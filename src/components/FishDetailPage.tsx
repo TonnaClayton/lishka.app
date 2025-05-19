@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import BottomNav, { SideNav } from "./BottomNav";
+import WeatherWidgetPro from "./WeatherWidgetPro";
 import { motion } from "framer-motion";
-import { getFishImageUrl, handleFishImageError } from "@/lib/fishbase-api";
+import {
+  handleFishImageError,
+  getPlaceholderFishImage,
+} from "@/lib/fish-image-service";
 import {
   ArrowLeft,
   Fish,
@@ -23,6 +28,11 @@ import { Separator } from "./ui/separator";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import LoadingDots from "./LoadingDots";
+import {
+  fetchWithRetry,
+  getCachedApiResponse,
+  cacheApiResponse,
+} from "@/lib/api-helpers";
 
 interface FishData {
   id: string;
@@ -122,6 +132,56 @@ const FishDetailPage: React.FC<FishDetailPageProps> = ({
           }
         }
 
+        // Import OpenAI toggle
+        const { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } = await import(
+          "@/lib/openai-toggle"
+        );
+
+        // Check if OpenAI is disabled
+        if (!OPENAI_ENABLED) {
+          console.log(OPENAI_DISABLED_MESSAGE);
+
+          // Create mock fish details
+          const fishDetails: FishData = {
+            id: "1",
+            name: fishName || "Unknown Fish",
+            scientificName: fishName
+              ? `${fishName.charAt(0).toUpperCase()}${fishName.slice(1).toLowerCase()} species`
+              : "Unknown species",
+            image:
+              imageFromNavigation ||
+              "https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746814934638-lishka-placeholder.png",
+            originalImage: imageFromNavigation,
+            description:
+              "This is a mock description since OpenAI API is currently disabled for troubleshooting. This fish is commonly found in coastal waters and is popular among local anglers.",
+            habitat: "Coastal waters, reefs, and rocky structures",
+            difficulty: "Intermediate",
+            season: ["Spring", "Summer", "Fall"],
+            isToxic: false,
+            fishingMethods: ["Casting", "Trolling", "Bottom fishing"],
+            regulations:
+              "Check local regulations before fishing. OpenAI API is currently disabled for troubleshooting.",
+            locations: ["Nearshore reefs", "Rocky outcroppings", "Jetties"],
+            bait: ["Live minnows", "Soft plastic lures", "Spoons"],
+            gear: ["Medium-action rod", "10-20lb test line", "Circle hooks"],
+            proTips: [
+              "Fish during incoming tides for best results",
+              "Target structure and drop-offs",
+              "Early morning and late evening are prime feeding times",
+            ],
+          };
+
+          // Save to cache with timestamp
+          localStorage.setItem(
+            `fish_details_${fishName?.toLowerCase()}_mock`,
+            JSON.stringify(fishDetails),
+          );
+
+          setFishData(fishDetails);
+          setLoading(false);
+          return;
+        }
+
         // Check if API key is available
         const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
         if (!apiKey) {
@@ -132,15 +192,23 @@ const FishDetailPage: React.FC<FishDetailPageProps> = ({
           };
         }
 
-        // Make OpenAI API call
+        // Create a cache key for the fish details API request
+        const detailsApiCacheKey = `fish_details_api_${fishName.toLowerCase()}`;
+
+        // Get cached API response if available
+        const cachedApiResponse = getCachedApiResponse(detailsApiCacheKey);
+
+        // Make OpenAI API call with retry logic and rate limiting
         console.log("Fetching details for fish:", fishName);
-        const response = await fetch(
+        console.log("OpenAI API key available:", !!apiKey);
+        const response = await fetchWithRetry(
           "https://api.openai.com/v1/chat/completions",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey}`,
+              Authorization: `Bearer ${apiKey.trim()}`,
+              "OpenAI-Beta": "assistants=v1",
             },
             body: JSON.stringify({
               model: "gpt-3.5-turbo",
@@ -158,6 +226,8 @@ const FishDetailPage: React.FC<FishDetailPageProps> = ({
               response_format: { type: "json_object" },
             }),
           },
+          3, // 3 retries
+          2000, // 2 second initial delay
         );
 
         if (!response.ok) {
@@ -182,6 +252,9 @@ const FishDetailPage: React.FC<FishDetailPageProps> = ({
         const data = await response.json();
         console.log("API response data:", data);
 
+        // Cache the API response for 24 hours
+        cacheApiResponse(detailsApiCacheKey, data, 24 * 60 * 60 * 1000);
+
         // Update API status
         setApiStatus({
           connected: true,
@@ -197,10 +270,8 @@ const FishDetailPage: React.FC<FishDetailPageProps> = ({
             id: "1",
             name: fishName,
             scientificName: parsedContent.scientificName || "Unknown",
-            // Use image from navigation state if available, otherwise generate one
-            image:
-              imageFromNavigation ||
-              getFishImageUrl(fishName, parsedContent.scientificName || ""),
+            // Use image from navigation state if available, otherwise use placeholder
+            image: imageFromNavigation || getPlaceholderFishImage(),
             // Store the original image URL in cache to ensure consistency
             originalImage: imageFromNavigation,
             description:
@@ -286,21 +357,20 @@ const FishDetailPage: React.FC<FishDetailPageProps> = ({
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F7F7F7] dark:bg-background flex flex-col">
-        <div className="sticky top-0 z-10 bg-white dark:bg-card p-4 flex items-center">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="font-['Anton'] text-xl ml-2 dark:text-white">
-            Loading...
-          </h1>
-        </div>
-        <div className="flex-1 flex items-center justify-center">
-          <div className="text-center">
-            <p className="mb-4 text-gray-600 dark:text-gray-300">
-              Loading fish details...
-            </p>
-            <LoadingDots color="#0251FB" size={6} />
+      <div className="h-screen overflow-hidden bg-[#F7F7F7] flex">
+        <SideNav />
+        <div className="flex-1 lg:ml-64 flex flex-col overflow-hidden">
+          <div className="sticky top-0 z-10 bg-white p-4 flex items-center flex-shrink-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="font-inter text-xl ml-2">Loading...</h1>
+          </div>
+          <div className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <p className="mb-4 text-gray-600">Loading fish details...</p>
+              <LoadingDots color="#0251FB" size={6} />
+            </div>
           </div>
         </div>
       </div>
@@ -309,26 +379,27 @@ const FishDetailPage: React.FC<FishDetailPageProps> = ({
 
   if (error) {
     return (
-      <div className="min-h-screen bg-[#F7F7F7] dark:bg-background flex flex-col">
-        <div className="sticky top-0 z-10 bg-white dark:bg-card p-4 shadow-sm flex items-center">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="font-['Anton'] text-xl ml-2 dark:text-white">Error</h1>
-        </div>
-        <div className="p-4">
-          <Alert variant="destructive" className="mb-6">
-            <AlertCircle className="h-4 w-4 dark:text-red-400" />
-            <AlertTitle className="dark:text-white">
-              Error {error.code}
-            </AlertTitle>
-            <AlertDescription className="dark:text-gray-300">
-              {error.message}
-            </AlertDescription>
-          </Alert>
-          <Button onClick={() => navigate(-1)} className="w-full mt-4">
-            Go Back
-          </Button>
+      <div className="h-screen overflow-hidden bg-[#F7F7F7] flex">
+        <SideNav />
+        <div className="flex-1 lg:ml-64 flex flex-col overflow-hidden">
+          <div className="sticky top-0 z-10 bg-white p-4 shadow-sm flex items-center flex-shrink-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="font-inter text-xl ml-2">Error</h1>
+          </div>
+          <div className="p-4 flex-1 overflow-y-auto">
+            <Alert variant="destructive" className="mb-6">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Error {error.code}</AlertTitle>
+              <AlertDescription className="text-gray-700">
+                {error.message}
+              </AlertDescription>
+            </Alert>
+            <Button onClick={() => navigate(-1)} className="w-full mt-4">
+              Go Back
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -336,242 +407,260 @@ const FishDetailPage: React.FC<FishDetailPageProps> = ({
 
   if (!fishData) {
     return (
-      <div className="min-h-screen bg-[#F7F7F7] dark:bg-background flex flex-col">
-        <div className="sticky top-0 z-10 bg-white dark:bg-card p-4 shadow-sm flex items-center">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="font-['Anton'] text-xl ml-2 dark:text-white">
-            Not Found
-          </h1>
-        </div>
-        <div className="p-4 text-center">
-          <p className="text-gray-600 dark:text-gray-300">
-            Fish details not found.
-          </p>
-          <Button onClick={() => navigate(-1)} className="mt-4">
-            Go Back
-          </Button>
+      <div className="h-screen overflow-hidden bg-[#F7F7F7] flex">
+        <SideNav />
+        <div className="flex-1 lg:ml-64 flex flex-col overflow-hidden">
+          <div className="sticky top-0 z-10 bg-white p-4 shadow-sm flex items-center flex-shrink-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="font-inter text-xl ml-2">Not Found</h1>
+          </div>
+          <div className="p-4 text-center flex-1 overflow-y-auto">
+            <p className="text-gray-600">Fish details not found.</p>
+            <Button onClick={() => navigate(-1)} className="mt-4">
+              Go Back
+            </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F7F7F7] dark:bg-background">
-      {/* Header */}
-      <div className="sticky top-0 z-10 bg-white dark:bg-card p-4 shadow-sm flex items-center w-full">
-        <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-          <ArrowLeft className="h-6 w-6" />
-        </Button>
-        <h1 className="font-['Anton'] text-xl ml-2 dark:text-white">
-          {fishData.name}
-        </h1>
-      </div>
+    <div className="h-screen overflow-hidden bg-[#F7F7F7] flex">
+      {/* Side Navigation - Hidden on mobile, visible on desktop */}
+      <SideNav />
+      {/* Main Content */}
+      <div className="flex-1 lg:ml-64 flex overflow-hidden">
+        <div className="flex-1 w-full lg:max-w-[calc(100%-380px)] flex flex-col overflow-hidden">
+          {/* Header */}
+          <div className="sticky top-0 z-10 bg-white p-4 shadow-sm flex items-center w-full flex-shrink-0">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ArrowLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="font-inter text-xl ml-2">{fishData.name}</h1>
+          </div>
+          {/* Fish Image Card */}
 
-      {/* Fish Image */}
-      <div className="relative w-full h-64">
-        <img
-          src={
-            fishData.originalImage ||
-            fishData.image ||
-            getFishImageUrl(fishData.name, fishData.scientificName)
-          }
-          alt={fishData.name}
-          className="w-full h-full object-cover"
-          onError={(e) => handleFishImageError(e, fishData.name)}
-        />
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-          <h1 className="font-inter font-bold text-2xl text-white">
-            {fishData.name}
-          </h1>
-          <p className="text-white/80 text-sm italic">
-            {fishData.scientificName}
-          </p>
-        </div>
-      </div>
-
-      {/* Content */}
-      <div className="p-4 max-w-full overflow-hidden">
-        <div className="space-y-4">
-          {/* Info Card */}
-          <Card className="overflow-hidden dark:bg-card dark:border-border/30">
-            <CardContent className="pt-6">
-              <h3 className="font-semibold flex items-center dark:text-white">
-                <Fish className="h-5 w-5 mr-2 text-[#0251FB] dark:text-blue-400" />
-                Description
-              </h3>
-              <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 break-words">
-                {fishData.description}
-              </p>
-
-              <Separator className="my-4" />
-
-              <h3 className="font-semibold flex items-center dark:text-white">
-                <Droplet className="h-5 w-5 mr-2 text-[#0251FB] dark:text-blue-400" />
-                Habitat
-              </h3>
-              <p className="mt-2 text-sm text-gray-700 dark:text-gray-300 break-words">
-                {fishData.habitat}
-              </p>
-
-              <Separator className="my-4" />
-
-              <h3 className="font-semibold flex items-center dark:text-white">
-                <Calendar className="h-5 w-5 mr-2 text-[#0251FB] dark:text-blue-400" />
-                Season
-              </h3>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {fishData.season.map((season, index) => (
-                  <Badge key={index} variant="outline">
-                    {season}
-                  </Badge>
-                ))}
-              </div>
-
-              <Separator className="my-4" />
-
-              <h3 className="font-semibold flex items-center dark:text-white">
-                <AlertTriangle className="h-5 w-5 mr-2 text-[#0251FB] dark:text-blue-400" />
-                Toxicity
-              </h3>
-              <div className="mt-2">
-                {fishData.isToxic ? (
-                  <div className="bg-destructive/10 dark:bg-destructive/10 border border-destructive/30 text-destructive dark:text-destructive p-3 rounded-md text-sm break-words">
-                    <p className="font-semibold">
-                      Warning: This fish may be toxic
-                    </p>
-                    {fishData.toxicityInfo && (
-                      <p className="mt-1">{fishData.toxicityInfo}</p>
-                    )}
-                  </div>
-                ) : (
-                  <p className="text-sm text-gray-700 dark:text-gray-300 break-words">
-                    This fish is generally safe to handle and consume when
-                    properly prepared.
+          <div className="p-4 space-y-4 flex-1 overflow-y-auto">
+            {/* Info Card */}
+            <Card className="overflow-hidden mb-4">
+              <div className="relative w-full" style={{ aspectRatio: "3/2" }}>
+                <img
+                  src={
+                    fishData.originalImage ||
+                    fishData.image ||
+                    "https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746814934638-lishka-placeholder.png"
+                  }
+                  alt={fishData.name}
+                  className="w-full h-full object-cover absolute top-0 left-0"
+                  onError={(e) => handleFishImageError(e, fishData.name)}
+                />
+                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+                  <h1 className="font-inter font-bold text-2xl text-white">
+                    {fishData.name}
+                  </h1>
+                  <p className="text-white/80 text-sm italic">
+                    {fishData.scientificName}
                   </p>
-                )}
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            </Card>
+            <Card className="overflow-hidden">
+              <CardContent className="pt-6">
+                <h3 className="font-semibold flex items-center">
+                  <Fish className="h-5 w-5 mr-2 text-[#0251FB]" />
+                  Description
+                </h3>
+                <p className="mt-2 text-sm text-gray-700 break-words">
+                  {fishData.description}
+                </p>
 
-          {/* Fishing Methods Card */}
-          <Card className="overflow-hidden dark:bg-card dark:border-border/30">
-            <CardContent className="pt-6">
-              <div className="mb-4">
-                <Badge className={difficultyColor[fishData.difficulty]}>
-                  {fishData.difficulty} Difficulty
-                </Badge>
-              </div>
+                <Separator className="my-4" />
 
-              <h3 className="font-semibold flex items-center dark:text-white">
-                <Anchor className="h-5 w-5 mr-2 text-[#0251FB] dark:text-blue-400" />
-                Best Fishing Methods
-              </h3>
-              <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 dark:text-gray-300 break-words">
-                {fishData.fishingMethods.map((method, index) => (
-                  <li key={index} className="mb-2">
-                    {method}
-                  </li>
-                ))}
-              </ul>
+                <h3 className="font-semibold flex items-center">
+                  <Droplet className="h-5 w-5 mr-2 text-[#0251FB]" />
+                  Habitat
+                </h3>
+                <p className="mt-2 text-sm text-gray-700 break-words">
+                  {fishData.habitat}
+                </p>
 
-              <Separator className="my-4" />
+                <Separator className="my-4" />
 
-              <h3 className="font-semibold flex items-center dark:text-white">
-                <MapPin className="h-5 w-5 mr-2 text-[#0251FB] dark:text-blue-400" />
-                Best Locations
-              </h3>
-              <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 dark:text-gray-300 break-words">
-                {fishData.locations.map((location, index) => (
-                  <li key={index} className="mb-2">
-                    {location}
-                  </li>
-                ))}
-              </ul>
+                <h3 className="font-semibold flex items-center">
+                  <Calendar className="h-5 w-5 mr-2 text-[#0251FB]" />
+                  Season
+                </h3>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {fishData.season.map((season, index) => (
+                    <Badge key={index} variant="outline">
+                      {season}
+                    </Badge>
+                  ))}
+                </div>
 
-              <Separator className="my-4" />
+                <Separator className="my-4" />
 
-              <h3 className="font-semibold flex items-center dark:text-white">
-                <Fish className="h-5 w-5 mr-2 text-[#0251FB] dark:text-blue-400" />
-                Recommended Bait
-              </h3>
-              <div className="mt-2 flex flex-wrap gap-2">
-                {fishData.bait.map((bait, index) => (
-                  <Badge key={index} variant="outline">
-                    {bait}
+                <h3 className="font-semibold flex items-center">
+                  <AlertTriangle className="h-5 w-5 mr-2 text-[#0251FB]" />
+                  Toxicity
+                </h3>
+                <div className="mt-2">
+                  {fishData.isToxic ? (
+                    <div className="bg-destructive/10 border border-destructive/30 text-destructive p-3 rounded-md text-sm break-words">
+                      <p className="font-semibold">
+                        Warning: This fish may be toxic
+                      </p>
+                      {fishData.toxicityInfo && (
+                        <p className="mt-1">{fishData.toxicityInfo}</p>
+                      )}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-700 break-words">
+                      This fish is generally safe to handle and consume when
+                      properly prepared.
+                    </p>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Fish Image Card */}
+
+            {/* Fishing Methods Card */}
+            <Card className="overflow-hidden">
+              <CardContent className="pt-6">
+                <div className="mb-4">
+                  <Badge className={difficultyColor[fishData.difficulty]}>
+                    {fishData.difficulty} Difficulty
                   </Badge>
-                ))}
-              </div>
+                </div>
 
-              <Separator className="my-4" />
+                <h3 className="font-semibold flex items-center">
+                  <Anchor className="h-5 w-5 mr-2 text-[#0251FB]" />
+                  Best Fishing Methods
+                </h3>
+                <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 break-words">
+                  {fishData.fishingMethods.map((method, index) => (
+                    <li key={index} className="mb-2">
+                      {method}
+                    </li>
+                  ))}
+                </ul>
 
-              <h3 className="font-semibold flex items-center dark:text-white">
-                <Package className="h-5 w-5 mr-2 text-[#0251FB] dark:text-blue-400" />
-                Required Gear
-              </h3>
-              <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 dark:text-gray-300 break-words">
-                {fishData.gear.map((gear, index) => (
-                  <li key={index} className="mb-2">
-                    {gear}
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
+                <Separator className="my-4" />
 
-          {/* Tips Card */}
-          <Card className="overflow-hidden dark:bg-card dark:border-border/30">
-            <CardContent className="pt-6">
-              <h3 className="font-semibold flex items-center dark:text-white">
-                <Lightbulb className="h-5 w-5 mr-2 text-[#0251FB] dark:text-blue-400" />
-                Pro Tips
-              </h3>
-              <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 dark:text-gray-300 break-words">
-                {fishData.proTips.map((tip, index) => (
-                  <li key={index} className="mb-2">
-                    {tip}
-                  </li>
-                ))}
-              </ul>
+                <h3 className="font-semibold flex items-center">
+                  <MapPin className="h-5 w-5 mr-2 text-[#0251FB]" />
+                  Best Locations
+                </h3>
+                <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 break-words">
+                  {fishData.locations.map((location, index) => (
+                    <li key={index} className="mb-2">
+                      {location}
+                    </li>
+                  ))}
+                </ul>
 
-              <Separator className="my-4" />
+                <Separator className="my-4" />
 
-              <h3 className="font-semibold flex items-center dark:text-white">
-                <Book className="h-5 w-5 mr-2 text-[#0251FB] dark:text-blue-400" />
-                Regulations
-              </h3>
-              <div className="mt-2 bg-info/10 dark:bg-info/10 border border-info/30 p-3 rounded-md text-sm break-words">
-                <p className="text-info/90 dark:text-info/90">
-                  {fishData.regulations}
-                </p>
-                <p className="mt-2 text-xs text-info/70 dark:text-info/70">
-                  Always check current local regulations before fishing as they
-                  may change.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
+                <h3 className="font-semibold flex items-center">
+                  <Fish className="h-5 w-5 mr-2 text-[#0251FB]" />
+                  Recommended Bait
+                </h3>
+                <div className="mt-2 flex flex-wrap gap-2">
+                  {fishData.bait.map((bait, index) => (
+                    <Badge key={index} variant="outline">
+                      {bait}
+                    </Badge>
+                  ))}
+                </div>
+
+                <Separator className="my-4" />
+
+                <h3 className="font-semibold flex items-center">
+                  <Package className="h-5 w-5 mr-2 text-[#0251FB]" />
+                  Required Gear
+                </h3>
+                <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 break-words">
+                  {fishData.gear.map((gear, index) => (
+                    <li key={index} className="mb-2">
+                      {gear}
+                    </li>
+                  ))}
+                </ul>
+              </CardContent>
+            </Card>
+
+            {/* Tips Card */}
+            <Card className="overflow-hidden">
+              <CardContent className="pt-6">
+                <h3 className="font-semibold flex items-center">
+                  <Lightbulb className="h-5 w-5 mr-2 text-[#0251FB]" />
+                  Pro Tips
+                </h3>
+                <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 break-words">
+                  {fishData.proTips.map((tip, index) => (
+                    <li key={index} className="mb-2">
+                      {tip}
+                    </li>
+                  ))}
+                </ul>
+
+                <Separator className="my-4" />
+
+                <h3 className="font-semibold flex items-center">
+                  <Book className="h-5 w-5 mr-2 text-[#0251FB]" />
+                  Regulations
+                </h3>
+                <div className="mt-2 bg-info/10 border border-info/30 p-3 rounded-md text-sm break-words">
+                  <p className="text-info/90">{fishData.regulations}</p>
+                  <p className="mt-2 text-xs text-info/70">
+                    Always check current local regulations before fishing as
+                    they may change.
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
+
+            <div className="mt-6 mb-4">
+              <Button className="w-full rounded-full bg-[#0251FB] hover:bg-[#0251FB]/90">
+                Find Nearby Fishing Spots
+              </Button>
+            </div>
+
+            {/* API Status Message */}
+            {apiStatus.connected && (
+              <Alert variant="success" className="mb-4">
+                <CheckCircle2 className="h-4 w-4 text-success" />
+                <AlertTitle>Connected to OpenAI</AlertTitle>
+                <AlertDescription>
+                  Using model: {apiStatus.model}
+                </AlertDescription>
+              </Alert>
+            )}
+          </div>
         </div>
 
-        <div className="mt-6 mb-4">
-          <Button className="w-full rounded-full bg-[#0251FB] dark:bg-primary hover:bg-[#0251FB]/90 dark:hover:bg-primary/80">
-            Find Nearby Fishing Spots
-          </Button>
+        {/* Weather Widget Sidebar */}
+        <div className="hidden lg:block w-80 min-w-[380px] h-screen border-l border-gray-200 bg-[#F7F7F7] overflow-hidden">
+          <div className="h-full flex flex-col">
+            <h2 className="text-lg font-semibold mb-4 flex-shrink-0 pt-4 px-4">
+              Weather
+            </h2>
+            <div className="flex-1 overflow-y-auto px-4">
+              {localStorage.getItem("userLocation") && (
+                <WeatherWidgetPro
+                  userLocation={JSON.parse(
+                    localStorage.getItem("userLocation") || "{}",
+                  )}
+                />
+              )}
+            </div>
+          </div>
         </div>
-
-        {/* API Status Message */}
-        {apiStatus.connected && (
-          <Alert variant="success" className="mb-20">
-            <CheckCircle2 className="h-4 w-4 text-success" />
-            <AlertTitle className="dark:text-white">
-              Connected to OpenAI
-            </AlertTitle>
-            <AlertDescription className="dark:text-gray-300">
-              Using model: {apiStatus.model}
-            </AlertDescription>
-          </Alert>
-        )}
       </div>
     </div>
   );
