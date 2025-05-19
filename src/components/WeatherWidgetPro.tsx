@@ -1181,7 +1181,7 @@ const WeatherWidget: React.FC<{
   console.log("Final current conditions:", currentConditions);
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 max-w-full overflow-x-hidden w-full">
       {/* Location Button */}
       <div className="flex justify-between items-center">
         <Button
@@ -1332,7 +1332,7 @@ const WeatherWidget: React.FC<{
                   }
                 }}
                 variant="default"
-                className="w-full h-12 bg-[#0251FB] text-white hover:bg-[#0251FB]/90 rounded-full"
+                className="confirm-location-button w-full h-12 bg-primary text-white hover:bg-primary/90 rounded-full"
               >
                 Set this location
               </Button>
@@ -1548,7 +1548,7 @@ const WeatherWidget: React.FC<{
             <p className="text-xs opacity-80">Visibility</p>
           </div>
         </div>
-        <div className="grid grid-cols-3 gap-2 bg-black/20 p-3 rounded-xl mt-2">
+        <div className="grid grid-cols-3 gap-1 sm:gap-2 bg-black/20 p-2 sm:p-3 rounded-xl mt-2">
           <div className="flex flex-col items-center">
             <p className="text-lg font-semibold">
               {currentConditions.swellWaveHeight !== null &&
@@ -1778,9 +1778,9 @@ const WeatherWidget: React.FC<{
           </div>
 
           {/* 24-hour Precipitation Forecast */}
-          <div className="mt-6">
+          <div className="mt-4 sm:mt-6">
             <div className="overflow-x-auto">
-              <div className="flex space-x-2 pb-2 min-w-[1600px]">
+              <div className="flex space-x-1 sm:space-x-2 pb-2 min-w-[300px] w-full sm:min-w-[800px] md:min-w-[1200px] lg:min-w-[1600px] sm:w-auto">
                 {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
                   const probability =
                     weatherData.hourly.precipitation_probability?.[
@@ -1901,7 +1901,7 @@ const WeatherWidget: React.FC<{
               {weatherData.daily.time.slice(0, 7).map((time, index) => (
                 <div
                   key={`day-${index}`}
-                  className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[120px]"
+                  className="flex flex-col items-center p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg flex-shrink-0 w-[100px] sm:w-[120px]"
                 >
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {new Date(time).toLocaleDateString([], {

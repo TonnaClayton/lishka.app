@@ -1,7 +1,10 @@
-import React from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { handleFishImageError, getFishImageUrl } from "@/lib/fishbase-api";
+import {
+  handleFishImageError,
+  getPlaceholderFishImage,
+} from "@/lib/fish-image-service";
 
 interface FishCardWithLocalNameProps {
   image?: string;
@@ -32,7 +35,7 @@ const FishCardWithLocalName = ({
 }: FishCardWithLocalNameProps) => {
   return (
     <Card
-      className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg bg-white dark:bg-card flex flex-col h-full border-0 shadow dark:border dark:border-border/30"
+      className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg bg-white flex flex-col h-full border-0 shadow"
       onClick={onClick}
     >
       <div className="relative w-full h-36 overflow-hidden">
@@ -40,7 +43,12 @@ const FishCardWithLocalName = ({
           src={image}
           alt={name}
           className="w-full h-full object-cover"
-          onError={(e) => handleFishImageError(e, name)}
+          onError={(e) => {
+            console.log(`Image error for ${name}: ${e.currentTarget.src}`);
+            // Try to load from scientific name regardless of current image source
+            // Use default error handler
+            handleFishImageError(e, name);
+          }}
         />
       </div>
       <CardContent className="p-3 flex flex-col flex-1">

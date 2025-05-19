@@ -4,6 +4,19 @@
 @tailwind components;
 @tailwind utilities;
 
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.2s ease-in-out;
+}
+
 @layer base {
   :root {
     --background: 0 0% 100%;
@@ -118,6 +131,43 @@
     padding-bottom: calc(env(safe-area-inset-bottom) + 5rem);
   }
 
+  /* Mobile viewport fix */
+  @media (max-width: 640px) {
+    .min-h-screen {
+      min-height: -webkit-fill-available;
+    }
+
+    /* Mobile-specific spacing adjustments */
+    .card-grid-mobile {
+      gap: 0.75rem;
+    }
+
+    .mobile-compact-text {
+      font-size: 0.875rem;
+    }
+
+    .mobile-compact-padding {
+      padding: 0.75rem;
+    }
+
+    /* Fix for weather widget overflow */
+    .overflow-x-auto {
+      max-width: 100%;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+
+    /* Hide scrollbars but keep functionality */
+    .overflow-x-auto::-webkit-scrollbar {
+      display: none;
+    }
+
+    /* Ensure all scrollable containers fit within viewport */
+    [class*="min-w-"] {
+      min-width: auto !important;
+    }
+  }
+
   /* LISHKA brand styles */
   .lishka-logo {
     @apply font-bold tracking-tight;
@@ -130,5 +180,155 @@
 
   .weather-card:hover {
     @apply shadow-lg;
+  }
+
+  /* Sidebar animation utilities */
+  .sidebar-transition {
+    @apply transition-all duration-400 ease-[cubic-bezier(0.25,0.1,0.25,1)];
+  }
+
+  .content-transition {
+    @apply transition-all duration-400 ease-[cubic-bezier(0.25,0.1,0.25,1)];
+  }
+
+  .element-transition {
+    @apply transition-all duration-300 ease-out;
+  }
+
+  /* Weather Widget Pro Styles */
+  .weather-widget-container {
+    @apply space-y-4 max-w-full overflow-x-hidden w-full;
+  }
+
+  .weather-location-button {
+    @apply flex items-center text-primary hover:bg-primary/10;
+  }
+
+  .weather-refresh-button {
+    @apply text-primary hover:bg-primary/10;
+  }
+
+  .weather-card-primary {
+    @apply p-6 bg-gradient-to-br from-blue-600 to-blue-800 text-white overflow-hidden relative shadow-md rounded-xl;
+  }
+
+  .weather-stats-grid {
+    @apply grid grid-cols-3 gap-2 bg-black/20 p-3 rounded-xl;
+  }
+
+  .weather-sun-info {
+    @apply mt-4 flex justify-between items-center bg-black/10 p-3 rounded-xl;
+  }
+
+  .marine-card {
+    @apply p-6 bg-blue-800 text-white overflow-hidden relative shadow-md mt-4 rounded-xl;
+  }
+
+  .marine-stats-grid {
+    @apply grid grid-cols-3 gap-2 bg-black/20 p-3 rounded-xl;
+  }
+
+  .swell-stats-grid {
+    @apply grid grid-cols-3 gap-1 sm:gap-2 bg-black/20 p-2 sm:p-3 rounded-xl mt-2;
+  }
+
+  .fishing-card {
+    @apply p-6 bg-white dark:bg-card overflow-hidden relative shadow-sm mt-4 rounded-xl;
+  }
+
+  .fishing-advice-content {
+    @apply mt-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-md;
+  }
+
+  .forecast-card {
+    @apply p-4 bg-white dark:bg-card shadow-sm rounded-xl;
+  }
+
+  .forecast-scroll {
+    @apply flex space-x-3 pb-2 w-full overflow-x-auto;
+  }
+
+  .forecast-item {
+    @apply flex flex-col items-center p-3 rounded-lg flex-shrink-0 w-[70px];
+  }
+
+  .forecast-item-blue {
+    @apply bg-blue-50 dark:bg-blue-900/20;
+  }
+
+  .forecast-item-gray {
+    @apply bg-gray-50 dark:bg-gray-800;
+  }
+
+  .data-source-info {
+    @apply p-3 bg-gray-50 dark:bg-gray-800 rounded-md mt-4;
+  }
+
+  .precipitation-card {
+    @apply p-4 bg-white dark:bg-card shadow-sm rounded-xl;
+  }
+
+  .precipitation-summary {
+    @apply bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-4;
+  }
+
+  .precipitation-scroll {
+    @apply flex space-x-1 sm:space-x-2 pb-2 w-full overflow-x-auto;
+  }
+
+  .precipitation-item {
+    @apply flex flex-col items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg flex-shrink-0 w-[50px];
+  }
+
+  .hourly-forecast-card {
+    @apply p-4 bg-white dark:bg-card shadow-sm rounded-xl;
+  }
+
+  .hourly-forecast-scroll {
+    @apply flex space-x-3 pb-2 w-full overflow-x-auto;
+  }
+
+  .hourly-item {
+    @apply flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg flex-shrink-0 w-[80px];
+  }
+
+  .weekly-forecast-card {
+    @apply p-4 bg-white dark:bg-card shadow-sm rounded-xl;
+  }
+
+  .weekly-forecast-scroll {
+    @apply flex space-x-3 pb-2 w-full overflow-x-auto;
+  }
+
+  .weekly-item {
+    @apply flex flex-col items-center p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg flex-shrink-0 w-[100px] sm:w-[120px];
+  }
+
+  .weather-footer {
+    @apply flex flex-col space-y-2 text-xs text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm;
+  }
+
+  .location-prompt {
+    @apply flex flex-col justify-center items-center h-64 bg-gray-50 dark:bg-gray-800 rounded-lg p-6;
+  }
+
+  .set-location-button {
+    @apply bg-primary text-white hover:bg-primary/90 rounded-full;
+  }
+
+  .loading-state {
+    @apply flex flex-col justify-center items-center h-64;
+  }
+
+  .error-card {
+    @apply p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900 shadow-sm rounded-xl;
+  }
+
+  .detect-location-button {
+    @apply w-full h-12 border-2 border-primary text-primary hover:bg-primary hover:text-white rounded-full;
+  }
+
+  .confirm-location-button {
+    @apply w-full h-12 bg-primary text-white hover:bg-primary/90 rounded-full;
   }
 }

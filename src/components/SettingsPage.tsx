@@ -1,18 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import {
-  Globe,
   ChevronLeft,
-  Home,
-  Search,
-  Cloud,
-  Menu,
   Trash2,
   CheckCircle2,
   AlertCircle,
-  Settings,
+  Globe,
 } from "lucide-react";
-import BottomNav from "./BottomNav";
 import { Button } from "./ui/button";
 import {
   Select,
@@ -24,12 +18,10 @@ import {
 import { Separator } from "./ui/separator";
 import { Switch } from "./ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import ThemeToggle from "./ThemeToggle";
+import BottomNav from "./BottomNav";
 
-interface MenuPageProps {
-  onLanguageChange?: (languageCode: string) => void;
-}
-
-const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
+const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
   const [apiStatus, setApiStatus] = useState<{
@@ -41,7 +33,7 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
     null,
   );
 
-  // Get stored language preference and night mode from localStorage
+  // Get stored language preference from localStorage
   useEffect(() => {
     const savedLanguage = localStorage.getItem("preferredLanguage");
     if (savedLanguage) {
@@ -57,7 +49,6 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
     console.log(`Changing language to: ${value}`);
     setSelectedLanguage(value);
     localStorage.setItem("preferredLanguage", value);
-    onLanguageChange(value);
 
     // Dispatch a custom event to notify other components about the language change
     window.dispatchEvent(new Event("languageChanged"));
@@ -181,140 +172,107 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
     }
   };
 
-  // API and Cache Settings Component
-  const ApiAndCacheSettings = () => (
-    <div className="space-y-2">
-      <h2 className="text-lg font-semibold">API & Cache Settings</h2>
-      <div className="bg-white rounded-lg shadow p-4">
-        {/* API Status */}
-        {apiStatus.connected && (
-          <Alert variant="success" className="mb-4">
-            <CheckCircle2 className="h-4 w-4 text-success" />
-            <AlertTitle>Connected to OpenAI</AlertTitle>
-            <AlertDescription>
-              <div className="space-y-1">
-                <p className="text-gray-700">Using model: {apiStatus.model}</p>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Error Message */}
-        {error && (
-          <Alert variant="destructive" className="mb-4">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Error {error.code}</AlertTitle>
-            <AlertDescription className="text-gray-700">
-              {error.message}
-            </AlertDescription>
-          </Alert>
-        )}
-
-        <div className="space-y-4">
-          <p className="text-sm text-gray-600">
-            Check API connection and manage cache settings.
-          </p>
-
-          <div className="flex flex-col gap-2">
-            <Button
-              variant="outline"
-              className="w-full justify-start text-left"
-              onClick={checkOpenAIStatus}
-              disabled={loading}
-            >
-              <CheckCircle2 className="mr-2 h-5 w-5" />
-              {loading ? "Checking API..." : "Check OpenAI API Status"}
-            </Button>
-
-            <Button
-              variant="outline"
-              className="w-full justify-start text-left text-red-500"
-              onClick={clearFishDataCache}
-            >
-              <Trash2 className="mr-2 h-5 w-5" />
-              Clear Fish Data Cache
-            </Button>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F7F7] lg:pl-64">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full">
-        <div className="flex items-center">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="text-xl font-bold ml-2">Menu</h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ChevronLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="text-xl font-bold ml-2">Settings</h1>
+          </div>
+          <ThemeToggle />
         </div>
       </header>
+
       {/* Main Content */}
-      <main className="flex-1 p-4 max-w-3xl mx-auto pb-20">
+      <main className="flex-1 p-4 max-w-3xl mx-auto w-full pb-20">
         <div className="space-y-6 w-full">
-          {/* Navigation Links */}
+          {/* Language Settings */}
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold">Navigation</h2>
-            <div className="bg-white rounded-lg shadow p-4 space-y-3">
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left"
-                onClick={() => navigate("/")}
-              >
-                <Home className="mr-2 h-5 w-5" />
-                Home
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left"
-                onClick={() => navigate("/search")}
-              >
-                <Search className="mr-2 h-5 w-5" />
-                Search
-              </Button>
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left"
-                onClick={() => navigate("/weather")}
-              >
-                <Cloud className="mr-2 h-5 w-5" />
-                Weather
-              </Button>
+            <h2 className="text-lg font-semibold">Language</h2>
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Globe className="h-5 w-5 mr-2 text-gray-600" />
+                  <span className="text-sm font-medium">App Language</span>
+                </div>
+                <Select
+                  value={selectedLanguage}
+                  onValueChange={handleLanguageChange}
+                >
+                  <SelectTrigger className="w-[120px]">
+                    <SelectValue placeholder="Select language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">English</SelectItem>
+                    <SelectItem value="es">Español</SelectItem>
+                    <SelectItem value="fr">Français</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
           <Separator />
 
-          {/* API and Cache Section - Only visible on mobile */}
-          <div className="lg:hidden">
-            <ApiAndCacheSettings />
-          </div>
-
-          {/* Settings button for desktop - navigates to settings page */}
-          <div className="hidden lg:block space-y-2">
-            <h2 className="text-lg font-semibold">Settings</h2>
-            <div className="bg-white rounded-lg shadow p-4 space-y-3">
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-left"
-                onClick={() => navigate("/settings")}
-              >
-                <Settings className="mr-2 h-5 w-5" />
-                Settings
-              </Button>
-            </div>
-          </div>
-
-          {/* App Settings */}
+          {/* API and Cache Section */}
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold">App Settings</h2>
+            <h2 className="text-lg font-semibold">API & Cache Settings</h2>
             <div className="bg-white rounded-lg shadow p-4">
+              {/* API Status */}
+              {apiStatus.connected && (
+                <Alert variant="success" className="mb-4">
+                  <CheckCircle2 className="h-4 w-4 text-success" />
+                  <AlertTitle>Connected to OpenAI</AlertTitle>
+                  <AlertDescription>
+                    <div className="space-y-1">
+                      <p className="text-gray-700">
+                        Using model: {apiStatus.model}
+                      </p>
+                    </div>
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {/* Error Message */}
+              {error && (
+                <Alert variant="destructive" className="mb-4">
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Error {error.code}</AlertTitle>
+                  <AlertDescription className="text-gray-700">
+                    {error.message}
+                  </AlertDescription>
+                </Alert>
+              )}
+
               <div className="space-y-4">
                 <p className="text-sm text-gray-600">
-                  Configure your fishing preferences here.
+                  Check API connection and manage cache settings.
                 </p>
+
+                <div className="flex flex-col gap-2">
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left"
+                    onClick={checkOpenAIStatus}
+                    disabled={loading}
+                  >
+                    <CheckCircle2 className="mr-2 h-5 w-5" />
+                    {loading ? "Checking API..." : "Check OpenAI API Status"}
+                  </Button>
+
+                  <Button
+                    variant="outline"
+                    className="w-full justify-start text-left text-red-500"
+                    onClick={clearFishDataCache}
+                  >
+                    <Trash2 className="mr-2 h-5 w-5" />
+                    Clear Fish Data Cache
+                  </Button>
+                </div>
               </div>
             </div>
           </div>
@@ -331,6 +289,7 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
           </div>
         </div>
       </main>
+
       {/* Bottom Navigation */}
       <div className="lg:hidden">
         <BottomNav />
@@ -340,4 +299,4 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
   );
 };
 
-export default MenuPage;
+export default SettingsPage;

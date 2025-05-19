@@ -68,9 +68,9 @@ const WeatherPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F7F7] dark:bg-background lg:pl-64">
+    <div className="flex flex-col min-h-screen bg-[#F7F7F7] dark:bg-background lg:pl-64 max-w-full overflow-hidden">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white dark:bg-card p-4 w-full lg:hidden">
+      <header className="sticky top-0 z-10 bg-white p-4 w-full lg:hidden">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 lg:hidden">
             <img
@@ -95,9 +95,9 @@ const WeatherPage: React.FC = () => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-auto p-4 lg:max-w-3xl lg:mx-auto">
+      <div className="flex-1 overflow-y-auto p-4 lg:max-w-3xl lg:mx-auto pb-20 w-full">
         <div className="mb-4">
-          <h1 className="font-['Anton'] text-2xl mb-1 dark:text-white lg:text-3xl">
+          <h1 className="font-inter text-2xl mb-1 dark:text-white lg:text-3xl">
             {location} Weather
           </h1>
           <div className="flex items-center">

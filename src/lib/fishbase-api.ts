@@ -4,6 +4,9 @@
  * This module provides functions to interact with the Fishbase API and format data
  */
 
+import { fetchWithRetry, cacheApiResponse } from "./api-helpers";
+import { getBlobImage } from "./blob-storage";
+
 /**
  * Generates a Fishbase image URL for a given scientific name
  * Format: https://www.fishbase.org/images/thumbnails/jpg/tn_[First 2 letters of genus][First 3 letters of species]_[variant].jpg
@@ -36,28 +39,168 @@ export function getFishbaseImageUrl(
 }
 
 /**
- * Gets an image URL for a fish, using Fishbase if possible, otherwise falling back to default image
+ * Fish image database interface
+ */
+interface FishImageDatabase {
+  [key: string]: {
+    url: string;
+    width?: number;
+    height?: number;
+    quality?: "high" | "medium" | "low";
+  };
+}
+
+/**
+ * Custom database of high-quality fish images
+ * Key format: lowercase scientific name with spaces removed
+ * Example: "salmosalar" for "Salmo salar"
+ */
+const fishImageDatabase: FishImageDatabase = {
+  // Atlantic Salmon
+  salmosalar: {
+    url: "https://images.unsplash.com/photo-1574155376612-bfa4ed8aabfd?w=800&q=90",
+    width: 800,
+    height: 533,
+    quality: "high",
+  },
+  // Bluefin Tuna
+  thunnusthynnus: {
+    url: "https://images.unsplash.com/photo-1531930961374-8db90742096e?w=800&q=90",
+    width: 800,
+    height: 533,
+    quality: "high",
+  },
+  // European Seabass
+  dicentrarchuslabrax: {
+    url: "https://images.unsplash.com/photo-1544943910-4268335342e0?w=800&q=90",
+    width: 800,
+    height: 533,
+    quality: "high",
+  },
+  // Gilthead Seabream
+  sparusaurata: {
+    url: "https://images.unsplash.com/photo-1534043464124-3be32fe000c9?w=800&q=90",
+    width: 800,
+    height: 533,
+    quality: "high",
+  },
+};
+
+/**
+ * Gets an image from our custom database
+ *
+ * @param scientificName Scientific name of the fish
+ * @returns URL to an image of the fish or null if not found
+ */
+export function getCustomFishImage(scientificName: string): string | null {
+  if (!scientificName) return null;
+
+  // Normalize the scientific name (lowercase, remove spaces)
+  const normalizedName = scientificName.toLowerCase().replace(/\s+/g, "");
+
+  // Check if we have this fish in our database
+  if (fishImageDatabase[normalizedName]) {
+    console.log(`Found custom image for ${scientificName}`);
+    return fishImageDatabase[normalizedName].url;
+  }
+
+  return null;
+}
+
+/**
+ * Gets an image from Supabase storage - REMOVED
+ * This function has been removed as we're no longer using Supabase
+ *
+ * @param scientificName Scientific name of the fish
+ * @returns URL to an image of the fish or null if not found
+ */
+export async function getSupabaseImage(
+  scientificName: string,
+): Promise<string | null> {
+  // We're not using Supabase anymore
+  console.log(
+    `Supabase storage has been removed. Using alternative image sources for ${scientificName}`,
+  );
+  return null;
+}
+
+/**
+ * Gets an image URL for a fish, first checking Vercel Blob storage, then using custom database,
+ * otherwise falling back to default image
  *
  * @param name Common name of the fish
  * @param scientificName Scientific name of the fish
  * @returns URL to an image of the fish
  */
-export function getFishImageUrl(name: string, scientificName: string): string {
-  // Try to get Fishbase image first
-  if (scientificName) {
-    // Try standard image variants in order of preference
-    const variants = ["u0", "u1", "u2", "u3", "m0", "m1", "f0", "f1"];
+export async function getFishImageUrl(
+  name: string,
+  scientificName: string,
+): Promise<string> {
+  console.log(`Fetching image for ${name} (${scientificName})`);
 
-    for (const variant of variants) {
-      const fishbaseUrl = getFishbaseImageUrl(scientificName, variant);
-      if (fishbaseUrl) {
-        return fishbaseUrl;
-      }
+  // First try Vercel Blob storage
+  try {
+    console.log(`Checking Vercel Blob for image of ${scientificName}`);
+    const blobImage = await getBlobImage(scientificName);
+    if (blobImage) {
+      console.log(
+        `Found Vercel Blob image for ${scientificName}: ${blobImage}`,
+      );
+      return blobImage;
+    } else {
+      console.log(`No Vercel Blob image found for ${scientificName}`);
     }
+  } catch (error) {
+    console.error("Error getting Vercel Blob image:", error);
+  }
+
+  // We're not using Supabase anymore - skip that check
+
+  // Try custom database next (higher quality than fishbase)
+  const customImage = getCustomFishImage(scientificName);
+  if (customImage) {
+    console.log(`Found custom image for ${scientificName}: ${customImage}`);
+    return customImage;
   }
 
   // Fall back to Lishka placeholder image
+  console.log(`Using placeholder image for ${name} (${scientificName})`);
   return "https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746814934638-lishka-placeholder.png";
+}
+
+/**
+ * Returns a placeholder image URL for a fish
+ *
+ * @param name Common name of the fish
+ * @param scientificName Scientific name of the fish
+ * @returns URL to a placeholder image
+ */
+export function getPlaceholderFishImage(): string {
+  return "https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746814934638-lishka-placeholder.png";
+}
+
+/**
+ * Synchronous version of getFishImageUrl that returns a placeholder image
+ * This is used in non-async contexts where we can't use await
+ *
+ * @param name Common name of the fish
+ * @param scientificName Scientific name of the fish
+ * @returns URL to a placeholder image
+ */
+export function getFishImageUrlSync(
+  name?: string,
+  scientificName?: string,
+): string {
+  // Try custom database first
+  if (scientificName) {
+    const customImage = getCustomFishImage(scientificName);
+    if (customImage) {
+      return customImage;
+    }
+  }
+
+  // Fall back to placeholder image
+  return getPlaceholderFishImage();
 }
 
 /**
@@ -71,9 +214,18 @@ export function handleFishImageError(
   fishName: string,
 ): void {
   const img = event.currentTarget;
+  console.log(
+    `Fish image error handler called for ${fishName}, current src: ${img.src}`,
+  );
+
   // If any image failed to load, switch to default image
-  img.src =
-    "https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746814934638-lishka-placeholder.png";
+  if (!img.src.includes("lishka-placeholder")) {
+    console.log(`Setting default placeholder image for ${fishName}`);
+    img.src =
+      "https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746814934638-lishka-placeholder.png";
+  } else {
+    console.log(`Already using placeholder image for ${fishName}`);
+  }
 }
 
 /**
@@ -83,6 +235,8 @@ export function handleFishImageError(
  * @param countryCode ISO country code for the location
  * @returns Promise that resolves to the local name or null if not found
  */
+import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "./openai-toggle";
+
 export async function getLocalFishName(
   scientificName: string,
   countryCode: string = "es",
@@ -236,6 +390,12 @@ export async function getLocalFishName(
       return localName;
     }
 
+    // If OpenAI is disabled, return null instead of making API call
+    if (!OPENAI_ENABLED) {
+      console.log(OPENAI_DISABLED_MESSAGE);
+      return null;
+    }
+
     // If no hardcoded translation, use OpenAI to get the translation
     // Check if API key is available
     const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
@@ -248,29 +408,37 @@ export async function getLocalFishName(
       `Using OpenAI to get ${languageName} name for ${scientificName}`,
     );
 
-    const response = await fetch("https://api.openai.com/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
+    // Create a cache key for the fish local name API request
+    const cacheKey = `fish_local_name_${scientificName}_${languageCode}`;
+
+    const response = await fetchWithRetry(
+      "https://api.openai.com/v1/chat/completions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey.trim()}`,
+        },
+        body: JSON.stringify({
+          model: "gpt-3.5-turbo",
+          messages: [
+            {
+              role: "system",
+              content:
+                "You are a multilingual fish species expert that provides accurate translations of fish names.",
+            },
+            {
+              role: "user",
+              content: `What is the ${languageName} local name for the fish with scientific name "${scientificName}"? Respond with ONLY the local name in ${languageName}, nothing else. If you don't know, respond with NULL.`,
+            },
+          ],
+          temperature: 0.3,
+          max_tokens: 50,
+        }),
       },
-      body: JSON.stringify({
-        model: "gpt-3.5-turbo",
-        messages: [
-          {
-            role: "system",
-            content:
-              "You are a multilingual fish species expert that provides accurate translations of fish names.",
-          },
-          {
-            role: "user",
-            content: `What is the ${languageName} local name for the fish with scientific name "${scientificName}"? Please reference Fishbase.org data for accuracy. Respond with ONLY the local name in ${languageName}, nothing else. If you don't know, respond with NULL.`,
-          },
-        ],
-        temperature: 0.3,
-        max_tokens: 50,
-      }),
-    });
+      2, // 2 retries for translations
+      3000, // 3 second initial delay (longer for lower priority)
+    );
 
     if (!response.ok) {
       console.error(`OpenAI API error: ${response.status}`);
@@ -291,6 +459,10 @@ export async function getLocalFishName(
     console.log(
       `OpenAI provided ${languageName} name for ${scientificName}: ${localName}`,
     );
+
+    // Cache the result for 24 hours
+    cacheApiResponse(cacheKey, localName, 24 * 60 * 60 * 1000);
+
     return localName;
   } catch (error) {
     console.error("Error fetching local fish name:", error);

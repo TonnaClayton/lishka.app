@@ -16,7 +16,7 @@ import { Badge } from "./ui/badge";
 import { Card } from "./ui/card";
 import FishCard from "./FishCard";
 import LoadingDots from "./LoadingDots";
-import { getFishImageUrl } from "@/lib/fishbase-api";
+import { getPlaceholderFishImage } from "@/lib/fishbase-api";
 
 interface Message {
   id: string;
@@ -241,6 +241,17 @@ const SearchPage: React.FC = () => {
   // Extract the API call logic to a separate function
   const processQuery = async (queryText: string, userMessage: Message) => {
     try {
+      // Import OpenAI toggle
+      const { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } = await import(
+        "@/lib/openai-toggle"
+      );
+
+      // Check if OpenAI is disabled
+      if (!OPENAI_ENABLED) {
+        console.log(OPENAI_DISABLED_MESSAGE);
+        throw new Error(OPENAI_DISABLED_MESSAGE);
+      }
+
       // Check if API key is available
       const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
       if (!apiKey) {
@@ -314,7 +325,7 @@ const SearchPage: React.FC = () => {
               id: `search-${Date.now()}-${index}`,
               name: fish.name,
               scientificName: fish.scientificName,
-              image: getFishImageUrl(fish.name, fish.scientificName),
+              image: fish.image || getPlaceholderFishImage(),
               habitat: fish.habitat,
               difficulty: fish.difficulty,
               season: fish.season,
@@ -563,7 +574,7 @@ const SearchPage: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen bg-[#F7F7F7] dark:bg-background gap-y-0 lg:pl-64">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white dark:bg-card p-4 w-full lg:hidden">
+      <header className="sticky top-0 z-10 bg-white p-4 w-full lg:hidden dark:bg-gray-800">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2 lg:hidden">
             <div className="flex items-center">
@@ -592,7 +603,7 @@ const SearchPage: React.FC = () => {
         </div>
       </header>
       {/* Main Content */}
-      <main className="flex-1 p-4 overflow-y-auto pb-32 lg:pb-16 lg:max-w-3xl lg:mx-auto">
+      <main className="flex-1 p-4 overflow-y-auto pb-36 lg:pb-16 lg:max-w-3xl lg:mx-auto">
         <div className="lg:max-w-3xl lg:mx-auto">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center">
@@ -691,7 +702,10 @@ const SearchPage: React.FC = () => {
                                 <FishCard
                                   name={fish.name}
                                   scientificName={fish.scientificName}
-                                  image={fish.image}
+                                  image={
+                                    fish.image ||
+                                    "https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746814934638-lishka-placeholder.png"
+                                  }
                                   habitat={fish.habitat}
                                   difficulty={fish.difficulty}
                                   season={fish.season}
