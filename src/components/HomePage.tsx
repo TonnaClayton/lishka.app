@@ -200,7 +200,7 @@ const HomePage: React.FC<HomePageProps> = ({
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F7F7] dark:bg-background rounded-xl border-l-0 border-y-0 border-r">
+    <div className="flex flex-col h-full dark:bg-background border-l-0 border-y-0 border-r-0 rounded-3xl">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full lg:hidden dark:bg-gray-800 border-t-0 border-x-0 border-b">
         <div className="flex justify-between items-center">
@@ -227,9 +227,9 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       </header>
       {/* Main Content */}
-      <div className="flex-1 overflow-auto p-4 lg:p-6 w-full pb-20">
+      <div className="flex-1 w-full p-4 lg:p-6 pb-20">
         <div className="mb-6">
-          <h2 className="text-xl font-semibold mb-2 dark:text-white">
+          <h2 className="text-2xl font-bold mb-1 dark:text-white">
             Fish in{" "}
             <span
               className="text-[#0251FB] dark:text-primary underline cursor-pointer"

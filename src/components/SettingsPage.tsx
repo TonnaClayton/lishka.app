@@ -279,7 +279,7 @@ const SettingsPage: React.FC = () => {
 
           {/* App Info */}
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold">About</h2>
+            <h2 className="text-xl font-semibold dark:text-white">About</h2>
             <div className="bg-white rounded-lg shadow p-4">
               <p className="text-sm text-gray-600">Lishka Fishing App v1.0.0</p>
               <p className="text-xs text-gray-500 mt-2">

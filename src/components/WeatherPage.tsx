@@ -95,14 +95,14 @@ const WeatherPage: React.FC = () => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 lg:max-w-3xl lg:mx-auto pb-20 w-full">
+      <div className="flex-1 overflow-y-auto p-4 lg:p-6 lg:max-w-3xl lg:mx-auto pb-20 w-full">
         <div className="mb-4">
-          <h1 className="font-inter text-2xl mb-1 dark:text-white lg:text-3xl">
+          <h1 className="text-2xl font-bold mb-1 dark:text-white lg:text-3xl">
             {location} Weather
           </h1>
           <div className="flex items-center">
             <MapPin className="h-4 w-4 text-blue-500 mr-1" />
-            <p className="font-inter text-sm text-gray-600 dark:text-gray-300 lg:text-base">
+            <p className="text-sm text-muted-foreground dark:text-gray-300 lg:text-base">
               Marine conditions for fishing
             </p>
           </div>
