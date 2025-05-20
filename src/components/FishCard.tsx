@@ -36,7 +36,7 @@ const FishCard = ({
 }: FishCardProps) => {
   return (
     <Card
-      className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full border-0 shadow bg-white"
+      className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full border-0 shadow bg-white rounded-3xl"
       onClick={onClick}
     >
       <div className="relative w-full aspect-[3/2] overflow-hidden">

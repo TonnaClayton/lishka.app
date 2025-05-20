@@ -96,6 +96,13 @@
   }
   body {
     @apply bg-background text-foreground font-['Inter',sans-serif];
+    min-height: 100%;
+    overflow-y: auto;
+    position: relative;
+  }
+  html {
+    height: 100%;
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -133,7 +140,15 @@
 
   /* Mobile viewport fix */
   @media (max-width: 640px) {
+    html {
+      height: -webkit-fill-available;
+    }
+    body {
+      min-height: 100vh;
+      min-height: -webkit-fill-available;
+    }
     .min-h-screen {
+      min-height: 100vh;
       min-height: -webkit-fill-available;
     }
 
@@ -160,6 +175,15 @@
     /* Hide scrollbars but keep functionality */
     .overflow-x-auto::-webkit-scrollbar {
       display: none;
+    }
+
+    .hide-scrollbar {
+      -ms-overflow-style: none; /* IE and Edge */
+      scrollbar-width: none; /* Firefox */
+    }
+
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none; /* Chrome, Safari and Opera */
     }
 
     /* Ensure all scrollable containers fit within viewport */
@@ -214,6 +238,14 @@
 
   .weather-stats-grid {
     @apply grid grid-cols-3 gap-2 bg-black/20 p-3 rounded-xl;
+  }
+
+  /* Force Safari to treat the page as scrollable */
+  .safari-scroll-fix {
+    height: 150vh;
+    position: absolute;
+    width: 0;
+    opacity: 0;
   }
 
   .weather-sun-info {

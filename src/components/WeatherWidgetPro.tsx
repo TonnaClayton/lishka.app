@@ -942,7 +942,7 @@ const WeatherWidget: React.FC<{
 
   if (!location) {
     return (
-      <div className="flex flex-col justify-center items-center h-64 bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+      <div className="flex flex-col justify-center items-center h-64 bg-gray-50 dark:bg-gray-800 rounded-lg p-6 border-r-0">
         <MapPin className="h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
         <p className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2 text-center">
           No location set
@@ -1181,7 +1181,7 @@ const WeatherWidget: React.FC<{
   console.log("Final current conditions:", currentConditions);
 
   return (
-    <div className="space-y-4 max-w-full overflow-x-hidden w-full">
+    <div className="space-y-4 max-w-full overflow-x-hidden w-full py-4 lg:px-4">
       {/* Location Button */}
       <div className="flex justify-between items-center">
         <Button
@@ -1341,7 +1341,7 @@ const WeatherWidget: React.FC<{
         </DialogContent>
       </Dialog>
       {/* Weather Card - Enhanced Weather Data */}
-      <Card className="p-6 bg-gradient-to-br from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md">
+      <Card className="p-6 bg-gradient-to-br from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-3xl">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-medium opacity-90">
@@ -1466,7 +1466,7 @@ const WeatherWidget: React.FC<{
         )}
       </Card>
       {/* Marine Card - Fishing Conditions */}
-      <Card className="p-6 bg-[#1E40AF] text-white overflow-hidden relative shadow-md mt-4">
+      <Card className="p-6 bg-[#1E40AF] text-white overflow-hidden relative shadow-md mt-4 rounded-3xl">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-medium opacity-90">
@@ -1583,7 +1583,7 @@ const WeatherWidget: React.FC<{
         </div>
       </Card>
       {/* Fishing Conditions Card */}
-      <Card className="p-6 bg-white dark:bg-card overflow-hidden relative shadow-sm mt-4">
+      <Card className="p-6 lg:p-8 bg-white dark:bg-card overflow-hidden relative shadow-sm mt-4 rounded-3xl">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-semibold dark:text-white">
@@ -1644,7 +1644,7 @@ const WeatherWidget: React.FC<{
         </div>
       </Card>
       {/* Marine Data Hourly Cards */}
-      <Card className="p-4 bg-white dark:bg-card shadow-sm">
+      <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-3xl">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold dark:text-white">
             Marine Data Forecast
@@ -1822,7 +1822,7 @@ const WeatherWidget: React.FC<{
           </div>
         </Card>
       )}
-      <Card className="p-4 bg-white dark:bg-card shadow-sm">
+      <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-3xl">
         <h2 className="text-lg font-semibold mb-4 dark:text-white">
           Hourly Forecast
         </h2>
@@ -1892,7 +1892,7 @@ const WeatherWidget: React.FC<{
       </Card>
       {/* Weekly Forecast */}
       {weatherData?.daily && (
-        <Card className="p-4 bg-white dark:bg-card shadow-sm">
+        <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-3xl">
           <h2 className="text-lg font-semibold mb-4 dark:text-white">
             Weekly Forecast
           </h2>

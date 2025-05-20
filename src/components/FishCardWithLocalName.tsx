@@ -35,7 +35,7 @@ const FishCardWithLocalName = ({
 }: FishCardWithLocalNameProps) => {
   return (
     <Card
-      className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg bg-white flex flex-col h-full border-0 shadow"
+      className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg bg-white flex flex-col h-full border-0 shadow rounded-3xl"
       onClick={onClick}
     >
       <div className="relative w-full h-36 overflow-hidden">

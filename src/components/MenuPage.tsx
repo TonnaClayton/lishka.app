@@ -184,7 +184,9 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
   // API and Cache Settings Component
   const ApiAndCacheSettings = () => (
     <div className="space-y-2">
-      <h2 className="text-lg font-semibold">API & Cache Settings</h2>
+      <h2 className="text-xl font-semibold dark:text-white">
+        API & Cache Settings
+      </h2>
       <div className="bg-white rounded-lg shadow p-4">
         {/* API Status */}
         {apiStatus.connected && (

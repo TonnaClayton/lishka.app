@@ -601,7 +601,7 @@ const FishDetailPage: React.FC<FishDetailPageProps> = ({
                   <Lightbulb className="h-5 w-5 mr-2 text-[#0251FB]" />
                   Pro Tips
                 </h3>
-                <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 break-words">
+                <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground break-words">
                   {fishData.proTips.map((tip, index) => (
                     <li key={index} className="mb-2">
                       {tip}
@@ -647,7 +647,7 @@ const FishDetailPage: React.FC<FishDetailPageProps> = ({
         {/* Weather Widget Sidebar */}
         <div className="hidden lg:block w-80 min-w-[380px] h-screen border-l border-gray-200 bg-[#F7F7F7] overflow-hidden">
           <div className="h-full flex flex-col">
-            <h2 className="text-lg font-semibold mb-4 flex-shrink-0 pt-4 px-4">
+            <h2 className="text-xl font-semibold mb-4 flex-shrink-0 pt-4 px-4 dark:text-white">
               Weather
             </h2>
             <div className="flex-1 overflow-y-auto px-4">
