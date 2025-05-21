@@ -299,49 +299,61 @@ const WeatherWidget: React.FC<{
 
   // Use user's location if available
   useEffect(() => {
-    let locationToUse: LocationData | null = null;
+    const loadLocation = () => {
+      let locationToUse: LocationData | null = null;
 
-    // First priority: use the location passed as a prop
-    if (userLocation) {
-      console.log(
-        `Using provided user location: ${userLocation.name} (${userLocation.latitude}, ${userLocation.longitude})`,
-      );
-      locationToUse = userLocation;
-      // Set location immediately to ensure map and name match
-      setLocation(locationToUse);
-      return;
-    } else {
-      // Second priority: try to get user's location from localStorage
-      const savedLocation = localStorage.getItem("userLocation");
-      if (savedLocation) {
-        try {
-          const parsedLocation = JSON.parse(savedLocation);
-          if (
-            parsedLocation &&
-            (parsedLocation.latitude || parsedLocation.lat)
-          ) {
-            locationToUse = {
-              latitude: parsedLocation.latitude || parsedLocation.lat || 0,
-              longitude: parsedLocation.longitude || parsedLocation.lng || 0,
-              name: parsedLocation.name || "Unknown Location",
-            };
-            console.log(
-              `Using saved location: ${locationToUse.name} (${locationToUse.latitude}, ${locationToUse.longitude})`,
-            );
-            // Set location immediately to ensure map and name match
-            setLocation(locationToUse);
-            return;
+      // First priority: use the location passed as a prop
+      if (userLocation) {
+        console.log(
+          `Using provided user location: ${userLocation.name} (${userLocation.latitude}, ${userLocation.longitude})`,
+        );
+        locationToUse = userLocation;
+        // Set location immediately to ensure map and name match
+        setLocation(locationToUse);
+        return;
+      } else {
+        // Second priority: try to get user's location from localStorage
+        const savedLocation = localStorage.getItem("userLocationFull");
+        if (savedLocation) {
+          try {
+            const parsedLocation = JSON.parse(savedLocation);
+            if (
+              parsedLocation &&
+              (parsedLocation.latitude || parsedLocation.lat)
+            ) {
+              locationToUse = {
+                latitude: parsedLocation.latitude || parsedLocation.lat || 0,
+                longitude: parsedLocation.longitude || parsedLocation.lng || 0,
+                name: parsedLocation.name || "Unknown Location",
+              };
+              console.log(
+                `Using saved location: ${locationToUse.name} (${locationToUse.latitude}, ${locationToUse.longitude})`,
+              );
+              // Set location immediately to ensure map and name match
+              setLocation(locationToUse);
+              return;
+            }
+          } catch (err) {
+            console.error("Error parsing user location:", err);
           }
-        } catch (err) {
-          console.error("Error parsing user location:", err);
         }
       }
-    }
 
-    // If we don't have a location, show the modal
-    console.log("No location found, waiting for user selection");
-    setLocation(null);
-    setShowLocationModal(true);
+      // If we don't have a location, show the modal
+      console.log("No location found, waiting for user selection");
+      setLocation(null);
+      setShowLocationModal(true);
+    };
+
+    // Load location initially
+    loadLocation();
+
+    // Listen for storage changes from other components
+    window.addEventListener("storage", loadLocation);
+
+    return () => {
+      window.removeEventListener("storage", loadLocation);
+    };
   }, [userLocation]);
 
   // Handle location update
@@ -351,6 +363,10 @@ const WeatherWidget: React.FC<{
     setCurrentIndex(0);
     setError(null);
     setLoading(true);
+
+    // Reset fishing advice when location changes
+    setInshoreAdvice("");
+    setOffshoreAdvice("");
 
     // Add timestamp to force refresh
     const timestampedLocation = {
@@ -1222,9 +1238,10 @@ const WeatherWidget: React.FC<{
             <div className="flex flex-col gap-2">
               <Button
                 onClick={() => {
+                  // Show loading state
+                  setLoading(true);
+
                   if (navigator.geolocation) {
-                    // Show loading state
-                    setLoading(true);
                     navigator.geolocation.getCurrentPosition(
                       async (position) => {
                         const lat = position.coords.latitude;
@@ -1289,9 +1306,20 @@ const WeatherWidget: React.FC<{
                       (error) => {
                         console.error("Error getting location:", error);
                         setLoading(false);
-                        alert(
-                          "Unable to retrieve your location. Please try selecting on the map.",
+
+                        // If geolocation fails, set a default location instead of showing an alert
+                        const defaultLocation = {
+                          latitude: 25.7617,
+                          longitude: -80.1918,
+                          name: "Miami Coast",
+                        };
+
+                        console.log(
+                          "Setting default location after error:",
+                          defaultLocation,
                         );
+                        handleLocationUpdate(defaultLocation);
+                        setShowLocationModal(false);
                       },
                       {
                         enableHighAccuracy: true,
@@ -1300,9 +1328,20 @@ const WeatherWidget: React.FC<{
                       },
                     );
                   } else {
-                    alert(
-                      "Geolocation is not supported by your browser. Please try selecting on the map.",
+                    // If geolocation is not supported, set a default location
+                    const defaultLocation = {
+                      latitude: 25.7617,
+                      longitude: -80.1918,
+                      name: "Miami Coast",
+                    };
+
+                    console.log(
+                      "Setting default location (no geolocation support):",
+                      defaultLocation,
                     );
+                    handleLocationUpdate(defaultLocation);
+                    setShowLocationModal(false);
+                    setLoading(false);
                   }
                 }}
                 variant="outline"

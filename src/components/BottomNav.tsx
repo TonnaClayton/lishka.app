@@ -152,13 +152,12 @@ export const SideNav: React.FC = () => {
             <Settings className={isCollapsed ? "" : "mr-3"} size={20} />
             {!isCollapsed && <span>Settings</span>}
           </Link>
-          <Link
-            to="/help"
+          <div
             className={`flex items-center py-3 rounded-lg ${isCollapsed ? "justify-center" : "px-4"} text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800`}
           >
             <HelpCircle className={isCollapsed ? "" : "mr-3"} size={20} />
             {!isCollapsed && <span>Help</span>}
-          </Link>
+          </div>
           <div
             className={`flex items-center mt-auto ${isCollapsed ? "justify-center py-3" : "px-4 py-3"}`}
           >

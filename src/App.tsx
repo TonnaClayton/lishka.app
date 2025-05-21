@@ -12,6 +12,7 @@ import SettingsPage from "./components/SettingsPage";
 import BlobConnectionTest from "./components/BlobConnectionTest";
 import BlobImageUploader from "./components/BlobImageUploader";
 import SafariScrollFix from "./components/SafariScrollFix";
+import AboutPage from "./components/AboutPage";
 // Removed SupabaseConnectionTest import
 
 function App() {
@@ -49,7 +50,7 @@ function App() {
         {/* Use flexbox layout for desktop */}
         <div className="mx-auto relative flex w-full h-full">
           {/* Side Navigation - flex-none (fixed width) */}
-          {!isSplashPage && <SideNav />}
+          <SideNav />
 
           {/* Main content area - flex-auto (flexible width) */}
           <div
@@ -69,6 +70,7 @@ function App() {
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/blob-test" element={<BlobConnectionTest />} />
                 <Route path="/blob-upload" element={<BlobImageUploader />} />
+                {/* About page removed from routes - only available in storyboard */}
                 {/* Add this to prevent conflicts with Tempo routes */}
                 {import.meta.env.VITE_TEMPO === "true" && (
                   <Route path="/tempobook/*" />

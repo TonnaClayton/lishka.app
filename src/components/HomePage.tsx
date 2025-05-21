@@ -3,10 +3,15 @@ import { useNavigate } from "react-router-dom";
 import BottomNav from "./BottomNav";
 import FishCard from "./FishCard";
 import { Button } from "./ui/button";
+
 import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
 import { getBlobImage } from "@/lib/blob-storage";
 import { getLocalFishName } from "@/lib/fishbase-api";
 import LoadingDots from "./LoadingDots";
+import LocationSetup from "./LocationSetup";
+
+// Import Dialog components from ui folder
+import { Dialog, DialogContent, DialogOverlay } from "./ui/dialog";
 
 interface HomePageProps {
   location?: string;
@@ -34,6 +39,18 @@ const HomePage: React.FC<HomePageProps> = ({
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [isLocationSetupOpen, setIsLocationSetupOpen] = useState(false);
+  const [userLocation, setUserLocation] = useState(() => {
+    // Try to get location from localStorage first
+    const savedLocation = localStorage.getItem("userLocation");
+    // If no saved location, check if we need to set up a default
+    if (!savedLocation) {
+      const defaultLocation = "Miami Coast";
+      localStorage.setItem("userLocation", defaultLocation);
+      return defaultLocation;
+    }
+    return savedLocation || location;
+  });
 
   // Get current month
   const getCurrentMonth = () => {
@@ -94,7 +111,7 @@ const HomePage: React.FC<HomePageProps> = ({
               },
               {
                 role: "user",
-                content: `List ${pageSize} fish species that can be caught in ${location} during ${currentMonth}. For each fish, provide: name, scientific name, habitat (freshwater/saltwater/brackish and specific environments), difficulty level to catch (Easy/Intermediate/Hard/Advanced/Expert), seasons when they're most active, and whether they're toxic. Format as JSON array with these exact fields: name, scientificName, habitat, difficulty, season, isToxic. Page: ${currentPage}`,
+                content: `List ${pageSize} fish species that can be caught in ${userLocation} during ${currentMonth}. For each fish, provide: name, scientific name, habitat (freshwater/saltwater/brackish and specific environments), difficulty level to catch (Easy/Intermediate/Hard/Advanced/Expert), seasons when they're most active, and whether they're toxic. Format as JSON array with these exact fields: name, scientificName, habitat, difficulty, season, isToxic. Page: ${currentPage}`,
               },
             ],
             temperature: 0.7,
@@ -186,7 +203,7 @@ const HomePage: React.FC<HomePageProps> = ({
 
   useEffect(() => {
     fetchFishData();
-  }, [location]);
+  }, [userLocation]);
 
   const handleFishClick = (fish: FishData) => {
     // Navigate to fish detail page with fish data
@@ -200,7 +217,7 @@ const HomePage: React.FC<HomePageProps> = ({
   };
 
   return (
-    <div className="flex flex-col h-full dark:bg-background border-l-0 border-y-0 border-r-0 rounded-3xl">
+    <div className="flex flex-col dark:bg-background border-l-0 border-y-0 border-r-0 rounded-3xl">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full lg:hidden dark:bg-gray-800 border-t-0 border-x-0 border-b">
         <div className="flex justify-between items-center">
@@ -233,9 +250,9 @@ const HomePage: React.FC<HomePageProps> = ({
             Fish in{" "}
             <span
               className="text-[#0251FB] dark:text-primary underline cursor-pointer"
-              onClick={() => navigate("/location-setup")}
+              onClick={() => setIsLocationSetupOpen(true)}
             >
-              {location}
+              {userLocation}
             </span>{" "}
             - {getCurrentMonth()}
           </h2>
@@ -305,6 +322,31 @@ const HomePage: React.FC<HomePageProps> = ({
       </div>
       {/* Bottom Navigation */}
       <BottomNav />
+      {/* Location Setup (shown conditionally) */}
+      {isLocationSetupOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+          <div className="w-full max-w-md">
+            <LocationSetup
+              onLocationSet={(newLocation) => {
+                // Update the location in the title
+                setUserLocation(newLocation.name);
+                // Location is already saved to localStorage in LocationSetup component
+                // Refresh fish data with new location
+                onLocationChange(newLocation.name);
+                // Close the location setup after location is set
+                setIsLocationSetupOpen(false);
+              }}
+              isOverlay={true}
+              onClose={() => {
+                // Only allow closing if a location is already set
+                if (localStorage.getItem("userLocation")) {
+                  setIsLocationSetupOpen(false);
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 };

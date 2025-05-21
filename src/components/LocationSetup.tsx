@@ -1,33 +1,38 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
-import { MapPin, Navigation, Layers } from "lucide-react";
+import { MapPin, Navigation, Map, Check } from "lucide-react";
+import LoadingDots from "./LoadingDots";
 import { useNavigate } from "react-router-dom";
-// @ts-ignore - Fixing import issue
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  useMapEvents,
-  LayersControl,
-} from "react-leaflet";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { LayersControl } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface LocationSetupProps {
   onLocationSet: (location: { lat: number; lng: number; name: string }) => void;
+  isOverlay?: boolean;
+  onClose?: () => void;
 }
 
-const LocationSetup = ({ onLocationSet = () => {} }: LocationSetupProps) => {
+const LocationSetup = ({
+  onLocationSet = () => {},
+  isOverlay = false,
+  onClose,
+}: LocationSetupProps) => {
   const navigate = useNavigate();
+  const [isDetecting, setIsDetecting] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
+  // Removed isClosing state
   const [location, setLocation] = useState<{
     lat: number;
     lng: number;
     name: string;
   } | null>(null);
+  const [countdown, setCountdown] = useState<number | null>(4);
 
   const handleDetectLocation = () => {
+    setIsDetecting(true);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
@@ -82,18 +87,36 @@ const LocationSetup = ({ onLocationSet = () => {} }: LocationSetupProps) => {
             name: locationName,
           };
           setLocation(newLocation);
+          setIsDetecting(false);
+
+          // Start countdown
+          setCountdown(4);
+
+          // Set up countdown timer
+          const timer = setInterval(() => {
+            setCountdown((prev) => {
+              if (prev === null || prev <= 1) {
+                clearInterval(timer);
+                handleContinue();
+                return 0;
+              }
+              return prev - 1;
+            });
+          }, 1000);
         },
         (error) => {
           console.error("Error getting location:", error);
           alert(
             "Unable to retrieve your location. Please try selecting on the map.",
           );
+          setIsDetecting(false);
         },
       );
     } else {
       alert(
         "Geolocation is not supported by your browser. Please try selecting on the map.",
       );
+      setIsDetecting(false);
     }
   };
 
@@ -109,93 +132,187 @@ const LocationSetup = ({ onLocationSet = () => {} }: LocationSetupProps) => {
   }) => {
     setLocation(selectedLocation);
     setIsMapOpen(false);
+    // Start countdown
+    setCountdown(4);
+
+    // Set up countdown timer
+    const timer = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          clearInterval(timer);
+          setTimeout(() => handleContinue(), 100);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
   };
 
   const handleContinue = () => {
     if (location) {
       // Save location to localStorage for other components to use
+      localStorage.setItem("userLocation", location.name);
+
+      // Also save the full location object for components that need coordinates
+      const fullLocationData = {
+        latitude: location.lat,
+        longitude: location.lng,
+        name: location.name,
+      };
+
       localStorage.setItem(
-        "userLocation",
-        JSON.stringify({
-          latitude: location.lat,
-          longitude: location.lng,
-          name: location.name,
-        }),
+        "userLocationFull",
+        JSON.stringify(fullLocationData),
       );
+
+      // Force a storage event to notify other components
+      window.dispatchEvent(new Event("storage"));
+
+      // Call the onLocationSet callback with the location data
       onLocationSet(location);
-      navigate("/");
+
+      // Handle navigation or closing immediately
+      if (!isOverlay) {
+        navigate("/");
+      } else if (onClose) {
+        // If in overlay mode and onClose is provided, call it
+        onClose();
+      }
     }
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-6 bg-[#F7F7F7] dark:bg-background">
-      <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="text-3xl font-bold font-inter dark:text-white">
-            SET YOUR LOCATION
-          </h1>
-          <p className="mt-4 text-gray-600 dark:text-gray-300">
-            Your location helps us provide accurate fishing information for your
-            area. We'll use this to recommend local fish species and fishing
-            spots.
-          </p>
-        </div>
-
-        <div className="space-y-4">
-          <Button
-            onClick={handleDetectLocation}
-            variant="outline"
-            className="w-full py-6 border-2 border-[#0251FB] dark:border-primary text-[#0251FB] dark:text-primary hover:bg-[#0251FB] hover:text-white dark:hover:bg-primary dark:hover:text-white rounded-full"
+    <>
+      {/* Map Selection Modal - Rendered as a separate modal */}
+      <AnimatePresence>
+        {isMapOpen && (
+          <motion.div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
           >
-            <MapPin className="mr-2" />
-            Detect my location
-          </Button>
-
-          <Button
-            onClick={handleMapSelection}
-            variant="outline"
-            className="w-full py-6 border-2 border-[#0251FB] dark:border-primary text-[#0251FB] dark:text-primary hover:bg-[#0251FB] hover:text-white dark:hover:bg-primary dark:hover:text-white rounded-full"
-          >
-            <Navigation className="mr-2" />
-            Select on map
-          </Button>
-        </div>
-
-        {location && (
-          <div className="mt-8 text-center">
-            <p className="mb-4 text-green-600 dark:text-green-400 font-medium">
-              Location set: {location.name}
-            </p>
-            <Button
-              onClick={handleContinue}
-              className="w-full py-6 bg-[#0251FB] dark:bg-primary text-white hover:bg-[#0251FB]/90 dark:hover:bg-primary/80 rounded-full"
+            <motion.div
+              className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl relative mx-4"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.3 }}
             >
-              Continue
-            </Button>
-          </div>
+              <div className="p-6 border-b border-gray-200 dark:border-gray-700 relative">
+                <h2 className="text-xl font-semibold text-gray-800 dark:text-white">
+                  Select Your Location
+                </h2>
+                <button
+                  onClick={() => {
+                    setIsMapOpen(false);
+                  }}
+                  className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 bg-transparent border-none p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="24"
+                    height="24"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+              <div className="w-full h-[500px]">
+                <MapSelection
+                  onLocationSelect={handleMapLocationSelect}
+                  currentLocation={location}
+                />
+              </div>
+            </motion.div>
+          </motion.div>
         )}
-      </div>
-      <Dialog
-        open={isMapOpen}
-        onOpenChange={setIsMapOpen}
-        className="dark:bg-gray-900"
-      >
-        <DialogContent className="sm:max-w-[600px] w-[90%] rounded-lg max-h-[80vh] shadow-xl dark:bg-card dark:border-border/30">
-          <DialogHeader>
-            <DialogTitle className="dark:text-white">
-              Select Your Location
-            </DialogTitle>
-          </DialogHeader>
-          <div className="w-full rounded-md overflow-hidden h-[500px]">
-            <MapSelection
-              onLocationSelect={handleMapLocationSelect}
-              currentLocation={location}
-              className=""
-            />
+      </AnimatePresence>
+      <AnimatePresence>
+        <motion.div
+          className="flex flex-col items-center justify-center p-6 bg-white dark:bg-gray-900 rounded-3xl shadow-lg max-w-md mx-4 relative"
+          initial={{ opacity: 1, scale: 1 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          transition={{ duration: 0.3 }}
+        >
+          {/* Close icon removed */}
+          <div className="w-full space-y-6 text-center">
+            {/* Location Icon */}
+            <div className="flex flex-col items-center">
+              <div className="bg-green-100 p-4 rounded-full mb-4">
+                <MapPin className="h-10 w-10 text-green-600" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-800 dark:text-white">
+                Set Your Location
+              </h1>
+              <p className="mt-2 text-sm text-gray-600 dark:text-gray-300 max-w-xs mx-auto">
+                We need your location to provide accurate fishing information
+                for your area
+              </p>
+            </div>
+
+            {/* Location Button */}
+            <div className="space-y-4 pt-2">
+              <Button
+                onClick={handleDetectLocation}
+                disabled={isDetecting}
+                className="w-full bg-blue-600 text-white hover:bg-blue-700 rounded-full flex items-center justify-center gap-2 transition-all duration-300 border-0 py-6"
+              >
+                {isDetecting ? (
+                  <>
+                    <LoadingDots color="#ffffff" size={5} />
+                    <span className="ml-2 animate-pulse">
+                      Detecting location...
+                    </span>
+                  </>
+                ) : location ? (
+                  <>
+                    <Check className="h-5 w-5 text-white" />
+                    <span>Location set to {location.name}</span>
+                  </>
+                ) : (
+                  <>
+                    <MapPin className="h-5 w-5" />
+                    <span>Detect my location</span>
+                  </>
+                )}
+              </Button>
+
+              {/* Select on map link */}
+              <button
+                onClick={handleMapSelection}
+                className="w-full text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium flex items-center justify-center gap-2 transition-colors border-0"
+              >
+                <Navigation className="h-4 w-4" />
+                Select on map
+              </button>
+            </div>
+
+            {/* Continue button */}
+            {location && (
+              <div className="mt-6">
+                <Button
+                  onClick={handleContinue}
+                  className="w-full bg-black text-white hover:bg-gray-800 rounded-full flex items-center justify-center gap-2 transition-all duration-300 border-0 py-6"
+                >
+                  <Check className="h-5 w-5" />
+                  <span>Continue with this location</span>
+                </Button>
+              </div>
+            )}
           </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+        </motion.div>
+      </AnimatePresence>
+    </>
   );
 };
 
@@ -231,75 +348,33 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
         const { lat, lng } = e.latlng;
         setSelectedPosition([lat, lng]);
 
-        // Generate location name based on coordinates without API call
         try {
-          console.log(
-            `Generating location name for map coordinates: ${lat}, ${lng}`,
-          );
-
           // Generate a location name based on coordinates
           const formattedLat = lat.toFixed(6);
           const formattedLng = lng.toFixed(6);
+          setLocationName(`${formattedLat}, ${formattedLng}`);
 
-          // Determine if it's likely a sea location based on coordinates
-          // This is a simplified approach - in reality we'd need more sophisticated logic
-          const isSeaLocation = Math.random() > 0.7; // 30% chance of being a sea location for demo purposes
+          // Try to get actual location name
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+          );
+          const data = await response.json();
 
-          if (isSeaLocation) {
-            // For sea locations, display only coordinates
-            setLocationName(`${formattedLat}, ${formattedLng}`);
-            console.log("Sea location detected for map selection");
-          } else {
-            // For land locations, generate a plausible name
-            // Use a simple mapping based on coordinate ranges
-            let city = "";
-            let country = "";
+          // Extract city/town and country
+          const city =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            data.address?.hamlet ||
+            "";
+          const country = data.address?.country || "";
 
-            // Very simplified location naming based on latitude ranges
-            if (lat > 40 && lat < 50) {
-              city = ["Barcelona", "Madrid", "Valencia", "Seville"][
-                Math.floor(Math.random() * 4)
-              ];
-              country = "Spain";
-            } else if (lat > 50 && lat < 60) {
-              city = ["London", "Manchester", "Liverpool", "Birmingham"][
-                Math.floor(Math.random() * 4)
-              ];
-              country = "United Kingdom";
-            } else if (lat > 30 && lat < 40) {
-              city = ["Rome", "Milan", "Naples", "Florence"][
-                Math.floor(Math.random() * 4)
-              ];
-              country = "Italy";
-            } else {
-              city = ["Paris", "Berlin", "Amsterdam", "Brussels"][
-                Math.floor(Math.random() * 4)
-              ];
-              country = ["France", "Germany", "Netherlands", "Belgium"][
-                Math.floor(Math.random() * 4)
-              ];
-            }
-
-            const name = `${city}, ${country}`;
+          if (city || country) {
+            const name = [city, country].filter(Boolean).join(", ");
             setLocationName(name);
-            console.log("Land location generated for map selection:", name);
           }
-
-          // Log the generated location data
-          console.log("Generated location data:", {
-            isSeaLocation,
-            lat,
-            lng,
-            locationName: isSeaLocation
-              ? `${formattedLat}, ${formattedLng}`
-              : setLocationName,
-          });
         } catch (error) {
           console.error("Error generating location name:", error);
-          // Display coordinates as fallback
-          const formattedLat = lat.toFixed(6);
-          const formattedLng = lng.toFixed(6);
-          setLocationName(`${formattedLat}, ${formattedLng}`);
         }
       },
     });
@@ -310,10 +385,10 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
     <div className="relative h-full flex flex-col gap-y-6 justify-center items-center">
       <MapContainer
         center={defaultPosition}
-        // Zoom in closer if we have a current location
         zoom={currentLocation ? 15 : 13}
         style={{ height: "100%", width: "100%" }}
         className="flex"
+        attributionControl={false}
       >
         <LayersControl position="topright">
           <LayersControl.BaseLayer name="Standard Map" checked>
@@ -322,7 +397,7 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
               url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
           </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="Marine Chart" checked>
+          <LayersControl.BaseLayer name="Marine Chart">
             <TileLayer
               attribution='&copy; <a href="https://openseamap.org">OpenSeaMap</a> contributors'
               url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
@@ -332,7 +407,7 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
         <MapClickHandler />
         {selectedPosition && <Marker position={selectedPosition} />}
       </MapContainer>
-      <div className="z-[1000] relative">
+      <div className="absolute bottom-4 left-0 right-0 flex justify-center z-[1000]">
         <Button
           onClick={() => {
             if (selectedPosition) {
@@ -340,12 +415,11 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
                 lat: selectedPosition[0],
                 lng: selectedPosition[1],
                 name: locationName,
-                countryCode: "es", // Adding a default country code for testing
               });
             }
           }}
           disabled={!selectedPosition}
-          className="bg-[#0251FB] dark:bg-blue-700 text-white hover:bg-[#0251FB]/90 dark:hover:bg-blue-600 rounded-full"
+          className="bg-primary text-white hover:bg-primary/90 rounded-full px-6 py-2 border-none shadow-md"
         >
           Select This Location
         </Button>
