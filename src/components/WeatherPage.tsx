@@ -17,54 +17,77 @@ const WeatherPage: React.FC = () => {
 
   // Set a coastal location for better marine data if none exists
   useEffect(() => {
-    const savedLocation = localStorage.getItem("userLocation");
-    if (!savedLocation) {
-      // Miami coordinates as a good default for marine data
-      const coastalLocation = {
-        latitude: 25.7617,
-        longitude: -80.1918,
-        name: "Miami Coast",
-      };
-      localStorage.setItem("userLocation", JSON.stringify(coastalLocation));
-      setUserLocation(coastalLocation);
-      setLocation(coastalLocation.name);
-    } else {
-      try {
-        const parsedLocation = JSON.parse(savedLocation);
-        if (parsedLocation) {
-          const locationData: LocationData = {
-            latitude: parsedLocation.latitude || parsedLocation.lat || 37.7749,
-            longitude:
-              parsedLocation.longitude || parsedLocation.lng || -122.4194,
-            name: parsedLocation.name || "Unknown Location",
-          };
-          setUserLocation(locationData);
-          setLocation(locationData.name);
-        }
-      } catch (err) {
-        console.error("Error parsing location:", err);
-        // Fallback to default location
+    const loadLocation = () => {
+      const savedLocation = localStorage.getItem("userLocationFull");
+      if (!savedLocation) {
+        // Miami coordinates as a good default for marine data
         const coastalLocation = {
           latitude: 25.7617,
           longitude: -80.1918,
           name: "Miami Coast",
         };
+        localStorage.setItem("userLocation", coastalLocation.name);
+        localStorage.setItem(
+          "userLocationFull",
+          JSON.stringify(coastalLocation),
+        );
         setUserLocation(coastalLocation);
         setLocation(coastalLocation.name);
+      } else {
+        try {
+          const parsedLocation = JSON.parse(savedLocation);
+          if (parsedLocation) {
+            const locationData: LocationData = {
+              latitude:
+                parsedLocation.latitude || parsedLocation.lat || 37.7749,
+              longitude:
+                parsedLocation.longitude || parsedLocation.lng || -122.4194,
+              name: parsedLocation.name || "Unknown Location",
+            };
+            setUserLocation(locationData);
+            setLocation(locationData.name);
+          }
+        } catch (err) {
+          console.error("Error parsing location:", err);
+          // Fallback to default location
+          const coastalLocation = {
+            latitude: 25.7617,
+            longitude: -80.1918,
+            name: "Miami Coast",
+          };
+          setUserLocation(coastalLocation);
+          setLocation(coastalLocation.name);
+        }
       }
-    }
+    };
+
+    // Load location initially
+    loadLocation();
+
+    // Listen for storage changes from other components
+    window.addEventListener("storage", loadLocation);
 
     // Set data loaded after a short delay to simulate API fetch
     setTimeout(() => {
       setDataLoaded(true);
     }, 1000);
+
+    return () => {
+      window.removeEventListener("storage", loadLocation);
+    };
   }, []);
 
   // Handle location update from the weather widget
   const handleLocationUpdate = (newLocation: LocationData) => {
     setUserLocation(newLocation);
     setLocation(newLocation.name);
-    localStorage.setItem("userLocation", JSON.stringify(newLocation));
+    localStorage.setItem("userLocation", newLocation.name);
+    localStorage.setItem("userLocationFull", JSON.stringify(newLocation));
+    // Force data reload when location changes
+    setDataLoaded(false);
+    setTimeout(() => {
+      setDataLoaded(true);
+    }, 1000);
   };
 
   return (
