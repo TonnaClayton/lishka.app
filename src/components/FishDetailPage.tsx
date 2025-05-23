@@ -16,6 +16,248 @@ import { Card } from "./ui/card";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import LoadingDots from "./LoadingDots";
 
+// Fishing Season Calendar Component
+interface FishingSeasonCalendarProps {
+  fishingSeasons?: FishingSeasons;
+  fishName: string;
+  location?: string;
+}
+
+const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
+  fishingSeasons,
+  fishName,
+  location,
+}) => {
+  // Month data
+  const months = [
+    { short: "Jan", full: "January", index: 0 },
+    { short: "Feb", full: "February", index: 1 },
+    { short: "Mar", full: "March", index: 2 },
+    { short: "Apr", full: "April", index: 3 },
+    { short: "May", full: "May", index: 4 },
+    { short: "Jun", full: "June", index: 5 },
+    { short: "Jul", full: "July", index: 6 },
+    { short: "Aug", full: "August", index: 7 },
+    { short: "Sep", full: "September", index: 8 },
+    { short: "Oct", full: "October", index: 9 },
+    { short: "Nov", full: "November", index: 10 },
+    { short: "Dec", full: "December", index: 11 },
+  ];
+
+  const currentMonthIndex = new Date().getMonth();
+
+  // Function to determine if a month is in season
+  const isMonthInSeason = (monthData: {
+    short: string;
+    full: string;
+    index: number;
+  }): boolean => {
+    if (!fishingSeasons?.inSeason || !Array.isArray(fishingSeasons.inSeason)) {
+      console.log(`No fishing seasons data available for ${fishName}`);
+      return false;
+    }
+
+    // Convert all season entries to lowercase for comparison
+    const seasonEntries = fishingSeasons.inSeason
+      .map((season) =>
+        typeof season === "string" ? season.toLowerCase().trim() : "",
+      )
+      .filter((season) => season.length > 0);
+
+    console.log(
+      `Checking month ${monthData.full} against seasons:`,
+      seasonEntries,
+    );
+
+    // If no valid season entries, return false
+    if (seasonEntries.length === 0) {
+      console.log(`No valid season entries found for ${fishName}`);
+      return false;
+    }
+
+    // Check each season entry
+    for (const season of seasonEntries) {
+      console.log(`Processing season entry: "${season}"`);
+
+      // Direct match with full month name
+      if (season === monthData.full.toLowerCase()) {
+        console.log(
+          `✓ Direct match: ${season} === ${monthData.full.toLowerCase()}`,
+        );
+        return true;
+      }
+
+      // Direct match with short month name
+      if (season === monthData.short.toLowerCase()) {
+        console.log(
+          `✓ Short match: ${season} === ${monthData.short.toLowerCase()}`,
+        );
+        return true;
+      }
+
+      // Check if season contains the month name (for entries like "spring", "summer", etc.)
+      if (
+        season.includes(monthData.full.toLowerCase()) ||
+        season.includes(monthData.short.toLowerCase())
+      ) {
+        console.log(
+          `✓ Contains match: ${season} contains ${monthData.full.toLowerCase()}`,
+        );
+        return true;
+      }
+
+      // Handle seasonal terms
+      const seasonalMonths = {
+        spring: [2, 3, 4], // March, April, May
+        summer: [5, 6, 7], // June, July, August
+        autumn: [8, 9, 10], // September, October, November
+        fall: [8, 9, 10], // September, October, November
+        winter: [11, 0, 1], // December, January, February
+      };
+
+      if (seasonalMonths[season]) {
+        if (seasonalMonths[season].includes(monthData.index)) {
+          console.log(`✓ Seasonal match: ${monthData.full} is in ${season}`);
+          return true;
+        }
+      }
+
+      // Handle ranges like "January-March", "Jan-Mar", "March to June", etc.
+      if (season.includes("-") || season.includes(" to ")) {
+        const separator = season.includes("-") ? "-" : " to ";
+        const [startSeason, endSeason] = season
+          .split(separator)
+          .map((s) => s.trim());
+
+        console.log(`Processing range: ${startSeason} to ${endSeason}`);
+
+        // Find start and end month indices
+        const startMonth = months.find(
+          (m) =>
+            m.full.toLowerCase() === startSeason ||
+            m.short.toLowerCase() === startSeason ||
+            m.full.toLowerCase().startsWith(startSeason) ||
+            m.short.toLowerCase().startsWith(startSeason),
+        );
+
+        const endMonth = months.find(
+          (m) =>
+            m.full.toLowerCase() === endSeason ||
+            m.short.toLowerCase() === endSeason ||
+            m.full.toLowerCase().startsWith(endSeason) ||
+            m.short.toLowerCase().startsWith(endSeason),
+        );
+
+        if (startMonth && endMonth) {
+          const startIdx = startMonth.index;
+          const endIdx = endMonth.index;
+          const currentIdx = monthData.index;
+
+          console.log(
+            `Range indices: start=${startIdx}, end=${endIdx}, current=${currentIdx}`,
+          );
+
+          // Handle range that wraps around the year (e.g., Nov-Feb)
+          let inRange = false;
+          if (startIdx <= endIdx) {
+            // Normal range (e.g., Mar-Jun)
+            inRange = currentIdx >= startIdx && currentIdx <= endIdx;
+          } else {
+            // Wrapping range (e.g., Nov-Feb)
+            inRange = currentIdx >= startIdx || currentIdx <= endIdx;
+          }
+
+          if (inRange) {
+            console.log(
+              `✓ Range match: ${monthData.full} is in range ${startSeason}-${endSeason}`,
+            );
+            return true;
+          }
+        } else {
+          console.log(
+            `Could not find months for range: ${startSeason} to ${endSeason}`,
+          );
+        }
+      }
+
+      // Handle comma-separated lists like "March, April, May"
+      if (season.includes(",")) {
+        const monthList = season.split(",").map((m) => m.trim());
+        for (const monthName of monthList) {
+          if (
+            monthName === monthData.full.toLowerCase() ||
+            monthName === monthData.short.toLowerCase() ||
+            monthData.full.toLowerCase().startsWith(monthName) ||
+            monthData.short.toLowerCase().startsWith(monthName)
+          ) {
+            console.log(
+              `✓ List match: ${monthData.full} found in comma-separated list`,
+            );
+            return true;
+          }
+        }
+      }
+    }
+
+    console.log(`✗ No match found for ${monthData.full}`);
+    return false;
+  };
+
+  // Function to get month styling
+  const getMonthStyling = (monthData: {
+    short: string;
+    full: string;
+    index: number;
+  }): string => {
+    const isInSeason = isMonthInSeason(monthData);
+    const isCurrentMonth = monthData.index === currentMonthIndex;
+
+    if (isInSeason && isCurrentMonth) {
+      // Current month and in season - light green
+      return "bg-green-100 border-green-200 text-green-700 font-bold dark:bg-green-900/20 dark:border-green-800 dark:text-green-300";
+    } else if (isInSeason) {
+      // In season but not current month - light blue
+      return "bg-blue-100 border-blue-200 text-blue-700 font-bold dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300";
+    } else if (isCurrentMonth) {
+      // Current month but not in season - light red
+      return "bg-red-50 border-red-200 text-red-600 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300";
+    } else {
+      // Not in season and not current month - light gray
+      return "bg-gray-50 border-gray-200 text-gray-400 dark:bg-gray-800/20 dark:border-gray-700 dark:text-gray-500";
+    }
+  };
+
+  // Debug logging
+  console.log("=== FISHING SEASON CALENDAR DEBUG ===");
+  console.log("Fishing seasons data:", fishingSeasons);
+  console.log("In season array:", fishingSeasons?.inSeason);
+  console.log("Current month index:", currentMonthIndex);
+  console.log("Current month name:", months[currentMonthIndex].full);
+  console.log("=====================================");
+
+  return (
+    <div className="grid grid-cols-12 gap-0.5 sm:gap-1 text-center">
+      {months.map((monthData) => {
+        const styling = getMonthStyling(monthData);
+        const isInSeason = isMonthInSeason(monthData);
+
+        console.log(
+          `Month ${monthData.full}: in-season=${isInSeason}, styling=${styling}`,
+        );
+
+        return (
+          <div
+            key={monthData.short}
+            className={`py-1 sm:py-2 px-0.5 sm:px-1 rounded-md border text-xs ${styling}`}
+          >
+            {monthData.short}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 interface FishingGear {
   rods?: string;
   reels?: string;
@@ -40,12 +282,38 @@ interface FishingMethod {
   proTip?: string;
 }
 
+interface FishingRegulations {
+  sizeLimit: string;
+  bagLimit: string;
+  seasonDates: string;
+  licenseRequired: string;
+  additionalRules: string[];
+  penalties: string;
+  lastUpdated: string;
+}
+
+interface FishingSeasons {
+  inSeason: string[];
+  traditionalSeason: string[];
+  conservationConcerns: string;
+  regulations: string;
+  notInSeason: string[];
+  reasoning: string;
+}
+
 interface FishDetails {
   name: string;
   scientificName: string;
   description: string;
   image?: string;
   fishingMethods?: FishingMethod[];
+  fishingSeasons?: FishingSeasons;
+  fishingRegulations?: FishingRegulations;
+  allRoundGear?: FishingGear;
+  localNames?: string[];
+  currentSeasonStatus?: string;
+  officialSeasonDates?: string;
+  fishingLocation?: string;
 }
 
 const FishDetailPage = () => {
@@ -55,6 +323,30 @@ const FishDetailPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [fishDetails, setFishDetails] = useState<FishDetails | null>(null);
+  const [userLocationName, setUserLocationName] = useState<string>("");
+  const [showDebugUI, setShowDebugUI] = useState<boolean>(false);
+
+  useEffect(() => {
+    // Get debug UI preference from localStorage
+    const debugUIPreference = localStorage.getItem("showDebugUI");
+    if (debugUIPreference !== null) {
+      setShowDebugUI(debugUIPreference === "true");
+    }
+
+    // Listen for debug UI changes
+    const handleDebugUIChange = () => {
+      const newDebugUIPreference = localStorage.getItem("showDebugUI");
+      if (newDebugUIPreference !== null) {
+        setShowDebugUI(newDebugUIPreference === "true");
+      }
+    };
+
+    window.addEventListener("debugUIChanged", handleDebugUIChange);
+
+    return () => {
+      window.removeEventListener("debugUIChanged", handleDebugUIChange);
+    };
+  }, []);
 
   useEffect(() => {
     const getFishDetails = async () => {
@@ -68,8 +360,20 @@ const FishDetailPage = () => {
         const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
         if (!apiKey) throw new Error("OpenAI API key is missing");
 
-        const userLocation =
-          localStorage.getItem("userLocation") || "Miami Coast";
+        const userLocationData = localStorage.getItem("userLocation");
+        let userLocation = "Unknown Location";
+
+        // Try to parse the location data to get the name
+        if (userLocationData) {
+          try {
+            const locationObj = JSON.parse(userLocationData);
+            userLocation = locationObj.name || "Unknown Location";
+          } catch {
+            userLocation = userLocationData || "Unknown Location";
+          }
+        }
+
+        setUserLocationName(userLocation);
         const currentMonth = new Date().toLocaleString("default", {
           month: "long",
         });
@@ -81,6 +385,7 @@ const FishDetailPage = () => {
           image: await getFishImageUrl(fishName.replace(/-/g, " "), "Unknown"),
         };
 
+        // First API call for general fishing information
         const response = await fetch(
           "https://api.openai.com/v1/chat/completions",
           {
@@ -90,69 +395,140 @@ const FishDetailPage = () => {
               Authorization: `Bearer ${apiKey.trim()}`,
             },
             body: JSON.stringify({
-              model: "gpt-3.5-turbo",
+              model: "gpt-4o",
               messages: [
                 {
                   role: "system",
-                  content:
-                    "You are a highly experienced technical fishing expert with deep knowledge of fish behavior, underwater topography, marine navigation, sonar interpretation, and advanced fishing techniques. You understand how fish relate to structure, use modern electronics, and know how weather and seasonal patterns affect fishing success. Your expertise includes detailed knowledge of bathymetric charts, wreck fishing, reef systems, and interpreting complex sonar returns for species identification.",
+                  content: `You are a fishing expert with detailed knowledge of local fishing regulations, seasonal patterns, and traditional fishing practices worldwide. You adapt your expertise to the specific location provided by the user. Always provide specific, accurate information for the requested location. Return only valid JSON without any additional text or formatting.`,
                 },
                 {
                   role: "user",
-                  content: `As a technical fishing expert, analyze ${userLocation} considering underwater topography, structure, and seasonal patterns. Then provide comprehensive fishing information for ${initialData.name} during ${currentMonth}. Consider all possible methods: jigging, spinning, bottom fishing, deep dropping, float fishing, drift fishing, trolling, and vertical jigging. Evaluate each based on the species' behavior patterns and habitat preferences.
+                  content: `Provide detailed fishing information for ${initialData.name} in ${userLocation}. Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Return only valid JSON in this exact format:
 
-                Use metric units in your response (provide all measurements in metric units). Include centimeters/meters for length, kilograms/grams for weight, and Celsius for temperature.
-
-                Return in this exact JSON format with no trailing commas or syntax errors:
-                {
-                  "name": "${initialData.name}",
-                  "scientificName": "${initialData.scientificName}",
-                  "description": "A detailed analysis of the fish's behavior patterns, preferred structure types, depth ranges, and seasonal movements in the local waters. Include key sonar signatures and how to identify the species on fish finders.",
-                  "fishingSeasons": ["List of months when this fish species is best to catch in ${userLocation}. Include all months where fishing is good, e.g., 'January', 'February', etc."],
-                  "allRoundGear": {
-                    "rods": "Specify power, action, and length",
-                    "reels": "Include gear ratio and line capacity needs",
-                    "line": "Specify material, test, and diameter",
-                    "leader": "Material and test based on fish behavior",
-                    "description": "Technical explanation of why this gear matches the species' characteristics and feeding patterns"
-                  },
-                  "fishingMethods": [
-                    {
-                      "title": "Technical method name (e.g., 'Jigs', 'Live Bait', 'Soft Plastics', 'Trolling', 'Bottom Rigs', 'Topwater')",
-                      "description": "Detailed technical explanation of why this method works for this species, including fish behavior patterns, structure relationships, and seasonal patterns",
-                      "gear": {
-                        "rods": "Specific technical requirements including power, action, and length",
-                        "reels": "Include gear ratios, drag specs, and line capacity",
-                        "line": "Full specifications including material, test, and diameter",
-                        "leader": "Material, test, and length specifications",
-                        "hooks": "Detailed hook specifications including size, type, and material",
-                        "hook_size_range": "Range of hook sizes appropriate for this method",
-                        "bait": ["List of specific effective baits with sizes"],
-                        "lures": ["List of specific lure models with sizes and colors"],
-                        "depth": "Optimal depth range and how it varies with conditions",
-                        "speed": "Precise retrieval or trolling speed ranges",
-                        "structure": "Detailed structure types and how to fish them",
-                        "sonarTips": "How to identify productive areas and fish on sonar",
-                        "jig_weight": "Recommended jig weight range based on depth and current",
-                        "jig_size": "Recommended jig size range in centimeters"
-                      },
-                      "proTip": "Advanced technical tip covering structure approach, conditions, timing, and technique refinements"
-                    }
-                  ]
-                }`,
+{
+  "name": "${initialData.name}",
+  "scientificName": "${initialData.scientificName}",
+  "description": "Detailed description of the fish including habitat, behavior, and identification features specific to ${userLocation} waters",
+  "localNames": ["Local names for this fish in ${userLocation} - provide regional/local names if this fish is found in these waters, otherwise return empty array"],
+  "currentSeasonStatus": "Yes, currently in season or No, not currently in season based on today's date and ${userLocation} regulations",
+  "officialSeasonDates": "Official fishing season dates for this species in ${userLocation} or Year-round or No specific season",
+  "fishingLocation": "${userLocation}",
+  "fishingSeasons": {
+    "inSeason": ["List of months when this fish is typically in season in ${userLocation}"],
+    "traditionalSeason": ["Traditional fishing months for this species in ${userLocation}"],
+    "conservationConcerns": "Conservation status and concerns specific to ${userLocation} waters",
+    "regulations": "${userLocation} specific fishing regulations for this species",
+    "biologicalReasoning": "Why this fish is in season during these months in ${userLocation} region",
+    "reasoning": "Explanation of how biology connects to ${userLocation} fishing regulations"
+  },
+  "allRoundGear": {
+    "rods": "Recommended rod specifications for ${userLocation} fishing conditions",
+    "reels": "Reel recommendations for ${userLocation} waters",
+    "line": "Line specifications suitable for ${userLocation} conditions",
+    "leader": "Leader recommendations for ${userLocation} fishing",
+    "description": "General gear setup explanation for ${userLocation} fishing conditions"
+  },
+  "fishingMethods": [
+    {
+      "title": "Primary fishing method for this species in ${userLocation}",
+      "description": "Detailed description of the method adapted to ${userLocation} conditions",
+      "gear": {
+        "rods": "Specific rod requirements for ${userLocation}",
+        "reels": "Reel specifications for ${userLocation} conditions",
+        "line": "Line requirements for ${userLocation} waters",
+        "leader": "Leader setup for ${userLocation} fishing",
+        "bait": ["Effective baits available in ${userLocation}"],
+        "lures": ["Effective lures for ${userLocation} waters"],
+        "depth": "Fishing depth range typical for ${userLocation}",
+        "speed": "Trolling speed if applicable for ${userLocation} conditions",
+        "jig_weight": "Jig weights if applicable for ${userLocation} waters",
+        "jig_size": "Jig sizes if applicable for ${userLocation} fishing"
+      },
+      "proTip": "Local ${userLocation} fishing tip for this species"
+    }
+  ]
+}`,
                 },
               ],
-              temperature: 0.7,
+              temperature: 0.3,
+            }),
+          },
+        );
+
+        // Second API call for detailed regulations
+        const regulationsResponse = await fetch(
+          "https://api.openai.com/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${apiKey.trim()}`,
+            },
+            body: JSON.stringify({
+              model: "gpt-4o",
+              messages: [
+                {
+                  role: "system",
+                  content: `You are a fishing regulations expert with comprehensive knowledge of local fishing laws, size limits, bag limits, and licensing requirements worldwide. Provide accurate, up-to-date regulatory information for the specific location and species requested. Return only valid JSON without any additional text or formatting.`,
+                },
+                {
+                  role: "user",
+                  content: `Provide detailed fishing regulations for ${initialData.name} in ${userLocation}. Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Return only valid JSON in this exact format:
+
+{
+  "sizeLimit": "Minimum and/or maximum size limits for ${initialData.name} in ${userLocation} (e.g., 'Minimum 25cm, Maximum 60cm' or 'No size restrictions' or 'Not specified')",
+  "bagLimit": "Daily bag limit for ${initialData.name} in ${userLocation} (e.g., '5 fish per day' or 'No bag limit' or 'Not specified')",
+  "seasonDates": "Official open/closed season dates for ${initialData.name} in ${userLocation} (e.g., 'Open: May 1 - September 30' or 'Year-round' or 'Check local regulations')",
+  "licenseRequired": "Fishing license requirements in ${userLocation} (e.g., 'Recreational fishing license required' or 'No license required for shore fishing' or 'Commercial license only')",
+  "additionalRules": ["List of additional specific rules for ${initialData.name} in ${userLocation} such as gear restrictions, area closures, catch and release requirements, etc."],
+  "penalties": "Penalties for violations in ${userLocation} (e.g., 'Fines from €50-€500' or 'Varies by violation' or 'Contact local authorities')",
+  "lastUpdated": "When these regulations were last updated or verified (e.g., '2024' or 'Check with local authorities for current regulations')"
+}`,
+                },
+              ],
+              temperature: 0.2,
             }),
           },
         );
 
         if (!response.ok) throw new Error(`API error: ${response.status}`);
+        if (!regulationsResponse.ok)
+          throw new Error(
+            `Regulations API error: ${regulationsResponse.status}`,
+          );
 
         const data = await response.json();
-        let result;
+        const regulationsData = await regulationsResponse.json();
+        // Initialize result with default values to prevent reference errors
+        let result = {
+          description: "No description available.",
+          fishingMethods: [],
+          fishingSeasons: {
+            inSeason: [],
+            traditionalSeason: [],
+            conservationConcerns: "",
+            regulations: "",
+            notInSeason: [],
+            reasoning: "",
+          },
+          allRoundGear: null,
+        };
+
+        let regulationsResult = {
+          sizeLimit: "Not specified",
+          bagLimit: "Not specified",
+          seasonDates: "Check local regulations",
+          licenseRequired: "Check local requirements",
+          additionalRules: [],
+          penalties: "Contact local authorities",
+          lastUpdated: "Unknown",
+        };
+
         try {
-          result = JSON.parse(data.choices[0].message.content);
+          const content = data.choices[0].message.content.trim();
+          // Remove any markdown formatting if present
+          const cleanContent = content.replace(/```json\n?|```\n?/g, "").trim();
+          result = JSON.parse(cleanContent);
         } catch (parseError) {
           console.error("JSON parse error:", parseError);
           console.log("Raw content:", data.choices[0].message.content);
@@ -167,7 +543,40 @@ const FishDetailPage = () => {
             console.log("Fixed JSON parsing successful");
           } catch (secondError) {
             console.error("Failed to fix JSON:", secondError);
-            throw new Error("Invalid JSON response from API");
+            // Don't throw error, use the default values instead
+            console.warn("Using default values due to parsing error");
+          }
+        }
+
+        // Parse regulations response
+        try {
+          const regulationsContent =
+            regulationsData.choices[0].message.content.trim();
+          const cleanRegulationsContent = regulationsContent
+            .replace(/```json\n?|```\n?/g, "")
+            .trim();
+          regulationsResult = JSON.parse(cleanRegulationsContent);
+        } catch (parseError) {
+          console.error("Regulations JSON parse error:", parseError);
+          console.log(
+            "Raw regulations content:",
+            regulationsData.choices[0].message.content,
+          );
+          // Try to fix common JSON issues
+          const fixedRegulationsContent =
+            regulationsData.choices[0].message.content
+              .replace(/\n/g, " ")
+              .replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+              .replace(/:\s*'([^']*)'/g, ':"$1"');
+
+          try {
+            regulationsResult = JSON.parse(fixedRegulationsContent);
+            console.log("Fixed regulations JSON parsing successful");
+          } catch (secondError) {
+            console.error("Failed to fix regulations JSON:", secondError);
+            console.warn(
+              "Using default regulations values due to parsing error",
+            );
           }
         }
 
@@ -178,22 +587,25 @@ const FishDetailPage = () => {
         );
 
         // Extract fishing seasons from the API response
-        const fishingSeasons = result.fishingSeasons || [
-          "April",
-          "May",
-          "June",
-          "July",
-          "August",
-          "September",
-        ];
+        const fishingSeasons = result.fishingSeasons || {};
+        console.log("=== API RESPONSE DEBUG ===");
+        console.log("Raw API result:", result);
         console.log("Fishing seasons from API:", fishingSeasons);
+        console.log("inSeason array from API:", fishingSeasons.inSeason);
+        console.log("=========================");
 
         setFishDetails({
           ...initialData,
           description: result.description || "No description available.",
           fishingMethods: fishingMethods,
           allRoundGear: result.allRoundGear,
-          fishingSeasons: fishingSeasons,
+          fishingSeasons: result.fishingSeasons,
+          fishingRegulations: regulationsResult,
+          localNames: result.localNames || [],
+          currentSeasonStatus: result.currentSeasonStatus || "Status unknown",
+          officialSeasonDates:
+            result.officialSeasonDates || "Dates not available",
+          fishingLocation: result.fishingLocation || userLocation,
         });
       } catch (err) {
         console.error("Error fetching fish details:", err);
@@ -310,108 +722,436 @@ const FishDetailPage = () => {
               </p>
             </Card>
 
+            {/* Fishing Regulations Card */}
+            {fishDetails.fishingRegulations && (
+              <Card className="p-4 sm:p-6 rounded-3xl">
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                  <h2 className="text-xl font-semibold">Fishing Regulations</h2>
+                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                    <svg
+                      className="w-4 h-4 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    {fishDetails.fishingLocation ||
+                      userLocationName ||
+                      "Location not specified"}
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Size Limit */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0 mt-0.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-black dark:text-gray-300"
+                      >
+                        <path d="M3 6h18" />
+                        <path d="M7 12h10" />
+                        <path d="M10 18h4" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                        Size Limit
+                      </span>
+                      <span className="text-gray-600 dark:text-gray-300">
+                        {fishDetails.fishingRegulations.sizeLimit}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bag Limit */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0 mt-0.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-black dark:text-gray-300"
+                      >
+                        <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10 6a2 2 0 0 1 4 0v1h-4V6zm8 15a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v12z" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                        Bag Limit
+                      </span>
+                      <span className="text-gray-600 dark:text-gray-300">
+                        {fishDetails.fishingRegulations.bagLimit}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Season Dates */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0 mt-0.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-black dark:text-gray-300"
+                      >
+                        <rect
+                          x="3"
+                          y="4"
+                          width="18"
+                          height="18"
+                          rx="2"
+                          ry="2"
+                        />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                        Season Dates
+                      </span>
+                      <span className="text-gray-600 dark:text-gray-300">
+                        {fishDetails.fishingRegulations.seasonDates}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* License Required */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0 mt-0.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-black dark:text-gray-300"
+                      >
+                        <rect
+                          x="2"
+                          y="3"
+                          width="20"
+                          height="14"
+                          rx="2"
+                          ry="2"
+                        />
+                        <line x1="8" y1="21" x2="16" y2="21" />
+                        <line x1="12" y1="17" x2="12" y2="21" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                        License Required
+                      </span>
+                      <span className="text-gray-600 dark:text-gray-300">
+                        {fishDetails.fishingRegulations.licenseRequired}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Additional Rules */}
+                  {fishDetails.fishingRegulations.additionalRules &&
+                    fishDetails.fishingRegulations.additionalRules.length >
+                      0 && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 flex-shrink-0 mt-0.5">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-black dark:text-gray-300"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                          </svg>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-semibold text-gray-900 dark:text-gray-100">
+                            Additional Rules
+                          </span>
+                          <ul className="text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1">
+                            {fishDetails.fishingRegulations.additionalRules.map(
+                              (rule, index) => (
+                                <li key={index} className="text-sm">
+                                  {rule}
+                                </li>
+                              ),
+                            )}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Penalties */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0 mt-0.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-black dark:text-gray-300"
+                      >
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                        Penalties
+                      </span>
+                      <span className="text-gray-600 dark:text-gray-300">
+                        {fishDetails.fishingRegulations.penalties}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Last Updated */}
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Last updated: {fishDetails.fishingRegulations.lastUpdated}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Always verify current regulations with local authorities
+                    before fishing.
+                  </p>
+                </div>
+              </Card>
+            )}
+
             {/* Fishing Season Calendar Card */}
             <Card className="p-4 sm:p-6 rounded-3xl">
-              <h2 className="text-xl font-semibold mb-2 sm:mb-3">
-                Fishing Season
-              </h2>
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <h2 className="text-xl font-semibold">Fishing Season</h2>
+                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  {fishDetails.fishingLocation ||
+                    userLocationName ||
+                    "Location not specified"}
+                </div>
+              </div>
               <div className="mt-2 sm:mt-4">
                 <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-2 sm:mb-3">
-                  Best months to catch {fishDetails.name}:
+                  Best months to catch {fishDetails.name} in{" "}
+                  {fishDetails.fishingLocation ||
+                    userLocationName ||
+                    "your area"}
+                  :
                 </div>
-                <div className="grid grid-cols-12 gap-0.5 sm:gap-1 text-center">
-                  {[
-                    "Jan",
-                    "Feb",
-                    "Mar",
-                    "Apr",
-                    "May",
-                    "Jun",
-                    "Jul",
-                    "Aug",
-                    "Sep",
-                    "Oct",
-                    "Nov",
-                    "Dec",
-                  ].map((month, index) => {
-                    // Check if the month is in season by comparing with full month names
-                    const fullMonthName = new Date(0, index).toLocaleString(
-                      "default",
-                      { month: "long" },
-                    );
+                <FishingSeasonCalendar
+                  fishingSeasons={fishDetails.fishingSeasons}
+                  fishName={fishDetails.name}
+                  location={fishDetails.fishingLocation || userLocationName}
+                />
 
-                    // Get current month index (0-11)
-                    const currentMonthIndex = new Date().getMonth();
-                    const isCurrentMonth = index === currentMonthIndex;
-
-                    // Debug logging
-                    if (index === 0) {
-                      console.log(
-                        "Checking fishing seasons:",
-                        fishDetails.fishingSeasons,
-                      );
-                      console.log("Current month index:", currentMonthIndex);
-                      console.log("Using mock data?", !result.fishingSeasons);
-                    }
-
-                    const isInSeason = fishDetails.fishingSeasons?.some(
-                      (season) => {
-                        const seasonLower = season.toLowerCase();
-                        const monthLower = month.toLowerCase();
-                        const fullMonthLower = fullMonthName.toLowerCase();
-
-                        // Check for exact match or substring match
-                        const isMatch =
-                          seasonLower === monthLower ||
-                          seasonLower === fullMonthLower ||
-                          seasonLower.includes(monthLower) ||
-                          seasonLower.includes(fullMonthLower);
-
-                        if (isMatch && index === 0) {
-                          console.log(
-                            `Match found for ${month}/${fullMonthName} in season: ${season}`,
-                          );
-                        }
-
-                        return isMatch;
-                      },
-                    ) : false;
-
-                    // Determine the class based on whether it's the current month and in season
-                    let monthClass = "";
-                    if (isCurrentMonth) {
-                      if (isInSeason) {
-                        monthClass =
-                          "bg-green-100 border-green-300 text-green-800 dark:bg-green-900/30 dark:border-green-800 dark:text-green-300";
-                      } else {
-                        monthClass =
-                          "bg-red-100 border-red-300 text-red-800 dark:bg-red-900/30 dark:border-red-800 dark:text-red-300";
-                      }
-                    } else if (isInSeason) {
-                      monthClass =
-                        "bg-blue-100 border-blue-300 text-blue-800 dark:bg-blue-900/30 dark:border-blue-800 dark:text-blue-300";
-                    } else {
-                      monthClass =
-                        "bg-gray-50 border-gray-200 text-gray-500 dark:bg-gray-800/30 dark:border-gray-700 dark:text-gray-400";
-                    }
-
-                    return (
-                      <div
-                        key={month}
-                        className={`py-1 sm:py-2 px-0.5 sm:px-1 rounded-md border text-xs sm:text-sm ${monthClass}`}
-                      >
-                        {month}
+                {/* Debug Section - Show raw data from OpenAI */}
+                {showDebugUI && (
+                  <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <h3 className="text-sm font-semibold text-yellow-700 dark:text-yellow-400 mb-2">
+                      Debug: Raw OpenAI Data
+                    </h3>
+                    <div className="space-y-2 text-xs">
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Official Season Dates (
+                          {fishDetails.fishingLocation ||
+                            userLocationName ||
+                            "Location"}
+                          ):
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.officialSeasonDates || "No data"}
+                          </code>
+                        </div>
                       </div>
-                    );
-                  })}
-                </div>
-                
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Current Season Status:
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.currentSeasonStatus || "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          In Season Array:
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.fishingSeasons?.inSeason
+                              ? JSON.stringify(
+                                  fishDetails.fishingSeasons.inSeason,
+                                  null,
+                                  2,
+                                )
+                              : "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Local Names in{" "}
+                          {fishDetails.fishingLocation ||
+                            userLocationName ||
+                            "Location"}
+                          :
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.localNames
+                              ? JSON.stringify(fishDetails.localNames, null, 2)
+                              : "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Conservation Concerns:
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.fishingSeasons?.conservationConcerns ||
+                              "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Regulations for{" "}
+                          {fishDetails.fishingLocation ||
+                            userLocationName ||
+                            "Location"}
+                          :
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.fishingSeasons?.regulations ||
+                              "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Biological Reasoning:
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.fishingSeasons?.biologicalReasoning ||
+                              "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Array Length:
+                        </span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">
+                          {fishDetails.fishingSeasons?.inSeason?.length || 0}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Array Type:
+                        </span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">
+                          {typeof fishDetails.fishingSeasons?.inSeason}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Fishing Location:
+                        </span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">
+                          {fishDetails.fishingLocation ||
+                            userLocationName ||
+                            "Not specified"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Today's Date:
+                        </span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">
+                          {new Date().toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {/* Reasoning */}
-                {fishDetails.fishingSeasonInfo?.reasoning && (
+                {fishDetails.fishingSeasons?.reasoning && (
                   <div className="mt-4 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">Seasonal Information</h3>
+                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                      Seasonal Information
+                    </h3>
                     <p className="text-xs text-gray-600 dark:text-gray-400">
-                      {fishDetails.fishingSeasonInfo.reasoning}
+                      {fishDetails.fishingSeasons.reasoning}
                     </p>
                   </div>
                 )}

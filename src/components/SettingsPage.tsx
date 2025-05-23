@@ -27,6 +27,7 @@ const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
   const [useImperialUnits, setUseImperialUnits] = useState<boolean>(false);
+  const [showDebugUI, setShowDebugUI] = useState<boolean>(false);
   const [apiStatus, setApiStatus] = useState<{
     connected: boolean;
     model: string;
@@ -55,6 +56,15 @@ const SettingsPage: React.FC = () => {
       // Default to metric units (cm and grams)
       localStorage.setItem("useImperialUnits", "false");
     }
+
+    // Get debug UI preference (default to false if not set)
+    const debugUIPreference = localStorage.getItem("showDebugUI");
+    if (debugUIPreference !== null) {
+      setShowDebugUI(debugUIPreference === "true");
+    } else {
+      // Default to hide debug UI
+      localStorage.setItem("showDebugUI", "false");
+    }
   }, []);
 
   const handleLanguageChange = (value: string) => {
@@ -79,6 +89,15 @@ const SettingsPage: React.FC = () => {
 
     // Dispatch a custom event to notify other components about the units change
     window.dispatchEvent(new Event("unitsChanged"));
+  };
+
+  const handleDebugUIChange = (checked: boolean) => {
+    console.log(`Changing debug UI to: ${checked ? "enabled" : "disabled"}`);
+    setShowDebugUI(checked);
+    localStorage.setItem("showDebugUI", checked.toString());
+
+    // Dispatch a custom event to notify other components about the debug UI change
+    window.dispatchEvent(new Event("debugUIChanged"));
   };
 
   // Function to clear all fish data cache
@@ -272,6 +291,30 @@ const SettingsPage: React.FC = () => {
                     cm/gr
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Debug UI Settings */}
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold">Developer Options</h2>
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <AlertCircle className="h-5 w-5 mr-2 text-gray-600" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-medium">
+                      Show Debug Information
+                    </span>
+                    <span className="text-xs text-gray-500">
+                      Display technical details in fish pages
+                    </span>
+                  </div>
+                </div>
+                <Switch
+                  checked={showDebugUI}
+                  onCheckedChange={handleDebugUIChange}
+                />
               </div>
             </div>
           </div>

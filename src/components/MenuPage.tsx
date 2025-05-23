@@ -254,7 +254,7 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F7F7] lg:pl-64">
+    <div className="flex flex-col min-h-screen bg-[#F7F7F7]">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full">
         <div className="flex items-center">
