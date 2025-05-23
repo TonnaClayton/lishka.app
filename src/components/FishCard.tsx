@@ -39,7 +39,7 @@ const FishCard = ({
       className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full border-0 shadow bg-white rounded-3xl"
       onClick={onClick}
     >
-      <div className="relative w-full aspect-[3/2] overflow-hidden">
+      <div className="relative w-full aspect-[3/2] overflow-hidden max-w-full">
         {/* Using aspect ratio for consistent 3:2 ratio */}
         <img
           src={image}
@@ -59,9 +59,6 @@ const FishCard = ({
             <h3 className="font-inter text-base font-bold text-foreground pr-6 line-clamp-1">
               {name}
             </h3>
-            {localName ? (
-              <p className="text-primary text-xs font-medium">{localName}</p>
-            ) : null}
             <p className="text-muted-foreground text-xs italic">
               {scientificName}
             </p>

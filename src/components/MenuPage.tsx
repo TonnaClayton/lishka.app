@@ -11,6 +11,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Settings,
+  Ruler,
 } from "lucide-react";
 import BottomNav from "./BottomNav";
 import { Button } from "./ui/button";
@@ -32,6 +33,7 @@ interface MenuPageProps {
 const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
   const navigate = useNavigate();
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+  const [useImperialUnits, setUseImperialUnits] = useState<boolean>(false);
   const [apiStatus, setApiStatus] = useState<{
     connected: boolean;
     model: string;
@@ -67,6 +69,15 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
     setTimeout(() => {
       window.location.reload();
     }, 300);
+  };
+
+  const handleUnitsChange = (checked: boolean) => {
+    console.log(`Changing units to: ${checked ? "imperial" : "metric"}`);
+    setUseImperialUnits(checked);
+    localStorage.setItem("useImperialUnits", checked.toString());
+
+    // Dispatch a custom event to notify other components about the units change
+    window.dispatchEvent(new Event("unitsChanged"));
   };
 
   // Function to clear all fish data cache
@@ -243,7 +254,7 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
   );
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F7F7] lg:pl-64">
+    <div className="flex flex-col min-h-screen bg-[#F7F7F7]">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full">
         <div className="flex items-center">
@@ -284,14 +295,53 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
                 <Cloud className="mr-2 h-5 w-5" />
                 Weather
               </Button>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-left"
+                onClick={() => navigate("/settings")}
+              >
+                <Settings className="mr-2 h-5 w-5" />
+                Settings
+              </Button>
             </div>
           </div>
 
           <Separator />
 
-          {/* API and Cache Section - Only visible on mobile */}
-          <div className="lg:hidden">
-            <ApiAndCacheSettings />
+          {/* Unit Measurement Settings - Only visible on mobile */}
+          <div className="lg:hidden space-y-2">
+            <h2 className="text-lg font-semibold">Measurements</h2>
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Ruler className="h-5 w-5 mr-2 text-gray-600" />
+                  <span className="text-sm font-medium">
+                    Select your preferred measurement system
+                  </span>
+                </div>
+                <div className="flex w-[180px] h-10 bg-gray-100 rounded-full p-1 relative overflow-hidden">
+                  <div
+                    className="absolute rounded-full bg-black z-0 top-1 h-[calc(100%-8px)] transition-all duration-300 ease-in-out"
+                    style={{
+                      width: "calc(50% - 8px)",
+                      left: useImperialUnits ? "4px" : "calc(50% + 4px)",
+                    }}
+                  />
+                  <button
+                    className={`flex-1 rounded-full flex items-center justify-center text-sm font-medium z-10 relative transition-colors duration-300 ${useImperialUnits ? "text-white" : "text-gray-500"}`}
+                    onClick={() => handleUnitsChange(true)}
+                  >
+                    in/oz
+                  </button>
+                  <button
+                    className={`flex-1 rounded-full flex items-center justify-center text-sm font-medium z-10 relative transition-colors duration-300 ${!useImperialUnits ? "text-white" : "text-gray-500"}`}
+                    onClick={() => handleUnitsChange(false)}
+                  >
+                    cm/gr
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Settings button for desktop - navigates to settings page */}

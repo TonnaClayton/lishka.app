@@ -6,7 +6,11 @@ import { Switch } from "./ui/switch";
 import { Card } from "./ui/card";
 import { Textarea } from "./ui/textarea";
 import FishCard from "./FishCard";
-import { getPlaceholderFishImage } from "@/lib/fishbase-api";
+import {
+  getPlaceholderFishImage,
+  getFishImageUrlSync,
+} from "@/lib/fish-image-service";
+import { getBlobImage } from "@/lib/blob-storage";
 import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
 import BottomNav from "./BottomNav";
 import TextareaAutosize from "react-textarea-autosize";
@@ -326,6 +330,26 @@ const SearchPage: React.FC = () => {
                                     }
                                     alt={fish.name}
                                     className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      // Try to load from Vercel Blob if available
+                                      if (fish.scientificName) {
+                                        getBlobImage(fish.scientificName)
+                                          .then((blobUrl) => {
+                                            if (blobUrl)
+                                              e.currentTarget.src = blobUrl;
+                                            else
+                                              e.currentTarget.src =
+                                                getPlaceholderFishImage();
+                                          })
+                                          .catch(() => {
+                                            e.currentTarget.src =
+                                              getPlaceholderFishImage();
+                                          });
+                                      } else {
+                                        e.currentTarget.src =
+                                          getPlaceholderFishImage();
+                                      }
+                                    }}
                                   />
                                 </div>
                                 <div className="ml-4">

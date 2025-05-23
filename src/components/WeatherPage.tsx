@@ -91,7 +91,7 @@ const WeatherPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F7F7] dark:bg-background lg:pl-64 max-w-full overflow-hidden">
+    <div className="flex flex-col min-h-screen bg-[#F7F7F7] dark:bg-background max-w-full overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full lg:hidden">
         <div className="flex justify-between items-center">

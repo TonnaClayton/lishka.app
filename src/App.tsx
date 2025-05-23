@@ -12,8 +12,6 @@ import SettingsPage from "./components/SettingsPage";
 import BlobConnectionTest from "./components/BlobConnectionTest";
 import BlobImageUploader from "./components/BlobImageUploader";
 import SafariScrollFix from "./components/SafariScrollFix";
-import AboutPage from "./components/AboutPage";
-// Removed SupabaseConnectionTest import
 
 function App() {
   // Check if we're on the splash page
@@ -57,20 +55,20 @@ function App() {
             className="flex-1 max-w-full h-full flex flex-col overflow-hidden"
             style={{ marginLeft: "var(--sidebar-width)" }}
           >
-            <div className="w-full flex-1 overflow-y-auto p-0 sm:p-4 pb-20 lg:pb-4">
+            <div className="w-full flex-1 overflow-y-auto pb-32 lg:pb-4">
               {/* Add Tempo routes before regular routes */}
               {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}
               <Routes>
                 <Route path="/" element={<HomePage />} />
                 <Route path="/fish/:fishName" element={<FishDetailPage />} />
+                {/* Add a catch-all route for fish names with special characters */}
+                <Route path="/fish/*" element={<FishDetailPage />} />
                 <Route path="/menu" element={<MenuPage />} />
-                <Route path="search" element={<SearchPage />} />
                 <Route path="/search" element={<SearchPage />} />
                 <Route path="/weather" element={<WeatherPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="/blob-test" element={<BlobConnectionTest />} />
                 <Route path="/blob-upload" element={<BlobImageUploader />} />
-                {/* About page removed from routes - only available in storyboard */}
                 {/* Add this to prevent conflicts with Tempo routes */}
                 {import.meta.env.VITE_TEMPO === "true" && (
                   <Route path="/tempobook/*" />

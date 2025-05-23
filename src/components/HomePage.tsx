@@ -7,6 +7,7 @@ import { Button } from "./ui/button";
 import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
 import { getBlobImage } from "@/lib/blob-storage";
 import { getLocalFishName } from "@/lib/fishbase-api";
+import { getFishImageUrl } from "@/lib/fish-image-service";
 import LoadingDots from "./LoadingDots";
 import LocationSetup from "./LocationSetup";
 
@@ -149,10 +150,14 @@ const HomePage: React.FC<HomePageProps> = ({
       // Load images and local names for each fish
       const enhancedFishData = await Promise.all(
         fishData.map(async (fish) => {
-          // Try to get image from Vercel Blob
+          // Try to get image using our image service
           let imageUrl;
           try {
-            imageUrl = await getBlobImage(fish.scientificName);
+            // Use the getFishImageUrl function from fish-image-service
+            imageUrl = await getFishImageUrl(fish.name, fish.scientificName);
+            console.log(
+              `Successfully fetched image for ${fish.name}: ${imageUrl}`,
+            );
           } catch (e) {
             console.error(`Error fetching image for ${fish.name}:`, e);
           }
@@ -206,8 +211,18 @@ const HomePage: React.FC<HomePageProps> = ({
   }, [userLocation]);
 
   const handleFishClick = (fish: FishData) => {
-    // Navigate to fish detail page with fish data
-    navigate(`/fish/${encodeURIComponent(fish.scientificName)}`, {
+    // Use a sanitized version of the name for the URL
+    const sanitizedName = fish.scientificName
+      ? fish.scientificName
+          .replace(/[^a-zA-Z0-9]/g, "-")
+          .replace(/-+/g, "-")
+          .toLowerCase()
+      : fish.name
+          .replace(/[^a-zA-Z0-9]/g, "-")
+          .replace(/-+/g, "-")
+          .toLowerCase();
+
+    navigate(`/fish/${sanitizedName}`, {
       state: { fish },
     });
   };
@@ -244,7 +259,7 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
       </header>
       {/* Main Content */}
-      <div className="flex-1 w-full p-4 lg:p-6 pb-20">
+      <div className="flex-1 w-full p-4 lg:p-6 pb-20 p-4">
         <div className="mb-6">
           <h2 className="text-2xl font-bold mb-1 dark:text-white">
             Fish in{" "}
@@ -287,7 +302,6 @@ const HomePage: React.FC<HomePageProps> = ({
                   key={`${fish.scientificName}-${index}`}
                   name={fish.name}
                   scientificName={fish.scientificName}
-                  localName={fish.localName}
                   habitat={fish.habitat}
                   difficulty={fish.difficulty}
                   season={fish.season}

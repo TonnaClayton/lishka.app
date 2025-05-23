@@ -1,423 +1,663 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
 import BottomNav, { SideNav } from "./BottomNav";
 import WeatherWidgetPro from "./WeatherWidgetPro";
-import { motion } from "framer-motion";
+import { ArrowLeft, AlertCircle } from "lucide-react";
+import FishCard from "./FishCard";
 import {
   handleFishImageError,
   getPlaceholderFishImage,
+  getFishImageUrlSync,
 } from "@/lib/fish-image-service";
-import {
-  ArrowLeft,
-  Fish,
-  Droplet,
-  Calendar,
-  AlertTriangle,
-  Anchor,
-  MapPin,
-  Package,
-  Lightbulb,
-  Book,
-  CheckCircle2,
-  AlertCircle,
-} from "lucide-react";
-
-import { Card, CardContent } from "@/components/ui/card";
+import { getBlobImage } from "@/lib/blob-storage";
+import { getFishImageUrl } from "@/lib/fishbase-api";
 import { Button } from "./ui/button";
-import { Separator } from "./ui/separator";
-import { Badge } from "./ui/badge";
+import { Card } from "./ui/card";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import LoadingDots from "./LoadingDots";
-import {
-  fetchWithRetry,
-  getCachedApiResponse,
-  cacheApiResponse,
-} from "@/lib/api-helpers";
 
-interface FishData {
-  id: string;
+// Fishing Season Calendar Component
+interface FishingSeasonCalendarProps {
+  fishingSeasons?: FishingSeasons;
+  fishName: string;
+  location?: string;
+}
+
+const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
+  fishingSeasons,
+  fishName,
+  location,
+}) => {
+  // Month data
+  const months = [
+    { short: "Jan", full: "January", index: 0 },
+    { short: "Feb", full: "February", index: 1 },
+    { short: "Mar", full: "March", index: 2 },
+    { short: "Apr", full: "April", index: 3 },
+    { short: "May", full: "May", index: 4 },
+    { short: "Jun", full: "June", index: 5 },
+    { short: "Jul", full: "July", index: 6 },
+    { short: "Aug", full: "August", index: 7 },
+    { short: "Sep", full: "September", index: 8 },
+    { short: "Oct", full: "October", index: 9 },
+    { short: "Nov", full: "November", index: 10 },
+    { short: "Dec", full: "December", index: 11 },
+  ];
+
+  const currentMonthIndex = new Date().getMonth();
+
+  // Function to determine if a month is in season
+  const isMonthInSeason = (monthData: {
+    short: string;
+    full: string;
+    index: number;
+  }): boolean => {
+    if (!fishingSeasons?.inSeason || !Array.isArray(fishingSeasons.inSeason)) {
+      console.log(`No fishing seasons data available for ${fishName}`);
+      return false;
+    }
+
+    // Convert all season entries to lowercase for comparison
+    const seasonEntries = fishingSeasons.inSeason
+      .map((season) =>
+        typeof season === "string" ? season.toLowerCase().trim() : "",
+      )
+      .filter((season) => season.length > 0);
+
+    console.log(
+      `Checking month ${monthData.full} against seasons:`,
+      seasonEntries,
+    );
+
+    // If no valid season entries, return false
+    if (seasonEntries.length === 0) {
+      console.log(`No valid season entries found for ${fishName}`);
+      return false;
+    }
+
+    // Check each season entry
+    for (const season of seasonEntries) {
+      console.log(`Processing season entry: "${season}"`);
+
+      // Direct match with full month name
+      if (season === monthData.full.toLowerCase()) {
+        console.log(
+          `✓ Direct match: ${season} === ${monthData.full.toLowerCase()}`,
+        );
+        return true;
+      }
+
+      // Direct match with short month name
+      if (season === monthData.short.toLowerCase()) {
+        console.log(
+          `✓ Short match: ${season} === ${monthData.short.toLowerCase()}`,
+        );
+        return true;
+      }
+
+      // Check if season contains the month name (for entries like "spring", "summer", etc.)
+      if (
+        season.includes(monthData.full.toLowerCase()) ||
+        season.includes(monthData.short.toLowerCase())
+      ) {
+        console.log(
+          `✓ Contains match: ${season} contains ${monthData.full.toLowerCase()}`,
+        );
+        return true;
+      }
+
+      // Handle seasonal terms
+      const seasonalMonths = {
+        spring: [2, 3, 4], // March, April, May
+        summer: [5, 6, 7], // June, July, August
+        autumn: [8, 9, 10], // September, October, November
+        fall: [8, 9, 10], // September, October, November
+        winter: [11, 0, 1], // December, January, February
+      };
+
+      if (seasonalMonths[season]) {
+        if (seasonalMonths[season].includes(monthData.index)) {
+          console.log(`✓ Seasonal match: ${monthData.full} is in ${season}`);
+          return true;
+        }
+      }
+
+      // Handle ranges like "January-March", "Jan-Mar", "March to June", etc.
+      if (season.includes("-") || season.includes(" to ")) {
+        const separator = season.includes("-") ? "-" : " to ";
+        const [startSeason, endSeason] = season
+          .split(separator)
+          .map((s) => s.trim());
+
+        console.log(`Processing range: ${startSeason} to ${endSeason}`);
+
+        // Find start and end month indices
+        const startMonth = months.find(
+          (m) =>
+            m.full.toLowerCase() === startSeason ||
+            m.short.toLowerCase() === startSeason ||
+            m.full.toLowerCase().startsWith(startSeason) ||
+            m.short.toLowerCase().startsWith(startSeason),
+        );
+
+        const endMonth = months.find(
+          (m) =>
+            m.full.toLowerCase() === endSeason ||
+            m.short.toLowerCase() === endSeason ||
+            m.full.toLowerCase().startsWith(endSeason) ||
+            m.short.toLowerCase().startsWith(endSeason),
+        );
+
+        if (startMonth && endMonth) {
+          const startIdx = startMonth.index;
+          const endIdx = endMonth.index;
+          const currentIdx = monthData.index;
+
+          console.log(
+            `Range indices: start=${startIdx}, end=${endIdx}, current=${currentIdx}`,
+          );
+
+          // Handle range that wraps around the year (e.g., Nov-Feb)
+          let inRange = false;
+          if (startIdx <= endIdx) {
+            // Normal range (e.g., Mar-Jun)
+            inRange = currentIdx >= startIdx && currentIdx <= endIdx;
+          } else {
+            // Wrapping range (e.g., Nov-Feb)
+            inRange = currentIdx >= startIdx || currentIdx <= endIdx;
+          }
+
+          if (inRange) {
+            console.log(
+              `✓ Range match: ${monthData.full} is in range ${startSeason}-${endSeason}`,
+            );
+            return true;
+          }
+        } else {
+          console.log(
+            `Could not find months for range: ${startSeason} to ${endSeason}`,
+          );
+        }
+      }
+
+      // Handle comma-separated lists like "March, April, May"
+      if (season.includes(",")) {
+        const monthList = season.split(",").map((m) => m.trim());
+        for (const monthName of monthList) {
+          if (
+            monthName === monthData.full.toLowerCase() ||
+            monthName === monthData.short.toLowerCase() ||
+            monthData.full.toLowerCase().startsWith(monthName) ||
+            monthData.short.toLowerCase().startsWith(monthName)
+          ) {
+            console.log(
+              `✓ List match: ${monthData.full} found in comma-separated list`,
+            );
+            return true;
+          }
+        }
+      }
+    }
+
+    console.log(`✗ No match found for ${monthData.full}`);
+    return false;
+  };
+
+  // Function to get month styling
+  const getMonthStyling = (monthData: {
+    short: string;
+    full: string;
+    index: number;
+  }): string => {
+    const isInSeason = isMonthInSeason(monthData);
+    const isCurrentMonth = monthData.index === currentMonthIndex;
+
+    if (isInSeason && isCurrentMonth) {
+      // Current month and in season - light green
+      return "bg-green-100 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300";
+    } else if (isInSeason) {
+      // In season but not current month - light blue
+      return "bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300";
+    } else if (isCurrentMonth) {
+      // Current month but not in season - light red
+      return "bg-red-50 border-red-200 text-red-600 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300";
+    } else {
+      // Not in season and not current month - light gray
+      return "bg-gray-50 border-gray-200 text-gray-400 dark:bg-gray-800/20 dark:border-gray-700 dark:text-gray-500";
+    }
+  };
+
+  // Debug logging
+  console.log("=== FISHING SEASON CALENDAR DEBUG ===");
+  console.log("Fishing seasons data:", fishingSeasons);
+  console.log("In season array:", fishingSeasons?.inSeason);
+  console.log("Current month index:", currentMonthIndex);
+  console.log("Current month name:", months[currentMonthIndex].full);
+  console.log("=====================================");
+
+  return (
+    <div className="grid grid-cols-12 gap-0.5 sm:gap-1 text-center">
+      {months.map((monthData) => {
+        const styling = getMonthStyling(monthData);
+        const isInSeason = isMonthInSeason(monthData);
+
+        console.log(
+          `Month ${monthData.full}: in-season=${isInSeason}, styling=${styling}`,
+        );
+
+        return (
+          <div
+            key={monthData.short}
+            className={`py-1 sm:py-2 px-0.5 sm:px-1 rounded-md border text-[10px] ${styling}`}
+          >
+            {monthData.short}
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
+interface FishingGear {
+  rods?: string;
+  reels?: string;
+  line?: string;
+  leader?: string;
+  bait?: string[];
+  lures?: string[];
+  hooks?: string;
+  hook_size_range?: string;
+  depth?: string;
+  speed?: string;
+  structure?: string;
+  sonarTips?: string;
+  jigging_technique?: string;
+  technical_details?: string;
+}
+
+interface FishingMethod {
+  title: string;
+  description: string;
+  gear?: FishingGear;
+  proTip?: string;
+}
+
+interface FishingRegulations {
+  sizeLimit: string;
+  bagLimit: string;
+  seasonDates: string;
+  licenseRequired: string;
+  additionalRules: string[];
+  penalties: string;
+  lastUpdated: string;
+}
+
+interface FishingSeasons {
+  inSeason: string[];
+  traditionalSeason: string[];
+  conservationConcerns: string;
+  regulations: string;
+  notInSeason: string[];
+  reasoning: string;
+}
+
+interface FishDetails {
   name: string;
   scientificName: string;
-  image: string;
-  originalImage?: string; // Store the original image URL from navigation
   description: string;
-  habitat: string;
-  difficulty: "Easy" | "Intermediate" | "Advanced" | "Expert";
-  season: string[];
-  isToxic: boolean;
-  toxicityInfo?: string;
-  fishingMethods: string[];
-  regulations: string;
-  locations: string[];
-  bait: string[];
-  gear: string[];
-  proTips: string[];
+  image?: string;
+  fishingMethods?: FishingMethod[];
+  fishingSeasons?: FishingSeasons;
+  fishingRegulations?: FishingRegulations;
+  allRoundGear?: FishingGear;
+  localNames?: string[];
+  currentSeasonStatus?: string;
+  officialSeasonDates?: string;
+  fishingLocation?: string;
 }
 
-interface FishDetailPageProps {
-  fishData?: FishData;
-}
-
-const FishDetailPage: React.FC<FishDetailPageProps> = ({
-  fishData: propsFishData,
-}) => {
+const FishDetailPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { fishName } = useParams<{ fishName: string }>();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<{ message: string; code?: number } | null>(
-    null,
-  );
-  const [fishData, setFishData] = useState<FishData | null>(null);
-  const [apiStatus, setApiStatus] = useState({ connected: false, model: "" });
+  const [error, setError] = useState<string | null>(null);
+  const [fishDetails, setFishDetails] = useState<FishDetails | null>(null);
+  const [userLocationName, setUserLocationName] = useState<string>("");
+  const [showDebugUI, setShowDebugUI] = useState<boolean>(false);
 
-  // Get image from location state if available
-  const imageFromNavigation = location.state?.image;
-  console.log("Image from navigation:", imageFromNavigation);
-
-  // If fishData is provided as a prop, use it directly
   useEffect(() => {
-    if (propsFishData) {
-      setFishData(propsFishData);
-      setLoading(false);
-      return;
+    // Get debug UI preference from localStorage
+    const debugUIPreference = localStorage.getItem("showDebugUI");
+    if (debugUIPreference !== null) {
+      setShowDebugUI(debugUIPreference === "true");
     }
 
-    // Otherwise check cache or fetch from API
-    const fetchFishDetails = async () => {
-      if (!fishName) return;
+    // Listen for debug UI changes
+    const handleDebugUIChange = () => {
+      const newDebugUIPreference = localStorage.getItem("showDebugUI");
+      if (newDebugUIPreference !== null) {
+        setShowDebugUI(newDebugUIPreference === "true");
+      }
+    };
 
-      setLoading(true);
-      setError(null);
+    window.addEventListener("debugUIChanged", handleDebugUIChange);
+
+    return () => {
+      window.removeEventListener("debugUIChanged", handleDebugUIChange);
+    };
+  }, []);
+
+  useEffect(() => {
+    const getFishDetails = async () => {
+      if (!fishName) {
+        setError("No fish name provided");
+        setLoading(false);
+        return;
+      }
 
       try {
-        // Check cache first with timestamp validation
-        const cachedData = localStorage.getItem(
-          `fish_details_${fishName.toLowerCase()}`,
-        );
-        if (cachedData) {
+        const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+        if (!apiKey) throw new Error("OpenAI API key is missing");
+
+        const userLocationData = localStorage.getItem("userLocation");
+        let userLocation = "Unknown Location";
+
+        // Try to parse the location data to get the name
+        if (userLocationData) {
           try {
-            const parsedCache = JSON.parse(cachedData);
-            const cacheTimestamp = localStorage.getItem(
-              `fish_details_${fishName.toLowerCase()}_timestamp`,
-            );
-
-            // Get current date to check if it's the first day of the month
-            const currentDate = new Date();
-            const isFirstDayOfMonth = currentDate.getDate() === 1;
-
-            // Cache is valid for 30 days (2592000000 ms) and not the first day of the month
-            // This ensures we keep cached data longer but still refresh monthly
-            const cacheIsValid =
-              cacheTimestamp &&
-              Date.now() - parseInt(cacheTimestamp) < 2592000000 &&
-              !isFirstDayOfMonth;
-
-            if (cacheIsValid) {
-              console.log("Retrieved fish details from cache:", fishName);
-              setFishData(parsedCache);
-              setLoading(false);
-              return;
-            } else if (isFirstDayOfMonth) {
-              console.log(
-                "First day of month - refreshing data for:",
-                fishName,
-              );
-            } else {
-              console.log("Cache expired for:", fishName);
-            }
-          } catch (cacheError) {
-            console.error("Error parsing cached fish data:", cacheError);
-            // Continue to API call if cache parsing fails
+            const locationObj = JSON.parse(userLocationData);
+            userLocation = locationObj.name || "Unknown Location";
+          } catch {
+            userLocation = userLocationData || "Unknown Location";
           }
         }
 
-        // Import OpenAI toggle
-        const { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } = await import(
-          "@/lib/openai-toggle"
-        );
+        setUserLocationName(userLocation);
+        const currentMonth = new Date().toLocaleString("default", {
+          month: "long",
+        });
 
-        // Check if OpenAI is disabled
-        if (!OPENAI_ENABLED) {
-          console.log(OPENAI_DISABLED_MESSAGE);
+        // Get initial data from navigation state or create default
+        const initialData = location.state?.fish || {
+          name: fishName.replace(/-/g, " "),
+          scientificName: "Unknown",
+          image: await getFishImageUrl(fishName.replace(/-/g, " "), "Unknown"),
+        };
 
-          // Create mock fish details
-          const fishDetails: FishData = {
-            id: "1",
-            name: fishName || "Unknown Fish",
-            scientificName: fishName
-              ? `${fishName.charAt(0).toUpperCase()}${fishName.slice(1).toLowerCase()} species`
-              : "Unknown species",
-            image:
-              imageFromNavigation ||
-              "https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746814934638-lishka-placeholder.png",
-            originalImage: imageFromNavigation,
-            description:
-              "This is a mock description since OpenAI API is currently disabled for troubleshooting. This fish is commonly found in coastal waters and is popular among local anglers.",
-            habitat: "Coastal waters, reefs, and rocky structures",
-            difficulty: "Intermediate",
-            season: ["Spring", "Summer", "Fall"],
-            isToxic: false,
-            fishingMethods: ["Casting", "Trolling", "Bottom fishing"],
-            regulations:
-              "Check local regulations before fishing. OpenAI API is currently disabled for troubleshooting.",
-            locations: ["Nearshore reefs", "Rocky outcroppings", "Jetties"],
-            bait: ["Live minnows", "Soft plastic lures", "Spoons"],
-            gear: ["Medium-action rod", "10-20lb test line", "Circle hooks"],
-            proTips: [
-              "Fish during incoming tides for best results",
-              "Target structure and drop-offs",
-              "Early morning and late evening are prime feeding times",
-            ],
-          };
-
-          // Save to cache with timestamp
-          localStorage.setItem(
-            `fish_details_${fishName?.toLowerCase()}_mock`,
-            JSON.stringify(fishDetails),
-          );
-
-          setFishData(fishDetails);
-          setLoading(false);
-          return;
-        }
-
-        // Check if API key is available
-        const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
-        if (!apiKey) {
-          throw {
-            message:
-              "OpenAI API key is missing. Please add it in project settings.",
-            code: 401,
-          };
-        }
-
-        // Create a cache key for the fish details API request
-        const detailsApiCacheKey = `fish_details_api_${fishName.toLowerCase()}`;
-
-        // Get cached API response if available
-        const cachedApiResponse = getCachedApiResponse(detailsApiCacheKey);
-
-        // Make OpenAI API call with retry logic and rate limiting
-        console.log("Fetching details for fish:", fishName);
-        console.log("OpenAI API key available:", !!apiKey);
-        const response = await fetchWithRetry(
+        // First API call for general fishing information
+        const response = await fetch(
           "https://api.openai.com/v1/chat/completions",
           {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
               Authorization: `Bearer ${apiKey.trim()}`,
-              "OpenAI-Beta": "assistants=v1",
             },
             body: JSON.stringify({
-              model: "gpt-3.5-turbo",
+              model: "gpt-4o",
               messages: [
                 {
                   role: "system",
-                  content:
-                    "You are a fishing expert AI that provides detailed information about fish species.",
+                  content: `You are a fishing expert with detailed knowledge of local fishing regulations, seasonal patterns, and traditional fishing practices worldwide. You adapt your expertise to the specific location provided by the user. Always provide specific, accurate information for the requested location. Return only valid JSON without any additional text or formatting.`,
                 },
                 {
                   role: "user",
-                  content: `Provide detailed information about ${fishName} for a fishing app. Include: scientific name, description, habitat, difficulty level (Easy, Intermediate, Advanced, or Expert), season availability (as an array), whether it's toxic (boolean), fishing methods (array), regulations, best fishing locations (array), recommended bait (array), required gear (array), and pro tips (array). Format as JSON.`,
+                  content: `Provide detailed fishing information for ${initialData.name} in ${userLocation}. Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Return only valid JSON in this exact format:
+
+{
+  "name": "${initialData.name}",
+  "scientificName": "${initialData.scientificName}",
+  "description": "Detailed description of the fish including habitat, behavior, and identification features specific to ${userLocation} waters",
+  "localNames": ["Local names for this fish in ${userLocation} - provide regional/local names if this fish is found in these waters, otherwise return empty array"],
+  "currentSeasonStatus": "Yes, currently in season or No, not currently in season based on today's date and ${userLocation} regulations",
+  "officialSeasonDates": "Official fishing season dates for this species in ${userLocation} or Year-round or No specific season",
+  "fishingLocation": "${userLocation}",
+  "fishingSeasons": {
+    "inSeason": ["List of months when this fish is typically in season in ${userLocation}"],
+    "traditionalSeason": ["Traditional fishing months for this species in ${userLocation}"],
+    "conservationConcerns": "Conservation status and concerns specific to ${userLocation} waters",
+    "regulations": "${userLocation} specific fishing regulations for this species",
+    "biologicalReasoning": "Why this fish is in season during these months in ${userLocation} region",
+    "reasoning": "Explanation of how biology connects to ${userLocation} fishing regulations"
+  },
+  "allRoundGear": {
+    "rods": "Recommended rod specifications for ${userLocation} fishing conditions",
+    "reels": "Reel recommendations for ${userLocation} waters",
+    "line": "Line specifications suitable for ${userLocation} conditions",
+    "leader": "Leader recommendations for ${userLocation} fishing",
+    "description": "General gear setup explanation for ${userLocation} fishing conditions"
+  },
+  "fishingMethods": [
+    {
+      "title": "Primary fishing method for this species in ${userLocation}",
+      "description": "Detailed description of the method adapted to ${userLocation} conditions",
+      "gear": {
+        "rods": "Specific rod requirements for ${userLocation}",
+        "reels": "Reel specifications for ${userLocation} conditions",
+        "line": "Line requirements for ${userLocation} waters",
+        "leader": "Leader setup for ${userLocation} fishing",
+        "bait": ["Effective baits available in ${userLocation}"],
+        "lures": ["Effective lures for ${userLocation} waters"],
+        "depth": "Fishing depth range typical for ${userLocation}",
+        "speed": "Trolling speed if applicable for ${userLocation} conditions",
+        "jig_weight": "Jig weights if applicable for ${userLocation} waters",
+        "jig_size": "Jig sizes if applicable for ${userLocation} fishing"
+      },
+      "proTip": "Local ${userLocation} fishing tip for this species"
+    }
+  ]
+}`,
                 },
               ],
-              response_format: { type: "json_object" },
+              temperature: 0.3,
             }),
           },
-          3, // 3 retries
-          2000, // 2 second initial delay
         );
 
-        if (!response.ok) {
-          const errorCodes = {
-            400: "Bad request - Check your query parameters",
-            401: "Unauthorized - Invalid API key",
-            403: "Forbidden - You don't have access to this resource",
-            404: "Not found - The requested resource doesn't exist",
-            429: "Too many requests - Rate limit exceeded",
-            500: "Server error - Something went wrong on OpenAI's end",
-            502: "Bad gateway - OpenAI is down or being upgraded",
-            503: "Service unavailable - OpenAI is overloaded or down for maintenance",
-            504: "Gateway timeout - The request took too long to process",
-          };
+        // Second API call for detailed regulations
+        const regulationsResponse = await fetch(
+          "https://api.openai.com/v1/chat/completions",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${apiKey.trim()}`,
+            },
+            body: JSON.stringify({
+              model: "gpt-4o",
+              messages: [
+                {
+                  role: "system",
+                  content: `You are a fishing regulations expert with comprehensive knowledge of local fishing laws, size limits, bag limits, and licensing requirements worldwide. Provide accurate, up-to-date regulatory information for the specific location and species requested. Return only valid JSON without any additional text or formatting.`,
+                },
+                {
+                  role: "user",
+                  content: `Provide detailed fishing regulations for ${initialData.name} in ${userLocation}. Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Return only valid JSON in this exact format:
 
-          const errorMessage =
-            errorCodes[response.status] ||
-            `OpenAI API error: ${response.status}`;
-          throw { message: errorMessage, code: response.status };
-        }
+{
+  "sizeLimit": "Minimum and/or maximum size limits for ${initialData.name} in ${userLocation} (e.g., 'Minimum 25cm, Maximum 60cm' or 'No size restrictions' or 'Not specified')",
+  "bagLimit": "Daily bag limit for ${initialData.name} in ${userLocation} (e.g., '5 fish per day' or 'No bag limit' or 'Not specified')",
+  "seasonDates": "Official open/closed season dates for ${initialData.name} in ${userLocation} (e.g., 'Open: May 1 - September 30' or 'Year-round' or 'Check local regulations')",
+  "licenseRequired": "Fishing license requirements in ${userLocation} (e.g., 'Recreational fishing license required' or 'No license required for shore fishing' or 'Commercial license only')",
+  "additionalRules": ["List of additional specific rules for ${initialData.name} in ${userLocation} such as gear restrictions, area closures, catch and release requirements, etc."],
+  "penalties": "Penalties for violations in ${userLocation} (e.g., 'Fines from €50-€500' or 'Varies by violation' or 'Contact local authorities')",
+  "lastUpdated": "When these regulations were last updated or verified (e.g., '2024' or 'Check with local authorities for current regulations')"
+}`,
+                },
+              ],
+              temperature: 0.2,
+            }),
+          },
+        );
+
+        if (!response.ok) throw new Error(`API error: ${response.status}`);
+        if (!regulationsResponse.ok)
+          throw new Error(
+            `Regulations API error: ${regulationsResponse.status}`,
+          );
 
         const data = await response.json();
-        console.log("API response data:", data);
+        const regulationsData = await regulationsResponse.json();
+        // Initialize result with default values to prevent reference errors
+        let result = {
+          description: "No description available.",
+          fishingMethods: [],
+          fishingSeasons: {
+            inSeason: [],
+            traditionalSeason: [],
+            conservationConcerns: "",
+            regulations: "",
+            notInSeason: [],
+            reasoning: "",
+          },
+          allRoundGear: null,
+        };
 
-        // Cache the API response for 24 hours
-        cacheApiResponse(detailsApiCacheKey, data, 24 * 60 * 60 * 1000);
-
-        // Update API status
-        setApiStatus({
-          connected: true,
-          model: data.model || "gpt-3.5-turbo",
-        });
+        let regulationsResult = {
+          sizeLimit: "Not specified",
+          bagLimit: "Not specified",
+          seasonDates: "Check local regulations",
+          licenseRequired: "Check local requirements",
+          additionalRules: [],
+          penalties: "Contact local authorities",
+          lastUpdated: "Unknown",
+        };
 
         try {
-          const parsedContent = JSON.parse(data.choices[0].message.content);
-          console.log("Parsed fish details:", parsedContent);
-
-          // Create fish data object from API response
-          const fishDetails: FishData = {
-            id: "1",
-            name: fishName,
-            scientificName: parsedContent.scientificName || "Unknown",
-            // Use image from navigation state if available, otherwise use placeholder
-            image: imageFromNavigation || getPlaceholderFishImage(),
-            // Store the original image URL in cache to ensure consistency
-            originalImage: imageFromNavigation,
-            description:
-              parsedContent.description || "No description available.",
-            habitat:
-              parsedContent.habitat ||
-              "Coastal waters, reefs, and rocky structures",
-            difficulty: parsedContent.difficulty || "Intermediate",
-            season: Array.isArray(parsedContent.season)
-              ? parsedContent.season
-              : [parsedContent.season || "Year-round"],
-            isToxic:
-              parsedContent.isToxic === true || parsedContent.toxic === true,
-            toxicityInfo: parsedContent.toxicityInfo || "",
-            fishingMethods: Array.isArray(parsedContent.fishingMethods)
-              ? parsedContent.fishingMethods
-              : ["Casting", "Trolling", "Bottom fishing"],
-            regulations:
-              parsedContent.regulations ||
-              "Check local regulations before fishing.",
-            locations: Array.isArray(parsedContent.locations)
-              ? parsedContent.locations
-              : ["Nearshore reefs", "Rocky outcroppings", "Jetties"],
-            bait: Array.isArray(parsedContent.bait)
-              ? parsedContent.bait
-              : ["Live minnows", "Soft plastic lures", "Spoons"],
-            gear: Array.isArray(parsedContent.gear)
-              ? parsedContent.gear
-              : ["Medium-action rod", "10-20lb test line", "Circle hooks"],
-            proTips: Array.isArray(parsedContent.proTips)
-              ? parsedContent.proTips
-              : [
-                  "Fish during incoming tides for best results",
-                  "Target structure and drop-offs",
-                  "Early morning and late evening are prime feeding times",
-                ],
-          };
-
-          // Save to cache with timestamp
-          localStorage.setItem(
-            `fish_details_${fishName.toLowerCase()}`,
-            JSON.stringify(fishDetails),
-          );
-
-          // Add timestamp for cache validation
-          localStorage.setItem(
-            `fish_details_${fishName.toLowerCase()}_timestamp`,
-            Date.now().toString(),
-          );
-
-          setFishData(fishDetails);
+          const content = data.choices[0].message.content.trim();
+          // Remove any markdown formatting if present
+          const cleanContent = content.replace(/```json\n?|```\n?/g, "").trim();
+          result = JSON.parse(cleanContent);
         } catch (parseError) {
-          console.error(
-            "Error parsing fish details:",
-            parseError,
-            data.choices[0].message.content,
-          );
-          throw {
-            message: "Failed to parse fish details from API response",
-            code: 422,
-          };
+          console.error("JSON parse error:", parseError);
+          console.log("Raw content:", data.choices[0].message.content);
+          // Try to fix common JSON issues
+          const fixedContent = data.choices[0].message.content
+            .replace(/\n/g, " ") // Remove newlines
+            .replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Add quotes to property names
+            .replace(/:\s*'([^']*)'/g, ':"$1"'); // Replace single quotes with double quotes
+
+          try {
+            result = JSON.parse(fixedContent);
+            console.log("Fixed JSON parsing successful");
+          } catch (secondError) {
+            console.error("Failed to fix JSON:", secondError);
+            // Don't throw error, use the default values instead
+            console.warn("Using default values due to parsing error");
+          }
         }
+
+        // Parse regulations response
+        try {
+          const regulationsContent =
+            regulationsData.choices[0].message.content.trim();
+          const cleanRegulationsContent = regulationsContent
+            .replace(/```json\n?|```\n?/g, "")
+            .trim();
+          regulationsResult = JSON.parse(cleanRegulationsContent);
+        } catch (parseError) {
+          console.error("Regulations JSON parse error:", parseError);
+          console.log(
+            "Raw regulations content:",
+            regulationsData.choices[0].message.content,
+          );
+          // Try to fix common JSON issues
+          const fixedRegulationsContent =
+            regulationsData.choices[0].message.content
+              .replace(/\n/g, " ")
+              .replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
+              .replace(/:\s*'([^']*)'/g, ':"$1"');
+
+          try {
+            regulationsResult = JSON.parse(fixedRegulationsContent);
+            console.log("Fixed regulations JSON parsing successful");
+          } catch (secondError) {
+            console.error("Failed to fix regulations JSON:", secondError);
+            console.warn(
+              "Using default regulations values due to parsing error",
+            );
+          }
+        }
+
+        // Ensure we have fishing methods array from the API response
+        const fishingMethods = result.fishingMethods || [];
+        console.log(
+          `Received ${fishingMethods.length} fishing methods from API`,
+        );
+
+        // Extract fishing seasons from the API response
+        const fishingSeasons = result.fishingSeasons || {};
+        console.log("=== API RESPONSE DEBUG ===");
+        console.log("Raw API result:", result);
+        console.log("Fishing seasons from API:", fishingSeasons);
+        console.log("inSeason array from API:", fishingSeasons.inSeason);
+        console.log("=========================");
+
+        setFishDetails({
+          ...initialData,
+          description: result.description || "No description available.",
+          fishingMethods: fishingMethods,
+          allRoundGear: result.allRoundGear,
+          fishingSeasons: result.fishingSeasons,
+          fishingRegulations: regulationsResult,
+          localNames: result.localNames || [],
+          currentSeasonStatus: result.currentSeasonStatus || "Status unknown",
+          officialSeasonDates:
+            result.officialSeasonDates || "Dates not available",
+          fishingLocation: result.fishingLocation || userLocation,
+        });
       } catch (err) {
         console.error("Error fetching fish details:", err);
-        setError({
-          message: err.message || "Failed to fetch fish details",
-          code: err.code || 500,
-        });
+        setError(
+          err instanceof Error ? err.message : "Failed to fetch fish details",
+        );
       } finally {
         setLoading(false);
       }
     };
 
-    fetchFishDetails();
-  }, [fishName, propsFishData]);
-
-  const difficultyColor = {
-    Easy: "bg-green-100 text-green-800",
-    Intermediate: "bg-yellow-100 text-yellow-800",
-    Advanced: "bg-orange-100 text-orange-800",
-    Expert: "bg-red-100 text-red-800",
-  };
+    getFishDetails();
+  }, [fishName, location.state]);
 
   if (loading) {
     return (
-      <div className="h-screen overflow-hidden bg-[#F7F7F7] flex">
+      <div className="h-screen bg-white dark:bg-gray-950 flex">
         <SideNav />
-        <div className="flex-1 lg:ml-64 flex flex-col overflow-hidden">
-          <div className="sticky top-0 z-10 bg-white p-4 flex items-center flex-shrink-0">
+        <div className="flex-1 flex flex-col">
+          <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 flex items-center">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-6 w-6" />
             </Button>
-            <h1 className="font-inter text-xl ml-2">Loading...</h1>
+            <h1 className="text-xl ml-2">Loading...</h1>
           </div>
           <div className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <p className="mb-4 text-gray-600">Loading fish details...</p>
-              <LoadingDots color="#0251FB" size={6} />
-            </div>
+            <LoadingDots color="#0251FB" size={6} />
           </div>
         </div>
       </div>
     );
   }
 
-  if (error) {
+  if (error || !fishDetails) {
     return (
-      <div className="h-screen overflow-hidden bg-[#F7F7F7] flex">
+      <div className="h-screen bg-white dark:bg-gray-950 flex">
         <SideNav />
-        <div className="flex-1 lg:ml-64 flex flex-col overflow-hidden">
-          <div className="sticky top-0 z-10 bg-white p-4 shadow-sm flex items-center flex-shrink-0">
+        <div className="flex-1 flex flex-col">
+          <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 flex items-center">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-6 w-6" />
             </Button>
-            <h1 className="font-inter text-xl ml-2">Error</h1>
+            <h1 className="text-xl ml-2">Error</h1>
           </div>
-          <div className="p-4 flex-1 overflow-y-auto">
-            <Alert variant="destructive" className="mb-6">
+          <div className="p-4">
+            <Alert variant="destructive">
               <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Error {error.code}</AlertTitle>
-              <AlertDescription className="text-gray-700">
-                {error.message}
+              <AlertTitle>Error</AlertTitle>
+              <AlertDescription>
+                {error || "Fish details not found"}
               </AlertDescription>
             </Alert>
-            <Button onClick={() => navigate(-1)} className="w-full mt-4">
-              Go Back
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!fishData) {
-    return (
-      <div className="h-screen overflow-hidden bg-[#F7F7F7] flex">
-        <SideNav />
-        <div className="flex-1 lg:ml-64 flex flex-col overflow-hidden">
-          <div className="sticky top-0 z-10 bg-white p-4 shadow-sm flex items-center flex-shrink-0">
-            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-6 w-6" />
-            </Button>
-            <h1 className="font-inter text-xl ml-2">Not Found</h1>
-          </div>
-          <div className="p-4 text-center flex-1 overflow-y-auto">
-            <p className="text-gray-600">Fish details not found.</p>
             <Button onClick={() => navigate(-1)} className="mt-4">
               Go Back
             </Button>
@@ -428,239 +668,889 @@ const FishDetailPage: React.FC<FishDetailPageProps> = ({
   }
 
   return (
-    <div className="h-screen overflow-hidden bg-[#F7F7F7] flex">
-      {/* Side Navigation - Hidden on mobile, visible on desktop */}
+    <div className="h-screen bg-white dark:bg-gray-950 flex">
       <SideNav />
-      {/* Main Content */}
-      <div className="flex-1 lg:ml-64 flex overflow-hidden">
-        <div className="flex-1 w-full lg:max-w-[calc(100%-380px)] flex flex-col overflow-hidden">
+      <div className="flex-1 flex">
+        <div className="flex-1 w-full lg:max-w-[calc(100%-380px)] flex flex-col">
           {/* Header */}
-          <div className="sticky top-0 z-10 bg-white p-4 shadow-sm flex items-center w-full flex-shrink-0">
+          <div className="sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 shadow-sm flex items-center">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-6 w-6" />
             </Button>
-            <h1 className="font-inter text-xl ml-2">{fishData.name}</h1>
+            <h1 className="text-xl ml-2">{fishDetails.name}</h1>
           </div>
-          {/* Fish Image Card */}
 
-          <div className="p-4 space-y-4 flex-1 overflow-y-auto">
-            {/* Info Card */}
-            <Card className="overflow-hidden mb-4">
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-4 space-y-6">
+            {/* Fish Image Card */}
+            <Card className="overflow-hidden rounded-3xl">
               <div className="relative w-full" style={{ aspectRatio: "3/2" }}>
                 <img
-                  src={
-                    fishData.originalImage ||
-                    fishData.image ||
-                    "https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746814934638-lishka-placeholder.png"
-                  }
-                  alt={fishData.name}
+                  src={fishDetails.image}
+                  alt={fishDetails.name}
                   className="w-full h-full object-cover absolute top-0 left-0"
-                  onError={(e) => handleFishImageError(e, fishData.name)}
+                  onError={(e) => {
+                    if (fishDetails.scientificName) {
+                      getBlobImage(fishDetails.scientificName)
+                        .then((blobUrl) => {
+                          if (blobUrl) e.currentTarget.src = blobUrl;
+                          else handleFishImageError(e, fishDetails.name);
+                        })
+                        .catch(() => handleFishImageError(e, fishDetails.name));
+                    } else {
+                      handleFishImageError(e, fishDetails.name);
+                    }
+                  }}
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                  <h1 className="font-inter font-bold text-2xl text-white">
-                    {fishData.name}
+                  <h1 className="font-semibold text-xl text-white">
+                    {fishDetails.name}
                   </h1>
-                  <p className="text-white/80 text-sm italic">
-                    {fishData.scientificName}
+                  <p className="text-white/80 text-xs italic">
+                    {fishDetails.scientificName}
                   </p>
                 </div>
+                <div className="absolute -bottom-4 left-0 right-0 h-4 bg-red-600"></div>
               </div>
             </Card>
-            <Card className="overflow-hidden">
-              <CardContent className="pt-6">
-                <h3 className="font-semibold flex items-center">
-                  <Fish className="h-5 w-5 mr-2 text-[#0251FB]" />
-                  Description
-                </h3>
-                <p className="mt-2 text-sm text-gray-700 break-words">
-                  {fishData.description}
-                </p>
 
-                <Separator className="my-4" />
+            {/* Description Card */}
+            <Card className="p-6 rounded-3xl">
+              <h2 className="text-xl font-semibold mb-4">About this Fish</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+                {fishDetails.description}
+              </p>
+            </Card>
 
-                <h3 className="font-semibold flex items-center">
-                  <Droplet className="h-5 w-5 mr-2 text-[#0251FB]" />
-                  Habitat
-                </h3>
-                <p className="mt-2 text-sm text-gray-700 break-words">
-                  {fishData.habitat}
-                </p>
-
-                <Separator className="my-4" />
-
-                <h3 className="font-semibold flex items-center">
-                  <Calendar className="h-5 w-5 mr-2 text-[#0251FB]" />
-                  Season
-                </h3>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {fishData.season.map((season, index) => (
-                    <Badge key={index} variant="outline">
-                      {season}
-                    </Badge>
-                  ))}
+            {/* Fishing Regulations Card */}
+            {fishDetails.fishingRegulations && (
+              <Card className="p-4 sm:p-6 rounded-3xl">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-xl font-semibold">Fishing Regulations</h2>
+                  <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
+                    <svg
+                      className="w-4 h-4 mr-1"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                    </svg>
+                    {fishDetails.fishingLocation ||
+                      userLocationName ||
+                      "Location not specified"}
+                  </div>
                 </div>
 
-                <Separator className="my-4" />
-
-                <h3 className="font-semibold flex items-center">
-                  <AlertTriangle className="h-5 w-5 mr-2 text-[#0251FB]" />
-                  Toxicity
-                </h3>
-                <div className="mt-2">
-                  {fishData.isToxic ? (
-                    <div className="bg-destructive/10 border border-destructive/30 text-destructive p-3 rounded-md text-sm break-words">
-                      <p className="font-semibold">
-                        Warning: This fish may be toxic
-                      </p>
-                      {fishData.toxicityInfo && (
-                        <p className="mt-1">{fishData.toxicityInfo}</p>
-                      )}
+                <div className="space-y-4">
+                  {/* Size Limit */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0 mt-0.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-black dark:text-gray-300"
+                      >
+                        <path d="M3 6h18" />
+                        <path d="M7 12h10" />
+                        <path d="M10 18h4" />
+                      </svg>
                     </div>
-                  ) : (
-                    <p className="text-sm text-gray-700 break-words">
-                      This fish is generally safe to handle and consume when
-                      properly prepared.
-                    </p>
-                  )}
+                    <div className="flex flex-col">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                        Size Limit
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {fishDetails.fishingRegulations.sizeLimit}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Bag Limit */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0 mt-0.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-black dark:text-gray-300"
+                      >
+                        <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10 6a2 2 0 0 1 4 0v1h-4V6zm8 15a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v12z" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                        Bag Limit
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {fishDetails.fishingRegulations.bagLimit}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Season Dates */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0 mt-0.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-black dark:text-gray-300"
+                      >
+                        <rect
+                          x="3"
+                          y="4"
+                          width="18"
+                          height="18"
+                          rx="2"
+                          ry="2"
+                        />
+                        <line x1="16" y1="2" x2="16" y2="6" />
+                        <line x1="8" y1="2" x2="8" y2="6" />
+                        <line x1="3" y1="10" x2="21" y2="10" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                        Season Dates
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {fishDetails.fishingRegulations.seasonDates}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* License Required */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0 mt-0.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-black dark:text-gray-300"
+                      >
+                        <rect
+                          x="2"
+                          y="3"
+                          width="20"
+                          height="14"
+                          rx="2"
+                          ry="2"
+                        />
+                        <line x1="8" y1="21" x2="16" y2="21" />
+                        <line x1="12" y1="17" x2="12" y2="21" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                        License Required
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {fishDetails.fishingRegulations.licenseRequired}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Additional Rules */}
+                  {fishDetails.fishingRegulations.additionalRules &&
+                    fishDetails.fishingRegulations.additionalRules.length >
+                      0 && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 flex-shrink-0 mt-0.5">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-black dark:text-gray-300"
+                          >
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                          </svg>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                            Additional Rules
+                          </span>
+                          <ul className="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1">
+                            {fishDetails.fishingRegulations.additionalRules.map(
+                              (rule, index) => (
+                                <li key={index} className="text-sm">
+                                  {rule}
+                                </li>
+                              ),
+                            )}
+                          </ul>
+                        </div>
+                      </div>
+                    )}
+
+                  {/* Penalties */}
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0 mt-0.5">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-black dark:text-gray-300"
+                      >
+                        <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                        <path d="M2 17l10 5 10-5" />
+                        <path d="M2 12l10 5 10-5" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                        Penalties
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {fishDetails.fishingRegulations.penalties}
+                      </span>
+                    </div>
+                  </div>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Fish Image Card */}
-
-            {/* Fishing Methods Card */}
-            <Card className="overflow-hidden">
-              <CardContent className="pt-6">
-                <div className="mb-4">
-                  <Badge className={difficultyColor[fishData.difficulty]}>
-                    {fishData.difficulty} Difficulty
-                  </Badge>
-                </div>
-
-                <h3 className="font-semibold flex items-center">
-                  <Anchor className="h-5 w-5 mr-2 text-[#0251FB]" />
-                  Best Fishing Methods
-                </h3>
-                <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 break-words">
-                  {fishData.fishingMethods.map((method, index) => (
-                    <li key={index} className="mb-2">
-                      {method}
-                    </li>
-                  ))}
-                </ul>
-
-                <Separator className="my-4" />
-
-                <h3 className="font-semibold flex items-center">
-                  <MapPin className="h-5 w-5 mr-2 text-[#0251FB]" />
-                  Best Locations
-                </h3>
-                <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 break-words">
-                  {fishData.locations.map((location, index) => (
-                    <li key={index} className="mb-2">
-                      {location}
-                    </li>
-                  ))}
-                </ul>
-
-                <Separator className="my-4" />
-
-                <h3 className="font-semibold flex items-center">
-                  <Fish className="h-5 w-5 mr-2 text-[#0251FB]" />
-                  Recommended Bait
-                </h3>
-                <div className="mt-2 flex flex-wrap gap-2">
-                  {fishData.bait.map((bait, index) => (
-                    <Badge key={index} variant="outline">
-                      {bait}
-                    </Badge>
-                  ))}
-                </div>
-
-                <Separator className="my-4" />
-
-                <h3 className="font-semibold flex items-center">
-                  <Package className="h-5 w-5 mr-2 text-[#0251FB]" />
-                  Required Gear
-                </h3>
-                <ul className="mt-2 list-disc pl-5 text-sm text-gray-700 break-words">
-                  {fishData.gear.map((gear, index) => (
-                    <li key={index} className="mb-2">
-                      {gear}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
-
-            {/* Tips Card */}
-            <Card className="overflow-hidden">
-              <CardContent className="pt-6">
-                <h3 className="font-semibold flex items-center">
-                  <Lightbulb className="h-5 w-5 mr-2 text-[#0251FB]" />
-                  Pro Tips
-                </h3>
-                <ul className="mt-2 list-disc pl-5 text-sm text-muted-foreground break-words">
-                  {fishData.proTips.map((tip, index) => (
-                    <li key={index} className="mb-2">
-                      {tip}
-                    </li>
-                  ))}
-                </ul>
-
-                <Separator className="my-4" />
-
-                <h3 className="font-semibold flex items-center">
-                  <Book className="h-5 w-5 mr-2 text-[#0251FB]" />
-                  Regulations
-                </h3>
-                <div className="mt-2 bg-info/10 border border-info/30 p-3 rounded-md text-sm break-words">
-                  <p className="text-info/90">{fishData.regulations}</p>
-                  <p className="mt-2 text-xs text-info/70">
-                    Always check current local regulations before fishing as
-                    they may change.
+                {/* Last Updated */}
+                <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    Last updated: {fishDetails.fishingRegulations.lastUpdated}
+                  </p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    Always verify current regulations with local authorities
+                    before fishing.
                   </p>
                 </div>
-              </CardContent>
+              </Card>
+            )}
+
+            {/* Fishing Season Calendar Card */}
+            <Card className="p-4 sm:p-6 rounded-3xl">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-semibold">Fishing Season</h2>
+                <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
+                  <svg
+                    className="w-4 h-4 mr-1"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                    />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                  </svg>
+                  {fishDetails.fishingLocation ||
+                    userLocationName ||
+                    "Location not specified"}
+                </div>
+              </div>
+              <div className="mt-4">
+                <div className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+                  Best months to catch {fishDetails.name} in{" "}
+                  {fishDetails.fishingLocation ||
+                    userLocationName ||
+                    "your area"}
+                  :
+                </div>
+                <FishingSeasonCalendar
+                  fishingSeasons={fishDetails.fishingSeasons}
+                  fishName={fishDetails.name}
+                  location={fishDetails.fishingLocation || userLocationName}
+                />
+
+                {/* Debug Section - Show raw data from OpenAI */}
+                {showDebugUI && (
+                  <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
+                    <h3 className="text-sm font-semibold text-yellow-700 dark:text-yellow-400 mb-2">
+                      Debug: Raw OpenAI Data
+                    </h3>
+                    <div className="space-y-2 text-xs">
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Official Season Dates (
+                          {fishDetails.fishingLocation ||
+                            userLocationName ||
+                            "Location"}
+                          ):
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.officialSeasonDates || "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Current Season Status:
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.currentSeasonStatus || "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          In Season Array:
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.fishingSeasons?.inSeason
+                              ? JSON.stringify(
+                                  fishDetails.fishingSeasons.inSeason,
+                                  null,
+                                  2,
+                                )
+                              : "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Local Names in{" "}
+                          {fishDetails.fishingLocation ||
+                            userLocationName ||
+                            "Location"}
+                          :
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.localNames
+                              ? JSON.stringify(fishDetails.localNames, null, 2)
+                              : "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Conservation Concerns:
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.fishingSeasons?.conservationConcerns ||
+                              "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Regulations for{" "}
+                          {fishDetails.fishingLocation ||
+                            userLocationName ||
+                            "Location"}
+                          :
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.fishingSeasons?.regulations ||
+                              "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Biological Reasoning:
+                        </span>
+                        <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
+                          <code className="text-gray-800 dark:text-gray-200">
+                            {fishDetails.fishingSeasons?.biologicalReasoning ||
+                              "No data"}
+                          </code>
+                        </div>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Array Length:
+                        </span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">
+                          {fishDetails.fishingSeasons?.inSeason?.length || 0}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Array Type:
+                        </span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">
+                          {typeof fishDetails.fishingSeasons?.inSeason}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Fishing Location:
+                        </span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">
+                          {fishDetails.fishingLocation ||
+                            userLocationName ||
+                            "Not specified"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="font-medium text-yellow-700 dark:text-yellow-400">
+                          Today's Date:
+                        </span>
+                        <span className="ml-2 text-gray-600 dark:text-gray-400">
+                          {new Date().toLocaleDateString("en-GB", {
+                            day: "numeric",
+                            month: "long",
+                            year: "numeric",
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Reasoning */}
+                {fishDetails.fishingSeasons?.reasoning && (
+                  <div className="mt-4 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                    <h3 className="text-base font-medium text-gray-700 dark:text-gray-300">
+                      Seasonal Information
+                    </h3>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      {fishDetails.fishingSeasons.reasoning}
+                    </p>
+                  </div>
+                )}
+              </div>
             </Card>
 
-            <div className="mt-6 mb-4">
-              <Button className="w-full rounded-full bg-[#0251FB] hover:bg-[#0251FB]/90">
-                Find Nearby Fishing Spots
-              </Button>
-            </div>
+            {/* All Round Gear Card */}
+            {fishDetails.allRoundGear && (
+              <Card className="p-6 rounded-3xl">
+                <h2 className="text-xl font-semibold mb-4">All Round Gear</h2>
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-gray-700 dark:text-gray-300"
+                      >
+                        <path d="M3 3h6l2 4h10v3M3 3v18M3 3H2m1 0h1" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                        Rods
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {fishDetails.allRoundGear.rods}
+                      </span>
+                    </div>
+                  </div>
 
-            {/* API Status Message */}
-            {apiStatus.connected && (
-              <Alert variant="success" className="mb-4">
-                <CheckCircle2 className="h-4 w-4 text-success" />
-                <AlertTitle>Connected to OpenAI</AlertTitle>
-                <AlertDescription>
-                  Using model: {apiStatus.model}
-                </AlertDescription>
-              </Alert>
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-gray-700 dark:text-gray-300"
+                      >
+                        <circle cx="12" cy="12" r="8" />
+                        <path d="M12 8v8M8 12h8" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                        Reels
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {fishDetails.allRoundGear.reels}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-gray-700 dark:text-gray-300"
+                      >
+                        <path d="M4 12h16M4 12l2 3M4 12l2-3M20 12l-2 3m2-3l-2-3" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                        Line
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {fishDetails.allRoundGear.line}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex items-start gap-3">
+                    <div className="w-6 flex-shrink-0">
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        className="text-gray-700 dark:text-gray-300"
+                      >
+                        <path d="M12 22c-4.4 0-8-3.6-8-8s3.6-8 8-8" />
+                        <path d="M20 14c0-4.4-3.6-8-8-8s-8 3.6-8 8" />
+                      </svg>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                        Leader
+                      </span>
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
+                        {fishDetails.allRoundGear.leader}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
+                      {fishDetails.allRoundGear.description}
+                    </p>
+                  </div>
+                </div>
+              </Card>
+            )}
+
+            {/* Fishing Methods */}
+            {fishDetails.fishingMethods &&
+            fishDetails.fishingMethods.length > 0 ? (
+              fishDetails.fishingMethods.map((method, index) => (
+                <div
+                  key={index}
+                  className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 mb-6 space-y-6"
+                >
+                  <h2 className="text-xl font-semibold">{method.title}</h2>
+
+                  {/* Location */}
+                  <div className="flex flex-col space-y-6">
+                    <div className="flex items-start gap-3">
+                      <div className="w-6 flex-shrink-0">
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className="text-gray-700 dark:text-gray-300"
+                        >
+                          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                          Location
+                        </span>
+                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                          {method.gear?.depth || "Not specified"}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Bait/Lures */}
+                    {(method.gear?.bait || method.gear?.lures) && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 flex-shrink-0">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-gray-700 dark:text-gray-300"
+                          >
+                            <path d="M16 8l2 2v2l2 2v4a2 2 0 0 1-2 2h-3.1c-.5 0-.9-.1-1.3-.4l-1.1-.8c-.4-.3-.8-.4-1.3-.4h-2.6c-.5 0-.9.1-1.3.4l-1.1.8c-.4.3-.8.4-1.3.4H2a2 2 0 0 1-2-2v-4l2-2V8l2-2 1.06.53a6.01 6.01 0 0 1 5.88 0L16 8z" />
+                          </svg>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                            {method.title.toLowerCase().includes("jig")
+                              ? "Jigs"
+                              : method.title.toLowerCase().includes("troll")
+                                ? "Lures"
+                                : method.gear?.bait
+                                  ? "Bait"
+                                  : "Lures"}
+                          </span>
+                          <span className="text-sm text-gray-600 dark:text-gray-300">
+                            {method.gear?.bait
+                              ? method.gear.bait.join(", ")
+                              : method.gear?.lures?.join(", ")}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Speed */}
+                    {method.gear?.speed && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 flex-shrink-0">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-gray-700 dark:text-gray-300"
+                          >
+                            <path d="M3 10l2.8-1.4a4 4 0 0 1 3.6-.1l7.4 3.7a4 4 0 0 0 3.6.1l.6-.3" />
+                            <path d="M3 6l2.8-1.4a4 4 0 0 1 3.6-.1l7.4 3.7a4 4 0 0 0 3.6.1l.6-.3" />
+                            <path d="M14 14l1-3h3l1-4h2l1-4" />
+                            <path d="M5 18a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
+                            <path d="M19 18a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
+                          </svg>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                            Speed
+                          </span>
+                          <span className="text-sm text-gray-600 dark:text-gray-300">
+                            {method.gear.speed}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Jig Weight - Show for jigging methods */}
+                    {method.gear?.jig_weight &&
+                      method.title.toLowerCase().includes("jig") && (
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 flex-shrink-0">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="text-gray-700 dark:text-gray-300"
+                            >
+                              <path d="M12 2v20M2 12h20M12 9v0M12 15v0" />
+                            </svg>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                              Jig Weight
+                            </span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">
+                              {method.gear.jig_weight}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Jig Size - Show for jigging methods */}
+                    {method.gear?.jig_size &&
+                      method.title.toLowerCase().includes("jig") && (
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 flex-shrink-0">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="text-gray-700 dark:text-gray-300"
+                            >
+                              <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                            </svg>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                              Jig Size
+                            </span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">
+                              {method.gear.jig_size}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Hooks - Only show for bottom fishing methods */}
+                    {method.gear?.hooks &&
+                      method.title.toLowerCase().includes("bottom") && (
+                        <div className="flex items-start gap-3">
+                          <div className="w-6 flex-shrink-0">
+                            <svg
+                              xmlns="http://www.w3.org/2000/svg"
+                              viewBox="0 0 24 24"
+                              fill="none"
+                              stroke="currentColor"
+                              strokeWidth="2"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              className="text-gray-700 dark:text-gray-300"
+                            >
+                              <path d="M12 9v12m0 0c-1.5 0-3-1.5-3-3" />
+                              <path d="M12 21c1.5 0 3-1.5 3-3" />
+                              <path d="M12 3c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6z" />
+                            </svg>
+                          </div>
+                          <div className="flex flex-col">
+                            <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                              Hooks
+                            </span>
+                            <span className="text-sm text-gray-600 dark:text-gray-300">
+                              {method.gear.hooks}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+
+                    {/* Hook Size Range - Show whenever available */}
+                    {method.gear?.hook_size_range && (
+                      <div className="flex items-start gap-3">
+                        <div className="w-6 flex-shrink-0">
+                          <svg
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="text-gray-700 dark:text-gray-300"
+                          >
+                            <path d="M3 6h18" />
+                            <path d="M7 12h10" />
+                            <path d="M10 18h4" />
+                          </svg>
+                        </div>
+                        <div className="flex flex-col">
+                          <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                            Hook Size Range
+                          </span>
+                          <span className="text-sm text-gray-600 dark:text-gray-300">
+                            {method.gear.hook_size_range}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                    {method.description}
+                  </p>
+
+                  {/* Technical Details */}
+                  {method.technical_details && (
+                    <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
+                      <h4 className="font-medium text-base text-blue-700 dark:text-blue-400 mb-1">
+                        Technical Details
+                      </h4>
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
+                        {method.technical_details}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Pro Tip */}
+                  {method.proTip && (
+                    <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
+                      <h3 className="font-medium text-base text-gray-900 dark:text-gray-100 mb-2">
+                        Pro Tip
+                      </h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                        {method.proTip}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              ))
+            ) : (
+              <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 mb-6">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
+                  No fishing methods available for this fish.
+                </p>
+              </div>
             )}
           </div>
         </div>
 
-        {/* Weather Widget Sidebar */}
-        <div className="hidden lg:block w-80 min-w-[380px] h-screen border-l border-gray-200 bg-[#F7F7F7] overflow-hidden">
-          <div className="h-full flex flex-col">
-            <h2 className="text-xl font-semibold mb-4 flex-shrink-0 pt-4 px-4 dark:text-white">
-              Weather
-            </h2>
-            <div className="flex-1 overflow-y-auto px-4">
-              {localStorage.getItem("userLocation") && (
-                <WeatherWidgetPro
-                  userLocation={JSON.parse(
-                    localStorage.getItem("userLocation") || "{}",
-                  )}
-                />
-              )}
-            </div>
+        {/* Weather Widget */}
+        <div className="hidden lg:block w-80 min-w-[380px] h-screen border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 overflow-hidden">
+          <div className="h-full overflow-y-auto">
+            <WeatherWidgetPro />
           </div>
         </div>
+      </div>
+
+      {/* Bottom Navigation - Mobile only */}
+      <div className="lg:hidden">
+        <BottomNav />
       </div>
     </div>
   );
