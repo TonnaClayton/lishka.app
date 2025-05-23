@@ -55,6 +55,18 @@ export async function fetchWithRetry(
         try {
           const errorText = await response.text();
           console.error(`Error response: ${errorText}`);
+          // Parse error response if possible
+          try {
+            const errorJson = JSON.parse(errorText);
+            console.error("Parsed error:", errorJson);
+            if (errorJson.error) {
+              throw new Error(
+                `OpenAI API Error: ${errorJson.error.message || errorJson.error}`,
+              );
+            }
+          } catch (parseError) {
+            console.error("Could not parse error response as JSON");
+          }
         } catch (e) {
           console.error("Could not read error response body");
         }

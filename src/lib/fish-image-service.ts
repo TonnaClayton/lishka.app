@@ -5,42 +5,6 @@
 import { getBlobImage } from "./blob-storage";
 
 /**
- * Custom database of high-quality fish images
- */
-const fishImageDatabase: Record<string, string> = {
-  // Atlantic Salmon
-  salmosalar:
-    "https://images.unsplash.com/photo-1574155376612-bfa4ed8aabfd?w=800&q=90",
-  // Bluefin Tuna
-  thunnusthynnus:
-    "https://images.unsplash.com/photo-1531930961374-8db90742096e?w=800&q=90",
-  // European Seabass
-  dicentrarchuslabrax:
-    "https://images.unsplash.com/photo-1544943910-4268335342e0?w=800&q=90",
-  // Gilthead Seabream
-  sparusaurata:
-    "https://images.unsplash.com/photo-1534043464124-3be32fe000c9?w=800&q=90",
-};
-
-/**
- * Gets an image from custom database
- */
-export function getCustomFishImage(scientificName: string): string | null {
-  if (!scientificName) return null;
-
-  // Normalize the scientific name
-  const normalizedName = scientificName.toLowerCase().replace(/\s+/g, "");
-
-  // Check if we have this fish in our database
-  if (fishImageDatabase[normalizedName]) {
-    console.log(`Found custom image for ${scientificName}`);
-    return fishImageDatabase[normalizedName];
-  }
-
-  return null;
-}
-
-/**
  * Gets a placeholder image URL for a fish
  */
 export function getPlaceholderFishImage(): string {
@@ -56,7 +20,7 @@ export async function getFishImageUrl(
 ): Promise<string> {
   console.log(`Fetching image for ${name} (${scientificName})`);
 
-  // First try Vercel Blob storage
+  // Try Vercel Blob storage
   try {
     console.log(`Checking Vercel Blob for image of ${scientificName}`);
     const blobImage = await getBlobImage(scientificName);
@@ -72,15 +36,21 @@ export async function getFishImageUrl(
     console.error("Error getting Vercel Blob image:", error);
   }
 
-  // Try custom database next
-  const customImage = getCustomFishImage(scientificName);
-  if (customImage) {
-    console.log(`Found custom image for ${scientificName}: ${customImage}`);
-    return customImage;
-  }
-
   // Fall back to placeholder image
   console.log(`Using placeholder image for ${name} (${scientificName})`);
+  return getPlaceholderFishImage();
+}
+
+/**
+ * Synchronous version of getFishImageUrl that returns a placeholder image
+ * This is used in non-async contexts where we can't use await
+ */
+export function getFishImageUrlSync(
+  name?: string,
+  scientificName?: string,
+): string {
+  // Always return placeholder for sync version
+  // The async version should be used when possible to get actual images
   return getPlaceholderFishImage();
 }
 

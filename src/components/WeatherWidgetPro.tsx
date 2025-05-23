@@ -1,4 +1,9 @@
 import React, { useEffect, useState, useRef } from "react";
+import {
+  formatTemperature,
+  formatSpeed,
+  formatDistance,
+} from "@/lib/unit-conversion";
 
 // Add global type for window.mapSelectionState
 declare global {
@@ -183,6 +188,20 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
       );
       map.setView([lat, lng], 15);
     }
+  }, [map]);
+
+  // Listen for unit changes
+  useEffect(() => {
+    const handleUnitsChange = () => {
+      // Force re-render when units change
+      console.log("Units changed, updating map display");
+      if (map) map.invalidateSize();
+    };
+
+    window.addEventListener("unitsChanged", handleUnitsChange);
+    return () => {
+      window.removeEventListener("unitsChanged", handleUnitsChange);
+    };
   }, [map]);
 
   // Function to handle map click and set marker
@@ -1208,7 +1227,9 @@ const WeatherWidget: React.FC<{
         >
           <MapPin className="h-5 w-5 mr-1" />
           <span className="font-medium">
-            {location?.name || "Unknown Location"}
+            {typeof location?.name === "string"
+              ? location.name.replace(/^"|"$/g, "")
+              : "Unknown Location"}
           </span>
         </Button>
         <Button
@@ -1401,25 +1422,31 @@ const WeatherWidget: React.FC<{
           <div className="flex items-baseline">
             <span className="text-6xl font-bold">
               {weatherData?.current?.temperature_2m !== undefined
-                ? `${Math.round(weatherData.current.temperature_2m)}°`
+                ? formatTemperature(weatherData.current.temperature_2m).split(
+                    " ",
+                  )[0]
                 : currentConditions.temperature !== null
-                  ? `${Math.round(currentConditions.temperature)}°`
+                  ? formatTemperature(currentConditions.temperature).split(
+                      " ",
+                    )[0]
                   : "-"}
             </span>
           </div>
           <p className="text-sm mt-2 opacity-90">
             Feels like{" "}
             {weatherData?.current?.apparent_temperature !== undefined
-              ? `${Math.round(weatherData.current.apparent_temperature)}°`
+              ? formatTemperature(
+                  weatherData.current.apparent_temperature,
+                ).split(" ")[0]
               : currentConditions.temperature !== null
-                ? `${Math.round(currentConditions.temperature)}°`
+                ? formatTemperature(currentConditions.temperature).split(" ")[0]
                 : "-"}
             <br />
             {weatherData?.daily?.temperature_2m_max &&
             weatherData?.daily?.temperature_2m_min
-              ? `Today: ${Math.round(weatherData.daily.temperature_2m_min[0])}° to ${Math.round(weatherData.daily.temperature_2m_max[0])}°`
+              ? `Today: ${formatTemperature(weatherData.daily.temperature_2m_min[0]).split(" ")[0]} to ${formatTemperature(weatherData.daily.temperature_2m_max[0]).split(" ")[0]}`
               : temperatures && temperatures.length > 0
-                ? `Today: ${Math.round(Math.min(...temperatures.slice(0, 24)))}° to ${Math.round(Math.max(...temperatures.slice(0, 24)))}°`
+                ? `Today: ${formatTemperature(Math.min(...temperatures.slice(0, 24))).split(" ")[0]} to ${formatTemperature(Math.max(...temperatures.slice(0, 24))).split(" ")[0]}`
                 : "-"}
           </p>
         </div>
@@ -2033,7 +2060,7 @@ const WeatherWidget: React.FC<{
                                   (sum, speed) => sum + speed,
                                   0,
                                 ) / validSpeeds.length;
-                              return `${Math.round(avgWindSpeed)} km/h`;
+                              return formatSpeed(avgWindSpeed).split(" ")[0];
                             }
                           }
                           return "-";

@@ -157,7 +157,10 @@ const LocationSetup = ({
       const fullLocationData = {
         latitude: location.lat,
         longitude: location.lng,
-        name: location.name,
+        name:
+          typeof location.name === "string"
+            ? location.name.replace(/^"|"$/g, "")
+            : location.name,
       };
 
       localStorage.setItem(

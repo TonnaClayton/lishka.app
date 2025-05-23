@@ -6,6 +6,11 @@
 
 import { fetchWithRetry, cacheApiResponse } from "./api-helpers";
 import { getBlobImage } from "./blob-storage";
+import {
+  getCustomFishImage,
+  getPlaceholderFishImage,
+  handleFishImageError,
+} from "./fish-image-service";
 
 /**
  * Generates a Fishbase image URL for a given scientific name
@@ -36,75 +41,6 @@ export function getFishbaseImageUrl(
 
   // Format based on examples: https://www.fishbase.org/images/thumbnails/jpg/tn_Sedum_u7.jpg
   return `https://www.fishbase.org/images/thumbnails/jpg/tn_${genusPrefix}${speciesPrefix}_${variant}.jpg`;
-}
-
-/**
- * Fish image database interface
- */
-interface FishImageDatabase {
-  [key: string]: {
-    url: string;
-    width?: number;
-    height?: number;
-    quality?: "high" | "medium" | "low";
-  };
-}
-
-/**
- * Custom database of high-quality fish images
- * Key format: lowercase scientific name with spaces removed
- * Example: "salmosalar" for "Salmo salar"
- */
-const fishImageDatabase: FishImageDatabase = {
-  // Atlantic Salmon
-  salmosalar: {
-    url: "https://images.unsplash.com/photo-1574155376612-bfa4ed8aabfd?w=800&q=90",
-    width: 800,
-    height: 533,
-    quality: "high",
-  },
-  // Bluefin Tuna
-  thunnusthynnus: {
-    url: "https://images.unsplash.com/photo-1531930961374-8db90742096e?w=800&q=90",
-    width: 800,
-    height: 533,
-    quality: "high",
-  },
-  // European Seabass
-  dicentrarchuslabrax: {
-    url: "https://images.unsplash.com/photo-1544943910-4268335342e0?w=800&q=90",
-    width: 800,
-    height: 533,
-    quality: "high",
-  },
-  // Gilthead Seabream
-  sparusaurata: {
-    url: "https://images.unsplash.com/photo-1534043464124-3be32fe000c9?w=800&q=90",
-    width: 800,
-    height: 533,
-    quality: "high",
-  },
-};
-
-/**
- * Gets an image from our custom database
- *
- * @param scientificName Scientific name of the fish
- * @returns URL to an image of the fish or null if not found
- */
-export function getCustomFishImage(scientificName: string): string | null {
-  if (!scientificName) return null;
-
-  // Normalize the scientific name (lowercase, remove spaces)
-  const normalizedName = scientificName.toLowerCase().replace(/\s+/g, "");
-
-  // Check if we have this fish in our database
-  if (fishImageDatabase[normalizedName]) {
-    console.log(`Found custom image for ${scientificName}`);
-    return fishImageDatabase[normalizedName].url;
-  }
-
-  return null;
 }
 
 /**
@@ -154,78 +90,9 @@ export async function getFishImageUrl(
     console.error("Error getting Vercel Blob image:", error);
   }
 
-  // We're not using Supabase anymore - skip that check
-
-  // Try custom database next (higher quality than fishbase)
-  const customImage = getCustomFishImage(scientificName);
-  if (customImage) {
-    console.log(`Found custom image for ${scientificName}: ${customImage}`);
-    return customImage;
-  }
-
   // Fall back to Lishka placeholder image
   console.log(`Using placeholder image for ${name} (${scientificName})`);
-  return "https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746814934638-lishka-placeholder.png";
-}
-
-/**
- * Returns a placeholder image URL for a fish
- *
- * @param name Common name of the fish
- * @param scientificName Scientific name of the fish
- * @returns URL to a placeholder image
- */
-export function getPlaceholderFishImage(): string {
-  return "https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746814934638-lishka-placeholder.png";
-}
-
-/**
- * Synchronous version of getFishImageUrl that returns a placeholder image
- * This is used in non-async contexts where we can't use await
- *
- * @param name Common name of the fish
- * @param scientificName Scientific name of the fish
- * @returns URL to a placeholder image
- */
-export function getFishImageUrlSync(
-  name?: string,
-  scientificName?: string,
-): string {
-  // Try custom database first
-  if (scientificName) {
-    const customImage = getCustomFishImage(scientificName);
-    if (customImage) {
-      return customImage;
-    }
-  }
-
-  // Fall back to placeholder image
   return getPlaceholderFishImage();
-}
-
-/**
- * Handles image loading errors by providing a fallback image
- *
- * @param event The error event from an image load failure
- * @param fishName The common name of the fish for fallback
- */
-export function handleFishImageError(
-  event: React.SyntheticEvent<HTMLImageElement, Event>,
-  fishName: string,
-): void {
-  const img = event.currentTarget;
-  console.log(
-    `Fish image error handler called for ${fishName}, current src: ${img.src}`,
-  );
-
-  // If any image failed to load, switch to default image
-  if (!img.src.includes("lishka-placeholder")) {
-    console.log(`Setting default placeholder image for ${fishName}`);
-    img.src =
-      "https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746814934638-lishka-placeholder.png";
-  } else {
-    console.log(`Already using placeholder image for ${fishName}`);
-  }
 }
 
 /**
@@ -469,3 +336,6 @@ export async function getLocalFishName(
     return null;
   }
 }
+
+// Re-export functions from fish-image-service for backward compatibility
+export { getPlaceholderFishImage, handleFishImageError };

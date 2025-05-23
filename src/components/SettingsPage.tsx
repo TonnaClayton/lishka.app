@@ -6,7 +6,9 @@ import {
   CheckCircle2,
   AlertCircle,
   Globe,
+  Ruler,
 } from "lucide-react";
+
 import { Button } from "./ui/button";
 import {
   Select,
@@ -24,6 +26,7 @@ import BottomNav from "./BottomNav";
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
+  const [useImperialUnits, setUseImperialUnits] = useState<boolean>(false);
   const [apiStatus, setApiStatus] = useState<{
     connected: boolean;
     model: string;
@@ -33,7 +36,7 @@ const SettingsPage: React.FC = () => {
     null,
   );
 
-  // Get stored language preference from localStorage
+  // Get stored language and units preferences from localStorage
   useEffect(() => {
     const savedLanguage = localStorage.getItem("preferredLanguage");
     if (savedLanguage) {
@@ -42,6 +45,15 @@ const SettingsPage: React.FC = () => {
       // Default to Spanish if no language is set
       setSelectedLanguage("es");
       localStorage.setItem("preferredLanguage", "es");
+    }
+
+    // Get units preference (default to metric/false if not set)
+    const unitsPreference = localStorage.getItem("useImperialUnits");
+    if (unitsPreference !== null) {
+      setUseImperialUnits(unitsPreference === "true");
+    } else {
+      // Default to metric units (cm and grams)
+      localStorage.setItem("useImperialUnits", "false");
     }
   }, []);
 
@@ -60,6 +72,15 @@ const SettingsPage: React.FC = () => {
     }, 300);
   };
 
+  const handleUnitsChange = (checked: boolean) => {
+    console.log(`Changing units to: ${checked ? "imperial" : "metric"}`);
+    setUseImperialUnits(checked);
+    localStorage.setItem("useImperialUnits", checked.toString());
+
+    // Dispatch a custom event to notify other components about the units change
+    window.dispatchEvent(new Event("unitsChanged"));
+  };
+
   // Function to clear all fish data cache
   const clearFishDataCache = () => {
     console.log("Clearing all fish data cache");
@@ -69,8 +90,11 @@ const SettingsPage: React.FC = () => {
       if (
         key &&
         (key.startsWith("fish_data_") ||
+          key.startsWith("fish_details_") ||
+          key.startsWith("fish_local_name_") ||
           key.includes("image_cache_") ||
-          key.includes("_image"))
+          key.includes("_image") ||
+          key.includes("api_response_cache_"))
       ) {
         keysToRemove.push(key);
       }
@@ -83,7 +107,7 @@ const SettingsPage: React.FC = () => {
 
     // Show message
     alert(
-      "Cache cleared! The app will now reload with rate limiting protection.",
+      `Cache cleared! ${keysToRemove.length} items removed. The app will now reload.`,
     );
     window.location.reload();
 
@@ -173,7 +197,7 @@ const SettingsPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F7F7] lg:pl-64">
+    <div className="flex flex-col min-h-screen bg-[#F7F7F7]">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full">
         <div className="flex items-center justify-between">
@@ -188,7 +212,7 @@ const SettingsPage: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 max-w-3xl mx-auto w-full pb-20">
+      <main className="flex-1 p-4 max-w-3xl mx-auto w-full pb-20 lg:pb-4">
         <div className="space-y-6 w-full">
           {/* Language Settings */}
           <div className="space-y-2">
@@ -212,6 +236,42 @@ const SettingsPage: React.FC = () => {
                     <SelectItem value="fr">Français</SelectItem>
                   </SelectContent>
                 </Select>
+              </div>
+            </div>
+          </div>
+
+          {/* Units Settings */}
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold">Measurements</h2>
+            <div className="bg-white rounded-lg shadow p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <Ruler className="h-5 w-5 mr-2 text-gray-600" />
+                  <span className="text-sm font-medium">
+                    Select your preferred measurement system
+                  </span>
+                </div>
+                <div className="flex w-[180px] h-10 bg-gray-100 rounded-full p-1 relative overflow-hidden">
+                  <div
+                    className="absolute rounded-full bg-black z-0 top-1 h-[calc(100%-8px)] transition-all duration-300 ease-in-out"
+                    style={{
+                      width: "calc(50% - 8px)",
+                      left: useImperialUnits ? "4px" : "calc(50% + 4px)",
+                    }}
+                  />
+                  <button
+                    className={`flex-1 rounded-full flex items-center justify-center text-sm font-medium z-10 relative transition-colors duration-300 ${useImperialUnits ? "text-white" : "text-gray-500"}`}
+                    onClick={() => handleUnitsChange(true)}
+                  >
+                    in/oz
+                  </button>
+                  <button
+                    className={`flex-1 rounded-full flex items-center justify-center text-sm font-medium z-10 relative transition-colors duration-300 ${!useImperialUnits ? "text-white" : "text-gray-500"}`}
+                    onClick={() => handleUnitsChange(false)}
+                  >
+                    cm/gr
+                  </button>
+                </div>
               </div>
             </div>
           </div>
