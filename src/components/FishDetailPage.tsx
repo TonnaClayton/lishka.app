@@ -214,10 +214,10 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
 
     if (isInSeason && isCurrentMonth) {
       // Current month and in season - light green
-      return "bg-green-100 border-green-200 text-green-700 font-bold dark:bg-green-900/20 dark:border-green-800 dark:text-green-300";
+      return "bg-green-100 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300";
     } else if (isInSeason) {
       // In season but not current month - light blue
-      return "bg-blue-100 border-blue-200 text-blue-700 font-bold dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300";
+      return "bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300";
     } else if (isCurrentMonth) {
       // Current month but not in season - light red
       return "bg-red-50 border-red-200 text-red-600 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300";
@@ -248,7 +248,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
         return (
           <div
             key={monthData.short}
-            className={`py-1 sm:py-2 px-0.5 sm:px-1 rounded-md border text-xs ${styling}`}
+            className={`py-1 sm:py-2 px-0.5 sm:px-1 rounded-md border text-[10px] ${styling}`}
           >
             {monthData.short}
           </div>
@@ -703,10 +703,10 @@ const FishDetailPage = () => {
                   }}
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
-                  <h1 className="font-bold text-2xl text-white">
+                  <h1 className="font-semibold text-xl text-white">
                     {fishDetails.name}
                   </h1>
-                  <p className="text-white/80 text-sm italic">
+                  <p className="text-white/80 text-xs italic">
                     {fishDetails.scientificName}
                   </p>
                 </div>
@@ -716,8 +716,8 @@ const FishDetailPage = () => {
 
             {/* Description Card */}
             <Card className="p-6 rounded-3xl">
-              <h2 className="text-xl font-semibold mb-3">About this Fish</h2>
-              <p className="text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
+              <h2 className="text-xl font-semibold mb-4">About this Fish</h2>
+              <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
                 {fishDetails.description}
               </p>
             </Card>
@@ -725,9 +725,9 @@ const FishDetailPage = () => {
             {/* Fishing Regulations Card */}
             {fishDetails.fishingRegulations && (
               <Card className="p-4 sm:p-6 rounded-3xl">
-                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold">Fishing Regulations</h2>
-                  <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                  <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
                     <svg
                       className="w-4 h-4 mr-1"
                       fill="none"
@@ -773,10 +773,10 @@ const FishDetailPage = () => {
                       </svg>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                         Size Limit
                       </span>
-                      <span className="text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
                         {fishDetails.fishingRegulations.sizeLimit}
                       </span>
                     </div>
@@ -799,10 +799,10 @@ const FishDetailPage = () => {
                       </svg>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                         Bag Limit
                       </span>
-                      <span className="text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
                         {fishDetails.fishingRegulations.bagLimit}
                       </span>
                     </div>
@@ -835,10 +835,10 @@ const FishDetailPage = () => {
                       </svg>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                         Season Dates
                       </span>
-                      <span className="text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
                         {fishDetails.fishingRegulations.seasonDates}
                       </span>
                     </div>
@@ -870,10 +870,10 @@ const FishDetailPage = () => {
                       </svg>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                         License Required
                       </span>
-                      <span className="text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
                         {fishDetails.fishingRegulations.licenseRequired}
                       </span>
                     </div>
@@ -901,10 +901,10 @@ const FishDetailPage = () => {
                           </svg>
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-gray-900 dark:text-gray-100">
+                          <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                             Additional Rules
                           </span>
-                          <ul className="text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1">
+                          <ul className="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1">
                             {fishDetails.fishingRegulations.additionalRules.map(
                               (rule, index) => (
                                 <li key={index} className="text-sm">
@@ -936,10 +936,10 @@ const FishDetailPage = () => {
                       </svg>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                         Penalties
                       </span>
-                      <span className="text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
                         {fishDetails.fishingRegulations.penalties}
                       </span>
                     </div>
@@ -961,9 +961,9 @@ const FishDetailPage = () => {
 
             {/* Fishing Season Calendar Card */}
             <Card className="p-4 sm:p-6 rounded-3xl">
-              <div className="flex items-center justify-between mb-2 sm:mb-3">
+              <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl font-semibold">Fishing Season</h2>
-                <div className="flex items-center text-sm text-gray-600 dark:text-gray-400">
+                <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
                   <svg
                     className="w-4 h-4 mr-1"
                     fill="none"
@@ -988,8 +988,8 @@ const FishDetailPage = () => {
                     "Location not specified"}
                 </div>
               </div>
-              <div className="mt-2 sm:mt-4">
-                <div className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 mb-2 sm:mb-3">
+              <div className="mt-4">
+                <div className="text-sm text-gray-600 dark:text-gray-300 mb-3">
                   Best months to catch {fishDetails.name} in{" "}
                   {fishDetails.fishingLocation ||
                     userLocationName ||
@@ -1147,10 +1147,10 @@ const FishDetailPage = () => {
                 {/* Reasoning */}
                 {fishDetails.fishingSeasons?.reasoning && (
                   <div className="mt-4 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
+                    <h3 className="text-base font-medium text-gray-700 dark:text-gray-300">
                       Seasonal Information
                     </h3>
-                    <p className="text-xs text-gray-600 dark:text-gray-400">
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
                       {fishDetails.fishingSeasons.reasoning}
                     </p>
                   </div>
@@ -1161,7 +1161,7 @@ const FishDetailPage = () => {
             {/* All Round Gear Card */}
             {fishDetails.allRoundGear && (
               <Card className="p-6 rounded-3xl">
-                <h2 className="text-xl font-semibold mb-6">All Round Gear</h2>
+                <h2 className="text-xl font-semibold mb-4">All Round Gear</h2>
                 <div className="space-y-4">
                   <div className="flex items-start gap-3">
                     <div className="w-6 flex-shrink-0">
@@ -1179,10 +1179,10 @@ const FishDetailPage = () => {
                       </svg>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                         Rods
                       </span>
-                      <span className="text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
                         {fishDetails.allRoundGear.rods}
                       </span>
                     </div>
@@ -1205,10 +1205,10 @@ const FishDetailPage = () => {
                       </svg>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                         Reels
                       </span>
-                      <span className="text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
                         {fishDetails.allRoundGear.reels}
                       </span>
                     </div>
@@ -1230,10 +1230,10 @@ const FishDetailPage = () => {
                       </svg>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                         Line
                       </span>
-                      <span className="text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
                         {fishDetails.allRoundGear.line}
                       </span>
                     </div>
@@ -1256,17 +1256,17 @@ const FishDetailPage = () => {
                       </svg>
                     </div>
                     <div className="flex flex-col">
-                      <span className="font-semibold text-gray-900 dark:text-gray-100">
+                      <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                         Leader
                       </span>
-                      <span className="text-gray-600 dark:text-gray-300">
+                      <span className="text-sm text-gray-600 dark:text-gray-300">
                         {fishDetails.allRoundGear.leader}
                       </span>
                     </div>
                   </div>
 
                   <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                    <p className="text-gray-600 dark:text-gray-300">
+                    <p className="text-sm text-gray-600 dark:text-gray-300">
                       {fishDetails.allRoundGear.description}
                     </p>
                   </div>
@@ -1282,7 +1282,7 @@ const FishDetailPage = () => {
                   key={index}
                   className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 mb-6 space-y-6"
                 >
-                  <h2 className="text-2xl font-bold">{method.title}</h2>
+                  <h2 className="text-xl font-semibold">{method.title}</h2>
 
                   {/* Location */}
                   <div className="flex flex-col space-y-6">
@@ -1303,10 +1303,10 @@ const FishDetailPage = () => {
                         </svg>
                       </div>
                       <div className="flex flex-col">
-                        <span className="font-semibold text-gray-900 dark:text-gray-100">
+                        <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                           Location
                         </span>
-                        <span className="text-gray-600 dark:text-gray-300">
+                        <span className="text-sm text-gray-600 dark:text-gray-300">
                           {method.gear?.depth || "Not specified"}
                         </span>
                       </div>
@@ -1330,7 +1330,7 @@ const FishDetailPage = () => {
                           </svg>
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-gray-900 dark:text-gray-100">
+                          <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                             {method.title.toLowerCase().includes("jig")
                               ? "Jigs"
                               : method.title.toLowerCase().includes("troll")
@@ -1339,7 +1339,7 @@ const FishDetailPage = () => {
                                   ? "Bait"
                                   : "Lures"}
                           </span>
-                          <span className="text-gray-600 dark:text-gray-300">
+                          <span className="text-sm text-gray-600 dark:text-gray-300">
                             {method.gear?.bait
                               ? method.gear.bait.join(", ")
                               : method.gear?.lures?.join(", ")}
@@ -1370,10 +1370,10 @@ const FishDetailPage = () => {
                           </svg>
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-gray-900 dark:text-gray-100">
+                          <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                             Speed
                           </span>
-                          <span className="text-gray-600 dark:text-gray-300">
+                          <span className="text-sm text-gray-600 dark:text-gray-300">
                             {method.gear.speed}
                           </span>
                         </div>
@@ -1399,10 +1399,10 @@ const FishDetailPage = () => {
                             </svg>
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-semibold text-gray-900 dark:text-gray-100">
+                            <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                               Jig Weight
                             </span>
-                            <span className="text-gray-600 dark:text-gray-300">
+                            <span className="text-sm text-gray-600 dark:text-gray-300">
                               {method.gear.jig_weight}
                             </span>
                           </div>
@@ -1428,10 +1428,10 @@ const FishDetailPage = () => {
                             </svg>
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-semibold text-gray-900 dark:text-gray-100">
+                            <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                               Jig Size
                             </span>
-                            <span className="text-gray-600 dark:text-gray-300">
+                            <span className="text-sm text-gray-600 dark:text-gray-300">
                               {method.gear.jig_size}
                             </span>
                           </div>
@@ -1459,10 +1459,10 @@ const FishDetailPage = () => {
                             </svg>
                           </div>
                           <div className="flex flex-col">
-                            <span className="font-semibold text-gray-900 dark:text-gray-100">
+                            <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                               Hooks
                             </span>
-                            <span className="text-gray-600 dark:text-gray-300">
+                            <span className="text-sm text-gray-600 dark:text-gray-300">
                               {method.gear.hooks}
                             </span>
                           </div>
@@ -1489,10 +1489,10 @@ const FishDetailPage = () => {
                           </svg>
                         </div>
                         <div className="flex flex-col">
-                          <span className="font-semibold text-gray-900 dark:text-gray-100">
+                          <span className="font-medium text-base text-gray-900 dark:text-gray-100">
                             Hook Size Range
                           </span>
-                          <span className="text-gray-600 dark:text-gray-300">
+                          <span className="text-sm text-gray-600 dark:text-gray-300">
                             {method.gear.hook_size_range}
                           </span>
                         </div>
@@ -1501,17 +1501,17 @@ const FishDetailPage = () => {
                   </div>
 
                   {/* Description */}
-                  <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
                     {method.description}
                   </p>
 
                   {/* Technical Details */}
                   {method.technical_details && (
                     <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
-                      <h4 className="font-semibold text-blue-700 dark:text-blue-400 mb-1">
+                      <h4 className="font-medium text-base text-blue-700 dark:text-blue-400 mb-1">
                         Technical Details
                       </h4>
-                      <p className="text-gray-700 dark:text-gray-300 text-sm">
+                      <p className="text-sm text-gray-700 dark:text-gray-300">
                         {method.technical_details}
                       </p>
                     </div>
@@ -1520,10 +1520,10 @@ const FishDetailPage = () => {
                   {/* Pro Tip */}
                   {method.proTip && (
                     <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                      <h3 className="font-semibold text-gray-900 dark:text-gray-100 mb-2">
+                      <h3 className="font-medium text-base text-gray-900 dark:text-gray-100 mb-2">
                         Pro Tip
                       </h3>
-                      <p className="text-gray-600 dark:text-gray-300">
+                      <p className="text-sm text-gray-600 dark:text-gray-300">
                         {method.proTip}
                       </p>
                     </div>
@@ -1532,7 +1532,7 @@ const FishDetailPage = () => {
               ))
             ) : (
               <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 mb-6">
-                <p className="text-gray-600 dark:text-gray-300">
+                <p className="text-sm text-gray-600 dark:text-gray-300">
                   No fishing methods available for this fish.
                 </p>
               </div>
