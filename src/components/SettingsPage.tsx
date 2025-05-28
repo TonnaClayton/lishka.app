@@ -7,6 +7,7 @@ import {
   AlertCircle,
   Globe,
   Ruler,
+  Fish,
 } from "lucide-react";
 
 import { Button } from "./ui/button";
@@ -111,6 +112,7 @@ const SettingsPage: React.FC = () => {
         (key.startsWith("fish_data_") ||
           key.startsWith("fish_details_") ||
           key.startsWith("fish_local_name_") ||
+          key.startsWith("fishing_tips_") ||
           key.includes("image_cache_") ||
           key.includes("_image") ||
           key.includes("api_response_cache_"))
@@ -299,22 +301,49 @@ const SettingsPage: React.FC = () => {
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">Developer Options</h2>
             <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <AlertCircle className="h-5 w-5 mr-2 text-gray-600" />
-                  <div className="flex flex-col">
-                    <span className="text-sm font-medium">
-                      Show Debug Information
-                    </span>
-                    <span className="text-xs text-gray-500">
-                      Display technical details in fish pages
-                    </span>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <AlertCircle className="h-5 w-5 mr-2 text-gray-600" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        Show Debug Information
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        Display technical details in fish pages
+                      </span>
+                    </div>
                   </div>
+                  <Switch
+                    checked={showDebugUI}
+                    onCheckedChange={handleDebugUIChange}
+                  />
                 </div>
-                <Switch
-                  checked={showDebugUI}
-                  onCheckedChange={handleDebugUIChange}
-                />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Fish className="h-5 w-5 mr-2 text-gray-600" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        Show Toxic Fish Debug Info
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        Display toxic fish data details
+                      </span>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={
+                      localStorage.getItem("showToxicFishDebug") === "true"
+                    }
+                    onCheckedChange={(checked) => {
+                      localStorage.setItem(
+                        "showToxicFishDebug",
+                        checked.toString(),
+                      );
+                      window.dispatchEvent(new Event("toxicFishDebugChanged"));
+                    }}
+                  />
+                </div>
               </div>
             </div>
           </div>

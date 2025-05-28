@@ -89,6 +89,7 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
       if (
         key &&
         (key.startsWith("fish_data_") ||
+          key.startsWith("fishing_tips_") ||
           key.includes("image_cache_") ||
           key.includes("_image"))
       ) {

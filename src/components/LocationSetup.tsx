@@ -334,7 +334,7 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
   const [locationName, setLocationName] = useState("");
   const defaultPosition = currentLocation
     ? [currentLocation.lat, currentLocation.lng]
-    : [40.7128, -74.006]; // Use current location if available, otherwise New York City as default
+    : [35.8997, 14.5146]; // Use current location if available, otherwise Malta as default
 
   // Set initial marker if we have a current location
   useEffect(() => {

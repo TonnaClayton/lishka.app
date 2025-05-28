@@ -11,7 +11,7 @@ interface LocationData {
 }
 
 const WeatherPage: React.FC = () => {
-  const [location, setLocation] = useState<string>("Miami Coast");
+  const [location, setLocation] = useState<string>("Malta");
   const [dataLoaded, setDataLoaded] = useState(false);
   const [userLocation, setUserLocation] = useState<LocationData | null>(null);
 
@@ -20,11 +20,11 @@ const WeatherPage: React.FC = () => {
     const loadLocation = () => {
       const savedLocation = localStorage.getItem("userLocationFull");
       if (!savedLocation) {
-        // Miami coordinates as a good default for marine data
+        // Malta coordinates as a good default for marine data
         const coastalLocation = {
-          latitude: 25.7617,
-          longitude: -80.1918,
-          name: "Miami Coast",
+          latitude: 35.8997,
+          longitude: 14.5146,
+          name: "Malta",
         };
         localStorage.setItem("userLocation", coastalLocation.name);
         localStorage.setItem(
@@ -39,10 +39,10 @@ const WeatherPage: React.FC = () => {
           if (parsedLocation) {
             const locationData: LocationData = {
               latitude:
-                parsedLocation.latitude || parsedLocation.lat || 37.7749,
+                parsedLocation.latitude || parsedLocation.lat || 35.8997,
               longitude:
-                parsedLocation.longitude || parsedLocation.lng || -122.4194,
-              name: parsedLocation.name || "Unknown Location",
+                parsedLocation.longitude || parsedLocation.lng || 14.5146,
+              name: parsedLocation.name || "Malta",
             };
             setUserLocation(locationData);
             setLocation(locationData.name);
@@ -51,9 +51,9 @@ const WeatherPage: React.FC = () => {
           console.error("Error parsing location:", err);
           // Fallback to default location
           const coastalLocation = {
-            latitude: 25.7617,
-            longitude: -80.1918,
-            name: "Miami Coast",
+            latitude: 35.8997,
+            longitude: 14.5146,
+            name: "Malta",
           };
           setUserLocation(coastalLocation);
           setLocation(coastalLocation.name);
