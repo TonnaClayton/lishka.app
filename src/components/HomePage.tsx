@@ -388,35 +388,29 @@ const HomePage: React.FC<HomePageProps> = ({
               },
               {
                 role: "user",
-                content: `Generate exactly 25 DANGEROUS fish species from the ${seaOcean} that pose REAL THREATS to humans. ONLY include fish that are:
+                content: `Generate fish species from the ${seaOcean} near ${cleanLocation} that are either TOXIC TO HANDLE or TOXIC TO EAT. IMPORTANT: Only include genuinely toxic fish - do NOT add random or non-toxic fish to reach a specific count.
 
-1. VENOMOUS (inject toxins through spines, bites, or stings)
-2. POISONOUS (toxic to eat - cause illness or death when consumed)
-3. HAVE TOXIC SKIN/MUCUS (cause burns, rashes, or poisoning when touched)
+TOXIC TO HANDLE (venomous/dangerous to touch):
+- Fish with venomous spines that inject toxins
+- Fish with toxic skin or mucus that causes burns/poisoning
+- Fish that sting or bite with venom
 
-PRIORITIZE fish commonly found near ${cleanLocation} first (8-10 species), then include other dangerous fish from the broader ${seaOcean} region.
+TOXIC TO EAT (poisonous when consumed):
+- Fish containing natural toxins that cause illness or death
+- Fish that accumulate toxins in their flesh
 
-EXCLUDE:
-- Harmless fish that are safe to handle and eat
-- Fish that are only "difficult to catch" but not dangerous
-- Fish with minor risks like sharp teeth (unless they inject venom)
-- Any fish that pose no toxicological threat to humans
+CRITICAL REQUIREMENT: If there are fewer than 20 genuinely toxic fish species in this region, return only the actual toxic ones. Do NOT pad the list with non-toxic fish or make up toxic properties for non-toxic species.
 
-For ${seaOcean} specifically include known dangerous species like:
-- Venomous fish: Weever fish, Stingrays, Scorpionfish, Rabbitfish
-- Toxic fish: Pufferfish species, certain Triggerfish
-- Fish with toxic mucus or skin
-
-Format each fish as JSON with these fields:
+Format each fish as JSON:
 - name: Common name
-- scientificName: Complete binomial (Genus species) - NO abbreviations like spp., sp., cf., aff.
+- scientificName: Complete binomial (Genus species)
 - habitat: Brief description
 - difficulty: Always "Expert"
 - season: Availability period
-- dangerType: Specific danger mechanism (examples: "Venomous dorsal spines cause excruciating pain and swelling", "Contains deadly tetrodotoxin - fatal if consumed", "Toxic skin mucus causes severe burns and blistering")
+- dangerType: Either "Toxic to handle" or "Toxic to eat" with brief explanation
 - isToxic: Always true
 
-Return ONLY a JSON array with no additional text. Example: [{"name":"Greater Weever","scientificName":"Trachinus draco","habitat":"Sandy bottoms","difficulty":"Expert","season":"Year-round","dangerType":"Venomous dorsal spines cause excruciating pain and swelling","isToxic":true}]`,
+Return ONLY a JSON array. Example: [{"name":"Greater Weever","scientificName":"Trachinus draco","habitat":"Sandy bottoms","difficulty":"Expert","season":"Year-round","dangerType":"Toxic to handle - venomous spines cause severe pain","isToxic":true}]`,
               },
             ],
             temperature: 0.1,
