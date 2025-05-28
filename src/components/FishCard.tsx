@@ -1,11 +1,12 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
   handleFishImageError,
   getPlaceholderFishImage,
+  getFishImageUrl,
 } from "@/lib/fish-image-service";
-import { Waves, Calendar, Trophy } from "lucide-react";
+import { Waves, Trophy, Target, AlertTriangle } from "lucide-react";
 
 interface FishCardProps {
   image?: string;
@@ -15,8 +16,8 @@ interface FishCardProps {
 
   habitat?: string;
   difficulty?: "Easy" | "Intermediate" | "Hard" | "Advanced" | "Expert";
-  season?: string;
   isToxic?: boolean;
+  dangerType?: string;
 
   onClick?: () => void;
 }
@@ -29,11 +30,46 @@ const FishCard = ({
 
   habitat = "Freshwater, Coastal",
   difficulty = "Intermediate",
-  season = "Spring, Summer",
   isToxic = false,
+  dangerType,
 
   onClick = () => {},
 }: FishCardProps) => {
+  const [actualImageUrl, setActualImageUrl] = useState<string>(image);
+  const [imageLoading, setImageLoading] = useState(true);
+
+  // Load the actual fish image on component mount
+  useEffect(() => {
+    const loadFishImage = async () => {
+      try {
+        console.log(
+          `FishCard: Starting image load for ${name} (${scientificName})`,
+        );
+        setImageLoading(true);
+        const fishImageUrl = await getFishImageUrl(name, scientificName);
+        console.log(`FishCard: Got image URL for ${name}:`, fishImageUrl);
+        setActualImageUrl(fishImageUrl);
+      } catch (error) {
+        console.error(`FishCard: Error loading image for ${name}:`, error);
+        setActualImageUrl(getPlaceholderFishImage());
+      } finally {
+        setImageLoading(false);
+      }
+    };
+
+    // Only load if we don't already have a good image URL
+    if (!image || image.includes("unsplash") || image.includes("placeholder")) {
+      console.log(
+        `FishCard: Loading new image for ${name}, current image:`,
+        image,
+      );
+      loadFishImage();
+    } else {
+      console.log(`FishCard: Using existing image for ${name}:`, image);
+      setActualImageUrl(image);
+      setImageLoading(false);
+    }
+  }, [name, scientificName, image]);
   return (
     <Card
       className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full border-0 shadow bg-white rounded-3xl"
@@ -41,50 +77,69 @@ const FishCard = ({
     >
       <div className="relative w-full aspect-[3/2] overflow-hidden max-w-full">
         {/* Using aspect ratio for consistent 3:2 ratio */}
+        {imageLoading && (
+          <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
+            <div className="text-gray-400 text-xs">Loading...</div>
+          </div>
+        )}
         <img
-          src={image}
+          src={actualImageUrl}
           alt={name}
-          className="w-full h-full object-cover"
+          className={`w-full h-full object-cover transition-opacity duration-300 ${
+            imageLoading ? "opacity-0" : "opacity-100"
+          }`}
+          onLoad={() => setImageLoading(false)}
           onError={(e) => {
             console.log(`Image error for ${name}: ${e.currentTarget.src}`);
-            // Try to load from scientific name regardless of current image source
-            // Use default error handler
+            setImageLoading(false);
             handleFishImageError(e, name);
           }}
         />
+        {isToxic && (
+          <Badge
+            variant="destructive"
+            className="absolute bottom-2 right-2 text-xs py-0 shadow-lg rounded-[32px]"
+          >
+            Toxic
+          </Badge>
+        )}
       </div>
-      <CardContent className="p-3 flex flex-col flex-1">
-        <div className="flex justify-between items-start mb-1">
-          <div className="flex-1">
-            <h3 className="font-inter text-base font-bold text-foreground pr-6 line-clamp-1">
-              {name}
-            </h3>
-            <p className="text-muted-foreground text-xs italic">
-              {scientificName}
-            </p>
-          </div>
-          {isToxic && (
-            <Badge variant="destructive" className="ml-1 shrink-0 text-xs py-0">
-              Toxic
-            </Badge>
-          )}
+      <CardContent className="p-2 sm:p-3 flex flex-col flex-1">
+        <div className="mb-1">
+          <h3 className="font-inter text-sm sm:text-base font-bold text-foreground line-clamp-1">
+            {name}
+          </h3>
+          <p className="text-muted-foreground text-xs italic line-clamp-1">
+            {scientificName}
+          </p>
         </div>
 
-        <div className="text-xs mt-auto space-y-1.5">
-          <div className="flex items-center">
-            <Waves className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400 mr-1.5" />
-            <span className="text-foreground line-clamp-1">{habitat}</span>
-          </div>
+        <div className="text-xs space-y-1 sm:space-y-1.5">
+          {isToxic && dangerType ? (
+            // For toxic fish, show danger type instead of habitat and difficulty
+            <div className="flex items-start">
+              <span className="text-foreground line-clamp-2 text-xs">
+                {dangerType}
+              </span>
+            </div>
+          ) : (
+            // For non-toxic fish, show habitat and difficulty as before
+            <>
+              <div className="flex items-center">
+                <Waves className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500 dark:text-blue-400 mr-1 sm:mr-1.5 shrink-0" />
+                <span className="text-foreground line-clamp-1 text-xs">
+                  {habitat}
+                </span>
+              </div>
 
-          <div className="flex items-center">
-            <Calendar className="h-3.5 w-3.5 text-green-500 dark:text-green-400 mr-1.5" />
-            <span className="text-foreground line-clamp-1">{season}</span>
-          </div>
-
-          <div className="flex items-center">
-            <Trophy className="h-3.5 w-3.5 text-orange-500 dark:text-orange-400 mr-1.5" />
-            <span className="text-foreground line-clamp-1">{difficulty}</span>
-          </div>
+              <div className="flex items-center">
+                <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-orange-500 dark:text-orange-400 mr-1 sm:mr-1.5 shrink-0" />
+                <span className="text-foreground line-clamp-1 text-xs">
+                  {difficulty}
+                </span>
+              </div>
+            </>
+          )}
         </div>
       </CardContent>
     </Card>

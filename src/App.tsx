@@ -51,10 +51,7 @@ function App() {
           <SideNav />
 
           {/* Main content area - flex-auto (flexible width) */}
-          <div
-            className="flex-1 max-w-full h-full flex flex-col overflow-hidden"
-            style={{ marginLeft: "var(--sidebar-width)" }}
-          >
+          <div className="flex-1 max-w-full h-full flex flex-col overflow-hidden lg:ml-[var(--sidebar-width)]">
             <div className="w-full flex-1 overflow-y-auto pb-32 lg:pb-4">
               {/* Add Tempo routes before regular routes */}
               {import.meta.env.VITE_TEMPO === "true" && useRoutes(routes)}

@@ -149,7 +149,7 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
         currentLocation.latitude || currentLocation.lat,
         currentLocation.longitude || currentLocation.lng,
       ]
-    : [0, 0]; // Use current location if available, otherwise initialize with zeros
+    : [35.8997, 14.5146]; // Use current location if available, otherwise Malta as default
 
   // Make selectedPosition and locationName available to parent component
   React.useEffect(() => {
@@ -341,9 +341,11 @@ const WeatherWidget: React.FC<{
               (parsedLocation.latitude || parsedLocation.lat)
             ) {
               locationToUse = {
-                latitude: parsedLocation.latitude || parsedLocation.lat || 0,
-                longitude: parsedLocation.longitude || parsedLocation.lng || 0,
-                name: parsedLocation.name || "Unknown Location",
+                latitude:
+                  parsedLocation.latitude || parsedLocation.lat || 35.8997,
+                longitude:
+                  parsedLocation.longitude || parsedLocation.lng || 14.5146,
+                name: parsedLocation.name || "Malta",
               };
               console.log(
                 `Using saved location: ${locationToUse.name} (${locationToUse.latitude}, ${locationToUse.longitude})`,
@@ -358,10 +360,17 @@ const WeatherWidget: React.FC<{
         }
       }
 
-      // If we don't have a location, show the modal
-      console.log("No location found, waiting for user selection");
-      setLocation(null);
-      setShowLocationModal(true);
+      // If we don't have a location, set Malta as default
+      console.log("No location found, setting Malta as default");
+      const maltaLocation = {
+        latitude: 35.8997,
+        longitude: 14.5146,
+        name: "Malta",
+      };
+      setLocation(maltaLocation);
+      // Also save to localStorage
+      localStorage.setItem("userLocation", maltaLocation.name);
+      localStorage.setItem("userLocationFull", JSON.stringify(maltaLocation));
     };
 
     // Load location initially
@@ -1330,9 +1339,9 @@ const WeatherWidget: React.FC<{
 
                         // If geolocation fails, set a default location instead of showing an alert
                         const defaultLocation = {
-                          latitude: 25.7617,
-                          longitude: -80.1918,
-                          name: "Miami Coast",
+                          latitude: 35.8997,
+                          longitude: 14.5146,
+                          name: "Malta",
                         };
 
                         console.log(
@@ -1351,9 +1360,9 @@ const WeatherWidget: React.FC<{
                   } else {
                     // If geolocation is not supported, set a default location
                     const defaultLocation = {
-                      latitude: 25.7617,
-                      longitude: -80.1918,
-                      name: "Miami Coast",
+                      latitude: 35.8997,
+                      longitude: 14.5146,
+                      name: "Malta",
                     };
 
                     console.log(

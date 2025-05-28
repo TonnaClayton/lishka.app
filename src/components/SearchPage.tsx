@@ -9,6 +9,7 @@ import FishCard from "./FishCard";
 import {
   getPlaceholderFishImage,
   getFishImageUrlSync,
+  handleFishImageError,
 } from "@/lib/fish-image-service";
 import { getBlobImage } from "@/lib/blob-storage";
 import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
@@ -325,31 +326,12 @@ const SearchPage: React.FC = () => {
                               <div className="flex items-center p-4">
                                 <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-200 flex-shrink-0">
                                   <img
-                                    src={
-                                      fish.image || getPlaceholderFishImage()
-                                    }
+                                    src={getPlaceholderFishImage()}
                                     alt={fish.name}
                                     className="w-full h-full object-cover"
-                                    onError={(e) => {
-                                      // Try to load from Vercel Blob if available
-                                      if (fish.scientificName) {
-                                        getBlobImage(fish.scientificName)
-                                          .then((blobUrl) => {
-                                            if (blobUrl)
-                                              e.currentTarget.src = blobUrl;
-                                            else
-                                              e.currentTarget.src =
-                                                getPlaceholderFishImage();
-                                          })
-                                          .catch(() => {
-                                            e.currentTarget.src =
-                                              getPlaceholderFishImage();
-                                          });
-                                      } else {
-                                        e.currentTarget.src =
-                                          getPlaceholderFishImage();
-                                      }
-                                    }}
+                                    onError={(e) =>
+                                      handleFishImageError(e, fish.name)
+                                    }
                                   />
                                 </div>
                                 <div className="ml-4">
@@ -420,7 +402,7 @@ const SearchPage: React.FC = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder="Send a message..."
-              className="resize-none flex-1 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent bg-transparent text-gray-900 dark:text-gray-100 border-none my-auto grow h-px shadow-none py-4 outline-none"
+              className="resize-none flex-1 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent bg-transparent text-gray-900 dark:text-gray-100 border-none my-auto grow h-px shadow-none py-6 px-4 outline-none"
               disabled={loading}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {
