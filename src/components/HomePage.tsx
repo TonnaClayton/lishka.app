@@ -388,7 +388,35 @@ const HomePage: React.FC<HomePageProps> = ({
               },
               {
                 role: "user",
-                content: `Generate exactly 25 toxic and venomous fish from the ${seaOcean}. PRIORITIZE fish commonly found near ${cleanLocation} first (around 8-10 fish), then include other toxic fish from the broader ${seaOcean} region. Include both fish that are toxic to handle and toxic to eat. Format each fish as a JSON object with these exact fields: name (common name), scientificName (complete binomial nomenclature with genus and species only - NEVER use spp., sp., cf., aff., or any abbreviations), habitat (brief description), difficulty (always "Expert"), season (availability), dangerType (detailed danger description explaining HOW the fish is dangerous - examples: "Venomous spines - painful stings when handled", "Deadly tetrodotoxin - fatal if eaten raw or cooked", "Toxic flesh - causes severe poisoning when consumed", "Venomous bite - inject neurotoxins through teeth", "Toxic skin mucus - causes burns when touched", "Venomous gill covers - dangerous to handle without gloves"), and isToxic (always true). CRITICAL: Each scientificName must be a specific species like "Pterois volitans" NOT "Pterois spp." or "Pterois sp.". Return a single JSON array containing these objects with no additional text or formatting. Example format: [{"name":"Lionfish","scientificName":"Pterois volitans","habitat":"Coral reefs","difficulty":"Expert","season":"Year-round","dangerType":"Venomous spines - painful stings when handled","isToxic":true}]`,
+                content: `Generate exactly 25 DANGEROUS fish species from the ${seaOcean} that pose REAL THREATS to humans. ONLY include fish that are:
+
+1. VENOMOUS (inject toxins through spines, bites, or stings)
+2. POISONOUS (toxic to eat - cause illness or death when consumed)
+3. HAVE TOXIC SKIN/MUCUS (cause burns, rashes, or poisoning when touched)
+
+PRIORITIZE fish commonly found near ${cleanLocation} first (8-10 species), then include other dangerous fish from the broader ${seaOcean} region.
+
+EXCLUDE:
+- Harmless fish that are safe to handle and eat
+- Fish that are only "difficult to catch" but not dangerous
+- Fish with minor risks like sharp teeth (unless they inject venom)
+- Any fish that pose no toxicological threat to humans
+
+For ${seaOcean} specifically include known dangerous species like:
+- Venomous fish: Weever fish, Stingrays, Scorpionfish, Rabbitfish
+- Toxic fish: Pufferfish species, certain Triggerfish
+- Fish with toxic mucus or skin
+
+Format each fish as JSON with these fields:
+- name: Common name
+- scientificName: Complete binomial (Genus species) - NO abbreviations like spp., sp., cf., aff.
+- habitat: Brief description
+- difficulty: Always "Expert"
+- season: Availability period
+- dangerType: Specific danger mechanism (examples: "Venomous dorsal spines cause excruciating pain and swelling", "Contains deadly tetrodotoxin - fatal if consumed", "Toxic skin mucus causes severe burns and blistering")
+- isToxic: Always true
+
+Return ONLY a JSON array with no additional text. Example: [{"name":"Greater Weever","scientificName":"Trachinus draco","habitat":"Sandy bottoms","difficulty":"Expert","season":"Year-round","dangerType":"Venomous dorsal spines cause excruciating pain and swelling","isToxic":true}]`,
               },
             ],
             temperature: 0.1,
