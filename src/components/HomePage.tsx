@@ -388,7 +388,7 @@ const HomePage: React.FC<HomePageProps> = ({
               },
               {
                 role: "user",
-                content: `Generate exactly 25 toxic and venomous fish from the ${seaOcean}. PRIORITIZE fish commonly found near ${cleanLocation} first (around 8-10 fish), then include other toxic fish from the broader ${seaOcean} region. Include both fish that are toxic to handle and toxic to eat. Format each fish as a JSON object with these exact fields: name (common name), scientificName (full binomial name, no spp. or sp.), habitat (brief description), difficulty (always "Expert"), season (availability), dangerType (detailed danger description explaining HOW the fish is dangerous - examples: "Venomous spines - painful stings when handled", "Deadly tetrodotoxin - fatal if eaten raw or cooked", "Toxic flesh - causes severe poisoning when consumed", "Venomous bite - inject neurotoxins through teeth", "Toxic skin mucus - causes burns when touched", "Venomous gill covers - dangerous to handle without gloves"), and isToxic (always true). Return a single JSON array containing these objects with no additional text or formatting. Example format: [{"name":"Lionfish","scientificName":"Pterois volitans","habitat":"Coral reefs","difficulty":"Expert","season":"Year-round","dangerType":"Venomous spines - painful stings when handled","isToxic":true}]`,
+                content: `Generate exactly 25 toxic and venomous fish from the ${seaOcean}. PRIORITIZE fish commonly found near ${cleanLocation} first (around 8-10 fish), then include other toxic fish from the broader ${seaOcean} region. Include both fish that are toxic to handle and toxic to eat. Format each fish as a JSON object with these exact fields: name (common name), scientificName (complete binomial nomenclature with genus and species only - NEVER use spp., sp., cf., aff., or any abbreviations), habitat (brief description), difficulty (always "Expert"), season (availability), dangerType (detailed danger description explaining HOW the fish is dangerous - examples: "Venomous spines - painful stings when handled", "Deadly tetrodotoxin - fatal if eaten raw or cooked", "Toxic flesh - causes severe poisoning when consumed", "Venomous bite - inject neurotoxins through teeth", "Toxic skin mucus - causes burns when touched", "Venomous gill covers - dangerous to handle without gloves"), and isToxic (always true). CRITICAL: Each scientificName must be a specific species like "Pterois volitans" NOT "Pterois spp." or "Pterois sp.". Return a single JSON array containing these objects with no additional text or formatting. Example format: [{"name":"Lionfish","scientificName":"Pterois volitans","habitat":"Coral reefs","difficulty":"Expert","season":"Year-round","dangerType":"Venomous spines - painful stings when handled","isToxic":true}]`,
               },
             ],
             temperature: 0.1,
@@ -465,16 +465,37 @@ const HomePage: React.FC<HomePageProps> = ({
           `DEBUG: Final toxic fish count (no filtering): ${toxicFishData.length}`,
         );
 
-        // Ensure each fish has required fields and is marked as toxic
-        toxicFishData = toxicFishData.map((fish) => ({
-          name: cleanFishName(fish.name) || "Unknown Toxic Fish",
-          scientificName: fish.scientificName || "Unknown",
-          habitat: fish.habitat || "Unknown",
-          difficulty: fish.difficulty || "Expert",
-          season: fish.season || "Year-round",
-          dangerType: fish.dangerType || "Toxic - handle with caution",
-          isToxic: true,
-        }));
+        // Ensure each fish has required fields, clean scientific names, and is marked as toxic
+        toxicFishData = toxicFishData.map((fish) => {
+          let cleanScientificName = fish.scientificName || "Unknown";
+
+          // Remove common abbreviations and ensure proper binomial nomenclature
+          if (cleanScientificName !== "Unknown") {
+            cleanScientificName = cleanScientificName
+              .replace(/\s+(spp?\.?|cf\.?|aff\.?)\s*$/i, "") // Remove spp., sp., cf., aff. at the end
+              .replace(/\s+(spp?\.?|cf\.?|aff\.?)\s+/gi, " ") // Remove these abbreviations in the middle
+              .trim();
+
+            // Ensure we have at least genus and species (two words)
+            const parts = cleanScientificName.split(/\s+/);
+            if (parts.length < 2) {
+              cleanScientificName = "Unknown";
+            } else if (parts.length > 2) {
+              // Keep only genus and species (first two words)
+              cleanScientificName = `${parts[0]} ${parts[1]}`;
+            }
+          }
+
+          return {
+            name: cleanFishName(fish.name) || "Unknown Toxic Fish",
+            scientificName: cleanScientificName,
+            habitat: fish.habitat || "Unknown",
+            difficulty: fish.difficulty || "Expert",
+            season: fish.season || "Year-round",
+            dangerType: fish.dangerType || "Toxic - handle with caution",
+            isToxic: true,
+          };
+        });
       } catch (e) {
         console.error("Error parsing toxic fish data:", e);
         console.error("Raw toxic fish response:", content);
@@ -631,7 +652,7 @@ const HomePage: React.FC<HomePageProps> = ({
               },
               {
                 role: "user",
-                content: `Generate a JSON array with exactly ${pageSize} fish species from waters near ${userLocation} in ${currentMonth}. Format: [{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat Description\",\"difficulty\":\"Easy\",\"season\":\"Season Info\",\"isToxic\":false}]. Mix of difficulty levels (Easy/Intermediate/Hard/Advanced/Expert). CRITICAL: scientificName must be complete binomial nomenclature (Genus species) - NEVER use spp., sp., or abbreviations. Examples: \"Thunnus thynnus\" NOT \"Thunnus spp.\". Return only the JSON array.`,
+                content: `Generate a JSON array with exactly ${pageSize} fish species that are NATIVE and commonly found in the ${getLocationToSeaMapping(userLocation)} near ${cleanLocation} during ${currentMonth}. CRITICAL GEOGRAPHIC REQUIREMENT: Only include fish species that are naturally occurring and indigenous to the ${getLocationToSeaMapping(userLocation)} region. DO NOT include tropical, exotic, or non-native species that would not naturally be found in these waters. For example, if the location is Malta (Mediterranean Sea), do NOT include clownfish, angelfish, or other tropical species. Focus on temperate and regional species appropriate for the specific sea/ocean. Format: [{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat Description\",\"difficulty\":\"Easy\",\"season\":\"Season Info\",\"isToxic\":false}]. Mix of difficulty levels (Easy/Intermediate/Hard/Advanced/Expert). CRITICAL: scientificName must be complete binomial nomenclature (Genus species) - NEVER use spp., sp., cf., aff., or any abbreviations. Examples: \"Thunnus thynnus\" NOT \"Thunnus spp.\" or \"Thunnus sp.\". Each scientific name must be a specific species with both genus and species names. Return only the JSON array.`,
               },
             ],
             temperature: 0.1,
@@ -676,15 +697,36 @@ const HomePage: React.FC<HomePageProps> = ({
 
         // No filtering - keep all fish as returned by OpenAI
 
-        // Ensure each fish has required fields
-        fishData = fishData.map((fish) => ({
-          name: fish.name || "Unknown Fish",
-          scientificName: fish.scientificName || "Unknown",
-          habitat: fish.habitat || "Unknown",
-          difficulty: fish.difficulty || "Intermediate",
-          season: fish.season || "Year-round",
-          isToxic: Boolean(fish.isToxic),
-        }));
+        // Ensure each fish has required fields and clean scientific names
+        fishData = fishData.map((fish) => {
+          let cleanScientificName = fish.scientificName || "Unknown";
+
+          // Remove common abbreviations and ensure proper binomial nomenclature
+          if (cleanScientificName !== "Unknown") {
+            cleanScientificName = cleanScientificName
+              .replace(/\s+(spp?\.?|cf\.?|aff\.?)\s*$/i, "") // Remove spp., sp., cf., aff. at the end
+              .replace(/\s+(spp?\.?|cf\.?|aff\.?)\s+/gi, " ") // Remove these abbreviations in the middle
+              .trim();
+
+            // Ensure we have at least genus and species (two words)
+            const parts = cleanScientificName.split(/\s+/);
+            if (parts.length < 2) {
+              cleanScientificName = "Unknown";
+            } else if (parts.length > 2) {
+              // Keep only genus and species (first two words)
+              cleanScientificName = `${parts[0]} ${parts[1]}`;
+            }
+          }
+
+          return {
+            name: fish.name || "Unknown Fish",
+            scientificName: cleanScientificName,
+            habitat: fish.habitat || "Unknown",
+            difficulty: fish.difficulty || "Intermediate",
+            season: fish.season || "Year-round",
+            isToxic: Boolean(fish.isToxic),
+          };
+        });
       } catch (e) {
         console.error("Error parsing OpenAI response:", e);
         console.error("Raw response:", content);
