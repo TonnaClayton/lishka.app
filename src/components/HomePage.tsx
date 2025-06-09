@@ -13,6 +13,7 @@ import { cacheApiResponse, getCachedApiResponse } from "@/lib/api-helpers";
 import LoadingDots from "./LoadingDots";
 import LocationSetup from "./LocationSetup";
 import FishingTipsCarousel from "./FishingTipsCarousel";
+import OffshoreFishingLocations from "./OffshoreFishingLocations";
 
 // Import Dialog components from ui folder
 import { Dialog, DialogContent, DialogOverlay } from "./ui/dialog";
@@ -336,9 +337,27 @@ const HomePage: React.FC<HomePageProps> = ({
       const currentMonthYear = getCurrentMonthYear();
       const cleanLocation = getCleanLocationName(userLocation);
       const seaOcean = getLocationToSeaMapping(userLocation);
+
+      // Get coordinates from localStorage
+      let latitude = 35.8997; // Default Malta coordinates
+      let longitude = 14.5146;
+
+      try {
+        const savedLocationFull = localStorage.getItem("userLocationFull");
+        if (savedLocationFull) {
+          const locationData = JSON.parse(savedLocationFull);
+          latitude = locationData.latitude || latitude;
+          longitude = locationData.longitude || longitude;
+        }
+      } catch (e) {
+        console.warn(
+          "Could not parse saved location coordinates, using defaults",
+        );
+      }
+
       // Use month-year instead of exact date for better cache persistence
-      // Updated cache key to v4 to reflect new dangerType field
-      const cacheKey = `toxic_fish_data_v4_${cleanLocation}_${seaOcean}_${currentMonthYear}`;
+      // Updated cache key to v5 to reflect new prompt with coordinates and probability scoring
+      const cacheKey = `toxic_fish_data_v5_${cleanLocation}_${seaOcean}_${currentMonthYear}_${latitude.toFixed(3)}_${longitude.toFixed(3)}`;
 
       // Check cache first
       const cachedData = getCachedApiResponse(cacheKey);
@@ -388,29 +407,72 @@ const HomePage: React.FC<HomePageProps> = ({
               },
               {
                 role: "user",
-                content: `Generate fish species from the ${seaOcean} near ${cleanLocation} that are either TOXIC TO HANDLE or TOXIC TO EAT. IMPORTANT: Only include genuinely toxic fish - do NOT add random or non-toxic fish to reach a specific count.
+                content: `You are a marine biology expert with access to authoritative species occurrence data, habitat preferences, and geospatial information. Return a comprehensive JSON list of genuinely toxic marine organisms from the ${seaOcean} near ${cleanLocation} at coordinates ${latitude}, ${longitude}.
 
-TOXIC TO HANDLE (venomous/dangerous to touch):
-- Fish with venomous spines that inject toxins
-- Fish with toxic skin or mucus that causes burns/poisoning
-- Fish that sting or bite with venom
+These organisms must meet one of the following strict toxicity criteria:
 
-TOXIC TO EAT (poisonous when consumed):
-- Fish containing natural toxins that cause illness or death
-- Fish that accumulate toxins in their flesh
+TOXIC TO HANDLE (Venomous/Dangerous to Touch)
+Include organisms that:
+- Possess venomous spines, barbs, stingers, or glands
+- Have toxic skin, mucus, or secretions that can cause chemical burns, allergic reactions, or envenomation upon touch
+- Can deliver venom via bite, sting, or contact (e.g., jellyfish, sea urchins, octopuses)
 
-CRITICAL REQUIREMENT: If there are fewer than 20 genuinely toxic fish species in this region, return only the actual toxic ones. Do NOT pad the list with non-toxic fish or make up toxic properties for non-toxic species.
+TOXIC TO EAT (Poisonous When Consumed)
+Include organisms that:
+- Contain natural biotoxins (e.g., tetrodotoxin, palytoxin, ciguatoxin, domoic acid)
+- Are known to accumulate marine toxins in their flesh or organs
+- Are scientifically confirmed to cause serious or fatal poisoning when eaten, even after cooking
 
-Format each fish as JSON:
-- name: Common name
-- scientificName: Complete binomial (Genus species)
-- habitat: Brief description
-- difficulty: Always "Expert"
-- season: Availability period
-- dangerType: Either "Toxic to handle" or "Toxic to eat" with brief explanation
-- isToxic: Always true
+INCLUDE:
+- Fish
+- Cephalopods (e.g., octopuses)
+- Cnidarians (e.g., jellyfish)
+- Echinoderms (e.g., sea urchins)
+- Mollusks (e.g., cone snails, bivalves)
+- Marine plants and algae (e.g., toxic seaweed, harmful algal blooms)
+- Other toxic marine invertebrates
 
-Return ONLY a JSON array. Example: [{"name":"Greater Weever","scientificName":"Trachinus draco","habitat":"Sandy bottoms","difficulty":"Expert","season":"Year-round","dangerType":"Toxic to handle - venomous spines cause severe pain","isToxic":true}]`,
+EXCLUDE:
+- Any non-toxic species
+- Species that are only dangerous due to sharpness or appearance without venom
+- Edible species that are only risky when spoiled or improperly cooked
+- Any species lacking confirmed toxicity in scientific or regional poison control databases
+
+ADDITIONAL BEHAVIOR: ORDER BY CATCH LIKELIHOOD
+Rank the results by probability of being encountered at the given coordinates:
+- Cross-reference the organism's preferred habitat with the local seabed type (e.g., rocky, sandy, seagrass, pelagic, reef, artificial structures)
+- Use environmental preferences such as depth range, temperature, and season
+- If the location favors multiple habitats, consider overlap and adjust probability accordingly
+
+RETURN FORMAT (JSON array only):
+Each entry must follow this format:
+{
+  "name": "Common name",
+  "scientificName": "Genus species",
+  "habitat": "Brief description of where it lives",
+  "difficulty": "Expert",
+  "season": "Seasonal availability or bloom period",
+  "dangerType": "Toxic to handle - reason" or "Toxic to eat - reason",
+  "isToxic": true,
+  "probabilityScore": 0.0 to 1.0
+}
+
+Example Output:
+[
+  {
+    "name": "Greater Weever",
+    "scientificName": "Trachinus draco",
+    "habitat": "Sandy and muddy bottoms, shallow coastal waters",
+    "difficulty": "Expert",
+    "season": "Year-round",
+    "dangerType": "Toxic to handle - venomous dorsal and gill spines cause intense pain",
+    "isToxic": true,
+    "probabilityScore": 0.93
+  }
+]
+
+FINAL RULE:
+Return only genuinely toxic marine organisms. If there are fewer than 20 such species in the region, list only those confirmed. Do not pad the list or make assumptions without habitat match or toxicity confirmation.`,
               },
             ],
             temperature: 0.1,
@@ -516,6 +578,7 @@ Return ONLY a JSON array. Example: [{"name":"Greater Weever","scientificName":"T
             season: fish.season || "Year-round",
             dangerType: fish.dangerType || "Toxic - handle with caution",
             isToxic: true,
+            probabilityScore: fish.probabilityScore || 0.5,
           };
         });
       } catch (e) {
@@ -528,7 +591,7 @@ Return ONLY a JSON array. Example: [{"name":"Greater Weever","scientificName":"T
         console.log("Using fallback toxic fish data due to parsing error");
       }
 
-      // Set toxic fish data immediately for faster display
+      // Set toxic fish data immediately for faster display (already ordered by probability from prompt)
       const toxicFishWithDefaults = toxicFishData.map((fish) => ({
         ...fish,
         name: cleanFishName(fish.name),
@@ -537,13 +600,14 @@ Return ONLY a JSON array. Example: [{"name":"Greater Weever","scientificName":"T
 
       // Debug log
       console.log(
-        `DEBUG: Received ${toxicFishWithDefaults.length} toxic fish from OpenAI API for ${cleanLocation} (${seaOcean})`,
+        `DEBUG: Received ${toxicFishWithDefaults.length} toxic fish from OpenAI API for ${cleanLocation} (${seaOcean}) at coordinates ${latitude}, ${longitude}`,
       );
       console.log(
-        "DEBUG: Toxic fish data:",
+        "DEBUG: Toxic fish data (ordered by probability):",
         toxicFishWithDefaults.map((fish) => ({
           name: fish.name,
-          scientificName: fish.scificName,
+          scientificName: fish.scientificName,
+          probabilityScore: fish.probabilityScore,
         })),
       );
 
@@ -902,9 +966,27 @@ Return ONLY a JSON array. Example: [{"name":"Greater Weever","scientificName":"T
         const seaOcean = getLocationToSeaMapping(validatedLocation);
         const cleanLocation = getCleanLocationName(validatedLocation);
 
-        // Clear old cache entries (use v4 keys for toxic fish)
+        // Clear old cache entries (use v5 keys for toxic fish with coordinates)
         const fishDataCacheKey = `fish_data_v3_${cleanLocation}_${currentMonthYear}_page_1`;
-        const toxicFishCacheKey = `toxic_fish_data_v4_${cleanLocation}_${seaOcean}_${currentMonthYear}`;
+
+        // Get coordinates for cache key
+        let latitude = 35.8997; // Default Malta coordinates
+        let longitude = 14.5146;
+
+        try {
+          const savedLocationFull = localStorage.getItem("userLocationFull");
+          if (savedLocationFull) {
+            const locationData = JSON.parse(savedLocationFull);
+            latitude = locationData.latitude || latitude;
+            longitude = locationData.longitude || longitude;
+          }
+        } catch (e) {
+          console.warn(
+            "Could not parse saved location coordinates for cache clearing",
+          );
+        }
+
+        const toxicFishCacheKey = `toxic_fish_data_v5_${cleanLocation}_${seaOcean}_${currentMonthYear}_${latitude.toFixed(3)}_${longitude.toFixed(3)}`;
 
         localStorage.removeItem(fishDataCacheKey);
         localStorage.removeItem(toxicFishCacheKey);
@@ -922,7 +1004,25 @@ Return ONLY a JSON array. Example: [{"name":"Greater Weever","scientificName":"T
         const cleanLocation = getCleanLocationName(validatedLocation);
 
         const fishDataCacheKey = `fish_data_v3_${cleanLocation}_${currentMonthYear}_page_1`;
-        const toxicFishCacheKey = `toxic_fish_data_v4_${cleanLocation}_${seaOcean}_${currentMonthYear}`;
+
+        // Get coordinates for cache key
+        let latitude = 35.8997; // Default Malta coordinates
+        let longitude = 14.5146;
+
+        try {
+          const savedLocationFull = localStorage.getItem("userLocationFull");
+          if (savedLocationFull) {
+            const locationData = JSON.parse(savedLocationFull);
+            latitude = locationData.latitude || latitude;
+            longitude = locationData.longitude || longitude;
+          }
+        } catch (e) {
+          console.warn(
+            "Could not parse saved location coordinates for cache checking",
+          );
+        }
+
+        const toxicFishCacheKey = `toxic_fish_data_v5_${cleanLocation}_${seaOcean}_${currentMonthYear}_${latitude.toFixed(3)}_${longitude.toFixed(3)}`;
 
         const cachedFishData = getCachedApiResponse(fishDataCacheKey);
         const cachedToxicData = getCachedApiResponse(toxicFishCacheKey);
@@ -986,7 +1086,7 @@ Return ONLY a JSON array. Example: [{"name":"Greater Weever","scientificName":"T
   };
 
   return (
-    <div className="flex flex-col dark:bg-background border-l-0 border-y-0 border-r-0 rounded-3xl">
+    <div className="flex flex-col dark:bg-background border-l-0 border-y-0 border-r-0 rounded-xl">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full lg:hidden dark:bg-gray-800 border-t-0 border-x-0 border-b">
         <div className="flex justify-between items-center">
@@ -1100,6 +1200,28 @@ Return ONLY a JSON array. Example: [{"name":"Greater Weever","scientificName":"T
               ))}
             </div>
           )}
+        </div>
+
+        {/* Offshore Fishing Locations Section */}
+        <div className="mb-8">
+          <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
+            Offshore Fishing Hotspots
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            AI-powered analysis of underwater structures, wrecks, and drop-offs
+            within 10NM of your location. Each spot is ranked by fish activity
+            probability.
+          </p>
+          {/* Debug info for location passing */}
+          {localStorage.getItem("showLocationDebug") === "true" && (
+            <div className="mb-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded text-xs">
+              <div className="font-mono text-green-700 dark:text-green-400">
+                DEBUG: Passing userLocation to OffshoreFishingLocations: "
+                {userLocation}"
+              </div>
+            </div>
+          )}
+          <OffshoreFishingLocations userLocation={userLocation} />
         </div>
 
         {/* Active Fish Section */}

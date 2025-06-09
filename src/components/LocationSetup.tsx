@@ -197,7 +197,7 @@ const LocationSetup = ({
             transition={{ duration: 0.2 }}
           >
             <motion.div
-              className="bg-white dark:bg-gray-900 rounded-3xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl relative mx-4"
+              className="bg-white dark:bg-gray-900 rounded-xl w-full max-w-2xl max-h-[90vh] overflow-hidden shadow-2xl relative mx-4"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 20 }}
@@ -241,7 +241,7 @@ const LocationSetup = ({
       </AnimatePresence>
       <AnimatePresence>
         <motion.div
-          className="flex flex-col items-center justify-center p-6 bg-white dark:bg-gray-900 rounded-3xl shadow-lg max-w-md mx-4 relative"
+          className="flex flex-col items-center justify-center p-6 bg-white dark:bg-gray-900 rounded-xl shadow-lg max-w-md mx-4 relative"
           initial={{ opacity: 1, scale: 1 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
