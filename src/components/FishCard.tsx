@@ -72,7 +72,7 @@ const FishCard = ({
   }, [name, scientificName, image]);
   return (
     <Card
-      className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full border-0 shadow bg-white rounded-3xl"
+      className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full border-0 shadow bg-white rounded-xl"
       onClick={onClick}
     >
       <div className="relative w-full aspect-[3/2] overflow-hidden max-w-full">

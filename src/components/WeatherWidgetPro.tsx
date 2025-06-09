@@ -1410,7 +1410,7 @@ const WeatherWidget: React.FC<{
         </DialogContent>
       </Dialog>
       {/* Weather Card - Enhanced Weather Data */}
-      <Card className="p-6 bg-gradient-to-br from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-3xl">
+      <Card className="p-6 bg-gradient-to-br from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-medium opacity-90">
@@ -1541,7 +1541,7 @@ const WeatherWidget: React.FC<{
         )}
       </Card>
       {/* Marine Card - Fishing Conditions */}
-      <Card className="p-6 bg-[#1E40AF] text-white overflow-hidden relative shadow-md mt-4 rounded-3xl">
+      <Card className="p-6 bg-[#1E40AF] text-white overflow-hidden relative shadow-md mt-4 rounded-xl">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-medium opacity-90">
@@ -1658,7 +1658,7 @@ const WeatherWidget: React.FC<{
         </div>
       </Card>
       {/* Fishing Conditions Card */}
-      <Card className="p-6 lg:p-8 bg-white dark:bg-card overflow-hidden relative shadow-sm mt-4 rounded-3xl">
+      <Card className="p-6 lg:p-8 bg-white dark:bg-card overflow-hidden relative shadow-sm mt-4 rounded-xl">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-semibold dark:text-white">
@@ -1719,7 +1719,7 @@ const WeatherWidget: React.FC<{
         </div>
       </Card>
       {/* Marine Data Hourly Cards */}
-      <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-3xl">
+      <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold dark:text-white">
             Marine Data Forecast
@@ -1897,7 +1897,7 @@ const WeatherWidget: React.FC<{
           </div>
         </Card>
       )}
-      <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-3xl">
+      <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
         <h2 className="text-lg font-semibold mb-4 dark:text-white">
           Hourly Forecast
         </h2>
@@ -1967,7 +1967,7 @@ const WeatherWidget: React.FC<{
       </Card>
       {/* Weekly Forecast */}
       {weatherData?.daily && (
-        <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-3xl">
+        <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
           <h2 className="text-lg font-semibold mb-4 dark:text-white">
             Weekly Forecast
           </h2>

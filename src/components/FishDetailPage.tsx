@@ -799,7 +799,7 @@ const FishDetailPage = () => {
             {/* Content */}
             <div className="p-4 lg:p-6 space-y-6 pb-20 lg:pb-6">
               {/* Fish Image Card */}
-              <Card className="overflow-hidden rounded-3xl">
+              <Card className="overflow-hidden rounded-xl">
                 <div className="relative w-full" style={{ aspectRatio: "3/2" }}>
                   {imageLoading ? (
                     <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
@@ -842,7 +842,7 @@ const FishDetailPage = () => {
 
               {/* Toxicity Information Card - Only visible for toxic fish */}
               {fishDetails.isToxic && (
-                <Card className="p-6 rounded-3xl">
+                <Card className="p-6 rounded-xl">
                   <h2 className="text-xl font-semibold mb-4">
                     Toxicity Information
                   </h2>
@@ -876,7 +876,7 @@ const FishDetailPage = () => {
               )}
 
               {/* Description Card */}
-              <Card className="p-6 rounded-3xl">
+              <Card className="p-6 rounded-xl">
                 <h2 className="text-xl font-semibold mb-4">About this Fish</h2>
                 <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
                   {fishDetails.description}
@@ -885,7 +885,7 @@ const FishDetailPage = () => {
 
               {/* Fishing Regulations Card */}
               {fishDetails.fishingRegulations && (
-                <Card className="p-4 sm:p-6 rounded-3xl">
+                <Card className="p-4 sm:p-6 rounded-xl">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-xl font-semibold">
                       Fishing Regulations
@@ -1123,7 +1123,7 @@ const FishDetailPage = () => {
               )}
 
               {/* Fishing Season Calendar Card */}
-              <Card className="p-4 sm:p-6 rounded-3xl">
+              <Card className="p-4 sm:p-6 rounded-xl">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold">Fishing Season</h2>
                   <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
@@ -1327,7 +1327,7 @@ const FishDetailPage = () => {
 
               {/* All Round Gear Card */}
               {fishDetails.allRoundGear && (
-                <Card className="p-6 rounded-3xl">
+                <Card className="p-6 rounded-xl">
                   <h2 className="text-xl font-semibold mb-4">All Round Gear</h2>
                   <div className="space-y-4">
                     <div className="flex items-start gap-3">
@@ -1447,7 +1447,7 @@ const FishDetailPage = () => {
                 fishDetails.fishingMethods.map((method, index) => (
                   <div
                     key={index}
-                    className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 mb-6 space-y-6"
+                    className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 mb-6 space-y-6"
                   >
                     <h2 className="text-xl font-semibold">{method.title}</h2>
 
@@ -1698,7 +1698,7 @@ const FishDetailPage = () => {
                   </div>
                 ))
               ) : (
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-3xl border border-gray-200 dark:border-gray-700 mb-6">
+                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
                   <p className="text-sm text-gray-600 dark:text-gray-300">
                     No fishing methods available for this fish.
                   </p>

@@ -8,6 +8,8 @@ import {
   Globe,
   Ruler,
   Fish,
+  MapPin,
+  Anchor,
 } from "lucide-react";
 
 import { Button } from "./ui/button";
@@ -29,6 +31,12 @@ const SettingsPage: React.FC = () => {
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
   const [useImperialUnits, setUseImperialUnits] = useState<boolean>(false);
   const [showDebugUI, setShowDebugUI] = useState<boolean>(false);
+  const [showToxicFishDebug, setShowToxicFishDebug] = useState<boolean>(false);
+  const [showLocationDebug, setShowLocationDebug] = useState<boolean>(false);
+  const [showOffshoreFishingDebug, setShowOffshoreFishingDebug] =
+    useState<boolean>(false);
+  const [showOpenAIDataDebug, setShowOpenAIDataDebug] =
+    useState<boolean>(false);
   const [apiStatus, setApiStatus] = useState<{
     connected: boolean;
     model: string;
@@ -66,6 +74,42 @@ const SettingsPage: React.FC = () => {
       // Default to hide debug UI
       localStorage.setItem("showDebugUI", "false");
     }
+
+    // Get toxic fish debug preference
+    const toxicFishDebugPreference = localStorage.getItem("showToxicFishDebug");
+    if (toxicFishDebugPreference !== null) {
+      setShowToxicFishDebug(toxicFishDebugPreference === "true");
+    } else {
+      localStorage.setItem("showToxicFishDebug", "false");
+    }
+
+    // Get location debug preference
+    const locationDebugPreference = localStorage.getItem("showLocationDebug");
+    if (locationDebugPreference !== null) {
+      setShowLocationDebug(locationDebugPreference === "true");
+    } else {
+      localStorage.setItem("showLocationDebug", "false");
+    }
+
+    // Get offshore fishing debug preference
+    const offshoreFishingDebugPreference = localStorage.getItem(
+      "showOffshoreFishingDebug",
+    );
+    if (offshoreFishingDebugPreference !== null) {
+      setShowOffshoreFishingDebug(offshoreFishingDebugPreference === "true");
+    } else {
+      localStorage.setItem("showOffshoreFishingDebug", "false");
+    }
+
+    // Get OpenAI data debug preference
+    const openAIDataDebugPreference = localStorage.getItem(
+      "showOpenAIDataDebug",
+    );
+    if (openAIDataDebugPreference !== null) {
+      setShowOpenAIDataDebug(openAIDataDebugPreference === "true");
+    } else {
+      localStorage.setItem("showOpenAIDataDebug", "false");
+    }
   }, []);
 
   const handleLanguageChange = (value: string) => {
@@ -99,6 +143,42 @@ const SettingsPage: React.FC = () => {
 
     // Dispatch a custom event to notify other components about the debug UI change
     window.dispatchEvent(new Event("debugUIChanged"));
+  };
+
+  const handleToxicFishDebugChange = (checked: boolean) => {
+    console.log(
+      `Changing toxic fish debug to: ${checked ? "enabled" : "disabled"}`,
+    );
+    setShowToxicFishDebug(checked);
+    localStorage.setItem("showToxicFishDebug", checked.toString());
+    window.dispatchEvent(new Event("toxicFishDebugChanged"));
+  };
+
+  const handleLocationDebugChange = (checked: boolean) => {
+    console.log(
+      `Changing location debug to: ${checked ? "enabled" : "disabled"}`,
+    );
+    setShowLocationDebug(checked);
+    localStorage.setItem("showLocationDebug", checked.toString());
+    window.dispatchEvent(new Event("locationDebugChanged"));
+  };
+
+  const handleOffshoreFishingDebugChange = (checked: boolean) => {
+    console.log(
+      `Changing offshore fishing debug to: ${checked ? "enabled" : "disabled"}`,
+    );
+    setShowOffshoreFishingDebug(checked);
+    localStorage.setItem("showOffshoreFishingDebug", checked.toString());
+    window.dispatchEvent(new Event("offshoreFishingDebugChanged"));
+  };
+
+  const handleOpenAIDataDebugChange = (checked: boolean) => {
+    console.log(
+      `Changing OpenAI data debug to: ${checked ? "enabled" : "disabled"}`,
+    );
+    setShowOpenAIDataDebug(checked);
+    localStorage.setItem("showOpenAIDataDebug", checked.toString());
+    window.dispatchEvent(new Event("openAIDataDebugChanged"));
   };
 
   // Function to clear all fish data cache
@@ -332,16 +412,59 @@ const SettingsPage: React.FC = () => {
                     </div>
                   </div>
                   <Switch
-                    checked={
-                      localStorage.getItem("showToxicFishDebug") === "true"
-                    }
-                    onCheckedChange={(checked) => {
-                      localStorage.setItem(
-                        "showToxicFishDebug",
-                        checked.toString(),
-                      );
-                      window.dispatchEvent(new Event("toxicFishDebugChanged"));
-                    }}
+                    checked={showToxicFishDebug}
+                    onCheckedChange={handleToxicFishDebugChange}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <MapPin className="h-5 w-5 mr-2 text-gray-600" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        Show Location Coordinates
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        Display user and fishing spot coordinates
+                      </span>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={showLocationDebug}
+                    onCheckedChange={handleLocationDebugChange}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Anchor className="h-5 w-5 mr-2 text-gray-600" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        Show Offshore Fishing Debug
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        Display raw API data for offshore fishing locations
+                      </span>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={showOffshoreFishingDebug}
+                    onCheckedChange={handleOffshoreFishingDebugChange}
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <AlertCircle className="h-5 w-5 mr-2 text-gray-600" />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium">
+                        Show OpenAI Data Debug
+                      </span>
+                      <span className="text-xs text-gray-500">
+                        Display data being sent to OpenAI for analysis
+                      </span>
+                    </div>
+                  </div>
+                  <Switch
+                    checked={showOpenAIDataDebug}
+                    onCheckedChange={handleOpenAIDataDebugChange}
                   />
                 </div>
               </div>

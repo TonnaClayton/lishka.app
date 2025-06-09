@@ -701,7 +701,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
         <CarouselContent>
           {tips.map((tip, index) => (
             <CarouselItem key={index}>
-              <Card className="overflow-hidden border border-border bg-background shadow-sm rounded-3xl">
+              <Card className="overflow-hidden border border-border bg-background shadow-sm rounded-xl">
                 <CardContent className="p-4 pb-4 flex flex-col h-full">
                   <p
                     ref={(el) => (tipContentRefs.current[index] = el)}
