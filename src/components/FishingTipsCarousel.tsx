@@ -152,7 +152,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
   const [tips, setTips] = useState<FishingTip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [api, setApi] = useState<CarouselApi>();
+  const [api, setApi] = useState<CarouselApi | undefined>(undefined);
   const [current, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
   const [weatherSummary, setWeatherSummary] = useState<any>(null);
@@ -275,7 +275,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
       const data = await response.json();
       const content = data.choices[0].message.content;
 
-      let fishingTips: FishingTip[];
+      let fishingTips: FishingTip[] = [];
       try {
         // Clean the response
         let jsonStr = content.trim();
@@ -291,18 +291,8 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
         }
 
         console.log("Cleaned fishing tips JSON:", jsonStr);
-        fishingTips = JSON.parse(jsonStr);
-
-        if (!Array.isArray(fishingTips)) {
-          throw new Error("Response is not an array");
-        }
-
-        // Validate and ensure proper structure
-        fishingTips = fishingTips.map((tip, index) => ({
-          title: tip.title || `Fishing Tip ${index + 1}`,
-          content: tip.content || "No content available",
-          category: tip.category || "General",
-        }));
+        const parsedTips = JSON.parse(jsonStr);
+        fishingTips = Array.isArray(parsedTips) ? parsedTips : [];
       } catch (e) {
         console.error("Error parsing fishing tips:", e);
         console.error("Raw response:", content);
@@ -340,6 +330,10 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
             category: "Technique",
           },
         ];
+      }
+
+      if (!Array.isArray(fishingTips) || fishingTips.length === 0) {
+        throw new Error("Response is not a valid array or is empty");
       }
 
       setTips(fishingTips);

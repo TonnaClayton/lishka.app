@@ -12,6 +12,7 @@ import {
   AlertCircle,
   Settings,
   Ruler,
+  LogOut,
 } from "lucide-react";
 import BottomNav from "./BottomNav";
 import { Button } from "./ui/button";
@@ -25,6 +26,7 @@ import {
 import { Separator } from "./ui/separator";
 import { Switch } from "./ui/switch";
 import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MenuPageProps {
   onLanguageChange?: (languageCode: string) => void;
@@ -32,6 +34,7 @@ interface MenuPageProps {
 
 const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
   const navigate = useNavigate();
+  const { signOut } = useAuth();
   const [selectedLanguage, setSelectedLanguage] = useState<string>("");
   const [useImperialUnits, setUseImperialUnits] = useState<boolean>(false);
   const [apiStatus, setApiStatus] = useState<{
@@ -81,6 +84,18 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
   };
 
   // Function to clear all fish data cache
+  const handleSignOut = async () => {
+    try {
+      console.log("[MenuPage] Initiating sign out");
+      await signOut();
+      console.log("[MenuPage] Sign out completed");
+    } catch (err) {
+      console.error("[MenuPage] Sign out error:", err);
+      // Force redirect even if signOut fails
+      navigate("/login", { replace: true });
+    }
+  };
+
   const clearFishDataCache = () => {
     console.log("Clearing all fish data cache");
     const keysToRemove = [];
@@ -304,44 +319,14 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
                 <Settings className="mr-2 h-5 w-5" />
                 Settings
               </Button>
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Unit Measurement Settings - Only visible on mobile */}
-          <div className="lg:hidden space-y-2">
-            <h2 className="text-lg font-semibold">Measurements</h2>
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <Ruler className="h-5 w-5 mr-2 text-gray-600" />
-                  <span className="text-sm font-medium">
-                    Select your preferred measurement system
-                  </span>
-                </div>
-                <div className="flex w-[180px] h-10 bg-gray-100 rounded-full p-1 relative overflow-hidden">
-                  <div
-                    className="absolute rounded-full bg-black z-0 top-1 h-[calc(100%-8px)] transition-all duration-300 ease-in-out"
-                    style={{
-                      width: "calc(50% - 8px)",
-                      left: useImperialUnits ? "4px" : "calc(50% + 4px)",
-                    }}
-                  />
-                  <button
-                    className={`flex-1 rounded-full flex items-center justify-center text-sm font-medium z-10 relative transition-colors duration-300 ${useImperialUnits ? "text-white" : "text-gray-500"}`}
-                    onClick={() => handleUnitsChange(true)}
-                  >
-                    in/oz
-                  </button>
-                  <button
-                    className={`flex-1 rounded-full flex items-center justify-center text-sm font-medium z-10 relative transition-colors duration-300 ${!useImperialUnits ? "text-white" : "text-gray-500"}`}
-                    onClick={() => handleUnitsChange(false)}
-                  >
-                    cm/gr
-                  </button>
-                </div>
-              </div>
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-left text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"
+                onClick={handleSignOut}
+              >
+                <LogOut className="mr-2 h-5 w-5" />
+                Sign Out
+              </Button>
             </div>
           </div>
 
@@ -360,25 +345,13 @@ const MenuPage: React.FC<MenuPageProps> = ({ onLanguageChange = () => {} }) => {
             </div>
           </div>
 
-          {/* App Settings */}
-          <div className="space-y-2">
-            <h2 className="text-lg font-semibold">App Settings</h2>
-            <div className="bg-white rounded-lg shadow p-4">
-              <div className="space-y-4">
-                <p className="text-sm text-gray-600">
-                  Configure your fishing preferences here.
-                </p>
-              </div>
-            </div>
-          </div>
-
           {/* App Info */}
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">About</h2>
             <div className="bg-white rounded-lg shadow p-4">
               <p className="text-sm text-gray-600">Lishka Fishing App v1.0.0</p>
               <p className="text-xs text-gray-500 mt-2">
-                Powered by OpenAI and Fishbase
+                Powered by OpenAI, Open Meteo & Leaflet Maps
               </p>
             </div>
           </div>

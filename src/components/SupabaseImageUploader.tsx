@@ -50,14 +50,14 @@ const SupabaseImageUploader: React.FC<SupabaseImageUploaderProps> = ({
     }
 
     // Initialize Supabase client
-    const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+    const supabaseUrl = "https://evevdtciewzvqspsnupc.supabase.co";
     const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
 
-    if (!supabaseUrl || !supabaseKey) {
+    if (!supabaseKey) {
       setStatus({
         type: "error",
         message:
-          "Supabase configuration missing. Please add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY to your environment variables.",
+          "Supabase configuration missing. Please add VITE_SUPABASE_KEY to your environment variables.",
       });
       return;
     }

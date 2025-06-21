@@ -23,13 +23,12 @@ const LocationSetup = ({
   const navigate = useNavigate();
   const [isDetecting, setIsDetecting] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
-  // Removed isClosing state
   const [location, setLocation] = useState<{
     lat: number;
     lng: number;
     name: string;
   } | null>(null);
-  const [countdown, setCountdown] = useState<number | null>(4);
+  const [countdown, setCountdown] = useState<number | null>(null);
 
   const handleDetectLocation = () => {
     setIsDetecting(true);
@@ -329,10 +328,24 @@ L.Icon.Default.mergeOptions({
 });
 
 // Map Selection Component
-const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
-  const [selectedPosition, setSelectedPosition] = useState(null);
+interface MapSelectionProps {
+  onLocationSelect: (location: {
+    lat: number;
+    lng: number;
+    name: string;
+  }) => void;
+  currentLocation?: { lat: number; lng: number; name: string } | null;
+}
+
+const MapSelection: React.FC<MapSelectionProps> = ({
+  onLocationSelect,
+  currentLocation = null,
+}) => {
+  const [selectedPosition, setSelectedPosition] = useState<
+    [number, number] | null
+  >(null);
   const [locationName, setLocationName] = useState("");
-  const defaultPosition = currentLocation
+  const defaultPosition: [number, number] = currentLocation
     ? [currentLocation.lat, currentLocation.lng]
     : [35.8997, 14.5146]; // Use current location if available, otherwise Malta as default
 
