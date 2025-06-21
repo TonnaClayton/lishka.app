@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { MapPin } from "lucide-react";
+import { useNavigate, Link } from "react-router-dom";
+import { MapPin, User } from "lucide-react";
 import BottomNav from "./BottomNav";
 import FishCard from "./FishCard";
 import { Button } from "./ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
 
 import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
 import { getBlobImage } from "@/lib/blob-storage";
@@ -14,6 +16,7 @@ import LoadingDots from "./LoadingDots";
 import LocationSetup from "./LocationSetup";
 import FishingTipsCarousel from "./FishingTipsCarousel";
 import OffshoreFishingLocations from "./OffshoreFishingLocations";
+import EmailVerificationBanner from "./EmailVerificationBanner";
 
 // Import Dialog components from ui folder
 import { Dialog, DialogContent, DialogOverlay } from "./ui/dialog";
@@ -40,6 +43,7 @@ const HomePage: React.FC<HomePageProps> = ({
   onLocationChange = () => {},
 }) => {
   const navigate = useNavigate();
+  const { user, profile } = useAuth();
   const [fishList, setFishList] = useState<FishData[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -1085,8 +1089,26 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
     fetchFishData(true);
   };
 
+  // Helper function to get user initials
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  // Handle avatar click to navigate to profile
+  const handleAvatarClick = () => {
+    navigate("/profile");
+  };
+
   return (
     <div className="flex flex-col dark:bg-background border-l-0 border-y-0 border-r-0 rounded-xl">
+      {/* Email Verification Banner */}
+      <EmailVerificationBanner />
+
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full lg:hidden dark:bg-gray-800 border-t-0 border-x-0 border-b">
         <div className="flex justify-between items-center">
@@ -1105,7 +1127,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
           <div className="hidden lg:block">
             <h1 className="text-xl font-semibold dark:text-white">Home</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <Button
               variant="ghost"
               size="sm"
@@ -1115,11 +1137,20 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
               <MapPin className="h-4 w-4" />
               <span className="truncate">{userLocation}</span>
             </Button>
-            <img
-              src="https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746801732510-image.png"
-              alt="Profile"
-              className="w-8 h-8 rounded-full object-cover"
-            />
+            {/* User Avatar */}
+            <Avatar
+              className="w-8 h-8 cursor-pointer hover:opacity-80 transition-opacity"
+              onClick={handleAvatarClick}
+            >
+              <AvatarImage src={profile?.avatar_url || undefined} />
+              <AvatarFallback className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
+                {profile?.full_name || user?.full_name ? (
+                  getInitials(profile?.full_name || user?.full_name || "")
+                ) : (
+                  <User className="w-4 h-4" />
+                )}
+              </AvatarFallback>
+            </Avatar>
           </div>
         </div>
       </header>
@@ -1202,7 +1233,10 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
           )}
         </div>
 
-        {/* Offshore Fishing Locations Section */}
+        {/* Offshore Fishing Locations Section - TEMPORARILY HIDDEN */}
+        {/* TODO: This section requires refinement for accurate location suggestions */}
+        {/* The OffshoreFishingLocations component needs improvement before re-enabling */}
+        {/*
         <div className="mb-8">
           <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
             Offshore Fishing Hotspots
@@ -1212,7 +1246,6 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
             within 10NM of your location. Each spot is ranked by fish activity
             probability.
           </p>
-          {/* Debug info for location passing */}
           {localStorage.getItem("showLocationDebug") === "true" && (
             <div className="mb-2 p-2 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded text-xs">
               <div className="font-mono text-green-700 dark:text-green-400">
@@ -1223,6 +1256,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
           )}
           <OffshoreFishingLocations userLocation={userLocation} />
         </div>
+        */}
 
         {/* Active Fish Section */}
         <div className="mb-6">

@@ -15,8 +15,11 @@ const SupabaseConnectionTest = () => {
     const testConnection = async () => {
       try {
         const supabaseUrl = "https://evevdtciewzvqspsnupc.supabase.co";
-        const supabaseKey =
-          "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2ZXZkdGNpZXd6dnFzcHNudXBjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc0MzEyMDUsImV4cCI6MjA2MzAwNzIwNX0.PpU1SbJxN3A4SHyHeuLgn2DpjDk9-aA2LH2QEw9j12o";
+        const supabaseKey = import.meta.env.VITE_SUPABASE_KEY;
+
+        if (!supabaseKey) {
+          throw new Error("Missing VITE_SUPABASE_KEY environment variable");
+        }
 
         const supabase = createClient(supabaseUrl, supabaseKey);
 

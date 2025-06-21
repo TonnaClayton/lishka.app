@@ -509,7 +509,9 @@ const FishDetailPage = () => {
         const data = await response.json();
         const regulationsData = await regulationsResponse.json();
         // Initialize result with default values to prevent reference errors
-        let result = {
+        let result: any = {
+          name: initialData.name,
+          scientificName: initialData.scientificName,
           description: "No description available.",
           fishingMethods: [],
           fishingSeasons: {
@@ -521,9 +523,13 @@ const FishDetailPage = () => {
             reasoning: "",
           },
           allRoundGear: null,
+          localNames: [],
+          currentSeasonStatus: "Status unknown",
+          officialSeasonDates: "Dates not available",
+          fishingLocation: userLocation,
         };
 
-        let regulationsResult = {
+        let regulationsResult: any = {
           sizeLimit: "Not specified",
           bagLimit: "Not specified",
           seasonDates: "Check local regulations",

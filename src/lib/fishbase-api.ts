@@ -5,9 +5,8 @@
  */
 
 import { fetchWithRetry, cacheApiResponse } from "./api-helpers";
-import { getBlobImage } from "./blob-storage";
 import {
-  getCustomFishImage,
+  getFishImageUrl as getFishImageFromService,
   getPlaceholderFishImage,
   handleFishImageError,
 } from "./fish-image-service";
@@ -74,25 +73,17 @@ export async function getFishImageUrl(
 ): Promise<string> {
   console.log(`Fetching image for ${name} (${scientificName})`);
 
-  // First try Vercel Blob storage
+  // Use the fish image service to get the image
   try {
-    console.log(`Checking Vercel Blob for image of ${scientificName}`);
-    const blobImage = await getBlobImage(scientificName);
-    if (blobImage) {
-      console.log(
-        `Found Vercel Blob image for ${scientificName}: ${blobImage}`,
-      );
-      return blobImage;
-    } else {
-      console.log(`No Vercel Blob image found for ${scientificName}`);
-    }
+    const imageUrl = await getFishImageFromService(name, scientificName);
+    console.log(`Got image for ${scientificName}: ${imageUrl}`);
+    return imageUrl;
   } catch (error) {
-    console.error("Error getting Vercel Blob image:", error);
+    console.error("Error getting fish image:", error);
+    // Fall back to Lishka placeholder image
+    console.log(`Using placeholder image for ${name} (${scientificName})`);
+    return getPlaceholderFishImage();
   }
-
-  // Fall back to Lishka placeholder image
-  console.log(`Using placeholder image for ${name} (${scientificName})`);
-  return getPlaceholderFishImage();
 }
 
 /**

@@ -110,11 +110,6 @@ const WeatherPage: React.FC = () => {
           <div className="hidden lg:block">
             <h1 className="text-xl font-semibold dark:text-white">Weather</h1>
           </div>
-          <img
-            src="https://storage.googleapis.com/tempo-public-images/github%7C43638385-1746801732510-image.png"
-            alt="Profile"
-            className="w-8 h-8 rounded-full object-cover"
-          />
         </div>
       </header>
 

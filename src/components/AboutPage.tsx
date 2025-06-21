@@ -53,7 +53,7 @@ const AboutPage = () => {
         transition={{ delay: 0.6, duration: 0.5 }}
         className="w-full text-center py-4 text-sm text-gray-500 dark:text-gray-400"
       >
-        Powered by OpenAI, OpenMetro
+        Powered by OpenAI & TinyPNG
       </motion.div>
     </div>
   );

@@ -11,8 +11,9 @@ import {
   getFishImageUrlSync,
   handleFishImageError,
 } from "@/lib/fish-image-service";
-import { getBlobImage } from "@/lib/blob-storage";
+
 import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
+import { useImperialUnits } from "@/lib/unit-conversion";
 import BottomNav from "./BottomNav";
 import TextareaAutosize from "react-textarea-autosize";
 
@@ -22,13 +23,14 @@ interface Message {
   content: string;
   timestamp: Date;
   fishResults?: Fish[];
+  image?: string;
 }
 
 interface Fish {
   id: string;
   name: string;
   scientificName?: string;
-  image: string;
+  image?: string;
   habitat: string;
   difficulty: "Easy" | "Intermediate" | "Hard" | "Advanced" | "Expert";
   season: string;
@@ -50,6 +52,10 @@ const SearchPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [useLocationContext, setUseLocationContext] = useState(true);
   const [suggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imperialUnits, setImperialUnits] =
+    useState<boolean>(useImperialUnits());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -59,8 +65,32 @@ const SearchPage: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Listen for units changes from settings
+  useEffect(() => {
+    const handleUnitsChange = () => {
+      setImperialUnits(useImperialUnits());
+    };
+
+    window.addEventListener("unitsChanged", handleUnitsChange);
+    return () => window.removeEventListener("unitsChanged", handleUnitsChange);
+  }, []);
+
+  // Convert image to base64
+  const convertImageToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+  };
+
   // Extract the API call logic to a separate function
-  const processQuery = async (queryText: string, userMessage: Message) => {
+  const processQuery = async (
+    queryText: string,
+    userMessage: Message,
+    imageFile?: File,
+  ) => {
     try {
       // Check if OpenAI is disabled
       if (!OPENAI_ENABLED) {
@@ -76,6 +106,61 @@ const SearchPage: React.FC = () => {
         );
       }
 
+      // Prepare messages for the API call
+      const unitsInstruction = imperialUnits
+        ? "Always provide measurements in imperial units (inches, feet, pounds, ounces, Fahrenheit, miles) as the primary unit, with metric equivalents in parentheses when helpful."
+        : "Always provide measurements in metric units (centimeters, meters, grams, kilograms, Celsius, kilometers) as the primary unit, with imperial equivalents in parentheses when helpful.";
+
+      const systemMessage = {
+        role: "system",
+        content: `You are a fishing expert AI that provides helpful information about fishing techniques, fish species, and fishing locations. ${unitsInstruction} If you mention specific fish species, provide detailed information about them including name, scientific name, habitat, difficulty level, and season availability. ${useLocationContext ? "Focus on fish species and fishing techniques relevant to the user's location." : "Provide global information without focusing on any specific location."}`,
+      };
+
+      const previousMessages = messages
+        .filter((msg) => msg.id !== userMessage.id)
+        .map((msg) => {
+          if (msg.image) {
+            return {
+              role: msg.role,
+              content: [
+                {
+                  type: "text",
+                  text: msg.content,
+                },
+                {
+                  type: "image_url",
+                  image_url: {
+                    url: msg.image,
+                  },
+                },
+              ],
+            };
+          }
+          return {
+            role: msg.role,
+            content: msg.content,
+          };
+        });
+
+      let userMessageContent;
+      if (imageFile) {
+        const base64Image = await convertImageToBase64(imageFile);
+        userMessageContent = [
+          {
+            type: "text",
+            text: `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`,
+          },
+          {
+            type: "image_url",
+            image_url: {
+              url: base64Image,
+            },
+          },
+        ];
+      } else {
+        userMessageContent = `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`;
+      }
+
       const response = await fetch(
         "https://api.openai.com/v1/chat/completions",
         {
@@ -85,23 +170,16 @@ const SearchPage: React.FC = () => {
             Authorization: `Bearer ${apiKey}`,
           },
           body: JSON.stringify({
-            model: "gpt-3.5-turbo",
+            model: imageFile ? "gpt-4o" : "gpt-3.5-turbo",
             messages: [
-              {
-                role: "system",
-                content: `You are a fishing expert AI that provides helpful information about fishing techniques, fish species, and fishing locations. If you mention specific fish species, provide detailed information about them including name, scientific name, habitat, difficulty level, and season availability. ${useLocationContext ? "Focus on fish species and fishing techniques relevant to the user's location." : "Provide global information without focusing on any specific location."}`,
-              },
-              ...messages
-                .filter((msg) => msg.id !== userMessage.id)
-                .map((msg) => ({
-                  role: msg.role,
-                  content: msg.content,
-                })),
+              systemMessage,
+              ...previousMessages,
               {
                 role: "user",
-                content: `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`,
+                content: userMessageContent,
               },
             ],
+            max_tokens: imageFile ? 1000 : undefined,
           }),
         },
       );
@@ -129,7 +207,8 @@ const SearchPage: React.FC = () => {
               id: `search-${Date.now()}-${index}`,
               name: fish.name,
               scientificName: fish.scientificName,
-              image: fish.image || getPlaceholderFishImage(),
+              // Don't provide image - let FishCard handle image loading
+              image: undefined,
               habitat: fish.habitat,
               difficulty: fish.difficulty,
               season: fish.season,
@@ -177,23 +256,32 @@ const SearchPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query.trim() || loading) return;
+    if ((!query.trim() && !imageFile) || loading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: query,
+      content: query || "[Image uploaded]",
       timestamp: new Date(),
+      image: selectedImage || undefined,
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentQuery = query;
+    const currentImageFile = imageFile;
     setQuery("");
+    setSelectedImage(null);
+    setImageFile(null);
     setLoading(true);
     setError(null);
 
     // Process the query with error handling
     try {
-      await processQuery(query, userMessage);
+      await processQuery(
+        currentQuery || "What can you tell me about this image?",
+        userMessage,
+        currentImageFile || undefined,
+      );
     } catch (err) {
       console.error("Error in handleSubmit:", err);
       setLoading(false);
@@ -202,8 +290,6 @@ const SearchPage: React.FC = () => {
   };
 
   const handleSuggestionClick = async (suggestion: string) => {
-    setQuery(suggestion);
-
     // Create a user message for the clicked suggestion
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -217,7 +303,7 @@ const SearchPage: React.FC = () => {
     setLoading(true);
     setError(null);
 
-    // Process the query directly
+    // Process the query directly without setting it in the textarea
     try {
       await processQuery(suggestion, userMessage);
     } catch (err) {
@@ -305,6 +391,15 @@ const SearchPage: React.FC = () => {
                   <div
                     className={`max-w-[85%] rounded-lg px-4 py-3 ${message.role === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"}`}
                   >
+                    {message.image && (
+                      <div className="mb-3">
+                        <img
+                          src={message.image}
+                          alt="Uploaded image"
+                          className="max-w-full h-auto rounded-lg max-h-64 object-contain"
+                        />
+                      </div>
+                    )}
                     <div className="whitespace-pre-wrap">{message.content}</div>
 
                     {/* Display fish cards if available */}
@@ -313,47 +408,20 @@ const SearchPage: React.FC = () => {
                         <h3 className="font-medium text-sm">Fish Species:</h3>
                         <div className="grid grid-cols-1 gap-4">
                           {message.fishResults.map((fish) => (
-                            <Card
+                            <FishCard
                               key={fish.id}
-                              className="overflow-hidden cursor-pointer hover:shadow-md transition-shadow"
+                              name={fish.name}
+                              scientificName={fish.scientificName}
+                              habitat={fish.habitat}
+                              difficulty={fish.difficulty}
+                              isToxic={fish.toxic}
                               onClick={() => {
                                 navigate(
                                   `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
                                   { state: { fish } },
                                 );
                               }}
-                            >
-                              <div className="flex items-center p-4">
-                                <div className="w-16 h-16 rounded-md overflow-hidden bg-gray-200 flex-shrink-0">
-                                  <img
-                                    src={getPlaceholderFishImage()}
-                                    alt={fish.name}
-                                    className="w-full h-full object-cover"
-                                    onError={(e) =>
-                                      handleFishImageError(e, fish.name)
-                                    }
-                                  />
-                                </div>
-                                <div className="ml-4">
-                                  <h4 className="font-medium">{fish.name}</h4>
-                                  {fish.scientificName && (
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 italic">
-                                      {fish.scientificName}
-                                    </p>
-                                  )}
-                                  <div className="flex items-center gap-2 mt-1">
-                                    <span className="text-xs px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 rounded-full">
-                                      {fish.difficulty}
-                                    </span>
-                                    {fish.toxic && (
-                                      <span className="text-xs px-2 py-0.5 bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200 rounded-full">
-                                        Toxic
-                                      </span>
-                                    )}
-                                  </div>
-                                </div>
-                              </div>
-                            </Card>
+                            />
                           ))}
                         </div>
                       </div>
@@ -395,13 +463,34 @@ const SearchPage: React.FC = () => {
           onSubmit={handleSubmit}
           className="w-full max-w-2xl mx-auto relative"
         >
+          {selectedImage && (
+            <div className="mb-3 relative inline-block">
+              <img
+                src={selectedImage}
+                alt="Selected image"
+                className="max-w-32 h-auto rounded-lg border border-gray-200 dark:border-gray-700"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setSelectedImage(null);
+                  setImageFile(null);
+                }}
+                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+              >
+                ×
+              </button>
+            </div>
+          )}
           <div className="relative flex items-center overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-col pr-[2] pl-0 rounded-2xl">
             {/* Image upload button */}
             <Textarea
               ref={inputRef}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Send a message..."
+              placeholder={
+                selectedImage ? "Ask about this image..." : "Send a message..."
+              }
               className="resize-none flex-1 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent bg-transparent text-gray-900 dark:text-gray-100 border-none my-auto grow h-px shadow-none py-6 px-4 outline-none"
               disabled={loading}
               onKeyDown={(e) => {
@@ -425,8 +514,10 @@ const SearchPage: React.FC = () => {
                     // Handle image upload
                     const file = e.target.files?.[0];
                     if (file) {
-                      // You can implement image upload logic here
-                      console.log("Image selected:", file);
+                      // Create preview URL
+                      const previewUrl = URL.createObjectURL(file);
+                      setSelectedImage(previewUrl);
+                      setImageFile(file);
                       // Reset the input to allow selecting the same file again
                       e.target.value = "";
                     }
@@ -452,8 +543,8 @@ const SearchPage: React.FC = () => {
               <Button
                 type="submit"
                 size="icon"
-                disabled={!query.trim() || loading}
-                className={`bg-transparent hover:bg-transparent ${query.trim() ? "text-blue-500 dark:text-blue-400" : "text-gray-400"} hover:text-blue-500 dark:hover:text-blue-400 h-10 w-10 flex-shrink-0 p-0 flex items-center justify-center`}
+                disabled={(!query.trim() && !imageFile) || loading}
+                className={`bg-transparent hover:bg-transparent ${query.trim() || imageFile ? "text-blue-500 dark:text-blue-400" : "text-gray-400"} hover:text-blue-500 dark:hover:text-blue-400 h-10 w-10 flex-shrink-0 p-0 flex items-center justify-center`}
                 variant="ghost"
               >
                 <Send size={20} />

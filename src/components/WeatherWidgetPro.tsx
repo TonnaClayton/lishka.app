@@ -327,9 +327,6 @@ const WeatherWidget: React.FC<{
           `Using provided user location: ${userLocation.name} (${userLocation.latitude}, ${userLocation.longitude})`,
         );
         locationToUse = userLocation;
-        // Set location immediately to ensure map and name match
-        setLocation(locationToUse);
-        return;
       } else {
         // Second priority: try to get user's location from localStorage
         const savedLocation = localStorage.getItem("userLocationFull");
@@ -350,9 +347,6 @@ const WeatherWidget: React.FC<{
               console.log(
                 `Using saved location: ${locationToUse.name} (${locationToUse.latitude}, ${locationToUse.longitude})`,
               );
-              // Set location immediately to ensure map and name match
-              setLocation(locationToUse);
-              return;
             }
           } catch (err) {
             console.error("Error parsing user location:", err);
@@ -361,16 +355,30 @@ const WeatherWidget: React.FC<{
       }
 
       // If we don't have a location, set Malta as default
-      console.log("No location found, setting Malta as default");
-      const maltaLocation = {
-        latitude: 35.8997,
-        longitude: 14.5146,
-        name: "Malta",
-      };
-      setLocation(maltaLocation);
-      // Also save to localStorage
-      localStorage.setItem("userLocation", maltaLocation.name);
-      localStorage.setItem("userLocationFull", JSON.stringify(maltaLocation));
+      if (!locationToUse) {
+        console.log("No location found, setting Malta as default");
+        locationToUse = {
+          latitude: 35.8997,
+          longitude: 14.5146,
+          name: "Malta",
+        };
+        // Also save to localStorage
+        localStorage.setItem("userLocation", locationToUse.name);
+        localStorage.setItem("userLocationFull", JSON.stringify(locationToUse));
+      }
+
+      // Only update location if it's different from current location
+      setLocation((prevLocation) => {
+        if (
+          !prevLocation ||
+          prevLocation.latitude !== locationToUse.latitude ||
+          prevLocation.longitude !== locationToUse.longitude ||
+          prevLocation.name !== locationToUse.name
+        ) {
+          return locationToUse;
+        }
+        return prevLocation;
+      });
     };
 
     // Load location initially
@@ -386,28 +394,28 @@ const WeatherWidget: React.FC<{
 
   // Handle location update
   const handleLocationUpdate = (newLocation: LocationData) => {
-    // Reset all states
-    setWeatherData(null);
-    setCurrentIndex(0);
-    setError(null);
-    setLoading(true);
+    // Check if location actually changed to prevent unnecessary updates
+    if (
+      location &&
+      location.latitude === newLocation.latitude &&
+      location.longitude === newLocation.longitude &&
+      location.name === newLocation.name
+    ) {
+      setShowLocationModal(false);
+      return;
+    }
 
     // Reset fishing advice when location changes
     setInshoreAdvice("");
     setOffshoreAdvice("");
 
-    // Add timestamp to force refresh
-    const timestampedLocation = {
-      ...newLocation,
-      _timestamp: Date.now(),
-    };
-
-    // Update location with timestamped version
-    console.log("Setting new location with timestamp:", timestampedLocation);
-    setLocation(timestampedLocation);
+    // Update location (weather data fetch will be triggered by useEffect)
+    console.log("Setting new location:", newLocation);
+    setLocation(newLocation);
 
     // Save to localStorage for persistence across components
-    localStorage.setItem("userLocation", JSON.stringify(newLocation));
+    localStorage.setItem("userLocation", newLocation.name);
+    localStorage.setItem("userLocationFull", JSON.stringify(newLocation));
 
     // Notify parent component if callback provided
     if (onLocationUpdate) {
@@ -501,16 +509,27 @@ const WeatherWidget: React.FC<{
   useEffect(() => {
     if (!location || !location.latitude || !location.longitude) return;
 
-    // Reset current index to 0 when location changes
-    setCurrentIndex(0);
-    // Clear previous weather data
-    setWeatherData(null);
-    // Show loading state
-    setLoading(true);
-    // Clear previous errors
-    setError(null);
+    // Prevent unnecessary fetches by checking if we already have data for this location
+    if (
+      weatherData &&
+      lastUpdated &&
+      Math.abs(Date.now() - lastUpdated.getTime()) < 300000
+    ) {
+      // 5 minutes
+      return;
+    }
+
+    let isCancelled = false;
 
     const fetchWeatherData = async () => {
+      if (isCancelled) return;
+
+      // Reset states only when starting a new fetch
+      setCurrentIndex(0);
+      setWeatherData(null);
+      setLoading(true);
+      setError(null);
+
       try {
         console.log(
           `Fetching data for: ${location.name} (${location.latitude}, ${location.longitude})`,
@@ -522,6 +541,8 @@ const WeatherWidget: React.FC<{
           location.longitude,
         );
 
+        if (isCancelled) return;
+
         // Log the API data
         console.log("Fetched weather data from API:", apiData);
 
@@ -530,22 +551,29 @@ const WeatherWidget: React.FC<{
         setLastUpdated(new Date());
         setError(null);
       } catch (err) {
+        if (isCancelled) return;
+
         console.error("Data fetch error:", err);
         setError(
           `Failed to fetch weather data: ${err.message || "Unknown error"}`,
         );
       } finally {
-        setLoading(false);
+        if (!isCancelled) {
+          setLoading(false);
+        }
       }
     };
 
-    // Add a small delay to ensure state is reset before fetching
+    // Add a small delay to debounce rapid location changes
     const timeoutId = setTimeout(() => {
       fetchWeatherData();
-    }, 100);
+    }, 300);
 
-    return () => clearTimeout(timeoutId);
-  }, [location]);
+    return () => {
+      isCancelled = true;
+      clearTimeout(timeoutId);
+    };
+  }, [location?.latitude, location?.longitude, location?.name]);
 
   // Function to get AI-generated fishing advice based on current conditions
   const getFishingAdvice = async () => {
@@ -663,14 +691,19 @@ const WeatherWidget: React.FC<{
   useEffect(() => {
     if (
       weatherData &&
-      !isLoadingRecommendation &&
+      !isLoadingFishingAdvice &&
       !inshoreAdvice &&
-      !offshoreAdvice
+      !offshoreAdvice &&
+      location
     ) {
-      // Only auto-fetch if we have weather data and no existing advice
-      getFishingAdvice();
+      // Debounce fishing advice fetching to prevent rapid calls
+      const timeoutId = setTimeout(() => {
+        getFishingAdvice();
+      }, 1000);
+
+      return () => clearTimeout(timeoutId);
     }
-  }, [weatherData]);
+  }, [weatherData, location?.name]);
 
   // Removed chart drawing effect as we're using card-based display instead
 
@@ -963,17 +996,17 @@ const WeatherWidget: React.FC<{
 
   const handleRefresh = () => {
     if (location && location.latitude && location.longitude) {
-      // Reset all states
+      // Reset states and clear cached data
       setLoading(true);
       setWeatherData(null);
       setCurrentIndex(0);
       setError(null);
+      setLastUpdated(null); // Clear last updated to force fresh fetch
 
-      // Force a fresh fetch by creating a new location object with the same values
-      // This ensures the useEffect dependency triggers
+      // Trigger a fresh fetch by updating the location with a timestamp
       const refreshedLocation = {
         ...location,
-        _timestamp: Date.now(), // Add a timestamp to force the effect to run
+        _timestamp: Date.now(),
       };
 
       console.log(
