@@ -13,16 +13,40 @@ export const FISHING_TIP_ENABLED = true;
 // Helper function to validate OpenAI configuration
 export const validateOpenAIConfig = () => {
   if (!OPENAI_ENABLED) {
-    console.error("OpenAI is disabled in configuration");
+    console.log("[OpenAI] OpenAI is disabled");
     return false;
   }
 
   const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
   if (!apiKey) {
-    console.error("OpenAI API key is missing");
+    console.error(
+      "[OpenAI] API key is missing - check VITE_OPENAI_API_KEY environment variable",
+    );
     return false;
   }
 
+  if (typeof apiKey !== "string" || apiKey.trim() === "") {
+    console.error("[OpenAI] API key is invalid - empty or wrong type");
+    return false;
+  }
+
+  if (!apiKey.startsWith("sk-")) {
+    console.error(
+      "[OpenAI] API key format is invalid - should start with 'sk-'",
+    );
+    return false;
+  }
+
+  if (apiKey.length < 20) {
+    console.error("[OpenAI] API key appears to be too short");
+    return false;
+  }
+
+  console.log("[OpenAI] ✅ Configuration is valid", {
+    hasKey: true,
+    keyLength: apiKey.length,
+    keyPrefix: apiKey.substring(0, 7) + "...",
+  });
   return true;
 };
 

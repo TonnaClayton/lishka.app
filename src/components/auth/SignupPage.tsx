@@ -177,7 +177,7 @@ const SignupPage: React.FC = () => {
             Create Account
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            Join Lishka to discover the best fishing spots
+            Join Lishka to fish smarter, connect deeper, and feel the adventure.
           </p>
         </div>
 
@@ -325,7 +325,7 @@ const SignupPage: React.FC = () => {
           </form>
         </div>
 
-        <div className="mt-auto pb-8 text-center">
+        <div className="mt-auto pb-8 pt-8 text-center">
           <p className="text-base text-gray-600 dark:text-gray-300">
             Already have an account?{" "}
             <Link

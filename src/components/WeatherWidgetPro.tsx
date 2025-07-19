@@ -47,15 +47,7 @@ import {
   Gauge,
   Fish,
 } from "lucide-react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  useMapEvents,
-  LayersControl,
-} from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
+import LocationModal from "./LocationModal";
 
 interface WeatherData {
   hourly: {
@@ -129,175 +121,6 @@ interface LocationData {
   _timestamp?: number; // Optional timestamp for forcing refreshes
 }
 
-// Fix Leaflet icon issue
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl:
-    "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png",
-});
-
-// Map Selection Component
-const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
-  const [selectedPosition, setSelectedPosition] = useState<
-    [number, number] | null
-  >(null);
-  const [locationName, setLocationName] = useState("");
-  const [map, setMap] = useState<L.Map | null>(null);
-  const defaultPosition = currentLocation
-    ? [
-        currentLocation.latitude || currentLocation.lat,
-        currentLocation.longitude || currentLocation.lng,
-      ]
-    : [35.8997, 14.5146]; // Use current location if available, otherwise Malta as default
-
-  // Make selectedPosition and locationName available to parent component
-  React.useEffect(() => {
-    // Store these values in window for the parent component to access
-    window.mapSelectionState = {
-      selectedPosition,
-      locationName,
-    };
-  }, [selectedPosition, locationName]);
-
-  // Set initial marker if we have a current location
-  useEffect(() => {
-    if (currentLocation) {
-      const lat = currentLocation.latitude || currentLocation.lat;
-      const lng = currentLocation.longitude || currentLocation.lng;
-      setSelectedPosition([lat, lng]);
-      setLocationName(currentLocation.name);
-
-      // Center the map on the current location
-      if (map) {
-        console.log(
-          `Centering map on: ${lat}, ${lng} (${currentLocation.name})`,
-        );
-        map.setView([lat, lng], 15);
-      }
-    }
-  }, [currentLocation, map]);
-
-  // Make sure map is centered when it's created
-  useEffect(() => {
-    if (map && currentLocation) {
-      const lat = currentLocation.latitude || currentLocation.lat;
-      const lng = currentLocation.longitude || currentLocation.lng;
-      console.log(
-        `Map created, centering on: ${lat}, ${lng} (${currentLocation.name})`,
-      );
-      map.setView([lat, lng], 15);
-    }
-  }, [map]);
-
-  // Listen for unit changes
-  useEffect(() => {
-    const handleUnitsChange = () => {
-      // Force re-render when units change
-      console.log("Units changed, updating map display");
-      if (map) map.invalidateSize();
-    };
-
-    window.addEventListener("unitsChanged", handleUnitsChange);
-    return () => {
-      window.removeEventListener("unitsChanged", handleUnitsChange);
-    };
-  }, [map]);
-
-  // Function to handle map click and set marker
-  const MapClickHandler = () => {
-    const map = useMapEvents({
-      click: async (e) => {
-        const { lat, lng } = e.latlng;
-        setSelectedPosition([lat, lng]);
-
-        // Attempt to get location name via reverse geocoding
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-          );
-          const data = await response.json();
-
-          // Extract city/town and country from address details
-          const city =
-            data.address?.city ||
-            data.address?.town ||
-            data.address?.village ||
-            data.address?.hamlet ||
-            "";
-          const country = data.address?.country || "";
-
-          // Format as "city, country"
-          const name = [city, country].filter(Boolean).join(", ");
-
-          // Check if location is on sea or water
-          const isSeaLocation =
-            !city || // No city means likely on water
-            data.address?.sea ||
-            data.address?.ocean ||
-            data.address?.water ||
-            data.address?.bay;
-
-          console.log("Location data:", {
-            isSeaLocation,
-            city,
-            country,
-            address: data.address,
-            lat,
-            lng,
-          });
-
-          if (isSeaLocation) {
-            // For sea locations, display only coordinates
-            const formattedLat = lat.toFixed(6);
-            const formattedLng = lng.toFixed(6);
-            setLocationName(`${formattedLat}, ${formattedLng}`);
-          } else {
-            setLocationName(name);
-          }
-        } catch (error) {
-          console.error("Error getting location name:", error);
-          // Display coordinates as fallback
-          const formattedLat = lat.toFixed(6);
-          const formattedLng = lng.toFixed(6);
-          setLocationName(`${formattedLat}, ${formattedLng}`);
-        }
-      },
-    });
-    return null;
-  };
-
-  return (
-    <div className="relative h-full flex flex-col gap-y-6 justify-center items-center">
-      <MapContainer
-        center={defaultPosition}
-        // Zoom in closer if we have a current location
-        zoom={currentLocation ? 15 : 13}
-        style={{ height: "100%", width: "100%" }}
-        className="flex"
-        ref={setMap}
-      >
-        <LayersControl position="topright">
-          <LayersControl.BaseLayer name="Standard Map" checked>
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-          </LayersControl.BaseLayer>
-          <LayersControl.BaseLayer name="Marine Chart">
-            <TileLayer
-              attribution='&copy; <a href="https://openseamap.org">OpenSeaMap</a> contributors'
-              url="https://tiles.openseamap.org/seamark/{z}/{x}/{y}.png"
-            />
-          </LayersControl.BaseLayer>
-        </LayersControl>
-        <MapClickHandler />
-        {selectedPosition && <Marker position={selectedPosition} />}
-      </MapContainer>
-    </div>
-  );
-};
-
 const WeatherWidget: React.FC<{
   userLocation?: LocationData;
   onLocationUpdate?: (location: LocationData) => void;
@@ -314,6 +137,7 @@ const WeatherWidget: React.FC<{
   const [isLoadingFishingAdvice, setIsLoadingFishingAdvice] = useState(false);
   const [inshoreAdvice, setInshoreAdvice] = useState("");
   const [offshoreAdvice, setOffshoreAdvice] = useState("");
+
   // Removed chart refs as we're using card-based display instead
 
   // Use user's location if available
@@ -426,6 +250,78 @@ const WeatherWidget: React.FC<{
     setShowLocationModal(false);
   };
 
+  // Function to generate mock weather data for debugging
+  const generateMockWeatherData = (): WeatherData => {
+    const now = new Date();
+    const times = Array.from({ length: 24 }, (_, i) => {
+      const time = new Date(now.getTime() + i * 60 * 60 * 1000);
+      return time.toISOString();
+    });
+
+    return {
+      hourly: {
+        time: times,
+        // Set all data to null to show '-' in UI
+        wave_height: Array(24).fill(null),
+        wave_direction: Array(24).fill(null),
+        swell_wave_height: Array(24).fill(null),
+        swell_wave_direction: Array(24).fill(null),
+        swell_wave_period: Array(24).fill(null),
+        wind_speed_10m: Array(24).fill(null),
+        wind_direction_10m: Array(24).fill(null),
+        temperature_2m: Array(24).fill(null),
+        weather_code: Array(24).fill(null),
+        precipitation: Array(24).fill(null),
+        precipitation_probability: Array(24).fill(null),
+        visibility: Array(24).fill(null),
+      },
+      hourly_units: {
+        wave_height: "m",
+        swell_wave_height: "m",
+        wind_speed_10m: "km/h",
+        temperature_2m: "°C",
+        precipitation: "mm",
+        visibility: "m",
+      },
+      current: {
+        time: now.toISOString(),
+        temperature_2m: null,
+        apparent_temperature: null,
+        is_day: now.getHours() >= 6 && now.getHours() < 20 ? 1 : 0,
+        precipitation: null,
+        weather_code: null,
+        wind_speed_10m: null,
+        wind_direction_10m: null,
+        wind_gusts_10m: null,
+        wave_height: null,
+        wave_direction: null,
+        swell_wave_height: null,
+        swell_wave_direction: null,
+        swell_wave_period: null,
+      },
+      current_units: {
+        temperature_2m: "°C",
+        wind_speed_10m: "km/h",
+        precipitation: "mm",
+        wave_height: "m",
+        swell_wave_height: "m",
+        swell_wave_period: "s",
+      },
+      daily: {
+        time: Array.from({ length: 7 }, (_, i) => {
+          const date = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
+          return date.toISOString().split("T")[0];
+        }),
+        weather_code: Array(7).fill(null),
+        temperature_2m_max: Array(7).fill(null),
+        temperature_2m_min: Array(7).fill(null),
+        sunrise: Array(7).fill(null),
+        sunset: Array(7).fill(null),
+        uv_index_max: Array(7).fill(null),
+      },
+    };
+  };
+
   // Function to fetch weather data from Open-Meteo API
   const fetchOpenMeteoData = async (
     lat: number,
@@ -434,7 +330,7 @@ const WeatherWidget: React.FC<{
     console.log(`Fetching weather data for coordinates: ${lat}, ${lng}`);
 
     // Construct the API URLs with customer API endpoint and API key
-    const weatherUrl = `https://customer-api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,weathercode,precipitation,precipitation_probability,visibility&daily=weathercode,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&current=temperature_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&timezone=auto&apikey=1g8vJZI7DhEIFDIt`;
+    const weatherUrl = `https://customer-api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code,precipitation,precipitation_probability,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&current=temperature_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&timezone=auto&apikey=1g8vJZI7DhEIFDIt`;
 
     const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=wave_height,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period&current=wave_height,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period`;
 
@@ -457,8 +353,43 @@ const WeatherWidget: React.FC<{
       const weatherData = await weatherResponse.json();
       const marineData = await marineResponse.json();
 
-      console.log("Weather API response:", weatherData);
-      console.log("Marine API response:", marineData);
+      console.log(
+        "🌤️ [WEATHER API] Full response from OpenMeteo:",
+        weatherData,
+      );
+      console.log("🌤️ [WEATHER API] Weather codes in response:", {
+        current: weatherData.current?.weather_code,
+        hourly: weatherData.hourly?.weather_code?.slice(0, 5),
+        daily: weatherData.daily?.weather_code?.slice(0, 3),
+      });
+      console.log("🌊 [MARINE API] Full response:", marineData);
+
+      // Enhanced API validation logging
+      console.log("🔍 [API VALIDATION] Request details:", {
+        weatherUrl: weatherUrl,
+        marineUrl: marineUrl,
+        coordinates: { lat, lng },
+        timestamp: new Date().toISOString(),
+        responseStatus: {
+          weather: weatherResponse.status,
+          marine: marineResponse.status,
+        },
+      });
+
+      // Log specific weather data for comparison
+      console.log("📊 [WEATHER COMPARISON] Key data points:", {
+        currentWeatherCode: weatherData.current?.weather_code,
+        currentCondition: weatherData.current?.weather_code
+          ? getWeatherConditionName(weatherData.current.weather_code)
+          : "N/A",
+        dailyWeatherCodes: weatherData.daily?.weather_code?.slice(0, 7),
+        dailyConditions: weatherData.daily?.weather_code
+          ?.slice(0, 7)
+          ?.map((code) => getWeatherConditionName(code)),
+        temperature: weatherData.current?.temperature_2m,
+        windSpeed: weatherData.current?.wind_speed_10m,
+        location: `${lat}, ${lng}`,
+      });
 
       // Merge the marine data into the weather data
       const combinedData: WeatherData = {
@@ -550,6 +481,46 @@ const WeatherWidget: React.FC<{
         setWeatherData(apiData);
         setLastUpdated(new Date());
         setError(null);
+
+        // Ensure loading is cleared
+        setLoading(false);
+
+        // Save current weather conditions to localStorage for other components
+        const currentConditions = {
+          temperature:
+            apiData?.current?.temperature_2m ||
+            (apiData.hourly?.temperature_2m?.length > 0
+              ? apiData.hourly.temperature_2m[0]
+              : null),
+          windSpeed:
+            apiData.hourly?.wind_speed_10m?.length > 0
+              ? apiData.hourly.wind_speed_10m[0]
+              : null,
+          windDirection:
+            apiData.hourly?.wind_direction_10m?.length > 0
+              ? apiData.hourly.wind_direction_10m[0]
+              : null,
+          waveHeight:
+            apiData?.current?.wave_height ||
+            (apiData.hourly?.wave_height?.length > 0
+              ? apiData.hourly.wave_height[0]
+              : null),
+          swellWaveHeight:
+            apiData?.current?.swell_wave_height ||
+            (apiData.hourly?.swell_wave_height?.length > 0
+              ? apiData.hourly.swell_wave_height[0]
+              : null),
+          swellWavePeriod:
+            apiData?.current?.swell_wave_period ||
+            (apiData.hourly?.swell_wave_period?.length > 0
+              ? apiData.hourly.swell_wave_period[0]
+              : null),
+          weatherCondition: getWeatherCondition(),
+        };
+        localStorage.setItem(
+          "currentWeatherData",
+          JSON.stringify(currentConditions),
+        );
       } catch (err) {
         if (isCancelled) return;
 
@@ -834,9 +805,9 @@ const WeatherWidget: React.FC<{
     );
   };
 
-  // Get weather condition based on WMO weather code
+  // Get weather condition based on WMO weather code (Windy model - codes 0,1,2 merged to "Clear sky")
   const getWeatherCondition = () => {
-    if (!weatherData) return "Loading...";
+    if (!weatherData) return "-";
 
     // Use current weather code if available, otherwise use the first hourly code
     const weatherCode =
@@ -847,24 +818,15 @@ const WeatherWidget: React.FC<{
         : null);
 
     if (weatherCode === null) {
-      // Fallback to temperature-based condition if no weather code
-      const temp = currentConditions.temperature;
-
-      if (temp === null) return "Unknown";
-
-      if (temp > 25) return "Clear sky";
-      if (temp > 20) return "Partly cloudy";
-      return "Cloudy";
+      return "-";
     }
 
-    // WMO Weather interpretation codes (https://www.nodc.noaa.gov/archive/arc0021/0002199/1.1/data/0-data/HTML/WMO-CODE/WMO4677.HTM)
+    // Modified WMO Weather interpretation codes to match Windy model
     switch (true) {
       case weatherCode === 0:
-        return "Clear sky";
       case weatherCode === 1:
-        return "Mainly clear";
       case weatherCode === 2:
-        return "Partly cloudy";
+        return "Clear sky"; // Windy model: merge codes 0, 1, 2 into "Clear sky"
       case weatherCode === 3:
         return "Overcast";
       case weatherCode >= 45 && weatherCode <= 49:
@@ -922,9 +884,9 @@ const WeatherWidget: React.FC<{
         );
       case weatherCode === 2:
         return isDay ? (
-          <CloudSun className="h-8 w-8 text-blue-400" />
+          <Sun className="h-8 w-8 text-yellow-500" />
         ) : (
-          <CloudMoon className="h-8 w-8 text-blue-300" />
+          <Moon className="h-8 w-8 text-blue-200" />
         );
       case weatherCode === 3:
         return <Cloud className="h-8 w-8 text-gray-500" />;
@@ -994,6 +956,43 @@ const WeatherWidget: React.FC<{
     return advice.trim();
   };
 
+  // Get weather condition name from weather code (Windy model - codes 0,1,2 merged to "Clear sky")
+  const getWeatherConditionName = (weatherCode: number | null | undefined) => {
+    if (weatherCode === null || weatherCode === undefined) {
+      return "Unknown";
+    }
+
+    // Modified WMO Weather interpretation codes to match Windy model
+    switch (true) {
+      case weatherCode === 0:
+      case weatherCode === 1:
+      case weatherCode === 2:
+        return "Clear sky"; // Windy model: merge codes 0, 1, 2 into "Clear sky"
+      case weatherCode === 3:
+        return "Overcast";
+      case weatherCode >= 45 && weatherCode <= 49:
+        return "Fog";
+      case weatherCode >= 51 && weatherCode <= 55:
+        return "Drizzle";
+      case weatherCode >= 56 && weatherCode <= 57:
+        return "Freezing Drizzle";
+      case weatherCode >= 61 && weatherCode <= 65:
+        return "Rain";
+      case weatherCode >= 66 && weatherCode <= 67:
+        return "Freezing Rain";
+      case weatherCode >= 71 && weatherCode <= 77:
+        return "Snow";
+      case weatherCode >= 80 && weatherCode <= 82:
+        return "Rain showers";
+      case weatherCode >= 85 && weatherCode <= 86:
+        return "Snow showers";
+      case weatherCode >= 95 && weatherCode <= 99:
+        return "Thunderstorm";
+      default:
+        return `Unknown (${weatherCode})`;
+    }
+  };
+
   const handleRefresh = () => {
     if (location && location.latitude && location.longitude) {
       // Reset states and clear cached data
@@ -1002,6 +1001,8 @@ const WeatherWidget: React.FC<{
       setCurrentIndex(0);
       setError(null);
       setLastUpdated(null); // Clear last updated to force fresh fetch
+      setInshoreAdvice(""); // Clear fishing advice
+      setOffshoreAdvice("");
 
       // Trigger a fresh fetch by updating the location with a timestamp
       const refreshedLocation = {
@@ -1283,165 +1284,15 @@ const WeatherWidget: React.FC<{
           <RefreshCw className="h-4 w-4" />
         </Button>
       </div>
-      {/* Location Selection Dialog */}
-      <Dialog open={showLocationModal} onOpenChange={setShowLocationModal}>
-        <DialogContent className="sm:max-w-[600px] w-[90%] rounded-lg max-h-[80vh] shadow-xl dark:bg-card dark:border-border/30">
-          <DialogHeader>
-            <DialogTitle className="dark:text-white">
-              Update Your Location
-            </DialogTitle>
-          </DialogHeader>
-          <div className="w-full rounded-md overflow-hidden h-[400px] mb-4">
-            <MapSelection
-              onLocationSelect={handleLocationUpdate}
-              currentLocation={location}
-            />
-          </div>
-          <div className="mb-4">
-            <div className="flex flex-col gap-2">
-              <Button
-                onClick={() => {
-                  // Show loading state
-                  setLoading(true);
 
-                  if (navigator.geolocation) {
-                    navigator.geolocation.getCurrentPosition(
-                      async (position) => {
-                        const lat = position.coords.latitude;
-                        const lng = position.coords.longitude;
-                        let locationName = "Current Location";
-                        let countryCode = "";
-
-                        // Attempt to get location name via reverse geocoding
-                        try {
-                          const response = await fetch(
-                            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-                          );
-                          const data = await response.json();
-                          console.log("Reverse geocoding data:", data);
-
-                          // Extract city/town and country from address details
-                          const city =
-                            data.address?.city ||
-                            data.address?.town ||
-                            data.address?.village ||
-                            data.address?.hamlet ||
-                            "";
-                          const country = data.address?.country || "";
-                          countryCode = data.address?.country_code || "";
-
-                          // Format as "city, country"
-                          const name = [city, country]
-                            .filter(Boolean)
-                            .join(", ");
-
-                          // Check if location is on sea or water
-                          const isSeaLocation =
-                            !city || // No city means likely on water
-                            data.address?.sea ||
-                            data.address?.ocean ||
-                            data.address?.water ||
-                            data.address?.bay;
-
-                          if (isSeaLocation) {
-                            // For sea locations, display only coordinates
-                            const formattedLat = lat.toFixed(6);
-                            const formattedLng = lng.toFixed(6);
-                            locationName = `${formattedLat}, ${formattedLng}`;
-                          } else {
-                            locationName = name || "Current Location";
-                          }
-                        } catch (error) {
-                          console.error("Error getting location name:", error);
-                        }
-
-                        const newLocation = {
-                          latitude: lat,
-                          longitude: lng,
-                          name: locationName,
-                          countryCode: countryCode,
-                        };
-
-                        console.log("Setting new location:", newLocation);
-                        handleLocationUpdate(newLocation);
-                        setShowLocationModal(false);
-                      },
-                      (error) => {
-                        console.error("Error getting location:", error);
-                        setLoading(false);
-
-                        // If geolocation fails, set a default location instead of showing an alert
-                        const defaultLocation = {
-                          latitude: 35.8997,
-                          longitude: 14.5146,
-                          name: "Malta",
-                        };
-
-                        console.log(
-                          "Setting default location after error:",
-                          defaultLocation,
-                        );
-                        handleLocationUpdate(defaultLocation);
-                        setShowLocationModal(false);
-                      },
-                      {
-                        enableHighAccuracy: true,
-                        timeout: 10000,
-                        maximumAge: 0,
-                      },
-                    );
-                  } else {
-                    // If geolocation is not supported, set a default location
-                    const defaultLocation = {
-                      latitude: 35.8997,
-                      longitude: 14.5146,
-                      name: "Malta",
-                    };
-
-                    console.log(
-                      "Setting default location (no geolocation support):",
-                      defaultLocation,
-                    );
-                    handleLocationUpdate(defaultLocation);
-                    setShowLocationModal(false);
-                    setLoading(false);
-                  }
-                }}
-                variant="outline"
-                className="w-full h-12 border-2 border-[#0251FB] dark:border-primary text-[#0251FB] dark:text-primary hover:bg-[#0251FB] hover:text-white dark:hover:bg-primary dark:hover:text-white rounded-full"
-              >
-                <MapPin className="mr-2" />
-                {loading ? "Detecting..." : "Detect my location"}
-              </Button>
-
-              <Button
-                onClick={() => {
-                  // Access the stored map selection state
-                  const mapState = window.mapSelectionState;
-                  if (mapState && mapState.selectedPosition) {
-                    const [lat, lng] = mapState.selectedPosition;
-                    const newLocation = {
-                      latitude: lat,
-                      longitude: lng,
-                      name:
-                        mapState.locationName ||
-                        `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
-                    };
-                    handleLocationUpdate(newLocation);
-                    setShowLocationModal(false);
-                  } else {
-                    alert("Please select a location on the map first.");
-                  }
-                }}
-                variant="default"
-                className="confirm-location-button w-full h-12 bg-primary text-white hover:bg-primary/90 rounded-full"
-              >
-                Set this location
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* Location Modal */}
+      <LocationModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
+        onLocationSelect={handleLocationUpdate}
+        currentLocation={location}
+        title="Update Your Location"
+      />
       {/* Weather Card - Enhanced Weather Data */}
       <Card className="p-6 bg-gradient-to-br from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
         <div className="flex justify-between items-start">
@@ -1463,7 +1314,8 @@ const WeatherWidget: React.FC<{
         <div className="mt-6 mb-6">
           <div className="flex items-baseline">
             <span className="text-6xl font-bold">
-              {weatherData?.current?.temperature_2m !== undefined
+              {weatherData?.current?.temperature_2m !== undefined &&
+              weatherData.current.temperature_2m !== null
                 ? formatTemperature(weatherData.current.temperature_2m).split(
                     " ",
                   )[0]
@@ -1476,7 +1328,8 @@ const WeatherWidget: React.FC<{
           </div>
           <p className="text-sm mt-2 opacity-90">
             Feels like{" "}
-            {weatherData?.current?.apparent_temperature !== undefined
+            {weatherData?.current?.apparent_temperature !== undefined &&
+            weatherData.current.apparent_temperature !== null
               ? formatTemperature(
                   weatherData.current.apparent_temperature,
                 ).split(" ")[0]
@@ -1485,11 +1338,15 @@ const WeatherWidget: React.FC<{
                 : "-"}
             <br />
             {weatherData?.daily?.temperature_2m_max &&
-            weatherData?.daily?.temperature_2m_min
+            weatherData?.daily?.temperature_2m_min &&
+            weatherData.daily.temperature_2m_max[0] !== null &&
+            weatherData.daily.temperature_2m_min[0] !== null
               ? `Today: ${formatTemperature(weatherData.daily.temperature_2m_min[0]).split(" ")[0]} to ${formatTemperature(weatherData.daily.temperature_2m_max[0]).split(" ")[0]}`
-              : temperatures && temperatures.length > 0
-                ? `Today: ${formatTemperature(Math.min(...temperatures.slice(0, 24))).split(" ")[0]} to ${formatTemperature(Math.max(...temperatures.slice(0, 24))).split(" ")[0]}`
-                : "-"}
+              : temperatures &&
+                  temperatures.length > 0 &&
+                  temperatures.some((t) => t !== null)
+                ? `Today: ${formatTemperature(Math.min(...temperatures.filter((t) => t !== null).slice(0, 24))).split(" ")[0]} to ${formatTemperature(Math.max(...temperatures.filter((t) => t !== null).slice(0, 24))).split(" ")[0]}`
+                : "Today: - to -"}
           </p>
         </div>
 
@@ -1499,7 +1356,8 @@ const WeatherWidget: React.FC<{
               <Wind className="h-4 w-4 mr-1 text-blue-200" />
             </div>
             <p className="text-lg font-semibold">
-              {weatherData?.current?.wind_speed_10m !== undefined
+              {weatherData?.current?.wind_speed_10m !== undefined &&
+              weatherData.current.wind_speed_10m !== null
                 ? `${Math.round(weatherData.current.wind_speed_10m)}`
                 : currentConditions.windSpeed !== null
                   ? `${Math.round(currentConditions.windSpeed)}`
@@ -1544,34 +1402,36 @@ const WeatherWidget: React.FC<{
         </div>
 
         {/* Sunrise/Sunset */}
-        {weatherData?.daily?.sunrise && weatherData?.daily?.sunset && (
-          <div className="mt-4 flex justify-between items-center bg-black/10 p-3 rounded-xl">
-            <div className="flex items-center">
-              <Sun className="h-4 w-4 mr-2 text-yellow-300" />
-              <div>
-                <p className="text-xs opacity-80">Sunrise</p>
-                <p className="text-sm font-medium">
-                  {new Date(weatherData.daily.sunrise[0]).toLocaleTimeString(
-                    [],
-                    { hour: "2-digit", minute: "2-digit" },
-                  )}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center">
-              <Moon className="h-4 w-4 mr-2 text-blue-200" />
-              <div>
-                <p className="text-xs opacity-80">Sunset</p>
-                <p className="text-sm font-medium">
-                  {new Date(weatherData.daily.sunset[0]).toLocaleTimeString(
-                    [],
-                    { hour: "2-digit", minute: "2-digit" },
-                  )}
-                </p>
-              </div>
+        <div className="mt-4 flex justify-between items-center bg-black/10 p-3 rounded-xl">
+          <div className="flex items-center">
+            <Sun className="h-4 w-4 mr-2 text-yellow-300" />
+            <div>
+              <p className="text-xs opacity-80">Sunrise</p>
+              <p className="text-sm font-medium">
+                {!weatherData?.daily?.sunrise || !weatherData.daily.sunrise[0]
+                  ? "-"
+                  : new Date(weatherData.daily.sunrise[0]).toLocaleTimeString(
+                      [],
+                      { hour: "2-digit", minute: "2-digit" },
+                    )}
+              </p>
             </div>
           </div>
-        )}
+          <div className="flex items-center">
+            <Moon className="h-4 w-4 mr-2 text-blue-200" />
+            <div>
+              <p className="text-xs opacity-80">Sunset</p>
+              <p className="text-sm font-medium">
+                {!weatherData?.daily?.sunset || !weatherData.daily.sunset[0]
+                  ? "-"
+                  : new Date(weatherData.daily.sunset[0]).toLocaleTimeString(
+                      [],
+                      { hour: "2-digit", minute: "2-digit" },
+                    )}
+              </p>
+            </div>
+          </div>
+        </div>
       </Card>
       {/* Marine Card - Fishing Conditions */}
       <Card className="p-6 bg-[#1E40AF] text-white overflow-hidden relative shadow-md mt-4 rounded-xl">
@@ -1645,13 +1505,10 @@ const WeatherWidget: React.FC<{
           <div className="flex flex-col items-center">
             <p className="text-lg font-semibold">
               {weatherData?.hourly?.visibility &&
-              weatherData.hourly.visibility.length > 0
-                ? `${(weatherData.hourly.visibility[0] / 1000).toFixed(1)}`
+              weatherData.hourly.visibility.length > 0 &&
+              weatherData.hourly.visibility[0] !== null
+                ? `${(weatherData.hourly.visibility[0] / 1000).toFixed(1)} km`
                 : "-"}
-              {weatherData?.hourly?.visibility &&
-              weatherData.hourly.visibility.length > 0
-                ? " km"
-                : ""}
             </p>
             <p className="text-xs opacity-80">Visibility</p>
           </div>
@@ -1751,6 +1608,7 @@ const WeatherWidget: React.FC<{
           </Tabs>
         </div>
       </Card>
+
       {/* Marine Data Hourly Cards */}
       <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
         <div className="flex justify-between items-center mb-4">
@@ -1780,8 +1638,7 @@ const WeatherWidget: React.FC<{
                   </p>
                   <p className="text-lg font-bold text-blue-600 dark:text-blue-300">
                     {waveHeights[index] !== null &&
-                    waveHeights[index] !== undefined &&
-                    typeof waveHeights[index] === "number"
+                    waveHeights[index] !== undefined
                       ? waveHeights[index].toFixed(1)
                       : "-"}
                   </p>
@@ -1816,8 +1673,8 @@ const WeatherWidget: React.FC<{
                     {time ? formatTime(time) : "--:--"}
                   </p>
                   <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
-                    {windSpeeds[index] !== undefined &&
-                    windSpeeds[index] !== null
+                    {windSpeeds[index] !== null &&
+                    windSpeeds[index] !== undefined
                       ? Math.round(windSpeeds[index])
                       : "-"}
                   </p>
@@ -1841,7 +1698,7 @@ const WeatherWidget: React.FC<{
             Data Sources:
           </p>
           <div className="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-2">
-            <Layers className="h-4 w-4 text-white" />
+            <Layers className="h-4 w-4 text-gray-600 dark:text-gray-300" />
             <span>Open-Meteo Weather & Marine API</span>
           </div>
           {location && (
@@ -1869,6 +1726,121 @@ const WeatherWidget: React.FC<{
         </div>
       </Card>
       {/* Hourly Forecast */}
+      <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
+        <h2 className="text-lg font-semibold mb-4 dark:text-white">
+          Hourly Forecast
+        </h2>
+        <div className="overflow-x-auto">
+          <div className="flex space-x-3 pb-2 min-w-[1200px]">
+            {times.slice(0, 12).map((time, index) => (
+              <div
+                key={`hourly-${index}`}
+                className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[90px]"
+              >
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  {time ? formatTime(time) : "--:--"}
+                </p>
+                <div className="mb-2">{getWeatherIcon()}</div>
+                <p className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">
+                  {temperatures[index] !== null &&
+                  temperatures[index] !== undefined
+                    ? `${Math.round(temperatures[index])}°`
+                    : "-"}
+                </p>
+
+                {/* Wind Speed and Direction */}
+                <div className="flex items-center mb-1">
+                  <Wind className="h-3 w-3 mr-1 text-blue-400" />
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {windSpeeds[index] !== null &&
+                    windSpeeds[index] !== undefined
+                      ? `${Math.round(windSpeeds[index])}`
+                      : "-"}
+                  </p>
+                  {windDirections[index] !== undefined &&
+                    windDirections[index] !== null && (
+                      <div className="ml-1 flex items-center">
+                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                          {getWindDirection(windDirections[index])}
+                        </span>
+                        <span className="ml-1 text-xs">
+                          {getDirectionArrow(windDirections[index])}
+                        </span>
+                      </div>
+                    )}
+                </div>
+
+                {/* Wave Height and Direction */}
+                <div className="flex items-center">
+                  <Waves className="h-3 w-3 mr-1 text-blue-500" />
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    {waveHeights[index] !== null &&
+                    waveHeights[index] !== undefined
+                      ? `${waveHeights[index].toFixed(1)}m`
+                      : "-"}
+                  </p>
+                  {waveDirections[index] !== undefined &&
+                    waveDirections[index] !== null && (
+                      <div className="ml-1 text-xs">
+                        {getDirectionArrow(waveDirections[index])}
+                      </div>
+                    )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </Card>
+
+      {/* Hourly Precipitation Card */}
+      <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold dark:text-white">
+            Hourly Precipitation (mm)
+          </h2>
+          <Droplets className="h-5 w-5 text-[#0251FB] dark:text-blue-400" />
+        </div>
+        <div className="overflow-x-auto">
+          <div className="flex space-x-3 pb-2 min-w-[800px]">
+            {times.slice(0, 12).map((time, index) => {
+              const precipitation =
+                weatherData.hourly.precipitation?.[currentHourIndex + index] ||
+                0;
+              const precipitationProbability =
+                weatherData.hourly.precipitation_probability?.[
+                  currentHourIndex + index
+                ] || 0;
+              return (
+                <div
+                  key={`precip-${index}`}
+                  className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[70px]"
+                >
+                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                    {time ? formatTime(time) : "--:--"}
+                  </p>
+                  <div className="flex items-center mb-1">
+                    <Droplets className="h-3 w-3 mr-1 text-blue-500" />
+                    <p className="text-sm font-bold text-blue-600 dark:text-blue-300">
+                      {precipitation !== null && precipitation !== undefined
+                        ? precipitation.toFixed(1)
+                        : "0.0"}
+                    </p>
+                  </div>
+                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                    (
+                    {precipitationProbability !== null &&
+                    precipitationProbability !== undefined
+                      ? `${precipitationProbability}%`
+                      : "0%"}
+                    )
+                  </p>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </Card>
+
       {/* Precipitation Forecast Card */}
       {precipitationForecast && precipitationForecast.chance > 0 && (
         <Card className="p-4 bg-white dark:bg-card shadow-sm">
@@ -1930,74 +1902,6 @@ const WeatherWidget: React.FC<{
           </div>
         </Card>
       )}
-      <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
-        <h2 className="text-lg font-semibold mb-4 dark:text-white">
-          Hourly Forecast
-        </h2>
-        <div className="overflow-x-auto">
-          <div className="flex space-x-3 pb-2 min-w-[800px]">
-            {times.slice(0, 24).map((time, index) => (
-              <div
-                key={index}
-                className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[80px]"
-              >
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                  {time ? formatTime(time) : "--:--"}
-                </p>
-
-                {/* Weather Icon - simplified version */}
-                <div className="mb-2">
-                  {index % 2 === 0 ? (
-                    <Sun className="h-5 w-5 text-yellow-500" />
-                  ) : (
-                    <CloudSun className="h-5 w-5 text-blue-400" />
-                  )}
-                </div>
-
-                {/* Temperature */}
-                <div className="flex items-center mb-2">
-                  <Thermometer className="h-3 w-3 mr-1 text-red-500" />
-                  <p className="text-sm font-bold dark:text-white">
-                    {temperatures[index] !== undefined &&
-                    temperatures[index] !== null
-                      ? `${Math.round(temperatures[index])}°`
-                      : "-"}
-                  </p>
-                </div>
-
-                {/* Wave Height */}
-                <div className="flex items-center mb-1">
-                  <Waves className="h-3 w-3 mr-1 text-blue-500" />
-                  <p className="text-xs dark:text-gray-300">
-                    {waveHeights[index] !== null &&
-                    waveHeights[index] !== undefined &&
-                    typeof waveHeights[index] === "number"
-                      ? `${waveHeights[index].toFixed(1)}m`
-                      : "-"}
-                  </p>
-                </div>
-
-                {/* Wind */}
-                <div className="flex items-center">
-                  <Wind className="h-3 w-3 mr-1 text-blue-400" />
-                  <p className="text-xs dark:text-gray-300">
-                    {windSpeeds[index] !== undefined &&
-                    windSpeeds[index] !== null
-                      ? `${Math.round(windSpeeds[index])}`
-                      : "-"}
-                  </p>
-                  <p className="text-xs ml-1 dark:text-gray-400">
-                    {windDirections[index] !== undefined &&
-                    windDirections[index] !== null
-                      ? getWindDirection(windDirections[index])
-                      : ""}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
       {/* Weekly Forecast */}
       {weatherData?.daily && (
         <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
@@ -2019,29 +1923,66 @@ const WeatherWidget: React.FC<{
                     })}
                   </p>
 
-                  {/* Weather Icon */}
+                  {/* Weather Icon under date */}
                   <div className="mb-2">
-                    {weatherData.daily.weather_code && (
-                      <>
-                        {weatherData.daily.weather_code[index] === 0 ? (
-                          <Sun className="h-5 w-5 text-yellow-500" />
-                        ) : weatherData.daily.weather_code[index] <= 3 ? (
-                          <CloudSun className="h-5 w-5 text-blue-400" />
-                        ) : weatherData.daily.weather_code[index] <= 49 ? (
-                          <CloudFog className="h-5 w-5 text-gray-400" />
-                        ) : weatherData.daily.weather_code[index] <= 69 ? (
-                          <CloudRain className="h-5 w-5 text-blue-500" />
-                        ) : weatherData.daily.weather_code[index] <= 79 ? (
-                          <CloudSnow className="h-5 w-5 text-blue-200" />
-                        ) : weatherData.daily.weather_code[index] <= 84 ? (
-                          <CloudRain className="h-5 w-5 text-blue-500" />
-                        ) : weatherData.daily.weather_code[index] <= 94 ? (
-                          <CloudSnow className="h-5 w-5 text-blue-200" />
-                        ) : (
-                          <CloudLightning className="h-5 w-5 text-yellow-500" />
-                        )}
-                      </>
-                    )}
+                    {(() => {
+                      // Get weather code for this day
+                      const weatherCode =
+                        weatherData.daily.weather_code?.[index];
+
+                      // If no weather code available, show default icon
+                      if (weatherCode === null || weatherCode === undefined) {
+                        return <CloudSun className="h-5 w-5 text-gray-500" />;
+                      }
+
+                      // Return appropriate icon based on weather code
+                      switch (true) {
+                        case weatherCode === 0:
+                          return <Sun className="h-5 w-5 text-yellow-500" />;
+                        case weatherCode === 1:
+                          return <Sun className="h-5 w-5 text-yellow-500" />;
+                        case weatherCode === 2:
+                          return <Sun className="h-5 w-5 text-yellow-500" />;
+                        case weatherCode === 3:
+                          return <Cloud className="h-5 w-5 text-gray-500" />;
+                        case weatherCode >= 45 && weatherCode <= 49:
+                          return <CloudFog className="h-5 w-5 text-gray-400" />;
+                        case weatherCode >= 51 && weatherCode <= 55:
+                          return (
+                            <CloudDrizzle className="h-5 w-5 text-blue-400" />
+                          );
+                        case weatherCode >= 56 && weatherCode <= 57:
+                          return (
+                            <CloudSnow className="h-5 w-5 text-blue-300" />
+                          );
+                        case weatherCode >= 61 && weatherCode <= 65:
+                          return (
+                            <CloudRain className="h-5 w-5 text-blue-500" />
+                          );
+                        case weatherCode >= 66 && weatherCode <= 67:
+                          return (
+                            <CloudHail className="h-5 w-5 text-blue-300" />
+                          );
+                        case weatherCode >= 71 && weatherCode <= 77:
+                          return (
+                            <CloudSnow className="h-5 w-5 text-blue-200" />
+                          );
+                        case weatherCode >= 80 && weatherCode <= 82:
+                          return (
+                            <CloudRain className="h-5 w-5 text-blue-500" />
+                          );
+                        case weatherCode >= 85 && weatherCode <= 86:
+                          return (
+                            <CloudSnow className="h-5 w-5 text-blue-200" />
+                          );
+                        case weatherCode >= 95 && weatherCode <= 99:
+                          return (
+                            <CloudLightning className="h-5 w-5 text-yellow-500" />
+                          );
+                        default:
+                          return <CloudSun className="h-5 w-5 text-gray-500" />;
+                      }
+                    })()}
                   </div>
 
                   {/* Temperature Section */}
@@ -2078,8 +2019,7 @@ const WeatherWidget: React.FC<{
                     </p>
                     <div className="flex items-center justify-center">
                       <Wind className="h-3 w-3 mr-1 text-blue-400" />
-                      <p className="text-xs dark:text-gray-300">
-                        {/* Use average wind speed from hourly data for this day */}
+                      <p className="text-xs dark:text-gray-300 mr-1">
                         {(() => {
                           // Calculate the day's start and end indices in hourly data
                           const dayStart = index * 24;
@@ -2108,6 +2048,69 @@ const WeatherWidget: React.FC<{
                           return "-";
                         })()}
                       </p>
+                      <p className="text-xs dark:text-gray-300 mr-1">
+                        {(() => {
+                          // Calculate the day's start and end indices in hourly data
+                          const dayStart = index * 24;
+                          const dayEnd = (index + 1) * 24;
+                          // Get wind directions for this day if available
+                          const dayWindDirections =
+                            weatherData.hourly?.wind_direction_10m?.slice(
+                              dayStart,
+                              dayEnd,
+                            );
+                          if (
+                            dayWindDirections &&
+                            dayWindDirections.length > 0
+                          ) {
+                            // Filter out null values
+                            const validDirections = dayWindDirections.filter(
+                              (d) => d !== null,
+                            );
+                            if (validDirections.length > 0) {
+                              // Calculate average wind direction
+                              const avgWindDirection =
+                                validDirections.reduce(
+                                  (sum, direction) => sum + direction,
+                                  0,
+                                ) / validDirections.length;
+                              return getWindDirection(avgWindDirection);
+                            }
+                          }
+                          return "-";
+                        })()}
+                      </p>
+                      {(() => {
+                        // Calculate the day's start and end indices in hourly data
+                        const dayStart = index * 24;
+                        const dayEnd = (index + 1) * 24;
+                        // Get wind directions for this day if available
+                        const dayWindDirections =
+                          weatherData.hourly?.wind_direction_10m?.slice(
+                            dayStart,
+                            dayEnd,
+                          );
+                        if (dayWindDirections && dayWindDirections.length > 0) {
+                          // Filter out null values
+                          const validDirections = dayWindDirections.filter(
+                            (d) => d !== null,
+                          );
+                          if (validDirections.length > 0) {
+                            // Calculate average wind direction
+                            const avgWindDirection =
+                              validDirections.reduce(
+                                (sum, direction) => sum + direction,
+                                0,
+                              ) / validDirections.length;
+                            return (
+                              <span className="text-xs">
+                                {getDirectionArrow(avgWindDirection)}
+                              </span>
+                            );
+                          }
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
 
@@ -2118,7 +2121,7 @@ const WeatherWidget: React.FC<{
                     </p>
                     <div className="flex items-center justify-center">
                       <Waves className="h-3 w-3 mr-1 text-blue-500" />
-                      <p className="text-xs dark:text-gray-300">
+                      <p className="text-xs dark:text-gray-300 mr-1">
                         {/* Use average wave height from hourly data for this day */}
                         {(() => {
                           // Calculate the day's start and end indices in hourly data
@@ -2146,13 +2149,76 @@ const WeatherWidget: React.FC<{
                                   );
                                 }, 0) / validHeights.length;
                               return typeof avgWaveHeight === "number"
-                                ? `${avgWaveHeight.toFixed(1)} m`
+                                ? `${avgWaveHeight.toFixed(1)}m`
                                 : "-";
                             }
                           }
                           return "-";
                         })()}
                       </p>
+                      <p className="text-xs dark:text-gray-300 mr-1">
+                        {(() => {
+                          // Calculate the day's start and end indices in hourly data
+                          const dayStart = index * 24;
+                          const dayEnd = (index + 1) * 24;
+                          // Get wave directions for this day if available
+                          const dayWaveDirections =
+                            weatherData.hourly?.wave_direction?.slice(
+                              dayStart,
+                              dayEnd,
+                            );
+                          if (
+                            dayWaveDirections &&
+                            dayWaveDirections.length > 0
+                          ) {
+                            // Filter out null values
+                            const validDirections = dayWaveDirections.filter(
+                              (d) => d !== null,
+                            );
+                            if (validDirections.length > 0) {
+                              // Calculate average wave direction
+                              const avgWaveDirection =
+                                validDirections.reduce(
+                                  (sum, direction) => sum + direction,
+                                  0,
+                                ) / validDirections.length;
+                              return getWindDirection(avgWaveDirection);
+                            }
+                          }
+                          return "-";
+                        })()}
+                      </p>
+                      {(() => {
+                        // Calculate the day's start and end indices in hourly data
+                        const dayStart = index * 24;
+                        const dayEnd = (index + 1) * 24;
+                        // Get wave directions for this day if available
+                        const dayWaveDirections =
+                          weatherData.hourly?.wave_direction?.slice(
+                            dayStart,
+                            dayEnd,
+                          );
+                        if (dayWaveDirections && dayWaveDirections.length > 0) {
+                          // Filter out null values
+                          const validDirections = dayWaveDirections.filter(
+                            (d) => d !== null,
+                          );
+                          if (validDirections.length > 0) {
+                            // Calculate average wave direction
+                            const avgWaveDirection =
+                              validDirections.reduce(
+                                (sum, direction) => sum + direction,
+                                0,
+                              ) / validDirections.length;
+                            return (
+                              <span className="text-xs">
+                                {getDirectionArrow(avgWaveDirection)}
+                              </span>
+                            );
+                          }
+                        }
+                        return null;
+                      })()}
                     </div>
                   </div>
 
@@ -2176,11 +2242,12 @@ const WeatherWidget: React.FC<{
           </div>
         </Card>
       )}
+
       {/* Data Source Information */}
       <div className="flex flex-col space-y-2 text-xs text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Info className="h-3 w-3 mr-1 text-white" />
+            <Info className="h-3 w-3 mr-1 text-gray-500 dark:text-gray-400" />
             <span>Data provided by Open-Meteo.com</span>
           </div>
           {lastUpdated && (

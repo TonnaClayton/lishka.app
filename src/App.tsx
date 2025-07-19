@@ -8,30 +8,52 @@ import {
   useRoutes,
 } from "react-router-dom";
 import routes from "tempo-routes";
-import HomePage from "./components/HomePage";
-import FishDetailPage from "./components/FishDetailPage";
-import MenuPage from "./components/MenuPage";
-import SearchPage from "./components/SearchPage";
-import WeatherPage from "./components/WeatherPage";
-import ProfilePage from "./components/ProfilePage";
+import { lazy } from "react";
 import LoginPage from "./components/auth/LoginPage";
 import SignupPage from "./components/auth/SignupPage";
 import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
 import EmailConfirmationPage from "./components/auth/EmailConfirmationPage";
 import ProtectedRoute from "./components/auth/ProtectedRoute";
-import { SideNav } from "./components/BottomNav";
-import WeatherWidgetPro from "./components/WeatherWidgetPro";
-import SettingsPage from "./components/SettingsPage";
-import BlobConnectionTest from "./components/BlobConnectionTest";
-import BlobImageUploader from "./components/BlobImageUploader";
-import BlobImageTest from "./components/BlobImageTest";
-import AccountStatusChecker from "./components/AccountStatusChecker";
-import StorageSetup from "./components/StorageSetup";
-import DatabaseDebugger from "./components/DatabaseDebugger";
-import ImageUploadDebugger from "./components/ImageUploadDebugger";
 import SafariScrollFix from "./components/SafariScrollFix";
 import EmailVerificationBanner from "./components/EmailVerificationBanner";
 import { AuthProvider } from "./contexts/AuthContext";
+
+// Lazy load heavy components for better initial loading performance
+const HomePage = lazy(() => import("./components/HomePage"));
+const FishDetailPage = lazy(() => import("./components/FishDetailPage"));
+const MenuPage = lazy(() => import("./components/MenuPage"));
+const SearchPage = lazy(() => import("./components/SearchPage"));
+const WeatherPage = lazy(() => import("./components/WeatherPage"));
+const ProfilePage = lazy(() => import("./components/ProfilePage"));
+const MyGearPage = lazy(() => import("./components/MyGearPage"));
+const GearCategoryPage = lazy(() => import("./components/GearCategoryPage"));
+const SideNav = lazy(() =>
+  import("./components/BottomNav").then((module) => ({
+    default: module.SideNav,
+  })),
+);
+const WeatherWidgetPro = lazy(() => import("./components/WeatherWidgetPro"));
+const SettingsPage = lazy(() => import("./components/SettingsPage"));
+const FAQPage = lazy(() => import("./components/FAQPage"));
+const TermsPage = lazy(() => import("./components/TermsPage"));
+const PrivacyPolicyPage = lazy(() => import("./components/PrivacyPolicyPage"));
+const BlobConnectionTest = lazy(
+  () => import("./components/BlobConnectionTest"),
+);
+const BlobImageUploader = lazy(() => import("./components/BlobImageUploader"));
+const BlobImageTest = lazy(() => import("./components/BlobImageTest"));
+const AccountStatusChecker = lazy(
+  () => import("./components/AccountStatusChecker"),
+);
+const StorageSetup = lazy(() => import("./components/StorageSetup"));
+const DatabaseDebugger = lazy(() => import("./components/DatabaseDebugger"));
+const ImageUploadDebugger = lazy(
+  () => import("./components/ImageUploadDebugger"),
+);
+const GearDatabaseDebugger = lazy(
+  () => import("./components/GearDatabaseDebugger"),
+);
+const WhatsNewPage = lazy(() => import("./components/WhatsNewPage"));
 
 // Wrapper component to provide AuthContext within router
 function AppWithAuth() {
@@ -148,6 +170,46 @@ const router = createBrowserRouter(
           ),
         },
         {
+          path: "faq",
+          element: (
+            <ProtectedRoute>
+              <FAQPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "terms",
+          element: (
+            <ProtectedRoute>
+              <TermsPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "privacy-policy",
+          element: (
+            <ProtectedRoute>
+              <PrivacyPolicyPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "my-gear",
+          element: (
+            <ProtectedRoute>
+              <MyGearPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "gear-category/:categoryId",
+          element: (
+            <ProtectedRoute>
+              <GearCategoryPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: "blob-test",
           element: (
             <ProtectedRoute>
@@ -213,6 +275,24 @@ const router = createBrowserRouter(
             </ProtectedRoute>
           ),
         },
+        {
+          path: "gear-database-debug",
+          element: (
+            <ProtectedRoute>
+              <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
+                <GearDatabaseDebugger />
+              </div>
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "whats-new",
+          element: (
+            <ProtectedRoute>
+              <WhatsNewPage />
+            </ProtectedRoute>
+          ),
+        },
       ],
     },
   ],
@@ -262,7 +342,15 @@ function AppContent() {
       {/* Use flexbox layout for desktop */}
       <div className="mx-auto relative flex w-full h-full">
         {/* Side Navigation - flex-none (fixed width) - hidden on auth pages */}
-        {!isAuthPage && <SideNav />}
+        {!isAuthPage && (
+          <Suspense
+            fallback={
+              <div className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800" />
+            }
+          >
+            <SideNav />
+          </Suspense>
+        )}
 
         {/* Main content area - flex-auto (flexible width) */}
         <div
@@ -274,8 +362,21 @@ function AppContent() {
           <div className="w-full flex-1 overflow-y-auto pb-32 lg:pb-4">
             {/* Tempo routes - render before outlet to catch tempo routes first */}
             {import.meta.env.VITE_TEMPO && useRoutes(routes)}
-            {/* Outlet for nested routes */}
-            <Outlet />
+            {/* Outlet for nested routes with suspense boundary */}
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center min-h-[50vh]">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-2" />
+                    <p className="text-sm text-gray-600 dark:text-gray-400">
+                      Loading...
+                    </p>
+                  </div>
+                </div>
+              }
+            >
+              <Outlet />
+            </Suspense>
           </div>
         </div>
 
@@ -283,7 +384,15 @@ function AppContent() {
         {shouldShowWeatherWidget && (
           <div className="hidden lg:block lg:w-[380px] lg:flex-none h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 overflow-hidden">
             <div className="h-full overflow-y-auto">
-              <WeatherWidgetPro />
+              <Suspense
+                fallback={
+                  <div className="p-4 animate-pulse">
+                    <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+                  </div>
+                }
+              >
+                <WeatherWidgetPro />
+              </Suspense>
             </div>
           </div>
         )}

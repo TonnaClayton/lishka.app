@@ -11,10 +11,26 @@ import { put } from "@vercel/blob";
  * Get the blob storage token from environment variables
  */
 function getBlobToken(): string {
+  console.log("[BlobStorage] 🔍 Checking for blob token:", {
+    hasViteToken: !!import.meta.env.VITE_BLOB_READ_WRITE_TOKEN,
+    tokenLength: import.meta.env.VITE_BLOB_READ_WRITE_TOKEN?.length || 0,
+    tokenType: typeof import.meta.env.VITE_BLOB_READ_WRITE_TOKEN,
+    allEnvKeys: Object.keys(import.meta.env).filter((key) =>
+      key.includes("BLOB"),
+    ),
+  });
+
   // Check for the VITE_ prefixed version (required for Vite browser access)
   const token = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
 
   if (!token) {
+    console.error("[BlobStorage] ❌ Token missing:", {
+      VITE_BLOB_READ_WRITE_TOKEN: import.meta.env.VITE_BLOB_READ_WRITE_TOKEN,
+      availableEnvVars: Object.keys(import.meta.env).filter(
+        (key) => key.includes("BLOB") || key.includes("VERCEL"),
+      ),
+      allEnvVars: Object.keys(import.meta.env),
+    });
     throw new Error(
       "VITE_BLOB_READ_WRITE_TOKEN environment variable is missing. " +
         "Please add it in your project settings with your Vercel Blob token.",
@@ -22,11 +38,24 @@ function getBlobToken(): string {
   }
 
   if (typeof token !== "string" || token.trim() === "") {
+    console.error("[BlobStorage] ❌ Token invalid:", {
+      tokenType: typeof token,
+      tokenValue: token,
+      tokenLength: token?.length || 0,
+      isEmpty: token === "",
+      isWhitespace: token?.trim() === "",
+    });
     throw new Error(
       "VITE_BLOB_READ_WRITE_TOKEN environment variable is empty. " +
         "Please set a valid Vercel Blob token in your project settings.",
     );
   }
+
+  console.log("[BlobStorage] ✅ Token validation successful:", {
+    tokenLength: token.length,
+    tokenPrefix: token.substring(0, 10) + "...",
+    tokenSuffix: "..." + token.substring(token.length - 4),
+  });
 
   return token.trim();
 }
@@ -74,96 +103,255 @@ function generateFileName(file: File, prefix: string = "images"): string {
  * Upload a general image file to Vercel Blob
  */
 export async function uploadImage(file: File): Promise<string> {
+  const isMobile =
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+      navigator.userAgent,
+    );
+
   try {
-    console.log("[BlobStorage] Starting image upload:", {
+    console.log("[BlobStorage] 🚀 Starting image upload:", {
       name: file.name,
       size: file.size,
       type: file.type,
       sizeFormatted: (file.size / (1024 * 1024)).toFixed(2) + " MB",
+      isMobile,
+      deviceType: isMobile ? "mobile" : "desktop",
+      timestamp: new Date().toISOString(),
     });
 
-    // Get token and validate file
-    const token = getBlobToken();
-    console.log("[BlobStorage] Token validation:", {
-      hasToken: !!token,
-      tokenLength: token.length,
-      tokenPrefix: token.substring(0, 10) + "...",
-    });
+    // Get token and validate file with enhanced error handling
+    let token;
+    try {
+      token = getBlobToken();
+      console.log("[BlobStorage] ✅ Token validation successful:", {
+        hasToken: !!token,
+        tokenLength: token.length,
+        tokenPrefix: token.substring(0, 10) + "...",
+        isMobile,
+      });
+    } catch (tokenError) {
+      console.error("[BlobStorage] ❌ Token validation failed:", {
+        error: tokenError.message,
+        isMobile,
+        availableEnvVars: {
+          VITE_BLOB_READ_WRITE_TOKEN: !!import.meta.env
+            .VITE_BLOB_READ_WRITE_TOKEN,
+          tokenLength: import.meta.env.VITE_BLOB_READ_WRITE_TOKEN?.length || 0,
+        },
+      });
+      throw new Error(`Failed to get upload token: ${tokenError.message}`);
+    }
 
-    validateFile(file);
-    console.log("[BlobStorage] File validation passed");
+    try {
+      validateFile(file);
+      console.log("[BlobStorage] ✅ File validation passed", { isMobile });
+    } catch (validationError) {
+      console.error("[BlobStorage] ❌ File validation failed:", {
+        error: validationError.message,
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        isMobile,
+      });
+      throw validationError;
+    }
 
     // Generate filename
     const fileName = generateFileName(file, "images");
-    console.log("[BlobStorage] Generated filename:", fileName);
+    console.log("[BlobStorage] 📝 Generated filename:", { fileName, isMobile });
 
-    // Upload to Vercel Blob with detailed logging
-    console.log("[BlobStorage] Initiating Vercel Blob upload...");
+    // Upload to Vercel Blob with detailed logging and timeout
+    console.log("[BlobStorage] 🔄 Initiating Vercel Blob upload...", {
+      isMobile,
+    });
     const uploadStartTime = Date.now();
 
-    const blob = await put(fileName, file, {
+    // Add timeout wrapper for mobile devices
+    const uploadTimeout = isMobile ? 120000 : 90000; // 120s for mobile, 90s for desktop
+    const uploadPromise = put(fileName, file, {
       access: "public",
       token: token,
     });
 
+    const timeoutPromise = new Promise<never>((_, reject) => {
+      setTimeout(() => {
+        console.error("[BlobStorage] ⏰ Upload timeout:", {
+          timeout: uploadTimeout,
+          fileName,
+          fileSize: file.size,
+          isMobile,
+          deviceType: isMobile ? "mobile" : "desktop",
+        });
+        reject(
+          new Error(
+            `Upload timeout after ${uploadTimeout / 1000} seconds. Please try again with a smaller image or better connection.`,
+          ),
+        );
+      }, uploadTimeout);
+    });
+
+    const blob = await Promise.race([uploadPromise, timeoutPromise]);
+
     const uploadTime = Date.now() - uploadStartTime;
-    console.log("[BlobStorage] Upload completed in", uploadTime, "ms");
-    console.log("[BlobStorage] Blob response:", {
+    console.log("[BlobStorage] ✅ Upload completed:", {
+      uploadTime: uploadTime + "ms",
+      isMobile,
+      isSlowUpload: uploadTime > 30000,
+    });
+
+    console.log("[BlobStorage] 📋 Blob response details:", {
+      hasUrl: !!blob.url,
       url: blob.url,
       pathname: blob.pathname,
       contentType: blob.contentType,
       contentDisposition: blob.contentDisposition,
       size: blob.size,
+      downloadUrl: blob.downloadUrl,
+      isMobile,
     });
 
-    // Validate the returned URL
+    // Enhanced URL validation
     if (!blob.url) {
-      throw new Error("No URL returned from Vercel Blob");
+      console.error("[BlobStorage] ❌ No URL in blob response:", {
+        fullBlobResponse: blob,
+        blobKeys: Object.keys(blob),
+        isMobile,
+      });
+      throw new Error(
+        "Failed to get upload url - No URL returned from Vercel Blob",
+      );
     }
 
     if (!blob.url.startsWith("https://")) {
-      console.warn("[BlobStorage] Warning: URL is not HTTPS:", blob.url);
-    }
-
-    if (!blob.url.includes("blob.vercel-storage.com")) {
-      console.warn(
-        "[BlobStorage] Warning: URL is not from Vercel Blob domain:",
-        blob.url,
-      );
-    }
-
-    console.log("[BlobStorage] Upload successful:", blob.url);
-    return blob.url;
-  } catch (error) {
-    console.error("[BlobStorage] Upload failed:", error);
-
-    // Enhanced error logging
-    if (error instanceof Error) {
-      console.error("[BlobStorage] Error details:", {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
+      console.warn("[BlobStorage] ⚠️ URL is not HTTPS:", {
+        url: blob.url,
+        isMobile,
       });
     }
 
-    // Check if it's a network error
-    if (error instanceof TypeError && error.message.includes("fetch")) {
-      throw new Error(
-        `Network error during upload: ${error.message}. Please check your internet connection.`,
-      );
+    if (!blob.url.includes("blob.vercel-storage.com")) {
+      console.warn("[BlobStorage] ⚠️ URL is not from Vercel Blob domain:", {
+        url: blob.url,
+        domain: new URL(blob.url).hostname,
+        isMobile,
+      });
     }
 
-    // Check if it's an authentication error
-    if (
-      error instanceof Error &&
-      (error.message.includes("401") || error.message.includes("403"))
-    ) {
-      throw new Error(
-        `Authentication error: ${error.message}. Please check your Vercel Blob token.`,
-      );
+    // Test URL accessibility
+    try {
+      const testResponse = await fetch(blob.url, { method: "HEAD" });
+      console.log("[BlobStorage] 🔍 URL accessibility test:", {
+        status: testResponse.status,
+        ok: testResponse.ok,
+        url: blob.url,
+        isMobile,
+      });
+    } catch (testError) {
+      console.warn("[BlobStorage] ⚠️ URL accessibility test failed:", {
+        error: testError.message,
+        url: blob.url,
+        isMobile,
+      });
     }
 
-    throw error;
+    console.log("[BlobStorage] 🎉 Upload successful:", {
+      url: blob.url,
+      isMobile,
+    });
+    return blob.url;
+  } catch (error) {
+    const uploadTime = Date.now();
+    console.error("[BlobStorage] 💥 Upload failed:", {
+      error: error instanceof Error ? error.message : String(error),
+      errorType: error instanceof Error ? error.constructor.name : typeof error,
+      fileName: file.name,
+      fileSize: file.size,
+      fileType: file.type,
+      isMobile,
+      deviceType: isMobile ? "mobile" : "desktop",
+      timestamp: new Date().toISOString(),
+    });
+
+    // Enhanced error logging
+    if (error instanceof Error) {
+      console.error("[BlobStorage] 📋 Detailed error information:", {
+        name: error.name,
+        message: error.message,
+        stack: error.stack,
+        isMobile,
+      });
+    }
+
+    // Check for specific error types and provide better error messages
+    if (error instanceof Error) {
+      // Network/connectivity errors
+      if (
+        error.message.includes("fetch") ||
+        error.message.includes("network")
+      ) {
+        const networkError = `Network error during upload: ${error.message}. Please check your internet connection.`;
+        console.error("[BlobStorage] 🌐 Network error detected:", {
+          networkError,
+          isMobile,
+        });
+        throw new Error(networkError);
+      }
+
+      // Authentication errors
+      if (
+        error.message.includes("401") ||
+        error.message.includes("403") ||
+        error.message.includes("Unauthorized")
+      ) {
+        const authError = `Authentication error: ${error.message}. Please check your Vercel Blob token configuration.`;
+        console.error("[BlobStorage] 🔐 Authentication error detected:", {
+          authError,
+          isMobile,
+        });
+        throw new Error(authError);
+      }
+
+      // Timeout errors
+      if (error.message.includes("timeout")) {
+        const timeoutError = `Upload timeout: ${error.message}. ${isMobile ? "Mobile uploads may take longer due to slower connections." : "Please try again."}`;
+        console.error("[BlobStorage] ⏰ Timeout error detected:", {
+          timeoutError,
+          isMobile,
+        });
+        throw new Error(timeoutError);
+      }
+
+      // Token-related errors
+      if (error.message.includes("token") || error.message.includes("Token")) {
+        const tokenError = `Token error: ${error.message}. Please check your VITE_BLOB_READ_WRITE_TOKEN environment variable.`;
+        console.error("[BlobStorage] 🔑 Token error detected:", {
+          tokenError,
+          isMobile,
+        });
+        throw new Error(tokenError);
+      }
+
+      // File size or validation errors
+      if (
+        error.message.includes("size") ||
+        error.message.includes("large") ||
+        error.message.includes("validation")
+      ) {
+        console.error("[BlobStorage] 📁 File validation error detected:", {
+          error: error.message,
+          isMobile,
+        });
+        throw error; // Re-throw as-is for validation errors
+      }
+    }
+
+    // Generic error with enhanced context
+    const genericError = `Failed to upload image: ${error instanceof Error ? error.message : "Unknown error"}. ${isMobile ? "If you're on mobile, try switching to a stronger WiFi connection." : "Please try again."}`;
+    console.error("[BlobStorage] ❓ Generic error:", {
+      genericError,
+      isMobile,
+    });
+    throw new Error(genericError);
   }
 }
 

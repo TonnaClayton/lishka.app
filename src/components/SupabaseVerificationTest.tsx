@@ -149,7 +149,7 @@ const SupabaseVerificationTest: React.FC = () => {
 
     try {
       // Test getCurrentUser function
-      const { data, error } = await auth.getCurrentUser();
+      const { user, error } = await auth.getCurrentUser();
 
       if (error) {
         updateTest("Auth Helper Functions", {
@@ -161,7 +161,7 @@ const SupabaseVerificationTest: React.FC = () => {
         updateTest("Auth Helper Functions", {
           status: "success",
           message: "Auth helper functions working",
-          details: `getCurrentUser executed successfully. User: ${data.user ? "Found" : "None"}`,
+          details: `getCurrentUser executed successfully. User: ${user ? "Found" : "None"}`,
         });
       }
     } catch (error) {

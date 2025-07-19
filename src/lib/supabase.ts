@@ -67,7 +67,7 @@ export const authService = {
     }
   },
 
-  // Sign in existing user
+  // Sign in existing user with timeout protection
   async signIn(email: string, password: string) {
     try {
       console.log("Attempting signIn with:", {
@@ -76,10 +76,23 @@ export const authService = {
         hasKey: !!supabaseKey,
       });
 
-      const { data, error } = await supabase.auth.signInWithPassword({
+      // Add timeout to prevent hanging requests
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(
+          () => reject(new Error("Login timeout - please try again")),
+          8000,
+        );
+      });
+
+      const signInPromise = supabase.auth.signInWithPassword({
         email,
         password,
       });
+
+      const { data, error } = (await Promise.race([
+        signInPromise,
+        timeoutPromise,
+      ])) as any;
 
       console.log("SignIn response:", {
         hasUser: !!data?.user,
@@ -210,11 +223,21 @@ export const db = supabase;
 export const profileService = {
   async getProfile(userId: string) {
     try {
-      const { data, error } = await supabase
+      // Add timeout to prevent hanging requests
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error("Profile fetch timeout")), 3000);
+      });
+
+      const profilePromise = supabase
         .from("profiles")
         .select("*")
         .eq("id", userId)
         .single();
+
+      const { data, error } = (await Promise.race([
+        profilePromise,
+        timeoutPromise,
+      ])) as any;
 
       return { data, error };
     } catch (err) {
@@ -230,13 +253,15 @@ export const profileService = {
   },
 
   async updateProfile(userId: string, updates: any) {
+    const startTime = Date.now();
     try {
-      console.log(
-        "[ProfileService] Updating profile for user:",
+      console.log("[ProfileService] 🚀 Starting profile update:", {
         userId,
-        "with updates:",
-        updates,
-      );
+        updateKeys: Object.keys(updates),
+        gearItemsCount: updates.gear_items?.length || 0,
+        galleryPhotosCount: updates.gallery_photos?.length || 0,
+        timestamp: new Date().toISOString(),
+      });
 
       // Special handling for gallery_photos to ensure proper array handling
       if (updates.gallery_photos) {
@@ -248,31 +273,65 @@ export const profileService = {
         });
       }
 
-      // First check if profile exists
+      // Special handling for gear_items to ensure proper array handling
+      if (updates.gear_items) {
+        console.log("[ProfileService] Gear items update detected:", {
+          type: typeof updates.gear_items,
+          isArray: Array.isArray(updates.gear_items),
+          length: updates.gear_items?.length,
+          sample: updates.gear_items?.slice(0, 2).map((item) => ({
+            id: item?.id,
+            name: item?.name,
+            category: item?.category,
+            hasImageUrl: !!item?.imageUrl,
+          })),
+        });
+      }
+
+      // First check if profile exists with timeout
+      console.log("[ProfileService] 🔍 Checking if profile exists...");
+      const checkStartTime = Date.now();
+
       const { data: existingProfile, error: checkError } = await supabase
         .from("profiles")
-        .select("id, gallery_photos")
+        .select("id, gallery_photos, gear_items")
         .eq("id", userId)
         .single();
+
+      const checkTime = Date.now() - checkStartTime;
+      console.log("[ProfileService] ⏱️ Profile existence check completed:", {
+        checkTime: `${checkTime}ms`,
+        exists: !!existingProfile,
+        hasError: !!checkError,
+        errorCode: checkError?.code,
+      });
 
       console.log("[ProfileService] Profile existence check:", {
         exists: !!existingProfile,
         error: checkError?.message,
-        currentGalleryPhotos: existingProfile?.gallery_photos,
+        errorCode: checkError?.code,
+        currentGalleryPhotos: existingProfile?.gallery_photos?.length || 0,
+        currentGearItems: Array.isArray(existingProfile?.gear_items)
+          ? existingProfile.gear_items.length
+          : 0,
       });
 
       if (!existingProfile || checkError) {
         console.log(
           "[ProfileService] Profile doesn't exist, creating it first",
         );
-        // Create profile with default values and updates
+        // Create profile with minimal required data for faster creation
         const profileData = {
           id: userId,
           preferred_units: "metric",
           preferred_language: "en",
           favorite_fish_species: [],
-          gallery_photos: [], // Ensure gallery_photos is initialized
-          ...updates,
+          gallery_photos: [],
+          gear_items: [], // Initialize gear_items as empty array
+          // Only include essential updates to reduce payload
+          ...(updates.full_name && { full_name: updates.full_name }),
+          ...(updates.avatar_url && { avatar_url: updates.avatar_url }),
+          ...(updates.gear_items && { gear_items: updates.gear_items }),
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
@@ -280,7 +339,11 @@ export const profileService = {
         console.log("[ProfileService] Creating profile with data:", {
           ...profileData,
           gallery_photos: profileData.gallery_photos?.length || 0,
+          gear_items: profileData.gear_items?.length || 0,
         });
+
+        console.log("[ProfileService] 📝 Creating new profile...");
+        const createStartTime = Date.now();
 
         const { data: newProfile, error: createError } = await supabase
           .from("profiles")
@@ -288,10 +351,21 @@ export const profileService = {
           .select()
           .single();
 
+        const createTime = Date.now() - createStartTime;
+        console.log("[ProfileService] ⏱️ Profile creation completed:", {
+          createTime: `${createTime}ms`,
+          success: !!newProfile && !createError,
+        });
+
         console.log("[ProfileService] Profile creation result:", {
           success: !!newProfile && !createError,
           error: createError?.message,
+          errorCode: createError?.code,
+          errorDetails: createError?.details,
           galleryPhotosCount: newProfile?.gallery_photos?.length || 0,
+          gearItemsCount: Array.isArray(newProfile?.gear_items)
+            ? newProfile.gear_items.length
+            : 0,
         });
         return { data: newProfile, error: createError };
       }
@@ -305,7 +379,11 @@ export const profileService = {
       console.log("[ProfileService] Updating existing profile with:", {
         ...updateData,
         gallery_photos: updateData.gallery_photos?.length || "not updating",
+        gear_items: updateData.gear_items?.length || "not updating",
       });
+
+      console.log("[ProfileService] 💾 Updating existing profile...");
+      const updateStartTime = Date.now();
 
       const { data, error } = await supabase
         .from("profiles")
@@ -314,13 +392,29 @@ export const profileService = {
         .select()
         .single();
 
+      const updateTime = Date.now() - updateStartTime;
+      console.log("[ProfileService] ⏱️ Profile update completed:", {
+        updateTime: `${updateTime}ms`,
+        success: !!data && !error,
+        totalOperationTime: `${Date.now() - startTime}ms`,
+      });
+
       console.log("[ProfileService] Profile update result:", {
         success: !!data && !error,
         error: error?.message,
+        errorCode: error?.code,
+        errorDetails: error?.details,
+        errorHint: error?.hint,
         galleryPhotosCount: data?.gallery_photos?.length || 0,
+        gearItemsCount: Array.isArray(data?.gear_items)
+          ? data.gear_items.length
+          : 0,
         galleryPhotosChanged:
           JSON.stringify(existingProfile.gallery_photos) !==
           JSON.stringify(data?.gallery_photos),
+        gearItemsChanged:
+          JSON.stringify(existingProfile.gear_items) !==
+          JSON.stringify(data?.gear_items),
       });
 
       // Additional verification for gallery_photos updates
@@ -335,14 +429,76 @@ export const profileService = {
         }
       }
 
+      // Additional verification for gear_items updates
+      if (updates.gear_items && data) {
+        const expectedCount = updates.gear_items.length;
+        const actualCount = Array.isArray(data.gear_items)
+          ? data.gear_items.length
+          : 0;
+        if (expectedCount !== actualCount) {
+          console.warn("[ProfileService] Gear items count mismatch!", {
+            expected: expectedCount,
+            actual: actualCount,
+            expectedItems: updates.gear_items.map((item) => ({
+              id: item.id,
+              name: item.name,
+            })),
+            actualItems: Array.isArray(data.gear_items)
+              ? data.gear_items.map((item: any) => ({
+                  id: item.id,
+                  name: item.name,
+                }))
+              : [],
+          });
+        }
+      }
+
       return { data, error };
     } catch (err) {
-      console.error("[ProfileService] UpdateProfile error:", err);
+      const totalTime = Date.now() - startTime;
+      console.error("[ProfileService] 💥 UpdateProfile exception:", {
+        error: err instanceof Error ? err.message : String(err),
+        errorType: err instanceof Error ? err.constructor.name : typeof err,
+        totalTime: `${totalTime}ms`,
+        userId,
+        updateKeys: Object.keys(updates),
+        stack: err instanceof Error ? err.stack : undefined,
+      });
+
+      // Categorize the error for better debugging
+      let errorCategory = "UNKNOWN";
+      let userMessage = "Unknown error occurred";
+
+      if (err instanceof Error) {
+        if (
+          err.message.includes("timeout") ||
+          err.message.includes("took too long")
+        ) {
+          errorCategory = "TIMEOUT";
+          userMessage = `Database timeout after ${totalTime}ms - operation took too long`;
+        } else if (
+          err.message.includes("fetch") ||
+          err.message.includes("network")
+        ) {
+          errorCategory = "NETWORK";
+          userMessage = "Network error during database operation";
+        } else if (err.message.includes("connection")) {
+          errorCategory = "CONNECTION";
+          userMessage = "Database connection error";
+        } else {
+          userMessage = err.message;
+        }
+      }
+
       return {
         data: null,
         error: {
-          message:
-            err instanceof Error ? err.message : "Unknown error occurred",
+          message: userMessage,
+          code: (err as any)?.code,
+          details: (err as any)?.details,
+          hint: (err as any)?.hint,
+          category: errorCategory,
+          totalTime: `${totalTime}ms`,
         },
       };
     }

@@ -17,13 +17,19 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { uploadImage, getBlobStorageStatus } from "@/lib/blob-storage";
-import { processImageUpload } from "@/lib/image-metadata";
+import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
+import {
+  classifyImage,
+  ClassificationResult,
+} from "@/lib/image-classification-service";
+import { uploadGearImage } from "@/lib/gear-upload-service";
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
+  const [classifyingImage, setClassifyingImage] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -45,83 +51,214 @@ const BottomNav: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      alert("Photo must be less than 10MB");
-      e.target.value = "";
-      return;
-    }
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
-      e.target.value = "";
-      return;
-    }
+    console.log(
+      `🔍 [BOTTOMNAV SMART UPLOAD] Photo capture started from bottomnav:`,
+      {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        fileSizeInMB: (file.size / (1024 * 1024)).toFixed(2),
+        lastModified: new Date(file.lastModified).toISOString(),
+        source: "bottomnav",
+        isFromCamera: e.target === cameraInputRef.current,
+        isFromGallery: e.target === galleryInputRef.current,
+      },
+    );
 
     setUploadingPhoto(true);
+    setClassifyingImage(true);
 
     try {
-      console.log("[BottomNav] Starting photo upload:", {
-        name: file.name,
-        size: file.size,
-        type: file.type,
-      });
+      // Step 1: Classify the image
+      console.log("🤖 [BOTTOMNAV] Classifying image...");
+      const classification = await classifyImage(file);
 
-      // Check blob storage configuration
-      const storageStatus = getBlobStorageStatus();
-      console.log("[BottomNav] Blob storage status:", storageStatus);
+      console.log("🎯 [BOTTOMNAV] Classification result:", classification);
+      setClassifyingImage(false);
 
-      if (!storageStatus.configured) {
-        const errorMessage =
-          storageStatus.error || "Blob storage is not properly configured";
-        console.error("[BottomNav] Blob storage not configured:", errorMessage);
-        alert(errorMessage);
-        return;
-      }
+      // Step 2: Route based on classification
+      if (classification.type === "fish") {
+        console.log(
+          "🐟 [BOTTOMNAV] Detected fish - using photo upload service",
+        );
 
-      // Process image metadata (fish identification, location, etc.)
-      console.log("[BottomNav] Processing image metadata...");
-      const metadata = await processImageUpload(file);
-      console.log("[BottomNav] Image metadata processed:", metadata);
+        // Register callbacks for UI feedback
+        const callbackId = `bottomnav-fish-${Date.now()}`;
+        const { photoUploadService } = await import(
+          "@/lib/photo-upload-service"
+        );
 
-      // Upload the photo
-      console.log("[BottomNav] Uploading photo to blob storage...");
-      const photoUrl = await uploadImage(file);
-      console.log("[BottomNav] Photo uploaded successfully:", photoUrl);
-
-      // Dispatch event with the uploaded photo URL and metadata for other components to listen
-      window.dispatchEvent(
-        new CustomEvent("photoUploaded", {
-          detail: {
-            photoUrl,
-            metadata: {
-              ...metadata,
-              url: photoUrl,
-            },
+        photoUploadService.registerCallbacks(callbackId, {
+          onStart: () => {
+            console.log("🔍 [BOTTOMNAV] Fish upload started");
           },
-        }),
-      );
+          onProgress: (message: string) => {
+            console.log(`🔍 [BOTTOMNAV] Fish upload progress: ${message}`);
+          },
+          onSuccess: (result) => {
+            console.log("🔍 [BOTTOMNAV] Fish upload successful:", result);
 
-      // Show success message with fish info if available
-      if (metadata.fishInfo && metadata.fishInfo.name !== "Unknown") {
-        alert(`Photo uploaded! Identified: ${metadata.fishInfo.name}`);
-      } else {
-        alert("Photo uploaded successfully!");
-      }
-    } catch (err) {
-      console.error("[BottomNav] Photo upload error:", err);
+            // Trigger a custom event to notify other components about the new photo
+            console.log("🔍 [BOTTOMNAV] Dispatching photoUploaded event:", {
+              metadata: result.metadata,
+              photoUrl: result.photoUrl || result.url,
+              source: "bottomnav",
+              type: "fish",
+              hasFishInfo: !!result.metadata?.fishInfo,
+              fishName: result.metadata?.fishInfo?.name,
+            });
 
-      if (err instanceof Error) {
-        alert(err.message);
+            window.dispatchEvent(
+              new CustomEvent("photoUploaded", {
+                detail: {
+                  photoUrl: result.photoUrl || result.url,
+                  metadata: result.metadata,
+                  source: "bottomnav",
+                  type: "fish",
+                },
+              }),
+            );
+
+            // Show success message with fish info if available
+            let successMsg = "Fish photo uploaded!";
+            const fishInfo = result.metadata?.fishInfo;
+            if (
+              fishInfo &&
+              (fishInfo.name !== "Unknown" ||
+                fishInfo.estimatedSize !== "Unknown" ||
+                fishInfo.estimatedWeight !== "Unknown")
+            ) {
+              if (fishInfo.name !== "Unknown") {
+                successMsg += ` Identified: ${fishInfo.name}`;
+                if (fishInfo.confidence > 0) {
+                  successMsg += ` (${Math.round(fishInfo.confidence * 100)}% confident)`;
+                }
+              } else {
+                successMsg += " Fish data detected!";
+              }
+            }
+
+            alert(successMsg);
+          },
+          onError: (error: string) => {
+            console.error("🔍 [BOTTOMNAV] Fish upload error:", error);
+            alert(`Fish upload error: ${error}`);
+          },
+          onComplete: () => {
+            console.log("🔍 [BOTTOMNAV] Fish upload process completed");
+            setUploadingPhoto(false);
+            photoUploadService.unregisterCallbacks(callbackId);
+          },
+        });
+
+        // Use the unified PhotoUploadService for fish
+        await photoUploadService.uploadPhoto(file, "bottomnav");
+      } else if (classification.type === "gear") {
+        console.log("🎣 [BOTTOMNAV] Detected gear - using gear upload service");
+
+        // Use gear upload service
+        const gearResult = await uploadGearImage(file);
+
+        if (gearResult.success) {
+          console.log("✅ [BOTTOMNAV] Gear upload successful:", gearResult);
+
+          // Trigger a custom event to notify other components about the new gear
+          window.dispatchEvent(
+            new CustomEvent("gearUploaded", {
+              detail: {
+                metadata: gearResult.metadata,
+                source: "bottomnav",
+                type: "gear",
+              },
+            }),
+          );
+
+          // Show success message with gear info if available
+          let successMsg = "Gear photo uploaded!";
+          const gearInfo = gearResult.metadata?.gearInfo;
+          if (gearInfo && gearInfo.name !== "Unknown Gear") {
+            successMsg += ` Identified: ${gearInfo.name}`;
+            if (gearInfo.confidence > 0) {
+              successMsg += ` (${Math.round(gearInfo.confidence * 100)}% confident)`;
+            }
+          }
+
+          alert(successMsg);
+        } else {
+          console.error("❌ [BOTTOMNAV] Gear upload failed:", gearResult.error);
+          alert(`Gear upload error: ${gearResult.error}`);
+        }
+
+        setUploadingPhoto(false);
       } else {
-        alert("Failed to upload photo. Please try again.");
+        console.log(
+          "❓ [BOTTOMNAV] Unknown content - using default photo upload",
+        );
+
+        // Fallback to regular photo upload for unknown content
+        const callbackId = `bottomnav-unknown-${Date.now()}`;
+        const { photoUploadService } = await import(
+          "@/lib/photo-upload-service"
+        );
+
+        photoUploadService.registerCallbacks(callbackId, {
+          onStart: () => {
+            console.log("🔍 [BOTTOMNAV] Unknown upload started");
+          },
+          onProgress: (message: string) => {
+            console.log(`🔍 [BOTTOMNAV] Unknown upload progress: ${message}`);
+          },
+          onSuccess: (result) => {
+            console.log("🔍 [BOTTOMNAV] Unknown upload successful:", result);
+
+            // Trigger a custom event
+            console.log(
+              "🔍 [BOTTOMNAV] Dispatching photoUploaded event (unknown):",
+              {
+                metadata: result.metadata,
+                photoUrl: result.photoUrl || result.url,
+                source: "bottomnav",
+                type: "unknown",
+                hasFishInfo: !!result.metadata?.fishInfo,
+                fishName: result.metadata?.fishInfo?.name,
+              },
+            );
+
+            window.dispatchEvent(
+              new CustomEvent("photoUploaded", {
+                detail: {
+                  photoUrl: result.photoUrl || result.url,
+                  metadata: result.metadata,
+                  source: "bottomnav",
+                  type: "unknown",
+                },
+              }),
+            );
+
+            alert("Photo uploaded successfully!");
+          },
+          onError: (error: string) => {
+            console.error("🔍 [BOTTOMNAV] Unknown upload error:", error);
+            alert(`Upload error: ${error}`);
+          },
+          onComplete: () => {
+            console.log("🔍 [BOTTOMNAV] Unknown upload process completed");
+            setUploadingPhoto(false);
+            photoUploadService.unregisterCallbacks(callbackId);
+          },
+        });
+
+        await photoUploadService.uploadPhoto(file, "bottomnav");
       }
-    } finally {
+    } catch (error: any) {
+      console.error("❌ [BOTTOMNAV] Smart upload failed:", error);
+      alert(error?.message || "Failed to process photo. Please try again.");
       setUploadingPhoto(false);
-      // Reset file input
-      e.target.value = "";
+      setClassifyingImage(false);
     }
+
+    // Reset file input
+    e.target.value = "";
   };
 
   return (
@@ -143,10 +280,14 @@ const BottomNav: React.FC = () => {
           {/* Camera button */}
           <button
             onClick={handleCameraClick}
-            disabled={uploadingPhoto}
-            className="flex items-center text-gray-500 hover:text-[#0251FB] dark:text-gray-400 dark:hover:text-blue-400 disabled:opacity-50"
+            disabled={uploadingPhoto || classifyingImage}
+            className="flex items-center text-gray-500 hover:text-[#0251FB] dark:text-gray-400 dark:hover:text-blue-400 disabled:opacity-50 relative"
           >
-            <Camera size={24} />
+            {classifyingImage ? (
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#0251FB] border-t-transparent" />
+            ) : (
+              <Camera size={24} />
+            )}
           </button>
           {/* Weather page only available on mobile */}
           {isMobile && (
@@ -158,10 +299,10 @@ const BottomNav: React.FC = () => {
             </Link>
           )}
           <Link
-            to="/menu"
-            className={`flex items-center ${currentPath === "/menu" ? "text-[#0251FB] dark:text-blue-400" : "text-gray-500 hover:text-[#0251FB] dark:text-gray-400 dark:hover:text-blue-400"}`}
+            to="/profile"
+            className={`flex items-center ${currentPath === "/profile" ? "text-[#0251FB] dark:text-blue-400" : "text-gray-500 hover:text-[#0251FB] dark:text-gray-400 dark:hover:text-blue-400"}`}
           >
-            <Menu size={24} />
+            <User size={24} />
           </Link>
         </div>
       </nav>
@@ -174,7 +315,7 @@ const BottomNav: React.FC = () => {
         capture="environment"
         onChange={handlePhotoChange}
         className="hidden"
-        disabled={uploadingPhoto}
+        disabled={uploadingPhoto || classifyingImage}
       />
       <input
         ref={galleryInputRef}
@@ -182,7 +323,7 @@ const BottomNav: React.FC = () => {
         accept="image/*"
         onChange={handlePhotoChange}
         className="hidden"
-        disabled={uploadingPhoto}
+        disabled={uploadingPhoto || classifyingImage}
       />
     </>
   );

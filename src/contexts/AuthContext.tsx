@@ -29,7 +29,8 @@ type Profile = {
   fishing_experience?: string;
   favorite_fish_species?: string[];
   bio?: string;
-  gallery_photos?: (string | ImageMetadata)[];
+  gallery_photos?: ImageMetadata[]; // Standardize to always be ImageMetadata objects
+  gear_items?: any[]; // Add gear_items field
   created_at: string;
   updated_at: string;
 };
@@ -52,6 +53,7 @@ interface AuthContextType {
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
   uploadAvatar: (file: File) => Promise<{ error: any }>;
   refreshProfile: () => Promise<void>;
+  deleteAccount: () => Promise<{ error: any }>;
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
@@ -215,7 +217,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         );
         setLoading(false);
       }
-    }, 10000); // 10 second timeout
+    }, 5000); // 5 second timeout - reduced for faster fallback
 
     // Get initial session
     const initializeAuth = async () => {
@@ -238,19 +240,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             console.log("[AuthContext] Setting initial user:", authUser);
             setUser(authUser);
             setSession(session);
+
+            // Set loading to false immediately for faster UI response
+            setLoading(false);
+
+            // Load profile in background - non-blocking
             if (authUser) {
-              await loadProfile(
+              loadProfile(
                 authUser.id,
                 session.user.user_metadata?.full_name,
-              );
+              ).catch((err) => {
+                console.warn(
+                  "[AuthContext] Background profile load failed:",
+                  err,
+                );
+              });
             }
           } else {
             console.log("[AuthContext] No initial session found");
+            setLoading(false);
           }
 
           // Clear timeout since we completed successfully
           if (timeoutId) clearTimeout(timeoutId);
-          setLoading(false);
         }
       } catch (err) {
         console.error("[AuthContext] Error initializing auth:", err);
@@ -286,9 +298,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         console.log("[AuthContext] Setting user from session:", authUser);
         setUser(authUser);
         setSession(session);
+
+        // Load profile in background for faster auth state resolution
         if (authUser) {
-          // Pass the full name from user metadata to profile creation
-          await loadProfile(authUser.id, session.user.user_metadata?.full_name);
+          loadProfile(authUser.id, session.user.user_metadata?.full_name).catch(
+            (err) => {
+              console.warn(
+                "[AuthContext] Background profile load failed:",
+                err,
+              );
+            },
+          );
         }
       } else {
         console.log("[AuthContext] Clearing user session");
@@ -357,41 +377,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signIn = async (email: string, password: string) => {
-    try {
-      setLoading(true);
-      console.log("[AuthContext] Starting signIn process for:", email);
+    console.log("[AuthContext] Starting signIn for:", email);
 
+    try {
       const { data, error } = await authService.signIn(email, password);
 
       console.log("[AuthContext] SignIn result:", {
         hasUser: !!data?.user,
         hasSession: !!data?.session,
-        error: error?.message,
-        userEmailConfirmed: data?.user?.email_confirmed_at,
-        isMobile:
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent,
-          ),
+        hasError: !!error,
+        errorMessage: error?.message,
       });
 
       if (error) {
-        console.log("[AuthContext] SignIn error:", error);
-        // Return the error to be handled by the login page
+        console.log("[AuthContext] Returning error:", error);
         return { error };
       }
 
-      // Normal successful login - user will be set via onAuthStateChange
-      console.log(
-        "[AuthContext] SignIn successful, waiting for onAuthStateChange",
-      );
+      // Success - user will be set via onAuthStateChange
+      console.log("[AuthContext] SignIn successful");
       return { error: null };
     } catch (err) {
-      console.error("[AuthContext] SignIn error:", err);
+      console.error("[AuthContext] SignIn exception:", err);
       return {
         error: { message: "An unexpected error occurred during signin" },
       };
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -486,49 +496,364 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
 
     try {
-      console.log("[AuthContext] updateProfile called with:", {
-        ...updates,
+      console.log("[AuthContext] 🔄 updateProfile called:", {
+        userId: user.id,
+        updateKeys: Object.keys(updates),
         gallery_photos: updates.gallery_photos
           ? `${updates.gallery_photos.length} photos`
           : "not updating",
+        gear_items: updates.gear_items
+          ? `${updates.gear_items.length} gear items`
+          : "not updating",
+        timestamp: new Date().toISOString(),
       });
 
-      const { data, error } = await profileService.updateProfile(
-        user.id,
-        updates,
+      // Validate gear_items structure if present
+      if (updates.gear_items) {
+        console.log("[AuthContext] 🔍 Validating gear_items structure:", {
+          isArray: Array.isArray(updates.gear_items),
+          count: updates.gear_items.length,
+          sampleItem: updates.gear_items[0]
+            ? {
+                id: updates.gear_items[0].id,
+                name: updates.gear_items[0].name,
+                category: updates.gear_items[0].category,
+                hasImageUrl: !!updates.gear_items[0].imageUrl,
+              }
+            : null,
+        });
+
+        // Ensure all gear items have required fields and clean up data
+        const validGearItems = updates.gear_items
+          .filter(
+            (item) =>
+              item &&
+              typeof item === "object" &&
+              item.id &&
+              item.name &&
+              item.category &&
+              item.imageUrl,
+          )
+          .map((item) => ({
+            // Core required fields
+            id: item.id,
+            name: item.name,
+            category: item.category,
+            imageUrl: item.imageUrl,
+            timestamp: item.timestamp || new Date().toISOString(),
+
+            // Optional fields - only include if they have values
+            ...(item.description && { description: item.description }),
+            ...(item.brand && { brand: item.brand }),
+            ...(item.model && { model: item.model }),
+            ...(item.price && { price: item.price }),
+            ...(item.condition && { condition: item.condition }),
+            ...(item.gearType && { gearType: item.gearType }),
+            ...(item.estimatedValue && { estimatedValue: item.estimatedValue }),
+            ...(typeof item.aiConfidence === "number" && {
+              aiConfidence: item.aiConfidence,
+            }),
+            ...(typeof item.userConfirmed === "boolean" && {
+              userConfirmed: item.userConfirmed,
+            }),
+            // CRITICAL: Always preserve debug information
+            ...(item.rawJsonResponse && {
+              rawJsonResponse: item.rawJsonResponse,
+            }),
+            ...(item.openaiPrompt && { openaiPrompt: item.openaiPrompt }),
+            // Enhanced fields for lures & jigs - ALWAYS INCLUDE, even if empty
+            size: item.size || "",
+            weight: item.weight || "",
+            targetFish: item.targetFish || "",
+            fishingTechnique: item.fishingTechnique || "",
+            weatherConditions: item.weatherConditions || "",
+            waterConditions: item.waterConditions || "",
+            seasonalUsage: item.seasonalUsage || "",
+            colorPattern: item.colorPattern || "",
+            actionType: item.actionType || "",
+            depthRange: item.depthRange || "",
+            // CRITICAL: Always include these fields - they were being filtered out!
+            versatility: item.versatility || "",
+            compatibleGear: item.compatibleGear || "",
+          }));
+
+        if (validGearItems.length !== updates.gear_items.length) {
+          console.warn(
+            "[AuthContext] ⚠️ Some gear items were invalid and filtered out:",
+            {
+              original: updates.gear_items.length,
+              valid: validGearItems.length,
+              filtered: updates.gear_items.length - validGearItems.length,
+            },
+          );
+        }
+
+        updates.gear_items = validGearItems;
+      }
+
+      // Check if gear_items column exists before attempting update
+      if (updates.gear_items && !profile?.hasOwnProperty("gear_items")) {
+        console.warn(
+          "[AuthContext] ⚠️ gear_items column may not exist in database schema",
+        );
+        // Try to save without gear_items to avoid schema errors
+        const { gear_items, ...otherUpdates } = updates;
+        if (Object.keys(otherUpdates).length > 0) {
+          updates = otherUpdates;
+        } else {
+          // If only gear_items was being updated, return early with helpful error
+          return {
+            error: {
+              code: "SCHEMA_ERROR",
+              message:
+                "Database schema needs to be updated. Please regenerate types with: npm run types:supabase",
+            },
+          };
+        }
+      }
+
+      // Add timeout wrapper for database operations with better error tracking
+      const startTime = Date.now();
+      console.log("[AuthContext] 🚀 Starting database update operation:", {
+        userId: user.id,
+        updateKeys: Object.keys(updates),
+        gearItemsCount: updates.gear_items?.length || 0,
+        timestamp: new Date().toISOString(),
+      });
+
+      const updatePromise = profileService.updateProfile(user.id, updates);
+      const timeoutPromise = new Promise<{ data: any; error: any }>(
+        (_, reject) => {
+          setTimeout(() => {
+            const elapsedTime = Date.now() - startTime;
+            console.error("[AuthContext] ⏰ Database timeout after:", {
+              elapsedTime: `${elapsedTime}ms`,
+              userId: user.id,
+              updateKeys: Object.keys(updates),
+              gearItemsCount: updates.gear_items?.length || 0,
+            });
+            reject(
+              new Error(
+                `Database timeout after ${elapsedTime}ms - operation took too long. This suggests a database connection or performance issue.`,
+              ),
+            );
+          }, 20000); // Increased to 20 seconds to better differentiate from network timeouts
+        },
       );
 
-      console.log("[AuthContext] updateProfile result:", {
+      const { data, error } = await Promise.race([
+        updatePromise,
+        timeoutPromise,
+      ]);
+
+      const totalTime = Date.now() - startTime;
+      console.log("[AuthContext] ⏱️ Database operation completed:", {
+        totalTime: `${totalTime}ms`,
+        success: !!data && !error,
+        userId: user.id,
+      });
+
+      console.log("[AuthContext] 📋 updateProfile result:", {
         success: !!data && !error,
         error: error?.message,
+        errorCode: error?.code,
+        errorDetails: error?.details,
+        errorHint: error?.hint,
         galleryPhotosCount: data?.gallery_photos?.length || 0,
+        gearItemsCount: data?.gear_items?.length || 0,
+        dataKeys: data ? Object.keys(data) : [],
+        userId: user.id,
       });
 
       if (data && !error) {
-        console.log("[AuthContext] Updating profile state with new data");
+        console.log("[AuthContext] ✅ Updating profile state with new data");
         setProfile(data);
+
+        // Additional verification for gear_items
+        if (updates.gear_items) {
+          const expectedCount = updates.gear_items.length;
+          const actualCount = data.gear_items?.length || 0;
+          console.log("[AuthContext] 🔍 Gear items verification:", {
+            expected: expectedCount,
+            actual: actualCount,
+            match: expectedCount === actualCount,
+            gearWithAI:
+              data.gear_items?.filter(
+                (item: any) => item.gearType && item.gearType !== "unknown",
+              ).length || 0,
+          });
+        }
 
         // Additional verification for gallery_photos
         if (updates.gallery_photos) {
           const expectedCount = updates.gallery_photos.length;
           const actualCount = data.gallery_photos?.length || 0;
-          console.log("[AuthContext] Gallery photos verification:", {
+          console.log("[AuthContext] 🔍 Gallery photos verification:", {
             expected: expectedCount,
             actual: actualCount,
             match: expectedCount === actualCount,
+            photosWithFishInfo:
+              data.gallery_photos?.filter((photo: any) => {
+                // All photos should now be ImageMetadata objects
+                return (
+                  photo && photo.fishInfo && photo.fishInfo.name !== "Unknown"
+                );
+              }).length || 0,
+            samplePhotoStructure: data.gallery_photos?.[0]
+              ? {
+                  hasUrl: !!data.gallery_photos[0].url,
+                  hasFishInfo: !!data.gallery_photos[0].fishInfo,
+                  fishName: data.gallery_photos[0].fishInfo?.name,
+                  hasLocation: !!data.gallery_photos[0].location,
+                  timestamp: data.gallery_photos[0].timestamp,
+                }
+              : null,
           });
         }
 
         return { error: null };
       } else if (error) {
-        console.error("[AuthContext] Profile update failed:", error);
-        return { error };
+        console.error("[AuthContext] ❌ Profile update failed:", {
+          error: error.message,
+          errorCode: error.code,
+          errorDetails: error.details,
+          errorHint: error.hint,
+          userId: user.id,
+          updateKeys: Object.keys(updates),
+          isGearUpdate: !!updates.gear_items,
+          gearCount: updates.gear_items?.length || 0,
+          totalTime: `${Date.now() - startTime}ms`,
+        });
+
+        // Provide more specific error messages with database context
+        let userFriendlyError = error.message;
+        let errorCategory = "UNKNOWN";
+
+        if (error.code === "PGRST204") {
+          userFriendlyError =
+            "Database schema needs to be updated. Please run: npm run types:supabase";
+          errorCategory = "SCHEMA_ERROR";
+        } else if (error.code === "23505") {
+          userFriendlyError = "Duplicate entry detected. Please try again.";
+          errorCategory = "CONSTRAINT_ERROR";
+        } else if (error.code === "42703") {
+          userFriendlyError =
+            "Database column missing. Please contact support.";
+          errorCategory = "SCHEMA_ERROR";
+        } else if (error.code === "PGRST116") {
+          userFriendlyError =
+            "Database query failed. The table or column may not exist.";
+          errorCategory = "SCHEMA_ERROR";
+        } else if (error.code === "PGRST301") {
+          userFriendlyError = "Database connection error. Please try again.";
+          errorCategory = "CONNECTION_ERROR";
+        } else if (error.message?.includes("gear_items")) {
+          userFriendlyError =
+            "Database schema error with gear_items. Please regenerate types or contact support.";
+          errorCategory = "SCHEMA_ERROR";
+        } else if (
+          error.message?.includes("timeout") ||
+          error.message?.includes("took too long")
+        ) {
+          userFriendlyError =
+            "Database operation timed out. This may indicate a database performance issue. Please try again.";
+          errorCategory = "TIMEOUT_ERROR";
+        } else if (
+          error.message?.includes("connection") ||
+          error.message?.includes("network")
+        ) {
+          userFriendlyError =
+            "Database connection failed. Please check your internet connection and try again.";
+          errorCategory = "CONNECTION_ERROR";
+        } else if (
+          error.message?.includes("payload") ||
+          error.message?.includes("too large")
+        ) {
+          userFriendlyError =
+            "Data payload too large for database. Try reducing the amount of data being saved.";
+          errorCategory = "PAYLOAD_ERROR";
+        }
+
+        console.error("[AuthContext] 🏷️ Error categorized as:", {
+          category: errorCategory,
+          originalError: error.message,
+          userFriendlyError,
+          code: error.code,
+        });
+
+        return {
+          error: {
+            ...error,
+            message: userFriendlyError,
+            category: errorCategory,
+          },
+        };
       }
 
-      return { error: { message: "Unknown error occurred" } };
+      console.error("[AuthContext] ❓ Unknown profile update state:", {
+        hasData: !!data,
+        hasError: !!error,
+        userId: user.id,
+      });
+      return {
+        error: { message: "Unknown error occurred during profile update" },
+      };
     } catch (err) {
-      console.error("[AuthContext] UpdateProfile error:", err);
-      return { error: { message: "An unexpected error occurred" } };
+      console.error("[AuthContext] 💥 UpdateProfile exception:", {
+        error: err instanceof Error ? err.message : String(err),
+        errorType: err instanceof Error ? err.constructor.name : typeof err,
+        stack: err instanceof Error ? err.stack : undefined,
+        userId: user.id,
+        updateKeys: Object.keys(updates),
+        isGearUpdate: !!updates.gear_items,
+      });
+
+      // Enhanced error handling for different types of failures
+      if (err instanceof Error) {
+        if (
+          err.message.includes("timeout") ||
+          err.message.includes("took too long")
+        ) {
+          return {
+            error: {
+              message:
+                "Database operation timed out. This suggests a database performance or connection issue. Please try again.",
+              category: "TIMEOUT_ERROR",
+            },
+          };
+        } else if (
+          err.message.includes("fetch") ||
+          err.message.includes("network")
+        ) {
+          return {
+            error: {
+              message:
+                "Network error during database operation. Please check your connection and try again.",
+              category: "NETWORK_ERROR",
+            },
+          };
+        } else if (
+          err.message.includes("JSON") ||
+          err.message.includes("parse")
+        ) {
+          return {
+            error: {
+              message:
+                "Data format error. The gear data may be corrupted. Please try uploading again.",
+              category: "DATA_ERROR",
+            },
+          };
+        }
+      }
+
+      return {
+        error: {
+          message:
+            "An unexpected error occurred during profile update. Please try again or contact support if the issue persists.",
+          category: "UNKNOWN_ERROR",
+          originalError: err instanceof Error ? err.message : String(err),
+        },
+      };
     }
   };
 
@@ -610,6 +935,58 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const deleteAccount = async () => {
+    if (!user) {
+      return { error: { message: "No user logged in" } };
+    }
+
+    try {
+      console.log("[AuthContext] Starting account deletion for user:", user.id);
+
+      // First delete the user's profile data
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .delete()
+        .eq("id", user.id);
+
+      if (profileError) {
+        console.warn("[AuthContext] Profile deletion warning:", profileError);
+        // Continue with auth deletion even if profile deletion fails
+      }
+
+      // Delete the user's auth account
+      const { error: authError } = await supabase.auth.admin.deleteUser(
+        user.id,
+      );
+
+      if (authError) {
+        console.error("[AuthContext] Auth deletion failed:", authError);
+        return { error: authError };
+      }
+
+      // Clear local state
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+      setLoading(false);
+
+      console.log("[AuthContext] Account deleted successfully");
+
+      // Redirect to login page
+      window.location.href = "/login";
+
+      return { error: null };
+    } catch (err) {
+      console.error("[AuthContext] Account deletion error:", err);
+      return {
+        error: {
+          message:
+            "Failed to delete account. Please try again or contact support.",
+        },
+      };
+    }
+  };
+
   const value = {
     user,
     profile,
@@ -624,6 +1001,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     updateProfile,
     uploadAvatar,
     refreshProfile,
+    deleteAccount,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -72,6 +72,9 @@ module.exports = {
           DEFAULT: "hsl(var(--info))",
           foreground: "hsl(var(--info-foreground))",
         },
+        "gear-badge": {
+          DEFAULT: "rgb(37 99 235 / var(--tw-bg-opacity))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

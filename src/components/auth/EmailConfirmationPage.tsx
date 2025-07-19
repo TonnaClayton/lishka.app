@@ -2,13 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2, AlertCircle, Mail, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
@@ -136,10 +129,10 @@ const EmailConfirmationPage: React.FC = () => {
             <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-6">
               <LoadingDots />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Confirming Your Email
             </h2>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-gray-600 dark:text-gray-400">
               Please wait while we verify your email address...
             </p>
           </div>
@@ -151,19 +144,19 @@ const EmailConfirmationPage: React.FC = () => {
             <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-6">
               <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Email Confirmed!
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               Your email address has been successfully verified. You can now
               access all features of your account.
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
+            <p className="text-sm text-gray-500 dark:text-gray-500 mb-6">
               Redirecting you to the home page...
             </p>
             <Button
               onClick={() => navigate("/", { replace: true })}
-              className="mt-4 bg-blue-600 hover:bg-blue-700 text-white"
+              className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl"
             >
               Continue to App
             </Button>
@@ -176,10 +169,10 @@ const EmailConfirmationPage: React.FC = () => {
             <div className="w-16 h-16 bg-orange-100 dark:bg-orange-900 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertCircle className="w-8 h-8 text-orange-600 dark:text-orange-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Link Expired
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               This confirmation link has expired. Don't worry, you can request a
               new one.
             </p>
@@ -187,7 +180,7 @@ const EmailConfirmationPage: React.FC = () => {
               <Button
                 onClick={handleResendConfirmation}
                 disabled={resending}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {resending ? (
                   <>
@@ -204,7 +197,7 @@ const EmailConfirmationPage: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={() => navigate("/")}
-                className="w-full"
+                className="w-full h-14 text-base font-medium rounded-xl border-gray-200 dark:border-gray-700"
               >
                 Continue to App
               </Button>
@@ -219,10 +212,10 @@ const EmailConfirmationPage: React.FC = () => {
             <div className="w-16 h-16 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center mx-auto mb-6">
               <AlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
             </div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
               Confirmation Failed
             </h2>
-            <p className="text-gray-600 dark:text-gray-300 mb-6">
+            <p className="text-gray-600 dark:text-gray-400 mb-6">
               {error ||
                 "We couldn't confirm your email address. The link may be invalid or expired."}
             </p>
@@ -231,7 +224,7 @@ const EmailConfirmationPage: React.FC = () => {
                 <Button
                   onClick={handleResendConfirmation}
                   disabled={resending}
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                  className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {resending ? (
                     <>
@@ -249,7 +242,7 @@ const EmailConfirmationPage: React.FC = () => {
               <Button
                 variant="outline"
                 onClick={() => navigate("/")}
-                className="w-full"
+                className="w-full h-14 text-base font-medium rounded-xl border-gray-200 dark:border-gray-700"
               >
                 Continue to App
               </Button>
@@ -260,10 +253,10 @@ const EmailConfirmationPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-blue-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col p-6">
+      <div className="w-full max-w-sm mx-auto flex-1 flex flex-col">
         {/* Header */}
-        <div className="flex items-center justify-center mb-6">
+        <div className="flex items-center justify-center mb-12 mt-4">
           <div className="flex items-center gap-2">
             <img
               src="/logo.svg"
@@ -278,16 +271,16 @@ const EmailConfirmationPage: React.FC = () => {
           </div>
         </div>
 
-        <Card className="bg-white dark:bg-gray-800 shadow-xl">
-          <CardContent className="pt-6">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-full">
             {error && status !== "expired" && status !== "error" && (
               <Alert variant="destructive" className="mb-6">
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
             {renderContent()}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     </div>
   );

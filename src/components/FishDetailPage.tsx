@@ -8,7 +8,18 @@ import {
   AlertTriangle,
   Shield,
   Phone,
+  Ruler,
+  ShoppingBag,
+  Calendar,
+  CreditCard,
+  FileText,
+  DollarSign,
+  MapPin,
+  Fish,
+  Gauge,
+  Weight,
 } from "lucide-react";
+
 import FishCard from "./FishCard";
 import {
   handleFishImageError,
@@ -214,19 +225,12 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
     index: number;
   }): string => {
     const isInSeason = isMonthInSeason(monthData);
-    const isCurrentMonth = monthData.index === currentMonthIndex;
 
-    if (isInSeason && isCurrentMonth) {
-      // Current month and in season - light green
-      return "bg-green-100 border-green-200 text-green-700 dark:bg-green-900/20 dark:border-green-800 dark:text-green-300";
-    } else if (isInSeason) {
-      // In season but not current month - light blue
+    if (isInSeason) {
+      // In season - light blue
       return "bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300";
-    } else if (isCurrentMonth) {
-      // Current month but not in season - light red
-      return "bg-red-50 border-red-200 text-red-600 dark:bg-red-900/20 dark:border-red-800 dark:text-red-300";
     } else {
-      // Not in season and not current month - light gray
+      // Not in season - light gray
       return "bg-gray-50 border-gray-200 text-gray-400 dark:bg-gray-800/20 dark:border-gray-700 dark:text-gray-500";
     }
   };
@@ -277,23 +281,77 @@ interface FishingGear {
   sonarTips?: string;
   jigging_technique?: string;
   technical_details?: string;
+  // New fields from OpenAI API
+  jigType?: string;
+  jigWeight?: string;
+  jigColor?: string;
+  jiggingStyle?: string;
+  rodType?: string;
+  reelType?: string;
+  hookSize?: string;
+  rigType?: string;
+  weight?: string;
+  lureType?: string;
+  lureSize?: string;
+  lureColor?: string;
+  trollingSpeed?: string;
+  floatType?: string;
+  castingDistance?: string;
+  lureWeight?: string;
+  electricReel?: string;
+  lightAttractors?: string;
+  // Additional fields that might come from API
+  [key: string]: any;
 }
 
 interface FishingMethod {
-  title: string;
-  description: string;
+  title?: string;
+  method?: string;
+  description?: string;
   gear?: FishingGear;
   proTip?: string;
+  // Allow additional fields from OpenAI API
+  [key: string]: any;
 }
 
 interface FishingRegulations {
-  sizeLimit: string;
-  bagLimit: string;
-  seasonDates: string;
-  licenseRequired: string;
-  additionalRules: string[];
-  penalties: string;
+  sizeLimit: {
+    value: string;
+    source: string;
+    confidence: string;
+  };
+  bagLimit: {
+    value: string;
+    source: string;
+    confidence: string;
+  };
+  seasonDates: {
+    value: string;
+    source: string;
+    confidence: string;
+  };
+  licenseRequired: {
+    value: string;
+    source: string;
+    confidence: string;
+  };
+  additionalRules: Array<{
+    rule: string;
+    source: string;
+    confidence: string;
+  }>;
+  penalties: {
+    value: string;
+    source: string;
+    confidence: string;
+  };
   lastUpdated: string;
+  validationFlags?: {
+    suspiciousSourcesDetected: boolean;
+    genericSourcesReplaced: boolean;
+    confidenceDowngraded: boolean;
+  };
+  lastValidated?: string;
 }
 
 interface FishingSeasons {
@@ -330,31 +388,349 @@ const FishDetailPage = () => {
   const [error, setError] = useState<string | null>(null);
   const [fishDetails, setFishDetails] = useState<FishDetails | null>(null);
   const [userLocationName, setUserLocationName] = useState<string>("");
-  const [showDebugUI, setShowDebugUI] = useState<boolean>(false);
+
   const [fishImageUrl, setFishImageUrl] = useState<string>("");
   const [imageLoading, setImageLoading] = useState(true);
 
-  useEffect(() => {
-    // Get debug UI preference from localStorage
-    const debugUIPreference = localStorage.getItem("showDebugUI");
-    if (debugUIPreference !== null) {
-      setShowDebugUI(debugUIPreference === "true");
+  // Cache keys for consistent data
+  const getCacheKey = (
+    type: string,
+    fishName: string,
+    location: string,
+    scientificName?: string,
+  ) => {
+    const key = `${type}_${fishName}_${location}_${scientificName || "unknown"}`
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "_");
+    return key;
+  };
+
+  // Cache duration: 7 days for regulations, 1 day for general info
+  const CACHE_DURATION = {
+    regulations: 7 * 24 * 60 * 60 * 1000, // 7 days
+    fishInfo: 24 * 60 * 60 * 1000, // 1 day
+  };
+
+  // Data validation function to check for potentially inaccurate AI responses
+  const validateFishingData = (
+    data: any,
+    fishName: string,
+    location: string,
+  ) => {
+    const warnings = [];
+    const errors = [];
+
+    console.log(`🔍 Validating fishing data for ${fishName} in ${location}`);
+
+    // Validate trolling distances
+    if (data.fishingMethods) {
+      data.fishingMethods.forEach((method: any, index: number) => {
+        if (method.method && method.method.toLowerCase().includes("troll")) {
+          const trollingDistance = method.gear?.trollingDistance;
+          if (trollingDistance) {
+            const numbers = trollingDistance.match(/\d+/g);
+            if (numbers) {
+              const distances = numbers.map(Number);
+              const maxDistance = Math.max(...distances);
+              const minDistance = Math.min(...distances);
+
+              // Flag suspicious trolling distances
+              if (maxDistance > 300) {
+                errors.push(
+                  `Trolling distance too high: ${trollingDistance} (Method: ${method.method})`,
+                );
+              } else if (maxDistance > 200) {
+                warnings.push(
+                  `Trolling distance seems high: ${trollingDistance} (Method: ${method.method})`,
+                );
+              }
+            }
+          }
+        }
+
+        // Validate depths
+        const depth = method.gear?.depth;
+        if (depth) {
+          const depthNumbers = depth.match(/\d+/g);
+          if (depthNumbers) {
+            const maxDepth = Math.max(...depthNumbers.map(Number));
+            if (maxDepth > 1000) {
+              warnings.push(
+                `Depth seems very deep: ${depth} (Method: ${method.method})`,
+              );
+            }
+          }
+        }
+
+        // Validate trolling speeds
+        const trollingSpeed = method.gear?.trollingSpeed;
+        if (trollingSpeed) {
+          const speedNumbers = trollingSpeed.match(/\d+/g);
+          if (speedNumbers) {
+            const maxSpeed = Math.max(...speedNumbers.map(Number));
+            if (maxSpeed > 15) {
+              warnings.push(
+                `Trolling speed seems high: ${trollingSpeed} (Method: ${method.method})`,
+              );
+            }
+          }
+        }
+      });
     }
 
-    // Listen for debug UI changes
-    const handleDebugUIChange = () => {
-      const newDebugUIPreference = localStorage.getItem("showDebugUI");
-      if (newDebugUIPreference !== null) {
-        setShowDebugUI(newDebugUIPreference === "true");
+    // Log validation results
+    if (errors.length > 0) {
+      console.error("❌ Data validation errors:", errors);
+    }
+    if (warnings.length > 0) {
+      console.warn("⚠️ Data validation warnings:", warnings);
+    }
+    if (errors.length === 0 && warnings.length === 0) {
+      console.log("✅ Data validation passed");
+    }
+
+    return {
+      isValid: errors.length === 0,
+      warnings,
+      errors,
+      validationTimestamp: new Date().toISOString(),
+    };
+  };
+
+  const getCachedData = (cacheKey: string) => {
+    try {
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        const { data, timestamp } = JSON.parse(cached);
+        const now = Date.now();
+        const maxAge = cacheKey.includes("regulations")
+          ? CACHE_DURATION.regulations
+          : CACHE_DURATION.fishInfo;
+
+        if (now - timestamp < maxAge) {
+          console.log(`✅ Using cached data for: ${cacheKey}`);
+          return data;
+        } else {
+          console.log(`⏰ Cache expired for: ${cacheKey}`);
+          localStorage.removeItem(cacheKey);
+        }
       }
+    } catch (error) {
+      console.warn("Error reading cache:", error);
+    }
+    return null;
+  };
+
+  const setCachedData = (cacheKey: string, data: any) => {
+    try {
+      const cacheEntry = {
+        data,
+        timestamp: Date.now(),
+      };
+      localStorage.setItem(cacheKey, JSON.stringify(cacheEntry));
+      console.log(`💾 Cached data for: ${cacheKey}`);
+    } catch (error) {
+      console.warn("Error writing cache:", error);
+    }
+  };
+
+  // Validation function to detect and prevent AI hallucination
+  const validateAndSanitizeRegulations = (
+    regulations: any,
+    location: string,
+  ) => {
+    const validatedRegulations = { ...regulations };
+    const validationFlags = {
+      suspiciousSourcesDetected: false,
+      genericSourcesReplaced: false,
+      confidenceDowngraded: false,
     };
 
-    window.addEventListener("debugUIChanged", handleDebugUIChange);
-
-    return () => {
-      window.removeEventListener("debugUIChanged", handleDebugUIChange);
+    // Known legitimate authority patterns by region
+    const legitimateAuthorities = {
+      eu: [
+        "european commission",
+        "directorate-general for maritime affairs",
+        "eu common fisheries policy",
+        "commission regulation",
+      ],
+      spain: [
+        "ministry of agriculture, fisheries and food",
+        "gobierno de españa",
+        "real decreto",
+      ],
+      malta: [
+        "department of fisheries and aquaculture",
+        "malta environment and planning authority",
+        "legal notice",
+      ],
+      cyprus: [
+        "department of fisheries and marine research",
+        "ministry of agriculture",
+        "cyprus fisheries law",
+      ],
+      greece: ["ministry of rural development and food", "hellenic republic"],
+      italy: [
+        "ministry of agricultural, food and forestry policies",
+        "decreto legislativo",
+      ],
     };
-  }, []);
+
+    // Suspicious patterns that indicate potential hallucination
+    const suspiciousPatterns = [
+      /regulation no\. \d{4}\/\d{4}/i, // Generic regulation patterns
+      /article \d+, section \d+/i, // Generic article references
+      /law \d{3}\(i\)\/\d{4}/i, // Specific Cyprus law pattern that might be fabricated
+      /royal decree \d+\/\d{4}/i, // Generic royal decree patterns
+      /legal notice \d+ of \d{4}/i, // Generic legal notice patterns
+    ];
+
+    // Generic terms that should be replaced
+    const genericTerms = [
+      "local regulations",
+      "government authority",
+      "fishing authority",
+      "marine authority",
+      "unknown",
+      "not specified",
+    ];
+
+    // Function to validate a single regulation entry
+    const validateRegulationEntry = (entry: any, fieldName: string) => {
+      if (!entry || typeof entry !== "object") {
+        return {
+          value: "Check with local authorities",
+          source: `Contact local fisheries authority in ${location}`,
+          confidence: "Low",
+        };
+      }
+
+      let { value, source, confidence } = entry;
+      let wasModified = false;
+
+      // Check for suspicious patterns in source
+      if (source && typeof source === "string") {
+        const sourceLower = source.toLowerCase();
+
+        // Check for generic terms
+        const hasGenericTerms = genericTerms.some((term) =>
+          sourceLower.includes(term.toLowerCase()),
+        );
+
+        // Check for suspicious regulation patterns
+        const hasSuspiciousPatterns = suspiciousPatterns.some((pattern) =>
+          pattern.test(source),
+        );
+
+        // Check if source contains legitimate authority references
+        const hasLegitimateAuthority = Object.values(legitimateAuthorities)
+          .flat()
+          .some((auth) => sourceLower.includes(auth.toLowerCase()));
+
+        if (
+          hasGenericTerms ||
+          hasSuspiciousPatterns ||
+          !hasLegitimateAuthority
+        ) {
+          // Replace with safe fallback
+          source = `Contact local fisheries authority in ${location} for current regulations`;
+          confidence = "Low";
+          wasModified = true;
+          validationFlags.suspiciousSourcesDetected = true;
+
+          if (hasGenericTerms) {
+            validationFlags.genericSourcesReplaced = true;
+          }
+        }
+      }
+
+      // Ensure confidence is appropriately conservative
+      if (
+        confidence === "High" &&
+        !source.toLowerCase().includes("european commission")
+      ) {
+        confidence = "Medium";
+        validationFlags.confidenceDowngraded = true;
+        wasModified = true;
+      }
+
+      // If value seems too specific without high confidence, make it more general
+      if (
+        confidence === "Low" &&
+        value &&
+        typeof value === "string" &&
+        (value.includes("cm") ||
+          value.includes("per day") ||
+          value.includes("€"))
+      ) {
+        value = "Check with local authorities";
+        wasModified = true;
+      }
+
+      if (wasModified) {
+        console.warn(
+          `⚠️ Regulation validation: Modified ${fieldName} due to suspicious content`,
+          { original: entry, modified: { value, source, confidence } },
+        );
+      }
+
+      return { value, source, confidence };
+    };
+
+    // Validate each regulation field
+    validatedRegulations.sizeLimit = validateRegulationEntry(
+      regulations.sizeLimit,
+      "sizeLimit",
+    );
+    validatedRegulations.bagLimit = validateRegulationEntry(
+      regulations.bagLimit,
+      "bagLimit",
+    );
+    validatedRegulations.seasonDates = validateRegulationEntry(
+      regulations.seasonDates,
+      "seasonDates",
+    );
+    validatedRegulations.licenseRequired = validateRegulationEntry(
+      regulations.licenseRequired,
+      "licenseRequired",
+    );
+    validatedRegulations.penalties = validateRegulationEntry(
+      regulations.penalties,
+      "penalties",
+    );
+
+    // Validate additional rules
+    if (
+      regulations.additionalRules &&
+      Array.isArray(regulations.additionalRules)
+    ) {
+      validatedRegulations.additionalRules = regulations.additionalRules
+        .map((rule: any, index: number) =>
+          validateRegulationEntry(rule, `additionalRule${index}`),
+        )
+        .filter((rule: any) => rule.value !== "Check with local authorities"); // Remove generic additional rules
+    } else {
+      validatedRegulations.additionalRules = [];
+    }
+
+    // Add validation metadata
+    validatedRegulations.validationFlags = validationFlags;
+    validatedRegulations.lastValidated = new Date().toISOString();
+
+    // Log validation results
+    if (
+      validationFlags.suspiciousSourcesDetected ||
+      validationFlags.genericSourcesReplaced ||
+      validationFlags.confidenceDowngraded
+    ) {
+      console.warn(
+        "🛡️ Regulation validation detected and corrected potential AI hallucination:",
+        validationFlags,
+      );
+    }
+
+    return validatedRegulations;
+  };
 
   useEffect(() => {
     const getFishDetails = async () => {
@@ -394,203 +770,554 @@ const FishDetailPage = () => {
           image: await getFishImageUrlFromService(fishNameFormatted, "Unknown"),
         };
 
-        // First API call for general fishing information
-        const response = await fetch(
-          "https://api.openai.com/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey.trim()}`,
-            },
-            body: JSON.stringify({
-              model: "gpt-4o",
-              messages: [
-                {
-                  role: "system",
-                  content: `You are a fishing expert with detailed knowledge of local fishing regulations, seasonal patterns, and traditional fishing practices worldwide. You adapt your expertise to the specific location provided by the user. Always provide specific, accurate information for the requested location. Return only valid JSON without any additional text or formatting.`,
-                },
-                {
-                  role: "user",
-                  content: `Provide detailed fishing information for ${initialData.name} in ${userLocation}. Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Return only valid JSON in this exact format:
+        // For API calls, we'll use both common and scientific names for better accuracy
+        const fishIdentifier =
+          initialData.scientificName && initialData.scientificName !== "Unknown"
+            ? `${initialData.name} (${initialData.scientificName})`
+            : initialData.name;
 
+        // Check cache for fish info first
+        const fishInfoCacheKey = getCacheKey(
+          "fishinfo",
+          initialData.name,
+          userLocation,
+          initialData.scientificName,
+        );
+        const cachedFishInfo = getCachedData(fishInfoCacheKey);
+
+        let result: any;
+        if (cachedFishInfo) {
+          result = cachedFishInfo;
+          console.log("📋 Using cached fish info");
+        } else {
+          console.log("🌐 Fetching fresh fish info from API");
+          // First API call for general fishing information
+          const response = await fetch(
+            "https://api.openai.com/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey.trim()}`,
+              },
+              body: JSON.stringify({
+                model: "gpt-4o",
+                messages: [
+                  {
+                    role: "system",
+                    content: `You are a professional fishing guide, marine biologist, and tackle expert with deep global knowledge of fish species, seasonal patterns, fishing regulations, and advanced fishing methods.
+
+CRITICAL ACCURACY REQUIREMENTS:
+🎯 ONLY provide information you are confident is accurate and verifiable
+🎯 For technical specifications (distances, depths, speeds, weights), provide RANGES rather than specific values
+🎯 Base recommendations on established fishing practices and scientific knowledge
+🎯 When uncertain about specific details, use conservative estimates or indicate uncertainty
+🎯 Cross-reference your knowledge with established fishing literature and practices
+🎯 Prioritize safety and proven techniques over experimental approaches
+
+DATA VALIDATION RULES:
+✅ Trolling distances: Use appropriate ranges based on species and local conditions
+✅ Depths: Based on known habitat preferences and bathymetry
+✅ Gear specifications: Use industry-standard recommendations
+✅ Seasonal patterns: Based on biological cycles and migration patterns
+✅ Local conditions: Consider regional fishing practices and environmental factors
+
+You will:
+1. Identify the top 3 most effective fishing methods for the given fish species at the specified location and date
+2. For each method, return method-specific gear details using the correct structure based on the method chosen
+3. Include a pro tip tailored to each method and the location
+4. Use realistic data ranges, tailored to local conditions, depths, and gear types
+5. Return only valid JSON in the exact format specified — do not include explanations or markdown
+
+🎣 Fishing Method Field Guide:
+Use the matching fields in the gear object depending on the method selected:
+
+Jigging
+depth
+jigType
+jigWeight
+jigColor
+jiggingStyle
+rodType
+reelType
+line
+leader
+
+Bottom Fishing
+depth
+hookSize
+bait
+rigType
+weight
+rodType
+reelType
+line
+leader
+
+Trolling
+depth
+lureType
+lureSize
+lureColor
+trollingSpeed
+trollingDistance
+rodType
+reelType
+line
+leader
+
+Float Fishing
+depth
+floatType
+hookSize
+bait
+line
+leader
+rodType
+
+Spinning / Casting (Lure Fishing)
+castingDistance
+lureType
+lureWeight
+lureColor
+rodType
+reelType
+line
+leader
+
+Deep Drop Fishing
+depth
+electricReel
+rigType
+bait
+weight
+lightAttractors
+line
+leader
+
+Surface Casting
+castingDistance
+lureType
+lureWeight
+lureColor
+rodType
+reelType
+line
+leader
+
+Live Bait Drifting
+depth
+bait
+hookSize
+rigType
+line
+leader
+rodType`,
+                  },
+                  {
+                    role: "user",
+                    content: `Provide detailed fishing information for ${fishIdentifier} in ${userLocation}. Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Return only valid JSON in this exact format:
 {
-  "name": "${initialData.name}",
-  "scientificName": "${initialData.scientificName}",
-  "description": "Detailed description of the fish including habitat, behavior, and identification features specific to ${userLocation} waters",
-  "localNames": ["Local names for this fish in ${userLocation} - provide regional/local names if this fish is found in these waters, otherwise return empty array"],
-  "currentSeasonStatus": "Yes, currently in season or No, not currently in season based on today's date and ${userLocation} regulations",
-  "officialSeasonDates": "Official fishing season dates for this species in ${userLocation} or Year-round or No specific season",
+  "name": "Common name of the species",
+  "scientificName": "Scientific name (Latin binomial nomenclature)",
+  "description": "Habitat, behavior, and identifying features specific to the region",
+  "localNames": ["Local names if known, otherwise empty array"],
+  "currentSeasonStatus": "Yes" or "No",
+  "officialSeasonDates": "e.g. 'June 1 - September 30' or 'Year-round'",
   "fishingLocation": "${userLocation}",
   "fishingSeasons": {
-    "inSeason": ["List of months when this fish is typically in season in ${userLocation}"],
-    "traditionalSeason": ["Traditional fishing months for this species in ${userLocation}"],
-    "conservationConcerns": "Conservation status and concerns specific to ${userLocation} waters",
-    "regulations": "${userLocation} specific fishing regulations for this species",
-    "biologicalReasoning": "Why this fish is in season during these months in ${userLocation} region",
-    "reasoning": "Explanation of how biology connects to ${userLocation} fishing regulations"
+    "inSeason": ["Months when it's typically targeted"],
+    "traditionalSeason": ["Traditional local fishing months"],
+    "conservationConcerns": "Status or pressures in this region",
+    "regulations": "Local rules or size/bag limits",
+    "biologicalReasoning": "Why it's in season (spawning, feeding, migration)",
+    "reasoning": "How biology relates to local laws"
   },
   "allRoundGear": {
-    "rods": "Recommended rod specifications for ${userLocation} fishing conditions",
-    "reels": "Reel recommendations for ${userLocation} waters",
-    "line": "Line specifications suitable for ${userLocation} conditions",
-    "leader": "Leader recommendations for ${userLocation} fishing",
-    "description": "General gear setup explanation for ${userLocation} fishing conditions"
+    "rods": "All-round rod recommendation",
+    "reels": "All-round reel type/size",
+    "line": "Line type and strength",
+    "leader": "Leader material and size",
+    "description": "General setup for multi-method fishing of this species in this location"
   },
   "fishingMethods": [
     {
-      "title": "Primary fishing method for this species in ${userLocation}",
-      "description": "Detailed description of the method adapted to ${userLocation} conditions",
+      "method": "Name of selected method (e.g. Jigging, Trolling, Bottom Fishing...)",
+      "description": "Why this method works well for this fish in this location",
       "gear": {
-        "rods": "Specific rod requirements for ${userLocation}",
-        "reels": "Reel specifications for ${userLocation} conditions",
-        "line": "Line requirements for ${userLocation} waters",
-        "leader": "Leader setup for ${userLocation} fishing",
-        "bait": ["Effective baits available in ${userLocation}"],
-        "lures": ["Effective lures for ${userLocation} waters"],
-        "depth": "Fishing depth range typical for ${userLocation}",
-        "speed": "Trolling speed if applicable for ${userLocation} conditions",
-        "jig_weight": "Jig weights if applicable for ${userLocation} waters",
-        "jig_size": "Jig sizes if applicable for ${userLocation} fishing"
+        "..." : "Method-specific fields from the field guide above"
       },
-      "proTip": "Local ${userLocation} fishing tip for this species"
+      "proTip": "Expert tip tailored to this method and location"
+    },
+    {
+      "method": "Second best method",
+      "description": "...",
+      "gear": {
+        "..." : "Fields depending on method selected"
+      },
+      "proTip": "..."
+    },
+    {
+      "method": "Third best method",
+      "description": "...",
+      "gear": {
+        "..." : "Fields depending on method selected"
+      },
+      "proTip": "..."
     }
   ]
 }`,
-                },
-              ],
-              temperature: 0.3,
-            }),
-          },
-        );
-
-        // Second API call for detailed regulations
-        const regulationsResponse = await fetch(
-          "https://api.openai.com/v1/chat/completions",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${apiKey.trim()}`,
+                  },
+                ],
+                temperature: 0.0, // Zero temperature for maximum accuracy and consistency
+              }),
             },
-            body: JSON.stringify({
-              model: "gpt-4o",
-              messages: [
-                {
-                  role: "system",
-                  content: `You are a fishing regulations expert with comprehensive knowledge of local fishing laws, size limits, bag limits, and licensing requirements worldwide. Provide accurate, up-to-date regulatory information for the specific location and species requested. Return only valid JSON without any additional text or formatting.`,
-                },
-                {
-                  role: "user",
-                  content: `Provide detailed fishing regulations for ${initialData.name} in ${userLocation}. Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Return only valid JSON in this exact format:
-
-{
-  "sizeLimit": "Minimum and/or maximum size limits for ${initialData.name} in ${userLocation} (e.g., 'Minimum 25cm, Maximum 60cm' or 'No size restrictions' or 'Not specified')",
-  "bagLimit": "Daily bag limit for ${initialData.name} in ${userLocation} (e.g., '5 fish per day' or 'No bag limit' or 'Not specified')",
-  "seasonDates": "Official open/closed season dates for ${initialData.name} in ${userLocation} (e.g., 'Open: May 1 - September 30' or 'Year-round' or 'Check local regulations')",
-  "licenseRequired": "Fishing license requirements in ${userLocation} (e.g., 'Recreational fishing license required' or 'No license required for shore fishing' or 'Commercial license only')",
-  "additionalRules": ["List of additional specific rules for ${initialData.name} in ${userLocation} such as gear restrictions, area closures, catch and release requirements, etc."],
-  "penalties": "Penalties for violations in ${userLocation} (e.g., 'Fines from €50-€500' or 'Varies by violation' or 'Contact local authorities')",
-  "lastUpdated": "When these regulations were last updated or verified (e.g., '2024' or 'Check with local authorities for current regulations')"
-}`,
-                },
-              ],
-              temperature: 0.2,
-            }),
-          },
-        );
-
-        if (!response.ok) throw new Error(`API error: ${response.status}`);
-        if (!regulationsResponse.ok)
-          throw new Error(
-            `Regulations API error: ${regulationsResponse.status}`,
           );
 
-        const data = await response.json();
-        const regulationsData = await regulationsResponse.json();
-        // Initialize result with default values to prevent reference errors
-        let result: any = {
-          name: initialData.name,
-          scientificName: initialData.scientificName,
-          description: "No description available.",
-          fishingMethods: [],
-          fishingSeasons: {
-            inSeason: [],
-            traditionalSeason: [],
-            conservationConcerns: "",
-            regulations: "",
-            notInSeason: [],
-            reasoning: "",
-          },
-          allRoundGear: null,
-          localNames: [],
-          currentSeasonStatus: "Status unknown",
-          officialSeasonDates: "Dates not available",
-          fishingLocation: userLocation,
-        };
-
-        let regulationsResult: any = {
-          sizeLimit: "Not specified",
-          bagLimit: "Not specified",
-          seasonDates: "Check local regulations",
-          licenseRequired: "Check local requirements",
-          additionalRules: [],
-          penalties: "Contact local authorities",
-          lastUpdated: "Unknown",
-        };
-
-        try {
-          const content = data.choices[0].message.content.trim();
-          // Remove any markdown formatting if present
-          const cleanContent = content.replace(/```json\n?|```\n?/g, "").trim();
-          result = JSON.parse(cleanContent);
-        } catch (parseError) {
-          console.error("JSON parse error:", parseError);
-          console.log("Raw content:", data.choices[0].message.content);
-          // Try to fix common JSON issues
-          const fixedContent = data.choices[0].message.content
-            .replace(/\n/g, " ") // Remove newlines
-            .replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":') // Add quotes to property names
-            .replace(/:\s*'([^']*)'/g, ':"$1"'); // Replace single quotes with double quotes
+          if (!response.ok) throw new Error(`API error: ${response.status}`);
+          const data = await response.json();
 
           try {
-            result = JSON.parse(fixedContent);
-            console.log("Fixed JSON parsing successful");
-          } catch (secondError) {
-            console.error("Failed to fix JSON:", secondError);
-            // Don't throw error, use the default values instead
-            console.warn("Using default values due to parsing error");
+            const content = data.choices[0].message.content.trim();
+            const cleanContent = content
+              .replace(/```json\n?|```\n?/g, "")
+              .trim();
+            result = JSON.parse(cleanContent);
+
+            // Validate the AI response for accuracy
+            const validation = validateFishingData(
+              result,
+              result.name,
+              userLocation,
+            );
+
+            // Add validation metadata to the result
+            result._validation = validation;
+
+            // Only cache if validation passes (no errors)
+            if (validation.isValid) {
+              setCachedData(fishInfoCacheKey, result);
+            } else {
+              console.error(
+                "🚫 Not caching data due to validation errors:",
+                validation.errors,
+              );
+            }
+          } catch (parseError) {
+            console.error("JSON parse error:", parseError);
+            // Use default values if parsing fails
+            result = {
+              name: initialData.name,
+              scientificName: initialData.scientificName,
+              description: "No description available.",
+              fishingMethods: [],
+              fishingSeasons: {
+                inSeason: [],
+                traditionalSeason: [],
+                conservationConcerns: "",
+                regulations: "",
+                notInSeason: [],
+                reasoning: "",
+              },
+              allRoundGear: null,
+              localNames: [],
+              currentSeasonStatus: "Status unknown",
+              officialSeasonDates: "Dates not available",
+              fishingLocation: userLocation,
+            };
           }
         }
 
-        // Parse regulations response
-        try {
-          const regulationsContent =
-            regulationsData.choices[0].message.content.trim();
-          const cleanRegulationsContent = regulationsContent
-            .replace(/```json\n?|```\n?/g, "")
-            .trim();
-          regulationsResult = JSON.parse(cleanRegulationsContent);
-        } catch (parseError) {
-          console.error("Regulations JSON parse error:", parseError);
-          console.log(
-            "Raw regulations content:",
-            regulationsData.choices[0].message.content,
+        // Check cache for regulations first
+        const regulationsCacheKey = getCacheKey(
+          "regulations",
+          result.name,
+          userLocation,
+          result.scientificName,
+        );
+        const cachedRegulations = getCachedData(regulationsCacheKey);
+
+        let regulationsResult: any;
+        if (cachedRegulations) {
+          regulationsResult = cachedRegulations;
+          console.log("⚖️ Using cached regulations");
+        } else {
+          console.log("🌐 Fetching fresh regulations from API");
+          // Second API call for detailed regulations
+          const regulationsResponse = await fetch(
+            "https://api.openai.com/v1/chat/completions",
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${apiKey.trim()}`,
+              },
+              body: JSON.stringify({
+                model: "gpt-4o",
+                messages: [
+                  {
+                    role: "system",
+                    content: `You are a fishing regulations expert. Your primary responsibility is to provide ONLY verifiable, accurate regulatory information. You must be extremely conservative and honest about what you know versus what you don't know.
+
+CRITICAL ANTI-HALLUCINATION RULES:
+🚫 NEVER create fake regulation numbers, law names, or government authorities
+🚫 NEVER make up specific article numbers, section references, or dates unless you are absolutely certain
+🚫 NEVER use generic terms like "Local regulations" or "Government authority"
+🚫 If you are uncertain about ANY detail, you MUST default to "Check with local authorities"
+
+VERIFIABLE SOURCE REQUIREMENTS:
+✅ Only reference regulations you can verify exist
+✅ Use only well-known, major regulatory frameworks (EU Common Fisheries Policy, major national laws)
+✅ When uncertain, always direct users to official local authorities
+✅ Be explicit about your confidence level - most responses should be "Low" confidence
+
+DEFAULT RESPONSES FOR UNCERTAINTY:
+- Value: "Check with local authorities"
+- Source: "[Specific Local Authority Name] - Contact for current regulations"
+- Confidence: "Low"
+
+KNOWN AUTHORITY EXAMPLES (use these patterns only):
+- EU: "European Commission - Directorate-General for Maritime Affairs and Fisheries"
+- Spain: "Ministry of Agriculture, Fisheries and Food - Spain"
+- Malta: "Department of Fisheries and Aquaculture - Malta"
+- Cyprus: "Department of Fisheries and Marine Research - Cyprus"
+- Greece: "Ministry of Rural Development and Food - Greece"
+- Italy: "Ministry of Agricultural, Food and Forestry Policies - Italy"
+
+CONFIDENCE LEVELS (be conservative):
+- High: Only for widely known, major EU-wide regulations
+- Medium: For general national frameworks you're confident exist
+- Low: For most specific local regulations (DEFAULT to this)
+
+REMEMBER: It's better to say "Check with local authorities" than to provide potentially false information that could lead to legal violations.`,
+                  },
+                  {
+                    role: "user",
+                    content: `Provide detailed fishing regulations for ${fishIdentifier} in ${userLocation}.
+Species: ${initialData.name} (Scientific name: ${initialData.scientificName || "Unknown"})
+Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}.
+
+IMPORTANT: For countries that are part of the EU (like Malta, Cyprus, Spain, etc.), prioritize EU regulations when local regulations are not available. Always check for accurate sources and avoid making up regulation numbers.
+
+Return only valid JSON in the following format:
+
+{
+  "sizeLimit": {
+    "value": "Minimum and/or maximum legal size limits (e.g., 'Minimum 25cm', 'No size limit', or 'Check with local authorities')",
+    "source": "The name of the law or governing authority - prioritize EU regulations for EU countries (e.g., 'EU Common Fisheries Policy', 'Malta Fisheries Regulation 2022, Article 5')",
+    "confidence": "High | Medium | Low"
+  },
+  "bagLimit": {
+    "value": "Maximum number of fish allowed per person per day or note if unlimited or seasonal",
+    "source": "Governing authority or law name - prioritize EU regulations for EU countries",
+    "confidence": "High | Medium | Low"
+  },
+  "penalties": {
+    "value": "Yes or No only - do not specify amounts or details",
+    "source": "Law name or enforcement authority",
+    "confidence": "High | Medium | Low"
+  },
+  "lastUpdated": "e.g., '2024-07-01' or 'Check with local authority for most recent regulations'"
+}`,
+                  },
+                ],
+                temperature: 0.0, // Zero temperature for completely deterministic results
+              }),
+            },
           );
-          // Try to fix common JSON issues
-          const fixedRegulationsContent =
-            regulationsData.choices[0].message.content
-              .replace(/\n/g, " ")
-              .replace(/([{,])\s*([a-zA-Z0-9_]+)\s*:/g, '$1"$2":')
-              .replace(/:\s*'([^']*)'/g, ':"$1"');
+
+          if (!regulationsResponse.ok)
+            throw new Error(
+              `Regulations API error: ${regulationsResponse.status}`,
+            );
+
+          const regulationsData = await regulationsResponse.json();
+
+          // Parse regulations response
+          try {
+            const regulationsContent =
+              regulationsData.choices[0].message.content.trim();
+            const cleanRegulationsContent = regulationsContent
+              .replace(/```json\n?|```\n?/g, "")
+              .trim();
+            regulationsResult = JSON.parse(cleanRegulationsContent);
+
+            // Validate and sanitize the regulations result
+            regulationsResult = validateAndSanitizeRegulations(
+              regulationsResult,
+              userLocation,
+            );
+
+            // Cache the successful result
+            setCachedData(regulationsCacheKey, regulationsResult);
+
+            console.log(
+              "✅ Regulations parsed, validated and cached successfully:",
+              {
+                sizeLimit: regulationsResult.sizeLimit?.confidence,
+                bagLimit: regulationsResult.bagLimit?.confidence,
+                seasonDates: regulationsResult.seasonDates?.confidence,
+                licenseRequired: regulationsResult.licenseRequired?.confidence,
+                penalties: regulationsResult.penalties?.confidence,
+                validationFlags: regulationsResult.validationFlags,
+              },
+            );
+          } catch (parseError) {
+            console.error("Regulations JSON parse error:", parseError);
+            // Use default values if parsing fails
+            regulationsResult = {
+              sizeLimit: {
+                value: "Not specified",
+                source: "No data available",
+                confidence: "Low",
+              },
+              bagLimit: {
+                value: "Not specified",
+                source: "No data available",
+                confidence: "Low",
+              },
+              seasonDates: {
+                value: "Check local regulations",
+                source: "No data available",
+                confidence: "Low",
+              },
+              licenseRequired: {
+                value: "Check local requirements",
+                source: "No data available",
+                confidence: "Low",
+              },
+              additionalRules: [],
+              penalties: {
+                value: "Contact local authorities",
+                source: "No data available",
+                confidence: "Low",
+              },
+              lastUpdated: "Unknown",
+            };
+          }
+        }
+
+        // If we got a scientific name from the first API call and it's different from what we had,
+        // and if the regulations confidence is low, try again with the updated scientific name
+        if (
+          result.scientificName &&
+          result.scientificName !== "Unknown" &&
+          result.scientificName !== initialData.scientificName &&
+          regulationsResult.sizeLimit?.confidence === "Low"
+        ) {
+          console.log(
+            "🔄 Retrying regulations with updated scientific name:",
+            result.scientificName,
+          );
+
+          const updatedFishIdentifier = `${result.name} (${result.scientificName})`;
 
           try {
-            regulationsResult = JSON.parse(fixedRegulationsContent);
-            console.log("Fixed regulations JSON parsing successful");
-          } catch (secondError) {
-            console.error("Failed to fix regulations JSON:", secondError);
+            const retryRegulationsResponse = await fetch(
+              "https://api.openai.com/v1/chat/completions",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${apiKey.trim()}`,
+                },
+                body: JSON.stringify({
+                  model: "gpt-4o",
+                  messages: [
+                    {
+                      role: "system",
+                      content: `You are a fishing regulations expert with detailed knowledge of local, national, and EU fishing laws. You must provide accurate, verifiable regulatory information for the requested species and location, including size limits, bag limits, open seasons, licensing, and special rules.
+
+IMPORTANT: Use the scientific name provided to ensure accurate species identification and regulatory lookup. Scientific names are standardized and will help you provide more precise regulations.
+
+For each regulation, specify:
+- The regulation value
+- The SPECIFIC source with full details (e.g., "EU Regulation No. 1380/2013, Article 15", "Spain Royal Decree 1049/2021, Annex III", "Malta Legal Notice 426 of 2018, Schedule 2", "Cyprus Fisheries Law 135(I)/2002, Section 12")
+- Your confidence level in the information provided ("High", "Medium", or "Low")
+
+SOURCE REQUIREMENTS:
+✅ Include specific regulation numbers, article/section references, and dates
+✅ Use official government department names (e.g., "Ministry of Agriculture and Fisheries - Spain", "Department of Fisheries and Marine Research - Cyprus")
+✅ Reference specific legal instruments (e.g., "Commission Regulation (EU) 2019/1241", "National Fisheries Act 2020")
+✅ Include enforcement authority details where applicable
+
+⚠️ If the regulation is not available or not confirmed by a trusted source:
+- Value: "Check with local authorities"
+- Source: Use the specific local authority name (e.g., "Ministry of Agriculture, Rural Development and Environment - Cyprus", "Directorate-General for Maritime Affairs and Fisheries - Malta")
+- Confidence: "Low"
+
+❌ Never use generic terms like "Unknown", "Local regulations", or "Government authority"
+❌ Never make up law names or regulation numbers
+✅ Always return only valid JSON, without extra text or formatting.
+
+CONFIDENCE LEVELS:
+- High: Specific regulatory references with exact article/section numbers
+- Medium: General EU or national regulations that likely apply, with regulation names
+- Low: Information is uncertain, unavailable, or requires verification with local authorities`,
+                    },
+                    {
+                      role: "user",
+                      content: `Provide detailed fishing regulations for ${updatedFishIdentifier} in ${userLocation}.
+Species: ${result.name} (Scientific name: ${result.scientificName})
+Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}.
+
+IMPORTANT: For countries that are part of the EU (like Malta, Cyprus, Spain, etc.), prioritize EU regulations when local regulations are not available. Always check for accurate sources and avoid making up regulation numbers.
+
+Return only valid JSON in the following format:
+
+{
+  "sizeLimit": {
+    "value": "Minimum and/or maximum legal size limits (e.g., 'Minimum 25cm', 'No size limit', or 'Check with local authorities')",
+    "source": "The name of the law or governing authority - prioritize EU regulations for EU countries (e.g., 'EU Common Fisheries Policy', 'Malta Fisheries Regulation 2022, Article 5')",
+    "confidence": "High | Medium | Low"
+  },
+  "bagLimit": {
+    "value": "Maximum number of fish allowed per person per day or note if unlimited or seasonal",
+    "source": "Governing authority or law name - prioritize EU regulations for EU countries",
+    "confidence": "High | Medium | Low"
+  },
+  "penalties": {
+    "value": "Yes or No only - do not specify amounts or details",
+    "source": "Law name or enforcement authority",
+    "confidence": "High | Medium | Low"
+  },
+  "lastUpdated": "e.g., '2024-07-01' or 'Check with local authority for most recent regulations'"
+}`,
+                    },
+                  ],
+                  temperature: 0.0, // Zero temperature for deterministic results
+                }),
+              },
+            );
+
+            if (retryRegulationsResponse.ok) {
+              const retryRegulationsData =
+                await retryRegulationsResponse.json();
+              const retryRegulationsContent =
+                retryRegulationsData.choices[0].message.content.trim();
+              const cleanRetryRegulationsContent = retryRegulationsContent
+                .replace(/```json\n?|```\n?/g, "")
+                .trim();
+              const retryRegulationsResult = JSON.parse(
+                cleanRetryRegulationsContent,
+              );
+
+              console.log("✅ Retry regulations parsed successfully:", {
+                sizeLimit: retryRegulationsResult.sizeLimit?.confidence,
+                bagLimit: retryRegulationsResult.bagLimit?.confidence,
+                seasonDates: retryRegulationsResult.seasonDates?.confidence,
+                licenseRequired:
+                  retryRegulationsResult.licenseRequired?.confidence,
+                penalties: retryRegulationsResult.penalties?.confidence,
+              });
+
+              // Use the retry result if it has better confidence
+              regulationsResult = retryRegulationsResult;
+            }
+          } catch (retryError) {
             console.warn(
-              "Using default regulations values due to parsing error",
+              "Retry regulations call failed, using original result:",
+              retryError,
             );
           }
         }
@@ -805,7 +1532,7 @@ const FishDetailPage = () => {
             {/* Content */}
             <div className="p-4 lg:p-6 space-y-6 pb-20 lg:pb-6">
               {/* Fish Image Card */}
-              <Card className="overflow-hidden rounded-xl">
+              <Card className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
                 <div className="relative w-full" style={{ aspectRatio: "3/2" }}>
                   {imageLoading ? (
                     <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
@@ -848,8 +1575,8 @@ const FishDetailPage = () => {
 
               {/* Toxicity Information Card - Only visible for toxic fish */}
               {fishDetails.isToxic && (
-                <Card className="p-6 rounded-xl">
-                  <h2 className="text-xl font-semibold mb-4">
+                <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
                     Toxicity Information
                   </h2>
                   <div className="space-y-4">
@@ -858,20 +1585,20 @@ const FishDetailPage = () => {
                         "This fish poses potential health risks. Exercise extreme caution when handling."}
                     </p>
                     <div>
-                      <h3 className="font-medium text-base text-gray-900 dark:text-gray-100 mb-2">
+                      <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
                         Safe Handling
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                      <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
                         Always wear protective gloves, avoid contact with spines
                         or secretions, use tools to remove hooks, and wash hands
                         thoroughly after contact.
                       </p>
                     </div>
                     <div>
-                      <h3 className="font-medium text-base text-gray-900 dark:text-gray-100 mb-2">
+                      <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
                         If Injured
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                      <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
                         Rinse wound with hot water, apply pressure to control
                         bleeding, and seek immediate medical attention. Call
                         emergency services if symptoms are severe.
@@ -882,256 +1609,85 @@ const FishDetailPage = () => {
               )}
 
               {/* Description Card */}
-              <Card className="p-6 rounded-xl">
-                <h2 className="text-xl font-semibold mb-4">About this Fish</h2>
+              <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                  About this Fish
+                </h2>
                 <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed whitespace-pre-wrap">
                   {fishDetails.description}
                 </p>
               </Card>
 
-              {/* Fishing Regulations Card */}
-              {fishDetails.fishingRegulations && (
-                <Card className="p-4 sm:p-6 rounded-xl">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-xl font-semibold">
-                      Fishing Regulations
+              {/* Conservation Banner */}
+              <div className="relative overflow-hidden rounded-xl">
+                <div
+                  className="relative bg-cover bg-center bg-no-repeat p-6 rounded-xl"
+                  style={{
+                    backgroundImage:
+                      "url('/images/clayton-tonna-qINZ8zEYErY-unsplash (2).jpg')",
+                  }}
+                >
+                  {/* Dark overlay for better text readability */}
+                  <div className="absolute inset-0 bg-black/30 rounded-xl"></div>
+
+                  {/* Content */}
+                  <div className="relative z-10 flex flex-col gap-2">
+                    {/* Title - On its own line */}
+                    <h2
+                      className="text-white text-left"
+                      style={{
+                        fontFamily: "Inter, sans-serif",
+                        fontStyle: "normal",
+                        fontWeight: 900,
+                        fontSize: "28px",
+                        lineHeight: "34px",
+                      }}
+                    >
+                      Respect the ocean.
                     </h2>
-                    <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
-                      <svg
-                        className="w-4 h-4 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
+
+                    {/* Subtitle and Logo grouped together */}
+                    <div
+                      className="flex flex-row justify-between items-end"
+                      style={{
+                        gap: "40px",
+                      }}
+                    >
+                      <p
+                        className="text-white text-left"
+                        style={{
+                          fontFamily: "Inter, sans-serif",
+                          fontStyle: "normal",
+                          fontWeight: 700,
+                          fontSize: "clamp(14px, 3.5vw, 16px)",
+                          lineHeight: "clamp(18px, 4.5vw, 20px)",
+                        }}
                       >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        Catch & release{" "}
+                        <span style={{ fontWeight: 400 }}>
+                          when you can & take only what you truly need.
+                        </span>
+                      </p>
+
+                      {/* Logo - 20px height */}
+                      <div className="flex-shrink-0">
+                        <img
+                          src="/images/Lishka Tips.svg"
+                          alt="Lishka Tips"
+                          style={{ height: "20px", width: "auto" }}
                         />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
-                      {fishDetails.fishingLocation ||
-                        userLocationName ||
-                        "Location not specified"}
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    {/* Size Limit */}
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 flex-shrink-0 mt-0.5">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-black dark:text-gray-300"
-                        >
-                          <path d="M3 6h18" />
-                          <path d="M7 12h10" />
-                          <path d="M10 18h4" />
-                        </svg>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                          Size Limit
-                        </span>
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                          {fishDetails.fishingRegulations.sizeLimit}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Bag Limit */}
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 flex-shrink-0 mt-0.5">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-black dark:text-gray-300"
-                        >
-                          <path d="M19 7h-3V6a4 4 0 0 0-8 0v1H5a1 1 0 0 0-1 1v11a3 3 0 0 0 3 3h10a3 3 0 0 0 3-3V8a1 1 0 0 0-1-1zM10 6a2 2 0 0 1 4 0v1h-4V6zm8 15a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V9h2v1a1 1 0 0 0 2 0V9h4v1a1 1 0 0 0 2 0V9h2v12z" />
-                        </svg>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                          Bag Limit
-                        </span>
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                          {fishDetails.fishingRegulations.bagLimit}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Season Dates */}
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 flex-shrink-0 mt-0.5">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-black dark:text-gray-300"
-                        >
-                          <rect
-                            x="3"
-                            y="4"
-                            width="18"
-                            height="18"
-                            rx="2"
-                            ry="2"
-                          />
-                          <line x1="16" y1="2" x2="16" y2="6" />
-                          <line x1="8" y1="2" x2="8" y2="6" />
-                          <line x1="3" y1="10" x2="21" y2="10" />
-                        </svg>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                          Season Dates
-                        </span>
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                          {fishDetails.fishingRegulations.seasonDates}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* License Required */}
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 flex-shrink-0 mt-0.5">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-black dark:text-gray-300"
-                        >
-                          <rect
-                            x="2"
-                            y="3"
-                            width="20"
-                            height="14"
-                            rx="2"
-                            ry="2"
-                          />
-                          <line x1="8" y1="21" x2="16" y2="21" />
-                          <line x1="12" y1="17" x2="12" y2="21" />
-                        </svg>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                          License Required
-                        </span>
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                          {fishDetails.fishingRegulations.licenseRequired}
-                        </span>
-                      </div>
-                    </div>
-
-                    {/* Additional Rules */}
-                    {fishDetails.fishingRegulations.additionalRules &&
-                      fishDetails.fishingRegulations.additionalRules.length >
-                        0 && (
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 flex-shrink-0 mt-0.5">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="text-black dark:text-gray-300"
-                            >
-                              <circle cx="12" cy="12" r="10" />
-                              <line x1="12" y1="8" x2="12" y2="12" />
-                              <line x1="12" y1="16" x2="12.01" y2="16" />
-                            </svg>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                              Additional Rules
-                            </span>
-                            <ul className="text-sm text-gray-600 dark:text-gray-300 list-disc list-inside space-y-1">
-                              {fishDetails.fishingRegulations.additionalRules.map(
-                                (rule, index) => (
-                                  <li key={index} className="text-sm">
-                                    {rule}
-                                  </li>
-                                ),
-                              )}
-                            </ul>
-                          </div>
-                        </div>
-                      )}
-
-                    {/* Penalties */}
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 flex-shrink-0 mt-0.5">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-black dark:text-gray-300"
-                        >
-                          <path d="M12 2L2 7l10 5 10-5-10-5z" />
-                          <path d="M2 17l10 5 10-5" />
-                          <path d="M2 12l10 5 10-5" />
-                        </svg>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                          Penalties
-                        </span>
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
-                          {fishDetails.fishingRegulations.penalties}
-                        </span>
                       </div>
                     </div>
                   </div>
-
-                  {/* Last Updated */}
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <p className="text-xs text-gray-500 dark:text-gray-400">
-                      Last updated: {fishDetails.fishingRegulations.lastUpdated}
-                    </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                      Always verify current regulations with local authorities
-                      before fishing.
-                    </p>
-                  </div>
-                </Card>
-              )}
+                </div>
+              </div>
 
               {/* Fishing Season Calendar Card */}
-              <Card className="p-4 sm:p-6 rounded-xl">
+              <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-xl font-semibold">Fishing Season</h2>
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                    Fishing Season
+                  </h2>
                   <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
                     <svg
                       className="w-4 h-4 mr-1"
@@ -1171,159 +1727,13 @@ const FishDetailPage = () => {
                     location={fishDetails.fishingLocation || userLocationName}
                   />
 
-                  {/* Debug Section - Show raw data from OpenAI */}
-                  {showDebugUI && (
-                    <div className="mt-4 bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg border border-yellow-200 dark:border-yellow-800">
-                      <h3 className="text-sm font-semibold text-yellow-700 dark:text-yellow-400 mb-2">
-                        Debug: Raw OpenAI Data
-                      </h3>
-                      <div className="space-y-2 text-xs">
-                        <div>
-                          <span className="font-medium text-yellow-700 dark:text-yellow-400">
-                            Official Season Dates (
-                            {fishDetails.fishingLocation ||
-                              userLocationName ||
-                              "Location"}
-                            ):
-                          </span>
-                          <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
-                            <code className="text-gray-800 dark:text-gray-200">
-                              {fishDetails.officialSeasonDates || "No data"}
-                            </code>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="font-medium text-yellow-700 dark:text-yellow-400">
-                            Current Season Status:
-                          </span>
-                          <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
-                            <code className="text-gray-800 dark:text-gray-200">
-                              {fishDetails.currentSeasonStatus || "No data"}
-                            </code>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="font-medium text-yellow-700 dark:text-yellow-400">
-                            In Season Array:
-                          </span>
-                          <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
-                            <code className="text-gray-800 dark:text-gray-200">
-                              {fishDetails.fishingSeasons?.inSeason
-                                ? JSON.stringify(
-                                    fishDetails.fishingSeasons.inSeason,
-                                    null,
-                                    2,
-                                  )
-                                : "No data"}
-                            </code>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="font-medium text-yellow-700 dark:text-yellow-400">
-                            Local Names in{" "}
-                            {fishDetails.fishingLocation ||
-                              userLocationName ||
-                              "Location"}
-                            :
-                          </span>
-                          <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
-                            <code className="text-gray-800 dark:text-gray-200">
-                              {fishDetails.localNames
-                                ? JSON.stringify(
-                                    fishDetails.localNames,
-                                    null,
-                                    2,
-                                  )
-                                : "No data"}
-                            </code>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="font-medium text-yellow-700 dark:text-yellow-400">
-                            Conservation Concerns:
-                          </span>
-                          <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
-                            <code className="text-gray-800 dark:text-gray-200">
-                              {fishDetails.fishingSeasons
-                                ?.conservationConcerns || "No data"}
-                            </code>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="font-medium text-yellow-700 dark:text-yellow-400">
-                            Regulations for{" "}
-                            {fishDetails.fishingLocation ||
-                              userLocationName ||
-                              "Location"}
-                            :
-                          </span>
-                          <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
-                            <code className="text-gray-800 dark:text-gray-200">
-                              {fishDetails.fishingSeasons?.regulations ||
-                                "No data"}
-                            </code>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="font-medium text-yellow-700 dark:text-yellow-400">
-                            Biological Reasoning:
-                          </span>
-                          <div className="bg-white dark:bg-gray-800 p-2 rounded border mt-1">
-                            <code className="text-gray-800 dark:text-gray-200">
-                              {fishDetails.fishingSeasons
-                                ?.biologicalReasoning || "No data"}
-                            </code>
-                          </div>
-                        </div>
-                        <div>
-                          <span className="font-medium text-yellow-700 dark:text-yellow-400">
-                            Array Length:
-                          </span>
-                          <span className="ml-2 text-gray-600 dark:text-gray-400">
-                            {fishDetails.fishingSeasons?.inSeason?.length || 0}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="font-medium text-yellow-700 dark:text-yellow-400">
-                            Array Type:
-                          </span>
-                          <span className="ml-2 text-gray-600 dark:text-gray-400">
-                            {typeof fishDetails.fishingSeasons?.inSeason}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="font-medium text-yellow-700 dark:text-yellow-400">
-                            Fishing Location:
-                          </span>
-                          <span className="ml-2 text-gray-600 dark:text-gray-400">
-                            {fishDetails.fishingLocation ||
-                              userLocationName ||
-                              "Not specified"}
-                          </span>
-                        </div>
-                        <div>
-                          <span className="font-medium text-yellow-700 dark:text-yellow-400">
-                            Today's Date:
-                          </span>
-                          <span className="ml-2 text-gray-600 dark:text-gray-400">
-                            {new Date().toLocaleDateString("en-GB", {
-                              day: "numeric",
-                              month: "long",
-                              year: "numeric",
-                            })}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
                   {/* Reasoning */}
                   {fishDetails.fishingSeasons?.reasoning && (
                     <div className="mt-4 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
-                      <h3 className="text-base font-medium text-gray-700 dark:text-gray-300">
+                      <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Seasonal Information
                       </h3>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
+                      <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
                         {fishDetails.fishingSeasons.reasoning}
                       </p>
                     </div>
@@ -1333,383 +1743,499 @@ const FishDetailPage = () => {
 
               {/* All Round Gear Card */}
               {fishDetails.allRoundGear && (
-                <Card className="p-6 rounded-xl">
-                  <h2 className="text-xl font-semibold mb-4">All Round Gear</h2>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 flex-shrink-0">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-gray-700 dark:text-gray-300"
-                        >
-                          <path d="M3 3h6l2 4h10v3M3 3v18M3 3H2m1 0h1" />
-                        </svg>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                    All Round Gear
+                  </h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    {fishDetails.allRoundGear.rods && (
+                      <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                        <div className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
                           Rods
-                        </span>
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-300">
                           {fishDetails.allRoundGear.rods}
-                        </span>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 flex-shrink-0">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-gray-700 dark:text-gray-300"
-                        >
-                          <circle cx="12" cy="12" r="8" />
-                          <path d="M12 8v8M8 12h8" />
-                        </svg>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                    )}
+                    {fishDetails.allRoundGear.reels && (
+                      <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                        <div className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
                           Reels
-                        </span>
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-300">
                           {fishDetails.allRoundGear.reels}
-                        </span>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 flex-shrink-0">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-gray-700 dark:text-gray-300"
-                        >
-                          <path d="M4 12h16M4 12l2 3M4 12l2-3M20 12l-2 3m2-3l-2-3" />
-                        </svg>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                    )}
+                    {fishDetails.allRoundGear.line && (
+                      <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                        <div className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
                           Line
-                        </span>
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-300">
                           {fishDetails.allRoundGear.line}
-                        </span>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="flex items-start gap-3">
-                      <div className="w-6 flex-shrink-0">
-                        <svg
-                          xmlns="http://www.w3.org/2000/svg"
-                          viewBox="0 0 24 24"
-                          fill="none"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          className="text-gray-700 dark:text-gray-300"
-                        >
-                          <path d="M12 22c-4.4 0-8-3.6-8-8s3.6-8 8-8" />
-                          <path d="M20 14c0-4.4-3.6-8-8-8s-8 3.6-8 8" />
-                        </svg>
-                      </div>
-                      <div className="flex flex-col">
-                        <span className="font-medium text-base text-gray-900 dark:text-gray-100">
+                    )}
+                    {fishDetails.allRoundGear.leader && (
+                      <div className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
+                        <div className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
                           Leader
-                        </span>
-                        <span className="text-sm text-gray-600 dark:text-gray-300">
+                        </div>
+                        <div className="text-xs text-gray-600 dark:text-gray-300">
                           {fishDetails.allRoundGear.leader}
-                        </span>
+                        </div>
                       </div>
-                    </div>
-
-                    <div className="border-t border-gray-200 dark:border-gray-700 pt-4 mt-4">
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
+                    )}
+                  </div>
+                  {fishDetails.allRoundGear.description && (
+                    <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                      <p className="text-xs text-gray-600 dark:text-gray-300">
                         {fishDetails.allRoundGear.description}
                       </p>
                     </div>
-                  </div>
+                  )}
                 </Card>
               )}
 
               {/* Fishing Methods */}
               {fishDetails.fishingMethods &&
               fishDetails.fishingMethods.length > 0 ? (
-                fishDetails.fishingMethods.map((method, index) => (
-                  <div
-                    key={index}
-                    className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 mb-6 space-y-6"
-                  >
-                    <h2 className="text-xl font-semibold">{method.title}</h2>
+                <>
+                  {fishDetails.fishingMethods.map((method, index) => {
+                    // Safety check for method object
+                    if (!method || typeof method !== "object") {
+                      return null;
+                    }
 
-                    {/* Location */}
-                    <div className="flex flex-col space-y-6">
-                      <div className="flex items-start gap-3">
-                        <div className="w-6 flex-shrink-0">
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            className="text-gray-700 dark:text-gray-300"
-                          >
-                            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
-                            <circle cx="12" cy="10" r="3" />
-                          </svg>
+                    // Helper functions to check gear availability and validity
+                    const hasBait =
+                      method.gear?.bait &&
+                      Array.isArray(method.gear.bait) &&
+                      method.gear.bait.length > 0 &&
+                      method.gear.bait.some(
+                        (b) =>
+                          b &&
+                          typeof b === "string" &&
+                          b.trim() !== "" &&
+                          b.trim().toLowerCase() !== "n/a",
+                      );
+                    const hasLures =
+                      method.gear?.lures &&
+                      Array.isArray(method.gear.lures) &&
+                      method.gear.lures.length > 0 &&
+                      method.gear.lures.some(
+                        (l) =>
+                          l &&
+                          typeof l === "string" &&
+                          l.trim() !== "" &&
+                          l.trim().toLowerCase() !== "n/a",
+                      );
+                    const hasJigInfo =
+                      (method.gear?.jig_weight &&
+                        typeof method.gear.jig_weight === "string" &&
+                        method.gear.jig_weight.trim() !== "") ||
+                      (method.gear?.jig_size &&
+                        typeof method.gear.jig_size === "string" &&
+                        method.gear.jig_size.trim() !== "");
+                    const methodTitle =
+                      method.title || method.method || `Method ${index + 1}`;
+                    const isJiggingMethod = methodTitle
+                      .toLowerCase()
+                      .includes("jig");
+                    const isBottomMethod = methodTitle
+                      .toLowerCase()
+                      .includes("bottom");
+                    const isTrollingMethod = methodTitle
+                      .toLowerCase()
+                      .includes("troll");
+
+                    // Helper function to render gear information
+                    const renderGearInfo = (gear: FishingGear) => {
+                      const gearItems = [];
+
+                      // Define all possible gear fields with their display names
+                      const gearFields = [
+                        { key: "depth", label: "Depth", color: "blue" },
+                        {
+                          key: "rods",
+                          label: "Rod Specifications",
+                          color: "green",
+                        },
+                        { key: "rodType", label: "Rod Type", color: "green" },
+                        {
+                          key: "reels",
+                          label: "Reel Specifications",
+                          color: "purple",
+                        },
+                        {
+                          key: "reelType",
+                          label: "Reel Type",
+                          color: "purple",
+                        },
+                        { key: "line", label: "Line", color: "orange" },
+                        { key: "leader", label: "Leader", color: "pink" },
+                        { key: "jigType", label: "Jig Type", color: "indigo" },
+                        { key: "jigWeight", label: "Jig Weight", color: "red" },
+                        {
+                          key: "jigColor",
+                          label: "Jig Color",
+                          color: "yellow",
+                        },
+                        {
+                          key: "jiggingStyle",
+                          label: "Jigging Style",
+                          color: "teal",
+                        },
+                        { key: "hookSize", label: "Hook Size", color: "cyan" },
+                        { key: "rigType", label: "Rig Type", color: "lime" },
+                        { key: "weight", label: "Weight", color: "amber" },
+                        {
+                          key: "lureType",
+                          label: "Lure Type",
+                          color: "emerald",
+                        },
+                        {
+                          key: "lureSize",
+                          label: "Lure Size",
+                          color: "violet",
+                        },
+                        {
+                          key: "lureColor",
+                          label: "Lure Color",
+                          color: "rose",
+                        },
+                        {
+                          key: "lureWeight",
+                          label: "Lure Weight",
+                          color: "sky",
+                        },
+                        {
+                          key: "trollingSpeed",
+                          label: "Trolling Speed",
+                          color: "slate",
+                        },
+                        {
+                          key: "trollingDistance",
+                          label: "Trolling Distance",
+                          color: "indigo",
+                        },
+                        {
+                          key: "floatType",
+                          label: "Float Type",
+                          color: "zinc",
+                        },
+                        {
+                          key: "castingDistance",
+                          label: "Casting Distance",
+                          color: "stone",
+                        },
+                        {
+                          key: "electricReel",
+                          label: "Electric Reel",
+                          color: "neutral",
+                        },
+                        {
+                          key: "lightAttractors",
+                          label: "Light Attractors",
+                          color: "gray",
+                        },
+                        { key: "speed", label: "Speed", color: "blue" },
+                        { key: "hooks", label: "Hooks", color: "green" },
+                        {
+                          key: "hook_size_range",
+                          label: "Hook Size Range",
+                          color: "purple",
+                        },
+                        {
+                          key: "structure",
+                          label: "Structure",
+                          color: "orange",
+                        },
+                        {
+                          key: "sonarTips",
+                          label: "Sonar Tips",
+                          color: "pink",
+                        },
+                        {
+                          key: "jigging_technique",
+                          label: "Jigging Technique",
+                          color: "indigo",
+                        },
+                        {
+                          key: "technical_details",
+                          label: "Technical Details",
+                          color: "red",
+                        },
+                      ];
+
+                      // Add bait and lures arrays
+                      if (hasBait && Array.isArray(method.gear.bait)) {
+                        gearItems.push({
+                          label: "Bait",
+                          value: method.gear.bait
+                            .filter(
+                              (b) =>
+                                b &&
+                                typeof b === "string" &&
+                                b.trim() !== "" &&
+                                b.trim().toLowerCase() !== "n/a",
+                            )
+                            .join(", "),
+                          color: "emerald",
+                        });
+                      }
+
+                      if (hasLures && Array.isArray(method.gear.lures)) {
+                        gearItems.push({
+                          label: "Lures",
+                          value: method.gear.lures
+                            .filter(
+                              (l) =>
+                                l &&
+                                typeof l === "string" &&
+                                l.trim() !== "" &&
+                                l.trim().toLowerCase() !== "n/a",
+                            )
+                            .join(", "),
+                          color: "violet",
+                        });
+                      }
+
+                      // Add other gear fields
+                      gearFields.forEach((field) => {
+                        const value = gear[field.key];
+                        if (
+                          value &&
+                          typeof value === "string" &&
+                          value.trim() !== ""
+                        ) {
+                          gearItems.push({
+                            label: field.label,
+                            value: value,
+                            color: field.color,
+                          });
+                        }
+                      });
+
+                      return gearItems;
+                    };
+
+                    const gearInfo = method.gear
+                      ? renderGearInfo(method.gear)
+                      : [];
+
+                    return (
+                      <Card
+                        key={index}
+                        className="p-6 rounded-xl border border-gray-200 dark:border-gray-800 mb-6"
+                      >
+                        <div className="space-y-4">
+                          <div>
+                            <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">
+                              {methodTitle}
+                            </h2>
+                            {method.description && (
+                              <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                                {method.description}
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Gear Information Grid */}
+                          {gearInfo.length > 0 && (
+                            <div>
+                              <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">
+                                Gear & Equipment
+                              </h3>
+                              <div className="grid grid-cols-2 gap-3">
+                                {gearInfo.map((item, idx) => (
+                                  <div
+                                    key={idx}
+                                    className="bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg"
+                                  >
+                                    <div className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
+                                      {item.label}
+                                    </div>
+                                    <div className="text-xs text-gray-600 dark:text-gray-300">
+                                      {item.value}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+
+                          {/* Pro Tip */}
+                          {method.proTip && (
+                            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+                              <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-2">
+                                Pro Tip
+                              </h4>
+                              <p className="text-xs text-gray-600 dark:text-gray-300">
+                                {method.proTip}
+                              </p>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex flex-col">
-                          <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                            Location
-                          </span>
-                          <span className="text-sm text-gray-600 dark:text-gray-300">
-                            {method.gear?.depth || "Not specified"}
+                      </Card>
+                    );
+                  })}
+                </>
+              ) : (
+                <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+                  <div className="text-center py-8">
+                    <p className="text-gray-500 dark:text-gray-400 mb-2">
+                      No fishing methods available for this fish.
+                    </p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
+                      This might be due to API response issues or the fish not
+                      being commonly targeted.
+                    </p>
+                  </div>
+                </Card>
+              )}
+
+              {/* Fishing Regulations Card - Moved to last position */}
+              {fishDetails.fishingRegulations && (
+                <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
+                      Fishing Regulations
+                    </h2>
+                    <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
+                      <svg
+                        className="w-4 h-4 mr-1"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
+                        />
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
+                        />
+                      </svg>
+                      {fishDetails.fishingLocation ||
+                        userLocationName ||
+                        "Location not specified"}
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    {/* Size Limit */}
+                    <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+                      <div className="flex flex-col">
+                        <div className="mb-1">
+                          <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                            Size Limit
                           </span>
                         </div>
+                        <span className="text-xs text-gray-600 dark:text-gray-300 mb-2">
+                          {fishDetails.fishingRegulations.sizeLimit.value}
+                        </span>
+                        {fishDetails.fishingRegulations.sizeLimit.value !==
+                          "Check with local authorities" && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400 italic">
+                            Source:{" "}
+                            {fishDetails.fishingRegulations.sizeLimit.source}
+                          </span>
+                        )}
                       </div>
-
-                      {/* Bait/Lures */}
-                      {(method.gear?.bait || method.gear?.lures) && (
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 flex-shrink-0">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="text-gray-700 dark:text-gray-300"
-                            >
-                              <path d="M16 8l2 2v2l2 2v4a2 2 0 0 1-2 2h-3.1c-.5 0-.9-.1-1.3-.4l-1.1-.8c-.4-.3-.8-.4-1.3-.4h-2.6c-.5 0-.9.1-1.3.4l-1.1.8c-.4.3-.8.4-1.3.4H2a2 2 0 0 1-2-2v-4l2-2V8l2-2 1.06.53a6.01 6.01 0 0 1 5.88 0L16 8z" />
-                            </svg>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                              {method.title.toLowerCase().includes("jig")
-                                ? "Jigs"
-                                : method.title.toLowerCase().includes("troll")
-                                  ? "Lures"
-                                  : method.gear?.bait
-                                    ? "Bait"
-                                    : "Lures"}
-                            </span>
-                            <span className="text-sm text-gray-600 dark:text-gray-300">
-                              {method.gear?.bait
-                                ? method.gear.bait.join(", ")
-                                : method.gear?.lures?.join(", ")}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Speed */}
-                      {method.gear?.speed && (
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 flex-shrink-0">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="text-gray-700 dark:text-gray-300"
-                            >
-                              <path d="M3 10l2.8-1.4a4 4 0 0 1 3.6-.1l7.4 3.7a4 4 0 0 0 3.6.1l.6-.3" />
-                              <path d="M3 6l2.8-1.4a4 4 0 0 1 3.6-.1l7.4 3.7a4 4 0 0 0 3.6.1l.6-.3" />
-                              <path d="M14 14l1-3h3l1-4h2l1-4" />
-                              <path d="M5 18a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
-                              <path d="M19 18a1 1 0 1 0 0-2 1 1 0 0 0 0 2z" />
-                            </svg>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                              Speed
-                            </span>
-                            <span className="text-sm text-gray-600 dark:text-gray-300">
-                              {method.gear.speed}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Jig Weight - Show for jigging methods */}
-                      {method.gear?.jig_weight &&
-                        method.title.toLowerCase().includes("jig") && (
-                          <div className="flex items-start gap-3">
-                            <div className="w-6 flex-shrink-0">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-gray-700 dark:text-gray-300"
-                              >
-                                <path d="M12 2v20M2 12h20M12 9v0M12 15v0" />
-                              </svg>
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                                Jig Weight
-                              </span>
-                              <span className="text-sm text-gray-600 dark:text-gray-300">
-                                {method.gear.jig_weight}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                      {/* Jig Size - Show for jigging methods */}
-                      {method.gear?.jig_size &&
-                        method.title.toLowerCase().includes("jig") && (
-                          <div className="flex items-start gap-3">
-                            <div className="w-6 flex-shrink-0">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-gray-700 dark:text-gray-300"
-                              >
-                                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                              </svg>
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                                Jig Size
-                              </span>
-                              <span className="text-sm text-gray-600 dark:text-gray-300">
-                                {method.gear.jig_size}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                      {/* Hooks - Only show for bottom fishing methods */}
-                      {method.gear?.hooks &&
-                        method.title.toLowerCase().includes("bottom") && (
-                          <div className="flex items-start gap-3">
-                            <div className="w-6 flex-shrink-0">
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                className="text-gray-700 dark:text-gray-300"
-                              >
-                                <path d="M12 9v12m0 0c-1.5 0-3-1.5-3-3" />
-                                <path d="M12 21c1.5 0 3-1.5 3-3" />
-                                <path d="M12 3c3.3 0 6 2.7 6 6s-2.7 6-6 6-6-2.7-6-6 2.7-6 6-6z" />
-                              </svg>
-                            </div>
-                            <div className="flex flex-col">
-                              <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                                Hooks
-                              </span>
-                              <span className="text-sm text-gray-600 dark:text-gray-300">
-                                {method.gear.hooks}
-                              </span>
-                            </div>
-                          </div>
-                        )}
-
-                      {/* Hook Size Range - Show whenever available */}
-                      {method.gear?.hook_size_range && (
-                        <div className="flex items-start gap-3">
-                          <div className="w-6 flex-shrink-0">
-                            <svg
-                              xmlns="http://www.w3.org/2000/svg"
-                              viewBox="0 0 24 24"
-                              fill="none"
-                              stroke="currentColor"
-                              strokeWidth="2"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              className="text-gray-700 dark:text-gray-300"
-                            >
-                              <path d="M3 6h18" />
-                              <path d="M7 12h10" />
-                              <path d="M10 18h4" />
-                            </svg>
-                          </div>
-                          <div className="flex flex-col">
-                            <span className="font-medium text-base text-gray-900 dark:text-gray-100">
-                              Hook Size Range
-                            </span>
-                            <span className="text-sm text-gray-600 dark:text-gray-300">
-                              {method.gear.hook_size_range}
-                            </span>
-                          </div>
-                        </div>
-                      )}
                     </div>
 
-                    {/* Description */}
-                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                      {method.description}
-                    </p>
-
-                    {/* Technical Details */}
-                    {method.technical_details && (
-                      <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
-                        <h4 className="font-medium text-base text-blue-700 dark:text-blue-400 mb-1">
-                          Technical Details
-                        </h4>
-                        <p className="text-sm text-gray-700 dark:text-gray-300">
-                          {method.technical_details}
-                        </p>
+                    {/* Bag Limit */}
+                    <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+                      <div className="flex flex-col">
+                        <div className="mb-1">
+                          <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                            Bag Limit
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-600 dark:text-gray-300 mb-2">
+                          {fishDetails.fishingRegulations.bagLimit.value}
+                        </span>
+                        {fishDetails.fishingRegulations.bagLimit.value !==
+                          "Check with local authorities" && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400 italic">
+                            Source:{" "}
+                            {fishDetails.fishingRegulations.bagLimit.source}
+                          </span>
+                        )}
                       </div>
-                    )}
+                    </div>
 
-                    {/* Pro Tip */}
-                    {method.proTip && (
-                      <div className="border-t border-gray-200 dark:border-gray-700 pt-6">
-                        <h3 className="font-medium text-base text-gray-900 dark:text-gray-100 mb-2">
-                          Pro Tip
-                        </h3>
-                        <p className="text-sm text-gray-600 dark:text-gray-300">
-                          {method.proTip}
-                        </p>
+                    {/* Penalties */}
+                    <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
+                      <div className="flex flex-col">
+                        <div className="mb-1">
+                          <span className="font-medium text-sm text-gray-900 dark:text-gray-100">
+                            Penalties
+                          </span>
+                        </div>
+                        <span className="text-xs text-gray-600 dark:text-gray-300 mb-2">
+                          {fishDetails.fishingRegulations.penalties.value ===
+                          "Yes"
+                            ? "Yes"
+                            : fishDetails.fishingRegulations.penalties.value ===
+                                "No"
+                              ? "No"
+                              : fishDetails.fishingRegulations.penalties.value}
+                        </span>
+                        {fishDetails.fishingRegulations.penalties.value !==
+                          "Check with local authorities" && (
+                          <span className="text-xs text-gray-500 dark:text-gray-400 italic">
+                            Source:{" "}
+                            {fishDetails.fishingRegulations.penalties.source}
+                          </span>
+                        )}
                       </div>
-                    )}
+                    </div>
                   </div>
-                ))
-              ) : (
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200 dark:border-gray-700 mb-6">
-                  <p className="text-sm text-gray-600 dark:text-gray-300">
-                    No fishing methods available for this fish.
-                  </p>
-                </div>
+
+                  {/* Enhanced Disclaimer */}
+                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 leading-relaxed">
+                      These regulations are AI-generated and may be outdated or
+                      inaccurate. Never rely solely on this information for
+                      legal compliance. Always check with official local
+                      authorities before fishing to avoid fines.
+                    </p>
+                  </div>
+                </Card>
               )}
+
+              {/* Footer Disclaimers */}
+              <div className="mt-6 pt-4 border-t border-gray-200 dark:border-gray-700 px-6 space-y-3">
+                <p className="text-xs text-gray-500 dark:text-gray-500 leading-relaxed">
+                  These fishing methods and gear specifications are AI-generated
+                  based on established practices. Always verify technical
+                  details with local guides or experienced anglers.
+                </p>
+                <p className="text-xs text-gray-500 dark:text-gray-500">
+                  Found inaccurate information? Help us improve by reporting it
+                  on our Instagram{" "}
+                  <button
+                    onClick={() =>
+                      window.open(
+                        "https://www.instagram.com/lishka.app/",
+                        "_blank",
+                      )
+                    }
+                    className="underline hover:no-underline font-medium text-gray-500 dark:text-gray-500"
+                  >
+                    @lishka.app
+                  </button>
+                </p>
+              </div>
             </div>
           </div>
 

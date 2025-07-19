@@ -26,72 +26,63 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
-    setError(null);
 
-    console.log("[LoginPage] Starting login process", {
-      email: email.trim().toLowerCase(),
-      from,
-      isMobile:
-        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent,
-        ),
-      userAgent: navigator.userAgent,
-    });
+    // Clear any existing errors
+    setError(null);
+    setShowEmailVerification(false);
 
     // Basic validation
     if (!email.trim() || !password) {
       setError("Please enter both email and password");
-      setLoading(false);
       return;
     }
 
-    try {
-      const { error } = await signIn(email.trim().toLowerCase(), password);
+    setLoading(true);
 
-      console.log("[LoginPage] SignIn completed", {
-        hasError: !!error,
-        errorMessage: error?.message,
-        from,
+    try {
+      console.log(
+        "[LoginPage] Starting login for:",
+        email.trim().toLowerCase(),
+      );
+
+      const result = await signIn(email.trim().toLowerCase(), password);
+
+      console.log("[LoginPage] Login result:", {
+        hasError: !!result.error,
+        errorMessage: result.error?.message,
       });
 
-      if (error) {
-        console.log("[LoginPage] Handling login error:", error);
+      if (result.error) {
         // Handle specific error types
-        if (error.message?.includes("Email not confirmed")) {
+        const errorMsg = result.error.message || "Login failed";
+
+        if (errorMsg.includes("Email not confirmed")) {
           setError(
             "Your email address hasn't been verified yet. Please check your inbox for a verification email.",
           );
           setShowEmailVerification(true);
-        } else if (error.message?.includes("Invalid login credentials")) {
+        } else if (errorMsg.includes("Invalid login credentials")) {
           setError(
             "Invalid email or password. Please check your credentials and try again.",
           );
-        } else if (error.message?.includes("Too many requests")) {
+        } else if (errorMsg.includes("Too many requests")) {
           setError(
             "Too many login attempts. Please wait a few minutes before trying again.",
           );
-        } else if (
-          error.message?.includes("Network") ||
-          error.message?.includes("fetch")
-        ) {
+        } else if (errorMsg.includes("Network") || errorMsg.includes("fetch")) {
           setError(
             "Network connection error. Please check your internet connection and try again.",
           );
         } else {
-          setError(error.message || "Failed to sign in. Please try again.");
+          setError(errorMsg);
         }
       } else {
-        // Login successful - navigate to intended destination
+        // Success - navigate to intended destination
         console.log("[LoginPage] Login successful, navigating to:", from);
-
-        // Add a small delay to ensure auth state is updated
-        setTimeout(() => {
-          navigate(from, { replace: true });
-        }, 100);
+        navigate(from, { replace: true });
       }
     } catch (err) {
-      console.error("[LoginPage] Login error:", err);
+      console.error("[LoginPage] Login exception:", err);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -160,10 +151,16 @@ const LoginPage: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-6">
             {error && (
               <Alert
-                variant={showEmailVerification ? "default" : "destructive"}
+                variant="destructive"
+                className="mb-4 border-red-500 dark:border-red-400"
               >
-                <AlertDescription>
-                  {error}
+                <AlertDescription className="text-sm leading-relaxed">
+                  <div className="font-medium mb-1 text-red-600 dark:text-red-400">
+                    {showEmailVerification
+                      ? "Email Verification Required"
+                      : "Login Error"}
+                  </div>
+                  <div className="text-red-600 dark:text-red-400">{error}</div>
                   {showEmailVerification && (
                     <div className="mt-3">
                       <Button
@@ -204,7 +201,7 @@ const LoginPage: React.FC = () => {
                 value={email}
                 onChange={(e) => {
                   setEmail(e.target.value);
-                  if (error) setError(null);
+                  // Don't clear error immediately to allow user to see it
                 }}
                 className="h-14 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
                 required
@@ -227,7 +224,7 @@ const LoginPage: React.FC = () => {
                   value={password}
                   onChange={(e) => {
                     setPassword(e.target.value);
-                    if (error) setError(null);
+                    // Don't clear error immediately to allow user to see it
                   }}
                   className="h-14 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700 pr-12"
                   required
@@ -259,7 +256,7 @@ const LoginPage: React.FC = () => {
               </Link>
             </div>
 
-            <div className="pt-4">
+            <div className="pt-4 space-y-3">
               <Button
                 type="submit"
                 className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"

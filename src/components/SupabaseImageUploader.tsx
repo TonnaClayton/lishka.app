@@ -145,7 +145,15 @@ const SupabaseImageUploader: React.FC<SupabaseImageUploaderProps> = ({
         </div>
 
         {status.type && (
-          <Alert variant={status.type}>
+          <Alert
+            variant={
+              status.type === "error"
+                ? "destructive"
+                : status.type === "success"
+                  ? "default"
+                  : "default"
+            }
+          >
             {status.type === "success" ? (
               <CheckCircle2 className="h-4 w-4" />
             ) : status.type === "error" ? (
@@ -156,7 +164,7 @@ const SupabaseImageUploader: React.FC<SupabaseImageUploaderProps> = ({
             <AlertTitle>
               {status.type === "success"
                 ? "Success"
-                : status.type === "destructive"
+                : status.type === "error"
                   ? "Error"
                   : "Info"}
             </AlertTitle>

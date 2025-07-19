@@ -22,9 +22,13 @@ export default defineConfig({
   server: {
     // @ts-ignore
     allowedHosts: true,
+    hmr: {
+      overlay: false, // Disable error overlay to prevent blocking UI during development
+    },
     headers: {
-      "Content-Security-Policy":
-        "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline' https://api.openai.com https://nominatim.openstreetmap.org https://customer-api.open-meteo.com https://marine-api.open-meteo.com https://api.tempo.new https://api-2.tempolabs.ai https://storage.googleapis.com https://tempolabs.ai https://*.tempolabs.ai; connect-src 'self' ws://localhost:* wss://localhost:* ws://angry-cori8-wqcq3.view-2.tempo-dev.app wss://angry-cori8-wqcq3.view-2.tempo-dev.app https://api.openai.com https://nominatim.openstreetmap.org https://customer-api.open-meteo.com https://marine-api.open-meteo.com https://lmjlmyqbwgxmiguxqdhi.supabase.co https://vercel.com/api/blob/ https://blob.vercel-storage.com https://*.blob.vercel-storage.com https://api.tempo.new https://api-2.tempolabs.ai https://storage.googleapis.com https://tempolabs.ai https://*.tempolabs.ai; img-src 'self' data: https: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; object-src 'none';",
+      // Temporarily disable CSP for development to avoid Vercel Blob issues
+      // TODO: Re-enable with proper configuration for production
+      // "Content-Security-Policy": "...",
     },
   },
 });

@@ -157,66 +157,6 @@ const ImageUploadDebugger: React.FC = () => {
             Test image upload functionality with logo and fish information
             overlays.
           </p>
-
-          {/* System Status */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Alert
-              variant={storageStatus.configured ? "default" : "destructive"}
-            >
-              {storageStatus.configured ? (
-                <CheckCircle2 className="w-4 h-4" />
-              ) : (
-                <AlertCircle className="w-4 h-4" />
-              )}
-              <AlertDescription>
-                <div>
-                  <p className="font-medium">Blob Storage</p>
-                  <p className="text-sm">
-                    {storageStatus.configured
-                      ? "✅ Configured"
-                      : "❌ Not Configured"}
-                  </p>
-                  {storageStatus.error && (
-                    <p className="text-xs text-red-600 mt-1">
-                      {storageStatus.error}
-                    </p>
-                  )}
-                </div>
-              </AlertDescription>
-            </Alert>
-
-            <Alert variant={hasOpenAI ? "default" : "destructive"}>
-              {hasOpenAI ? (
-                <CheckCircle2 className="w-4 h-4" />
-              ) : (
-                <AlertCircle className="w-4 h-4" />
-              )}
-              <AlertDescription>
-                <div>
-                  <p className="font-medium">OpenAI Integration</p>
-                  <p className="text-sm">
-                    {hasOpenAI ? "✅ API Key Present" : "❌ No API Key"}
-                  </p>
-                  <p className="text-xs text-gray-500">
-                    {hasOpenAI
-                      ? "Fish identification enabled"
-                      : "Fish identification disabled"}
-                  </p>
-                </div>
-              </AlertDescription>
-            </Alert>
-          </div>
-
-          {user && (
-            <Alert>
-              <AlertDescription>
-                <p className="text-sm">
-                  <strong>User:</strong> {user.email} (ID: {user.id.slice(0, 8)}
-                  ...)
-                </p>
-              </AlertDescription>
-            </Alert>
-          )}
         </CardContent>
       </Card>
 

@@ -16,6 +16,7 @@ import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
 import { useImperialUnits } from "@/lib/unit-conversion";
 import BottomNav from "./BottomNav";
 import TextareaAutosize from "react-textarea-autosize";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface Message {
   id: string;
@@ -46,6 +47,8 @@ const DEFAULT_SUGGESTIONS = [
 
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
+  const { profile } = useAuth();
+
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(false);
@@ -56,9 +59,53 @@ const SearchPage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imperialUnits, setImperialUnits] =
     useState<boolean>(useImperialUnits());
+  const [currentLocation, setCurrentLocation] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  // Get user location from multiple sources
+  useEffect(() => {
+    const getUserLocation = () => {
+      // First try profile location
+      if (profile?.location && profile.location.trim()) {
+        setCurrentLocation(profile.location);
+        return;
+      }
+
+      // Then try localStorage location
+      try {
+        const savedLocation = localStorage.getItem("userLocationFull");
+        if (savedLocation) {
+          const parsedLocation = JSON.parse(savedLocation);
+          if (parsedLocation?.name) {
+            setCurrentLocation(parsedLocation.name);
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("Error parsing saved location:", error);
+      }
+
+      // Fallback to default
+      setCurrentLocation("Malta");
+    };
+
+    getUserLocation();
+
+    // Listen for location changes
+    const handleLocationChange = () => {
+      getUserLocation();
+    };
+
+    window.addEventListener("storage", handleLocationChange);
+    window.addEventListener("locationChanged", handleLocationChange);
+
+    return () => {
+      window.removeEventListener("storage", handleLocationChange);
+      window.removeEventListener("locationChanged", handleLocationChange);
+    };
+  }, [profile?.location]);
 
   // Scroll to bottom of messages when new messages are added
   useEffect(() => {
@@ -343,8 +390,10 @@ const SearchPage: React.FC = () => {
             size={16}
             className={useLocationContext ? "text-blue-500" : "text-gray-400"}
           />
-          <span className="text-xs text-muted-foreground dark:text-gray-400">
-            {useLocationContext ? "Using location" : "Global search"}
+          <span className="text-xs text-blue-500 dark:text-blue-400">
+            {useLocationContext
+              ? currentLocation || "Getting location..."
+              : "Global search"}
           </span>
           <Switch
             checked={useLocationContext}
@@ -366,7 +415,7 @@ const SearchPage: React.FC = () => {
               </h2>
               <p className="text-muted-foreground dark:text-gray-400">
                 Get AI advice on techniques, species identification, fishing
-                spots and more.
+                spots, sonar image readings and more.
               </p>
               <div className="grid grid-cols-2 gap-2 w-full max-w-md">
                 {suggestions.map((suggestion, index) => (
@@ -407,22 +456,38 @@ const SearchPage: React.FC = () => {
                       <div className="mt-4 space-y-4">
                         <h3 className="font-medium text-sm">Fish Species:</h3>
                         <div className="grid grid-cols-1 gap-4">
-                          {message.fishResults.map((fish) => (
-                            <FishCard
-                              key={fish.id}
-                              name={fish.name}
-                              scientificName={fish.scientificName}
-                              habitat={fish.habitat}
-                              difficulty={fish.difficulty}
-                              isToxic={fish.toxic}
-                              onClick={() => {
-                                navigate(
-                                  `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
-                                  { state: { fish } },
-                                );
-                              }}
-                            />
-                          ))}
+                          {message.fishResults
+                            .filter((fish) => {
+                              // Filter out generic fish names
+                              const genericNames = [
+                                "generic fish",
+                                "unknown fish",
+                                "fish",
+                                "generic",
+                                "unknown",
+                              ];
+                              const fishName = fish.name?.toLowerCase() || "";
+                              return (
+                                !genericNames.includes(fishName) &&
+                                fishName.trim() !== ""
+                              );
+                            })
+                            .map((fish) => (
+                              <FishCard
+                                key={fish.id}
+                                name={fish.name}
+                                scientificName={fish.scientificName}
+                                habitat={fish.habitat}
+                                difficulty={fish.difficulty}
+                                isToxic={fish.toxic}
+                                onClick={() => {
+                                  navigate(
+                                    `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
+                                    { state: { fish } },
+                                  );
+                                }}
+                              />
+                            ))}
                         </div>
                       </div>
                     )}

@@ -157,8 +157,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
   const [count, setCount] = useState(0);
   const [weatherSummary, setWeatherSummary] = useState<any>(null);
   const [loadingWeather, setLoadingWeather] = useState(false);
-  const [maxCardHeight, setMaxCardHeight] = useState<number | null>(null);
-  const tipContentRefs = useRef<(HTMLParagraphElement | null)[]>([]);
+  // Removed maxCardHeight state and tipContentRefs to fix height growing issue
 
   // Get current season based on month
   const getCurrentSeason = () => {
@@ -429,60 +428,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
     fetchWeatherSummary();
   }, [location]);
 
-  // Calculate and set the maximum card height
-  useEffect(() => {
-    if (tips.length > 0) {
-      // Reset refs array to match tips length
-      tipContentRefs.current = Array(tips.length).fill(null);
-
-      // Use setTimeout to ensure DOM is fully rendered
-      setTimeout(() => {
-        // Only calculate on mobile devices (or when simulating mobile in dev tools)
-        if (window.innerWidth <= 768) {
-          let maxHeight = 0;
-
-          // Find the maximum height among all tip content elements
-          tipContentRefs.current.forEach((ref) => {
-            if (ref) {
-              const height = ref.scrollHeight;
-              maxHeight = Math.max(maxHeight, height);
-            }
-          });
-
-          // Add some padding to the max height
-          if (maxHeight > 0) {
-            setMaxCardHeight(maxHeight + 16); // 16px extra for padding
-          }
-        } else {
-          // Reset max height on larger screens
-          setMaxCardHeight(null);
-        }
-      }, 100);
-    }
-
-    // Add resize listener to recalculate on window resize
-    const handleResize = () => {
-      if (window.innerWidth <= 768) {
-        // Recalculate on resize for mobile
-        let maxHeight = 0;
-        tipContentRefs.current.forEach((ref) => {
-          if (ref) {
-            const height = ref.scrollHeight;
-            maxHeight = Math.max(maxHeight, height);
-          }
-        });
-        if (maxHeight > 0) {
-          setMaxCardHeight(maxHeight + 16);
-        }
-      } else {
-        // Reset max height on larger screens
-        setMaxCardHeight(null);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [tips]);
+  // Removed height calculation logic that was causing cards to grow on touch
 
   useEffect(() => {
     if (!api) {
@@ -698,13 +644,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
               <Card className="overflow-hidden border border-border bg-background shadow-sm rounded-xl">
                 <CardContent className="p-4 pb-4 flex flex-col h-full">
                   <p
-                    ref={(el) => (tipContentRefs.current[index] = el)}
                     className="text-2xl text-black leading-relaxed mb-4 flex-grow"
-                    style={
-                      maxCardHeight
-                        ? { minHeight: `${maxCardHeight}px` }
-                        : undefined
-                    }
                     dangerouslySetInnerHTML={{
                       __html: highlightKeywords(tip.content),
                     }}

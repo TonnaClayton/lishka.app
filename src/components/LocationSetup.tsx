@@ -345,6 +345,7 @@ const MapSelection: React.FC<MapSelectionProps> = ({
     [number, number] | null
   >(null);
   const [locationName, setLocationName] = useState("");
+  const [mapKey, setMapKey] = useState(0); // Force re-render on location change
   const defaultPosition: [number, number] = currentLocation
     ? [currentLocation.lat, currentLocation.lng]
     : [35.8997, 14.5146]; // Use current location if available, otherwise Malta as default
@@ -354,57 +355,57 @@ const MapSelection: React.FC<MapSelectionProps> = ({
     if (currentLocation) {
       setSelectedPosition([currentLocation.lat, currentLocation.lng]);
       setLocationName(currentLocation.name);
+      // Force map re-render to prevent Leaflet position errors
+      setMapKey((prev) => prev + 1);
     }
   }, [currentLocation]);
 
   // Function to handle map click and set marker
   const MapClickHandler = () => {
-    const map = useMapEvents({
-      click: async (e) => {
-        const { lat, lng } = e.latlng;
-        setSelectedPosition([lat, lng]);
+    let map: any = null;
 
-        try {
-          // Generate a location name based on coordinates
-          const formattedLat = lat.toFixed(6);
-          const formattedLng = lng.toFixed(6);
-          setLocationName(`${formattedLat}, ${formattedLng}`);
+    try {
+      map = useMapEvents({
+        click: async (e) => {
+          try {
+            const { lat, lng } = e.latlng;
+            setSelectedPosition([lat, lng]);
 
-          // Try to get actual location name
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-          );
-          const data = await response.json();
-
-          // Extract city/town and country
-          const city =
-            data.address?.city ||
-            data.address?.town ||
-            data.address?.village ||
-            data.address?.hamlet ||
-            "";
-          const country = data.address?.country || "";
-
-          if (city || country) {
-            const name = [city, country].filter(Boolean).join(", ");
-            setLocationName(name);
+            // Generate a location name based on coordinates
+            const formattedLat = lat.toFixed(6);
+            const formattedLng = lng.toFixed(6);
+            setLocationName(`${formattedLat}, ${formattedLng}`);
+          } catch (error) {
+            console.error("Error handling map click:", error);
           }
-        } catch (error) {
-          console.error("Error generating location name:", error);
-        }
-      },
-    });
+        },
+      });
+    } catch (error) {
+      console.error("Error setting up map events:", error);
+    }
+
     return null;
   };
 
   return (
     <div className="relative h-full flex flex-col gap-y-6 justify-center items-center">
       <MapContainer
+        key={mapKey} // Force re-render to prevent Leaflet errors
         center={defaultPosition}
         zoom={currentLocation ? 15 : 13}
         style={{ height: "100%", width: "100%" }}
         className="flex"
         attributionControl={false}
+        whenReady={() => {
+          // Ensure map is properly initialized
+          setTimeout(() => {
+            try {
+              window.dispatchEvent(new Event("resize"));
+            } catch (error) {
+              console.warn("Map resize event failed:", error);
+            }
+          }, 100);
+        }}
       >
         <LayersControl position="topright">
           <LayersControl.BaseLayer name="Standard Map" checked>
@@ -421,17 +422,26 @@ const MapSelection: React.FC<MapSelectionProps> = ({
           </LayersControl.BaseLayer>
         </LayersControl>
         <MapClickHandler />
-        {selectedPosition && <Marker position={selectedPosition} />}
+        {selectedPosition && (
+          <Marker
+            key={`marker-${selectedPosition[0]}-${selectedPosition[1]}`}
+            position={selectedPosition}
+          />
+        )}
       </MapContainer>
       <div className="absolute bottom-4 left-0 right-0 flex justify-center z-[1000]">
         <Button
           onClick={() => {
             if (selectedPosition) {
-              onLocationSelect({
-                lat: selectedPosition[0],
-                lng: selectedPosition[1],
-                name: locationName,
-              });
+              try {
+                onLocationSelect({
+                  lat: selectedPosition[0],
+                  lng: selectedPosition[1],
+                  name: locationName,
+                });
+              } catch (error) {
+                console.error("Error selecting location:", error);
+              }
             }
           }}
           disabled={!selectedPosition}

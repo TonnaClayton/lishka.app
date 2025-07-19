@@ -1,16 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Ruler } from "lucide-react";
+import { ChevronLeft, Ruler, LogOut, Trash2 } from "lucide-react";
 
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
 import { Switch } from "./ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "./ui/alert-dialog";
 
 import BottomNav from "./BottomNav";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
+  const { signOut, deleteAccount } = useAuth();
   const [useImperialUnits, setUseImperialUnits] = useState<boolean>(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Get units preference from localStorage
   useEffect(() => {
@@ -31,6 +45,36 @@ const SettingsPage: React.FC = () => {
 
     // Dispatch a custom event to notify other components about the units change
     window.dispatchEvent(new Event("unitsChanged"));
+  };
+
+  const handleSignOut = async () => {
+    try {
+      console.log("[SettingsPage] Initiating sign out");
+      await signOut();
+      console.log("[SettingsPage] Sign out completed");
+    } catch (err) {
+      console.error("[SettingsPage] Sign out error:", err);
+      // Force redirect even if signOut fails
+      navigate("/login", { replace: true });
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      setIsDeleting(true);
+      console.log("[SettingsPage] Initiating account deletion");
+      const { error } = await deleteAccount();
+
+      if (error) {
+        console.error("[SettingsPage] Account deletion error:", error);
+        alert("Failed to delete account. Please try again or contact support.");
+      }
+    } catch (err) {
+      console.error("[SettingsPage] Account deletion error:", err);
+      alert("Failed to delete account. Please try again or contact support.");
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   return (
@@ -83,6 +127,76 @@ const SettingsPage: React.FC = () => {
                   </button>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* Account Section */}
+          <div className="space-y-2">
+            <h2 className="text-lg font-semibold">Account</h2>
+            <div className="bg-white rounded-lg shadow p-4 space-y-2">
+              <Button
+                variant="ghost"
+                className="w-full justify-start text-left text-black hover:bg-gray-50 hover:text-black"
+                onClick={handleSignOut}
+              >
+                <LogOut className="mr-2 h-5 w-5" />
+                Sign Out
+              </Button>
+
+              <Separator />
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start text-left text-red-600 hover:bg-red-50 hover:text-red-700"
+                    disabled={isDeleting}
+                  >
+                    <Trash2 className="mr-2 h-5 w-5" />
+                    {isDeleting ? "Deleting..." : "Delete Account"}
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[90vw] max-w-md bg-white rounded-lg shadow-lg p-8 z-50">
+                  <AlertDialogHeader>
+                    <div className="flex justify-center mb-4">
+                      <img
+                        src="/logo.svg"
+                        alt="Lishka Logo"
+                        className="h-8 w-auto"
+                      />
+                    </div>
+                    <AlertDialogTitle>Delete Account</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Are you sure you want to delete your account? This action
+                      cannot be undone and you will lose:
+                      <br />
+                      <br />
+                      • All your profile information
+                      <br />
+                      • Your fishing gear collection
+                      <br />
+                      • Your photo gallery
+                      <br />
+                      • All saved preferences and settings
+                      <br />
+                      • Your fishing history and data
+                      <br />
+                      <br />
+                      This action is permanent and cannot be reversed.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter className="gap-3">
+                    <AlertDialogCancel>Cancel</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAccount}
+                      className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                      disabled={isDeleting}
+                    >
+                      {isDeleting ? "Deleting..." : "Delete Account"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             </div>
           </div>
         </div>

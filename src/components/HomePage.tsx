@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { MapPin, User } from "lucide-react";
+import { MapPin, User, Menu } from "lucide-react";
 import BottomNav from "./BottomNav";
 import FishCard from "./FishCard";
 import { Button } from "./ui/button";
@@ -8,15 +8,16 @@ import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 
 import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
-import { getBlobImage } from "@/lib/blob-storage";
+
 import { getLocalFishName } from "@/lib/fishbase-api";
 import { getFishImageUrl } from "@/lib/fish-image-service";
 import { cacheApiResponse, getCachedApiResponse } from "@/lib/api-helpers";
 import LoadingDots from "./LoadingDots";
-import LocationSetup from "./LocationSetup";
+import LocationModal from "./LocationModal";
 import FishingTipsCarousel from "./FishingTipsCarousel";
 import OffshoreFishingLocations from "./OffshoreFishingLocations";
 import EmailVerificationBanner from "./EmailVerificationBanner";
+import GearRecommendationWidget from "./GearRecommendationWidget";
 
 // Import Dialog components from ui folder
 import { Dialog, DialogContent, DialogOverlay } from "./ui/dialog";
@@ -36,6 +37,7 @@ interface FishData {
   isToxic: boolean;
   dangerType?: string;
   image?: string;
+  probabilityScore?: number;
 }
 
 const HomePage: React.FC<HomePageProps> = ({
@@ -49,16 +51,35 @@ const HomePage: React.FC<HomePageProps> = ({
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [page, setPage] = useState(1);
-  const [isLocationSetupOpen, setIsLocationSetupOpen] = useState(false);
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
   const [toxicFishList, setToxicFishList] = useState<FishData[]>([]);
   const [loadingToxicFish, setLoadingToxicFish] = useState(false);
   const [userLocation, setUserLocation] = useState(() => {
     // Try to get location from localStorage first
     const savedLocation = localStorage.getItem("userLocation");
+    console.log(
+      "[HomePage] Initial userLocation from localStorage:",
+      savedLocation,
+    );
+
     // If no saved location, check if we need to set up a default
     if (!savedLocation) {
       const defaultLocation = "Malta";
+      console.log(
+        "[HomePage] No saved location, setting default:",
+        defaultLocation,
+      );
       localStorage.setItem("userLocation", defaultLocation);
+      // Also set the full location data
+      const defaultLocationFull = {
+        latitude: 35.8997,
+        longitude: 14.5146,
+        name: defaultLocation,
+      };
+      localStorage.setItem(
+        "userLocationFull",
+        JSON.stringify(defaultLocationFull),
+      );
       return defaultLocation;
     }
     return savedLocation || location;
@@ -402,7 +423,6 @@ const HomePage: React.FC<HomePageProps> = ({
           },
           body: JSON.stringify({
             model: "gpt-4",
-            max_tokens: 4000,
             messages: [
               {
                 role: "system",
@@ -554,37 +574,66 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
         );
 
         // Ensure each fish has required fields, clean scientific names, and is marked as toxic
-        toxicFishData = toxicFishData.map((fish) => {
-          let cleanScientificName = fish.scientificName || "Unknown";
+        toxicFishData = toxicFishData
+          .map((fish) => {
+            let cleanScientificName = fish.scientificName || "";
 
-          // Remove common abbreviations and ensure proper binomial nomenclature
-          if (cleanScientificName !== "Unknown") {
-            cleanScientificName = cleanScientificName
-              .replace(/\s+(spp?\.?|cf\.?|aff\.?)\s*$/i, "") // Remove spp., sp., cf., aff. at the end
-              .replace(/\s+(spp?\.?|cf\.?|aff\.?)\s+/gi, " ") // Remove these abbreviations in the middle
-              .trim();
+            // Remove common abbreviations and ensure proper binomial nomenclature
+            if (cleanScientificName) {
+              cleanScientificName = cleanScientificName
+                .replace(/\s+(spp?\.?|cf\.?|aff\.?)\s*$/i, "") // Remove spp., sp., cf., aff. at the end
+                .replace(/\s+(spp?\.?|cf\.?|aff\.?)\s+/gi, " ") // Remove these abbreviations in the middle
+                .trim();
 
-            // Ensure we have at least genus and species (two words)
-            const parts = cleanScientificName.split(/\s+/);
-            if (parts.length < 2) {
-              cleanScientificName = "Unknown";
-            } else if (parts.length > 2) {
-              // Keep only genus and species (first two words)
-              cleanScientificName = `${parts[0]} ${parts[1]}`;
+              // Ensure we have at least genus and species (two words)
+              const parts = cleanScientificName.split(/\s+/);
+              if (parts.length < 2) {
+                cleanScientificName = "";
+              } else if (parts.length > 2) {
+                // Keep only genus and species (first two words)
+                cleanScientificName = `${parts[0]} ${parts[1]}`;
+              }
             }
-          }
 
-          return {
-            name: cleanFishName(fish.name) || "Unknown Toxic Fish",
-            scientificName: cleanScientificName,
-            habitat: fish.habitat || "Unknown",
-            difficulty: fish.difficulty || "Expert",
-            season: fish.season || "Year-round",
-            dangerType: fish.dangerType || "Toxic - handle with caution",
-            isToxic: true,
-            probabilityScore: fish.probabilityScore || 0.5,
-          };
-        });
+            return {
+              name: cleanFishName(fish.name) || "Unknown Toxic Fish",
+              scientificName: cleanScientificName,
+              habitat: fish.habitat || "Unknown",
+              difficulty: fish.difficulty || "Expert",
+              season: fish.season || "Year-round",
+              dangerType: fish.dangerType || "Toxic - handle with caution",
+              isToxic: true,
+              probabilityScore: fish.probabilityScore || 0.5,
+            };
+          })
+          .filter((fish) => {
+            // Only keep fish with valid scientific names
+            const hasValidScientificName =
+              fish.scientificName &&
+              fish.scientificName !== "Unknown" &&
+              fish.scientificName !== "" &&
+              fish.scientificName.includes(" ") && // Must have at least genus and species
+              fish.scientificName.split(" ").length >= 2; // Must have at least 2 words
+
+            // Exclude algae and plant species from the toxic fish list
+            const isNotAlgae = !(
+              fish.name.toLowerCase().includes("algae") ||
+              fish.name.toLowerCase().includes("seaweed") ||
+              fish.name.toLowerCase().includes("kelp") ||
+              fish.name.toLowerCase().includes("phytoplankton") ||
+              fish.name.toLowerCase().includes("diatom") ||
+              fish.name.toLowerCase().includes("dinoflagellate") ||
+              fish.scientificName.toLowerCase().includes("algae") ||
+              fish.scientificName.toLowerCase().includes("phyto") ||
+              fish.scientificName.toLowerCase().includes("chlorophyta") ||
+              fish.scientificName.toLowerCase().includes("rhodophyta") ||
+              fish.scientificName.toLowerCase().includes("phaeophyta") ||
+              fish.scientificName.toLowerCase().includes("pyrrophyta") ||
+              fish.scientificName.toLowerCase().includes("bacillariophyta")
+            );
+
+            return hasValidScientificName && isNotAlgae;
+          });
       } catch (e) {
         console.error("Error parsing toxic fish data:", e);
         console.error("Raw toxic fish response:", content);
@@ -742,7 +791,20 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
               },
               {
                 role: "user",
-                content: `Generate a JSON array with exactly ${pageSize} fish species that are NATIVE and commonly found in the ${getLocationToSeaMapping(userLocation)} near ${cleanLocation} during ${currentMonth}. CRITICAL GEOGRAPHIC REQUIREMENT: Only include fish species that are naturally occurring and indigenous to the ${getLocationToSeaMapping(userLocation)} region. DO NOT include tropical, exotic, or non-native species that would not naturally be found in these waters. For example, if the location is Malta (Mediterranean Sea), do NOT include clownfish, angelfish, or other tropical species. Focus on temperate and regional species appropriate for the specific sea/ocean. Format: [{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat Description\",\"difficulty\":\"Easy\",\"season\":\"Season Info\",\"isToxic\":false}]. Mix of difficulty levels (Easy/Intermediate/Hard/Advanced/Expert). CRITICAL: scientificName must be complete binomial nomenclature (Genus species) - NEVER use spp., sp., cf., aff., or any abbreviations. Examples: \"Thunnus thynnus\" NOT \"Thunnus spp.\" or \"Thunnus sp.\". Each scientific name must be a specific species with both genus and species names. Return only the JSON array.`,
+                content: `Generate a JSON array with exactly ${pageSize} fish species that are NATIVE and commonly found in the ${getLocationToSeaMapping(userLocation)} near ${cleanLocation} during ${currentMonth}. 
+
+CRITICAL REQUIREMENTS:
+1. SCIENTIFIC NAME FIRST: Every fish MUST have a valid, complete binomial scientific name (Genus species). NO exceptions.
+2. NEVER return fish with "Unknown", "N/A", or missing scientific names.
+3. scientificName must be complete binomial nomenclature - NEVER use spp., sp., cf., aff., or any abbreviations.
+4. Examples: "Thunnus thynnus" NOT "Thunnus spp." or "Thunnus sp." or "Unknown".
+5. If you cannot provide a valid scientific name for a fish, DO NOT include it in the response.
+
+GEOGRAPHIC REQUIREMENT: Only include fish species that are naturally occurring and indigenous to the ${getLocationToSeaMapping(userLocation)} region. DO NOT include tropical, exotic, or non-native species that would not naturally be found in these waters. For example, if the location is Malta (Mediterranean Sea), do NOT include clownfish, angelfish, or other tropical species. Focus on temperate and regional species appropriate for the specific sea/ocean.
+
+Format: [{\"name\":\"Fish Name\",\"scientificName\":\"Genus species\",\"habitat\":\"Habitat Description\",\"difficulty\":\"Easy\",\"season\":\"Season Info\",\"isToxic\":false}]. Mix of difficulty levels (Easy/Intermediate/Hard/Advanced/Expert). 
+
+IMPORTANT: Each scientific name must be a specific, real species with both genus and species names. Verify the scientific name exists before including the fish. Return only the JSON array.`,
               },
             ],
             temperature: 0.1,
@@ -787,43 +849,54 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
 
         // No filtering - keep all fish as returned by OpenAI
 
-        // Ensure each fish has required fields and clean scientific names
-        fishData = fishData.map((fish) => {
-          let cleanScientificName = fish.scientificName || "Unknown";
+        // Filter out fish with invalid scientific names and ensure proper data
+        fishData = fishData
+          .map((fish) => {
+            let cleanScientificName = fish.scientificName || "";
 
-          // Remove common abbreviations and ensure proper binomial nomenclature
-          if (cleanScientificName !== "Unknown") {
-            cleanScientificName = cleanScientificName
-              .replace(/\s+(spp?\.?|cf\.?|aff\.?)\s*$/i, "") // Remove spp., sp., cf., aff. at the end
-              .replace(/\s+(spp?\.?|cf\.?|aff\.?)\s+/gi, " ") // Remove these abbreviations in the middle
-              .trim();
+            // Remove common abbreviations and ensure proper binomial nomenclature
+            if (cleanScientificName) {
+              cleanScientificName = cleanScientificName
+                .replace(/\s+(spp?\.?|cf\.?|aff\.?)\s*$/i, "") // Remove spp., sp., cf., aff. at the end
+                .replace(/\s+(spp?\.?|cf\.?|aff\.?)\s+/gi, " ") // Remove these abbreviations in the middle
+                .trim();
 
-            // Ensure we have at least genus and species (two words)
-            const parts = cleanScientificName.split(/\s+/);
-            if (parts.length < 2) {
-              cleanScientificName = "Unknown";
-            } else if (parts.length > 2) {
-              // Keep only genus and species (first two words)
-              cleanScientificName = `${parts[0]} ${parts[1]}`;
+              // Ensure we have at least genus and species (two words)
+              const parts = cleanScientificName.split(/\s+/);
+              if (parts.length < 2) {
+                cleanScientificName = "";
+              } else if (parts.length > 2) {
+                // Keep only genus and species (first two words)
+                cleanScientificName = `${parts[0]} ${parts[1]}`;
+              }
             }
-          }
 
-          return {
-            name: fish.name || "Unknown Fish",
-            scientificName: cleanScientificName,
-            habitat: fish.habitat || "Unknown",
-            difficulty: fish.difficulty || "Intermediate",
-            season: fish.season || "Year-round",
-            isToxic: Boolean(fish.isToxic),
-          };
-        });
+            return {
+              name: fish.name || "Unknown Fish",
+              scientificName: cleanScientificName,
+              habitat: fish.habitat || "Unknown",
+              difficulty: fish.difficulty || "Intermediate",
+              season: fish.season || "Year-round",
+              isToxic: Boolean(fish.isToxic),
+            };
+          })
+          .filter((fish) => {
+            // Only keep fish with valid scientific names
+            return (
+              fish.scientificName &&
+              fish.scientificName !== "Unknown" &&
+              fish.scientificName !== "" &&
+              fish.scientificName.includes(" ") && // Must have at least genus and species
+              fish.scientificName.split(" ").length >= 2 // Must have at least 2 words
+            );
+          });
       } catch (e) {
         console.error("Error parsing OpenAI response:", e);
         console.error("Raw response:", content);
 
         // Log the error details for debugging
         console.error("JSON parsing failed. Raw content:", content);
-        console.error("Cleaned content:", jsonStr);
+        console.error("Cleaned content:", cleanContent);
 
         // No fallback data - throw error to show user-friendly message
         throw new Error(
@@ -929,13 +1002,46 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
     }
   };
 
-  // Separate effect for location initialization
+  // Separate effect for location initialization and listening to changes
   useEffect(() => {
-    const savedLocation = localStorage.getItem("userLocation");
-    if (savedLocation) {
-      const validatedLocation = validateLocation(savedLocation);
-      setUserLocation(validatedLocation);
-    }
+    const loadLocation = () => {
+      const savedLocation = localStorage.getItem("userLocation");
+      console.log(
+        "[HomePage] Loading location from localStorage:",
+        savedLocation,
+      );
+
+      if (savedLocation) {
+        const validatedLocation = validateLocation(savedLocation);
+        console.log("[HomePage] Setting userLocation to:", validatedLocation);
+        setUserLocation(validatedLocation);
+      }
+    };
+
+    // Load location initially
+    loadLocation();
+
+    // Listen for location changes from other components
+    const handleLocationChange = (event: Event) => {
+      console.log("[HomePage] Location change event received", event);
+      loadLocation();
+    };
+
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === "userLocation" || event.key === "userLocationFull") {
+        console.log("[HomePage] Storage change detected for location", event);
+        loadLocation();
+      }
+    };
+
+    // Add event listeners
+    window.addEventListener("locationChanged", handleLocationChange);
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("locationChanged", handleLocationChange);
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   // Track previous location to avoid unnecessary cache clearing
@@ -1128,29 +1234,16 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
             <h1 className="text-xl font-semibold dark:text-white">Home</h1>
           </div>
           <div className="flex items-center gap-2">
+            {/* Location Information */}
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsLocationSetupOpen(true)}
-              className="flex items-center gap-1 text-[#0251FB] dark:text-primary hover:bg-blue-50 dark:hover:bg-blue-900/20"
+              className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1 h-auto"
+              onClick={() => setIsLocationModalOpen(true)}
             >
+              <span className="text-sm truncate">{userLocation}</span>
               <MapPin className="h-4 w-4" />
-              <span className="truncate">{userLocation}</span>
             </Button>
-            {/* User Avatar */}
-            <Avatar
-              className="w-8 h-8 cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={handleAvatarClick}
-            >
-              <AvatarImage src={profile?.avatar_url || undefined} />
-              <AvatarFallback className="text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300">
-                {profile?.full_name || user?.full_name ? (
-                  getInitials(profile?.full_name || user?.full_name || "")
-                ) : (
-                  <User className="w-4 h-4" />
-                )}
-              </AvatarFallback>
-            </Avatar>
           </div>
         </div>
       </header>
@@ -1159,6 +1252,11 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
         {/* Fishing Tips Carousel Section */}
         <div className="mb-8">
           <FishingTipsCarousel location={userLocation} />
+        </div>
+
+        {/* Gear Recommendation Widget */}
+        <div className="mb-8">
+          <GearRecommendationWidget />
         </div>
 
         {/* Toxic Fish Section */}
@@ -1196,9 +1294,9 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
               </div>
             )}
           {loadingToxicFish ? (
-            <div className="flex items-center justify-center py-8">
+            <div className="flex flex-col items-center justify-center py-8">
               <LoadingDots />
-              <p className="text-sm text-muted-foreground ml-2">
+              <p className="text-sm text-muted-foreground mt-2">
                 Loading toxic fish data...
               </p>
             </div>
@@ -1210,7 +1308,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
               </p>
             </div>
           ) : (
-            <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide">
+            <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-hide">
               {toxicFishList.map((fish, index) => (
                 <div
                   key={`toxic-${fish.scientificName}-${index}`}
@@ -1221,7 +1319,6 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
                     scientificName={fish.scientificName}
                     habitat={fish.habitat}
                     difficulty={fish.difficulty}
-                    season={fish.season}
                     isToxic={fish.isToxic}
                     dangerType={fish.dangerType}
                     image={fish.image}
@@ -1269,9 +1366,9 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
         </div>
 
         {loading ? (
-          <div className="flex flex-col items-center justify-center py-12">
+          <div className="flex flex-col items-center justify-center py-8">
             <LoadingDots />
-            <p className="text-sm text-muted-foreground mt-4">
+            <p className="text-sm text-muted-foreground mt-2">
               Finding fish in your area...
             </p>
           </div>
@@ -1296,7 +1393,6 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
                   scientificName={fish.scientificName}
                   habitat={fish.habitat}
                   difficulty={fish.difficulty}
-                  season={fish.season}
                   isToxic={fish.isToxic}
                   image={fish.image}
                   onClick={() => handleFishClick(fish)}
@@ -1313,10 +1409,12 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
                   className="w-full max-w-xs"
                 >
                   {loadingMore ? (
-                    <>
-                      <LoadingDots size={4} />
-                      <span className="ml-2">Loading...</span>
-                    </>
+                    <div className="flex flex-col items-center">
+                      <LoadingDots />
+                      <p className="text-sm text-muted-foreground mt-2">
+                        Loading...
+                      </p>
+                    </div>
                   ) : (
                     "Load More Fish"
                   )}
@@ -1328,31 +1426,52 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
       </div>
       {/* Bottom Navigation */}
       <BottomNav />
-      {/* Location Setup (shown conditionally) */}
-      {isLocationSetupOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
-          <div className="w-full max-w-md">
-            <LocationSetup
-              onLocationSet={(newLocation) => {
-                // Update the location in the title
-                setUserLocation(newLocation.name);
-                // Location is already saved to localStorage in LocationSetup component
-                // Refresh fish data with new location
-                onLocationChange(newLocation.name);
-                // Close the location setup after location is set
-                setIsLocationSetupOpen(false);
-              }}
-              isOverlay={true}
-              onClose={() => {
-                // Only allow closing if a location is already set
-                if (localStorage.getItem("userLocation")) {
-                  setIsLocationSetupOpen(false);
-                }
-              }}
-            />
-          </div>
-        </div>
-      )}
+      {/* Location Modal */}
+      <LocationModal
+        isOpen={isLocationModalOpen}
+        onClose={() => {
+          // Only allow closing if a location is already set
+          if (localStorage.getItem("userLocation")) {
+            setIsLocationModalOpen(false);
+          }
+        }}
+        onLocationSelect={(newLocation) => {
+          console.log(
+            "[HomePage] LocationModal onLocationSelect called with:",
+            newLocation,
+          );
+          // Update the location in the title
+          setUserLocation(newLocation.name);
+          // Refresh fish data with new location
+          onLocationChange(newLocation.name);
+        }}
+        currentLocation={(() => {
+          // Try to get actual coordinates from localStorage
+          try {
+            const savedLocationFull = localStorage.getItem("userLocationFull");
+            if (savedLocationFull) {
+              const locationData = JSON.parse(savedLocationFull);
+              return {
+                latitude: locationData.latitude || 35.8997,
+                longitude: locationData.longitude || 14.5146,
+                name: locationData.name || userLocation,
+              };
+            }
+          } catch (e) {
+            console.warn("Could not parse saved location coordinates");
+          }
+
+          // Fallback to default if no saved location
+          return userLocation
+            ? {
+                latitude: 35.8997, // Default coordinates
+                longitude: 14.5146,
+                name: userLocation,
+              }
+            : null;
+        })()}
+        title="Set Your Location"
+      />
     </div>
   );
 };

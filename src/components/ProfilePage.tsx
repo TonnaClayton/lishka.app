@@ -27,6 +27,9 @@ import {
   MoreVertical,
   Trash2,
   Weight,
+  Menu,
+  Share,
+  Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -37,6 +40,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +48,9 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,10 +66,101 @@ import {
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
-import { uploadImage, getBlobStorageStatus } from "@/lib/blob-storage";
+import {
+  uploadImageToSupabase,
+  getSupabaseStorageStatus,
+} from "@/lib/supabase-storage";
+import { supabase } from "@/lib/supabase";
 import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
+
+interface LocationData {
+  latitude: number;
+  longitude: number;
+  name: string;
+  countryCode?: string;
+}
+import {
+  uploadGearImage,
+  GearUploadResult,
+  GearMetadata,
+} from "@/lib/gear-upload-service";
 import FishInfoOverlay from "./FishInfoOverlay";
 import BottomNav from "./BottomNav";
+import LocationModal from "./LocationModal";
+
+// Fix Leaflet icon issue with proper CDN URLs
+if (typeof window !== "undefined") {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+    iconUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  });
+}
+
+// Map Click Handler Component for Edit Dialog
+const MapClickHandler = ({
+  onLocationSelect,
+}: {
+  onLocationSelect: (lat: number, lng: number, name: string) => void;
+}) => {
+  useMapEvents({
+    click: async (e) => {
+      const { lat, lng } = e.latlng;
+
+      // Attempt to get location name via reverse geocoding
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        );
+        const data = await response.json();
+
+        // Extract city/town and country from address details
+        const city =
+          data.address?.city ||
+          data.address?.town ||
+          data.address?.village ||
+          data.address?.hamlet ||
+          "";
+        const country = data.address?.country || "";
+
+        // Format as "city, country"
+        const name = [city, country].filter(Boolean).join(", ");
+
+        // Check if location is on sea or water
+        const isSeaLocation =
+          !city || // No city means likely on water
+          data.address?.sea ||
+          data.address?.ocean ||
+          data.address?.water ||
+          data.address?.bay;
+
+        let locationName;
+        if (isSeaLocation) {
+          // For sea locations, display only coordinates
+          const formattedLat = lat.toFixed(6);
+          const formattedLng = lng.toFixed(6);
+          locationName = `${formattedLat}, ${formattedLng}`;
+        } else {
+          locationName = name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        }
+
+        onLocationSelect(lat, lng, locationName);
+      } catch (error) {
+        console.error("Error getting location name:", error);
+        // Display coordinates as fallback
+        const formattedLat = lat.toFixed(6);
+        const formattedLng = lng.toFixed(6);
+        const locationName = `${formattedLat}, ${formattedLng}`;
+        onLocationSelect(lat, lng, locationName);
+      }
+    },
+  });
+  return null;
+};
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
@@ -103,12 +201,46 @@ const ProfilePage: React.FC = () => {
     (string | ImageMetadata)[]
   >([]);
   const [photosLoaded, setPhotosLoaded] = useState(false);
-  const [isSingleColumn, setIsSingleColumn] = useState(false);
+  const [isSingleColumn, setIsSingleColumn] = useState(() => {
+    // Initialize based on screen size - mobile should default to single column
+    if (typeof window !== "undefined") {
+      const isMobileScreen = window.innerWidth < 768;
+      const isMobileDevice =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent,
+        );
+      console.log("[ProfilePage] Initial column detection:", {
+        isMobileScreen,
+        isMobileDevice,
+        windowWidth: window.innerWidth,
+        defaultToSingle: isMobileScreen || isMobileDevice,
+      });
+      return isMobileScreen || isMobileDevice;
+    }
+    return false;
+  });
   const [imageLoadingStates, setImageLoadingStates] = useState<
     Record<string, boolean>
   >({});
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
   const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
+  const [uploadingGear, setUploadingGear] = useState(false);
+  const [validationErrors, setValidationErrors] = useState<{
+    username?: string;
+    email?: string;
+  }>({});
+  const [checkingUsername, setCheckingUsername] = useState(false);
+  const [showEditAIDialog, setShowEditAIDialog] = useState(false);
+  const [editingPhotoIndex, setEditingPhotoIndex] = useState<number | null>(
+    null,
+  );
+  const [editingMetadata, setEditingMetadata] = useState<ImageMetadata | null>(
+    null,
+  );
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [tempLocationData, setTempLocationData] = useState<LocationData | null>(
+    null,
+  );
 
   // Load photos from database and localStorage on component mount
   useEffect(() => {
@@ -217,11 +349,34 @@ const ProfilePage: React.FC = () => {
   // Listen for photo upload events from BottomNav
   useEffect(() => {
     const handlePhotoUploaded = (event: CustomEvent) => {
+      console.log(
+        "🔍 [PROFILE PAGE] Photo upload event received:",
+        event.detail,
+      );
       const { photoUrl, metadata } = event.detail;
+
+      console.log("🔍 [PROFILE PAGE] Event detail breakdown:", {
+        hasPhotoUrl: !!photoUrl,
+        photoUrl,
+        hasMetadata: !!metadata,
+        metadata,
+        metadataType: typeof metadata,
+        metadataKeys: metadata ? Object.keys(metadata) : null,
+        hasFishInfo: !!metadata?.fishInfo,
+        fishInfo: metadata?.fishInfo,
+      });
+
       if (photoUrl) {
         // Add to uploaded photos list (newest first)
         setUploadedPhotos((prev) => {
           const newPhoto = metadata ? { ...metadata, url: photoUrl } : photoUrl;
+          console.log("🔍 [PROFILE PAGE] Adding new photo to list:", {
+            newPhoto,
+            hasMetadata: !!metadata,
+            hasFishInfo: !!metadata?.fishInfo,
+            fishName: metadata?.fishInfo?.name,
+            previousPhotosCount: prev.length,
+          });
           const newPhotos = [newPhoto, ...prev];
           return newPhotos;
         });
@@ -254,6 +409,7 @@ const ProfilePage: React.FC = () => {
   const [formData, setFormData] = useState({
     full_name: profile?.full_name || "",
     username: profile?.username || "",
+    email: user?.email || "",
     bio: profile?.bio || "",
     location: profile?.location || "",
     fishing_experience: profile?.fishing_experience || "",
@@ -267,6 +423,7 @@ const ProfilePage: React.FC = () => {
       setFormData({
         full_name: profile.full_name || "",
         username: profile.username || "",
+        email: user?.email || "",
         bio: profile.bio || "",
         location: profile.location || "",
         fishing_experience: profile.fishing_experience || "",
@@ -274,7 +431,7 @@ const ProfilePage: React.FC = () => {
         favorite_fish_species: profile.favorite_fish_species || [],
       });
     }
-  }, [profile]);
+  }, [profile, user]);
 
   // Update border position when active tab changes
   const updateBorderPosition = React.useCallback(() => {
@@ -337,18 +494,180 @@ const ProfilePage: React.FC = () => {
     return () => clearTimeout(timeoutId);
   }, [updateBorderPosition]);
 
-  // Update border position on window resize
+  // Update border position on window resize and handle mobile layout
   useEffect(() => {
     const handleResize = () => {
       requestAnimationFrame(updateBorderPosition);
+
+      // Auto-adjust column layout for mobile screens
+      const isMobileScreen = window.innerWidth < 768;
+      const isMobileDevice =
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+          navigator.userAgent,
+        );
+
+      console.log("[ProfilePage] Window resize detected:", {
+        windowWidth: window.innerWidth,
+        isMobileScreen,
+        isMobileDevice,
+        currentIsSingleColumn: isSingleColumn,
+      });
+
+      // Force single column on mobile screens
+      if (isMobileScreen && !isSingleColumn) {
+        console.log("[ProfilePage] Forcing single column for mobile screen");
+        setIsSingleColumn(true);
+      }
     };
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [updateBorderPosition]);
+  }, [updateBorderPosition, isSingleColumn]);
 
   const handleInputChange = (field: string, value: string | string[]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+
+    // Clear validation errors when user starts typing
+    if (validationErrors[field as keyof typeof validationErrors]) {
+      setValidationErrors((prev) => ({ ...prev, [field]: undefined }));
+    }
+
+    // Validate username format in real-time
+    if (field === "username" && typeof value === "string") {
+      validateUsernameFormat(value);
+    }
+  };
+
+  // Username format validation
+  const validateUsernameFormat = (username: string) => {
+    if (!username) {
+      setValidationErrors((prev) => ({ ...prev, username: undefined }));
+      return true;
+    }
+
+    // Check format: lowercase letters, numbers, dots, and underscores only
+    const usernameRegex = /^[a-z0-9._]+$/;
+    if (!usernameRegex.test(username)) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        username:
+          "Username can only contain lowercase letters, numbers, dots (.) and underscores (_)",
+      }));
+      return false;
+    }
+
+    // Check for consecutive dots or underscores
+    if (username.includes("..") || username.includes("__")) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        username: "Username cannot have consecutive dots or underscores",
+      }));
+      return false;
+    }
+
+    // Check minimum length
+    if (username.length < 3) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        username: "Username must be at least 3 characters long",
+      }));
+      return false;
+    }
+
+    // Check maximum length
+    if (username.length > 30) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        username: "Username must be less than 30 characters",
+      }));
+      return false;
+    }
+
+    setValidationErrors((prev) => ({ ...prev, username: undefined }));
+    return true;
+  };
+
+  // Check username uniqueness
+  const checkUsernameUniqueness = async (username: string) => {
+    if (!username || !validateUsernameFormat(username)) {
+      return false;
+    }
+
+    // Don't check if it's the same as current username
+    if (username === profile?.username) {
+      return true;
+    }
+
+    setCheckingUsername(true);
+    console.log("[ProfilePage] Checking username uniqueness for:", username);
+
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", username)
+        .limit(1);
+
+      console.log("[ProfilePage] Database query result:", {
+        data,
+        error,
+        username,
+      });
+
+      if (error) {
+        console.error("Error checking username uniqueness:", error);
+        setValidationErrors((prev) => ({
+          ...prev,
+          username: "Error checking username availability",
+        }));
+        return false;
+      }
+
+      if (data && data.length > 0) {
+        console.log(
+          "[ProfilePage] Username already exists in database:",
+          username,
+        );
+        setValidationErrors((prev) => ({
+          ...prev,
+          username: "This username is already taken",
+        }));
+        return false;
+      }
+
+      console.log("[ProfilePage] Username is available:", username);
+      setValidationErrors((prev) => ({ ...prev, username: undefined }));
+      return true;
+    } catch (err) {
+      console.error("Username uniqueness check failed:", err);
+      setValidationErrors((prev) => ({
+        ...prev,
+        username: "Error checking username availability",
+      }));
+      return false;
+    } finally {
+      setCheckingUsername(false);
+    }
+  };
+
+  // Validate email format
+  const validateEmailFormat = (email: string) => {
+    if (!email) {
+      setValidationErrors((prev) => ({ ...prev, email: "Email is required" }));
+      return false;
+    }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setValidationErrors((prev) => ({
+        ...prev,
+        email: "Please enter a valid email address",
+      }));
+      return false;
+    }
+
+    setValidationErrors((prev) => ({ ...prev, email: undefined }));
+    return true;
   };
 
   const handleAvatarClick = () => {
@@ -525,11 +844,404 @@ const ProfilePage: React.FC = () => {
   };
 
   const handlePhotoUpload = () => {
-    photoInputRef.current?.click();
+    console.log("[ProfilePage] Add photo button clicked - mobile optimized");
+    console.log("[ProfilePage] photoInputRef.current:", photoInputRef.current);
+    console.log("[ProfilePage] User agent:", navigator.userAgent);
+    console.log(
+      "[ProfilePage] Is mobile:",
+      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+        navigator.userAgent,
+      ),
+    );
+
+    if (photoInputRef.current) {
+      try {
+        // For mobile devices, use a more direct approach
+        const isMobile =
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent,
+          );
+
+        if (isMobile) {
+          console.log(
+            "[ProfilePage] Mobile device detected - using direct click",
+          );
+          // Reset the input value first to ensure change event fires
+          photoInputRef.current.value = "";
+          // Use setTimeout to ensure the click happens after any event bubbling
+          setTimeout(() => {
+            if (photoInputRef.current) {
+              photoInputRef.current.click();
+              console.log("[ProfilePage] Mobile file input clicked");
+            }
+          }, 10);
+        } else {
+          console.log("[ProfilePage] Desktop device - using standard click");
+          photoInputRef.current.click();
+        }
+
+        console.log("[ProfilePage] File input click triggered successfully");
+      } catch (error) {
+        console.error("[ProfilePage] Error clicking file input:", error);
+      }
+    } else {
+      console.error("[ProfilePage] photoInputRef.current is null");
+    }
   };
 
   const handleImageClick = () => {
-    setIsSingleColumn(!isSingleColumn);
+    const newColumnState = !isSingleColumn;
+    setIsSingleColumn(newColumnState);
+  };
+
+  const handleGearUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      setError("Gear image must be less than 10MB");
+      e.target.value = "";
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file");
+      e.target.value = "";
+      return;
+    }
+
+    setUploadingGear(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      console.log("[ProfilePage] Starting gear upload:", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+
+      // Upload and process gear image
+      const result = await uploadGearImage(file);
+
+      if (!result.success || !result.metadata) {
+        throw new Error(result.error || "Failed to upload gear");
+      }
+
+      console.log("[ProfilePage] Gear upload successful:", result);
+
+      // Create gear item from metadata
+      const gearItem = {
+        id: `gear_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        name: result.metadata.gearInfo?.name || "Unknown Gear",
+        category: mapGearTypeToCategory(
+          result.metadata.gearInfo?.type || "other",
+        ),
+        description: result.metadata.gearInfo?.type || "",
+        brand: result.metadata.gearInfo?.brand || "",
+        model: result.metadata.gearInfo?.model || "",
+        imageUrl: result.metadata.url,
+        timestamp: result.metadata.timestamp,
+        userConfirmed: false,
+        gearType: result.metadata.gearInfo?.type || "unknown",
+        aiConfidence: result.metadata.gearInfo?.confidence || 0,
+        // Enhanced fields
+        size: result.metadata.gearInfo?.size || "",
+        weight: result.metadata.gearInfo?.weight || "",
+        targetFish: result.metadata.gearInfo?.targetFish || "",
+        fishingTechnique: result.metadata.gearInfo?.fishingTechnique || "",
+        weatherConditions: result.metadata.gearInfo?.weatherConditions || "",
+        waterConditions: result.metadata.gearInfo?.waterConditions || "",
+        seasonalUsage: result.metadata.gearInfo?.seasonalUsage || "",
+        colorPattern: result.metadata.gearInfo?.colorPattern || "",
+        actionType: result.metadata.gearInfo?.actionType || "",
+        depthRange: result.metadata.gearInfo?.depthRange || "",
+        versatility: result.metadata.gearInfo?.versatility || "",
+        compatibleGear: result.metadata.gearInfo?.compatibleGear || "",
+        // Debug information
+        rawJsonResponse: result.metadata.gearInfo?.rawJsonResponse || "",
+        openaiPrompt: result.metadata.gearInfo?.openaiPrompt || "",
+      };
+
+      // Add to user's gear collection
+      const currentGear = profile?.gear_items || [];
+      const updatedGear = [gearItem, ...currentGear];
+
+      // Update profile with new gear
+      const { error: updateError } = await updateProfile({
+        gear_items: updatedGear,
+      });
+
+      if (updateError) {
+        console.error(
+          "[ProfilePage] Error updating profile with gear:",
+          updateError,
+        );
+        setError("Failed to save gear. Please try again.");
+        return;
+      }
+
+      console.log("[ProfilePage] Gear saved successfully");
+
+      // Show success message with gear info
+      if (
+        result.metadata.gearInfo &&
+        result.metadata.gearInfo.name !== "Unknown Gear"
+      ) {
+        const successMsg = `Gear uploaded! Identified: ${result.metadata.gearInfo.name} (${Math.round((result.metadata.gearInfo.confidence || 0) * 100)}% confident)`;
+        setSuccess(successMsg);
+      } else {
+        setSuccess("Gear uploaded successfully!");
+      }
+      setTimeout(() => setSuccess(null), 5000);
+    } catch (err) {
+      console.error("[ProfilePage] Gear upload failed:", err);
+      if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError("Failed to upload gear. Please try again.");
+      }
+    } finally {
+      setUploadingGear(false);
+      // Reset file input
+      e.target.value = "";
+    }
+  };
+
+  // Map gear type to category
+  const mapGearTypeToCategory = (gearType: string): string => {
+    const type = gearType.toLowerCase();
+    if (
+      type.includes("rod") ||
+      type.includes("reel") ||
+      type.includes("combo")
+    ) {
+      return "rods-reels";
+    } else if (
+      type.includes("lure") ||
+      type.includes("jig") ||
+      type.includes("spoon")
+    ) {
+      return "lures-jigs";
+    } else if (type.includes("bait") || type.includes("chum")) {
+      return "bait-chum";
+    } else if (
+      type.includes("electronic") ||
+      type.includes("finder") ||
+      type.includes("gps")
+    ) {
+      return "electronics";
+    } else if (
+      type.includes("accessory") ||
+      type.includes("hook") ||
+      type.includes("sinker") ||
+      type.includes("swivel")
+    ) {
+      return "accessories";
+    } else {
+      return "other";
+    }
+  };
+
+  const handleSharePhoto = async (index: number) => {
+    try {
+      const photo = uploadedPhotos[index];
+      let photoUrl: string;
+      let metadata: ImageMetadata | null = null;
+
+      // Simplified extraction - all photos should be ImageMetadata objects now
+      if (typeof photo === "string") {
+        console.warn(
+          `[ProfilePage] Legacy string photo in share function:`,
+          photo,
+        );
+        if (photo.startsWith("{") && photo.includes('"url"')) {
+          try {
+            const parsed = JSON.parse(photo);
+            photoUrl = parsed.url || photo;
+            metadata = parsed;
+          } catch {
+            photoUrl = photo;
+          }
+        } else {
+          photoUrl = photo;
+        }
+      } else {
+        photoUrl = photo.url || String(photo);
+        metadata = photo as ImageMetadata;
+      }
+
+      // Check if Web Share API is available
+      if (navigator.share) {
+        try {
+          // Fetch the image as a blob for sharing
+          const response = await fetch(photoUrl);
+          const blob = await response.blob();
+          const file = new File([blob], "fish-photo.jpg", { type: blob.type });
+
+          let shareText = "Check out this fish photo from Lishka!";
+          if (
+            metadata?.fishInfo?.name &&
+            metadata.fishInfo.name !== "Unknown"
+          ) {
+            shareText = `Check out this ${metadata.fishInfo.name} I caught! 🎣`;
+            if (
+              metadata.fishInfo.estimatedSize &&
+              metadata.fishInfo.estimatedSize !== "Unknown"
+            ) {
+              shareText += ` Size: ${metadata.fishInfo.estimatedSize}`;
+            }
+            if (
+              metadata.fishInfo.estimatedWeight &&
+              metadata.fishInfo.estimatedWeight !== "Unknown"
+            ) {
+              shareText += ` Weight: ${metadata.fishInfo.estimatedWeight}`;
+            }
+          }
+
+          await navigator.share({
+            title: "My Fish Catch",
+            text: shareText,
+            files: [file],
+          });
+
+          console.log("[ProfilePage] Photo shared successfully");
+        } catch (shareError) {
+          console.error("[ProfilePage] Error sharing photo:", shareError);
+          // Fallback to copying URL
+          await navigator.clipboard.writeText(photoUrl);
+          setSuccess("Photo URL copied to clipboard!");
+          setTimeout(() => setSuccess(null), 3000);
+        }
+      } else {
+        // Fallback: copy URL to clipboard
+        try {
+          await navigator.clipboard.writeText(photoUrl);
+          setSuccess("Photo URL copied to clipboard!");
+          setTimeout(() => setSuccess(null), 3000);
+        } catch (clipboardError) {
+          console.error(
+            "[ProfilePage] Error copying to clipboard:",
+            clipboardError,
+          );
+          setError("Unable to share photo. Please try again.");
+        }
+      }
+
+      // Close the menu
+      setOpenMenuIndex(null);
+    } catch (err) {
+      console.error("[ProfilePage] Error sharing photo:", err);
+      setError("Failed to share photo. Please try again.");
+      setOpenMenuIndex(null);
+    }
+  };
+
+  const handleEditAIInfo = (index: number) => {
+    const photo = uploadedPhotos[index];
+    let metadata: ImageMetadata | null = null;
+
+    // Simplified extraction - all photos should be ImageMetadata objects now
+    if (typeof photo === "string") {
+      console.warn(
+        `[ProfilePage] Legacy string photo in edit function:`,
+        photo,
+      );
+      if (photo.startsWith("{") && photo.includes('"url"')) {
+        try {
+          const parsed = JSON.parse(photo);
+          metadata = parsed;
+        } catch {
+          // Create default metadata structure for legacy data
+          metadata = {
+            url: photo,
+            timestamp: new Date().toISOString(),
+            fishInfo: {
+              name: "Unknown",
+              confidence: 0,
+              estimatedSize: "Unknown",
+              estimatedWeight: "Unknown",
+            },
+            location: null,
+          };
+        }
+      } else {
+        // Create default metadata structure for plain URLs
+        metadata = {
+          url: photo,
+          timestamp: new Date().toISOString(),
+          fishInfo: {
+            name: "Unknown",
+            confidence: 0,
+            estimatedSize: "Unknown",
+            estimatedWeight: "Unknown",
+          },
+          location: null,
+        };
+      }
+    } else {
+      metadata = photo as ImageMetadata;
+    }
+
+    setEditingPhotoIndex(index);
+    setEditingMetadata(metadata);
+    setShowEditAIDialog(true);
+    setOpenMenuIndex(null);
+  };
+
+  const handleLocationSelect = (location: LocationData) => {
+    setTempLocationData(location);
+    if (editingMetadata) {
+      setEditingMetadata({
+        ...editingMetadata,
+        location: {
+          latitude: location.latitude,
+          longitude: location.longitude,
+          address: location.name,
+        },
+      });
+    }
+    setShowLocationModal(false);
+  };
+
+  const handleSaveEditedAIInfo = async () => {
+    if (editingPhotoIndex === null || !editingMetadata) return;
+
+    try {
+      setLoading(true);
+      setError(null);
+
+      // Update the photo in the array
+      const updatedPhotos = [...uploadedPhotos];
+      updatedPhotos[editingPhotoIndex] = editingMetadata;
+      setUploadedPhotos(updatedPhotos);
+
+      // Update the database
+      const { error } = await updateProfile({ gallery_photos: updatedPhotos });
+
+      if (error) {
+        console.error("[ProfilePage] Error updating AI info:", error);
+        setError("Failed to update AI info. Please try again.");
+        return;
+      }
+
+      console.log("[ProfilePage] AI info updated successfully");
+      setSuccess("AI info updated successfully!");
+      setTimeout(() => setSuccess(null), 3000);
+
+      // Close dialog and reset state
+      setShowEditAIDialog(false);
+      setEditingPhotoIndex(null);
+      setEditingMetadata(null);
+      setTempLocationData(null);
+    } catch (err) {
+      console.error("[ProfilePage] Error saving edited AI info:", err);
+      setError("Failed to update AI info. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDeletePhoto = async (index: number) => {
@@ -622,15 +1334,14 @@ const ProfilePage: React.FC = () => {
           type: file.type,
         });
 
-        // Check blob storage configuration
-        const storageStatus = getBlobStorageStatus();
-        console.log("[ProfilePage] Blob storage status:", storageStatus);
+        // Check Supabase storage configuration
+        const storageStatus = getSupabaseStorageStatus();
+        console.log("[ProfilePage] Supabase storage status:", storageStatus);
 
         if (!storageStatus.configured) {
-          const errorMessage =
-            storageStatus.error || "Blob storage is not properly configured";
+          const errorMessage = "Supabase storage is not properly configured";
           console.error(
-            "[ProfilePage] Blob storage not configured:",
+            "[ProfilePage] Supabase storage not configured:",
             errorMessage,
           );
           throw new Error(errorMessage);
@@ -663,16 +1374,19 @@ const ProfilePage: React.FC = () => {
         });
 
         // Upload the photo with timeout
-        console.log("[ProfilePage] Uploading photo to blob storage...");
+        console.log("[ProfilePage] Uploading photo to Supabase storage...");
         const photoUrl = await Promise.race([
-          uploadImage(file),
+          uploadImageToSupabase(file, "fish-photos"),
           new Promise<never>((_, reject) => {
             setTimeout(() => {
-              reject(new Error("Photo upload timed out"));
+              reject(new Error("Supabase photo upload timed out"));
             }, 30000);
           }),
         ]);
-        console.log("[ProfilePage] Photo uploaded successfully:", photoUrl);
+        console.log(
+          "[ProfilePage] Photo uploaded successfully to Supabase:",
+          photoUrl,
+        );
 
         // Create complete metadata object with URL
         const completeMetadata: ImageMetadata = {
@@ -744,19 +1458,62 @@ const ProfilePage: React.FC = () => {
   const handleSave = async () => {
     setLoading(true);
     setError(null);
+    setValidationErrors({});
 
     try {
+      // Validate email format
+      if (!validateEmailFormat(formData.email)) {
+        setLoading(false);
+        return;
+      }
+
+      // Validate and check username uniqueness if username is provided
+      if (formData.username) {
+        const isUsernameValid = await checkUsernameUniqueness(
+          formData.username,
+        );
+        if (!isUsernameValid) {
+          setLoading(false);
+          return;
+        }
+      }
+
       console.log("Saving profile with data:", formData);
-      const { error } = await updateProfile(formData);
+
+      // Separate email update from profile update
+      const { email, ...profileUpdates } = formData;
+
+      // Update email if it has changed
+      if (email !== user?.email) {
+        console.log("Updating email from", user?.email, "to", email);
+        const { error: emailError } = await supabase.auth.updateUser({ email });
+
+        if (emailError) {
+          console.error("Email update error:", emailError);
+          setError(emailError.message || "Failed to update email");
+          setLoading(false);
+          return;
+        }
+
+        // Show message about email confirmation
+        setSuccess(
+          "Profile updated! Please check your new email address to confirm the change.",
+        );
+      }
+
+      // Update profile data
+      const { error } = await updateProfile(profileUpdates);
       console.log("Update profile result:", { error });
 
       if (error) {
         console.error("Profile update error:", error);
         setError(error.message || "Failed to update profile");
       } else {
-        setSuccess("Profile updated successfully!");
+        if (email === user?.email) {
+          setSuccess("Profile updated successfully!");
+        }
         setIsEditing(false);
-        setTimeout(() => setSuccess(null), 3000);
+        setTimeout(() => setSuccess(null), 5000);
       }
     } catch (err) {
       console.error("Profile save error:", err);
@@ -837,13 +1594,22 @@ const ProfilePage: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             {!isEditing ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsEditing(true)}
-              >
-                <Edit3 className="h-5 w-5" />
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Edit3 className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/menu")}
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </>
             ) : (
               <div className="flex gap-2">
                 <Button
@@ -851,9 +1617,11 @@ const ProfilePage: React.FC = () => {
                   size="icon"
                   onClick={() => {
                     setIsEditing(false);
+                    setValidationErrors({});
                     setFormData({
                       full_name: profile?.full_name || "",
                       username: profile?.username || "",
+                      email: user?.email || "",
                       bio: profile.bio || "",
                       location: profile?.location || "",
                       fishing_experience: profile?.fishing_experience || "",
@@ -869,7 +1637,12 @@ const ProfilePage: React.FC = () => {
                   variant="ghost"
                   size="icon"
                   onClick={handleSave}
-                  disabled={loading}
+                  disabled={
+                    loading ||
+                    checkingUsername ||
+                    !!validationErrors.username ||
+                    !!validationErrors.email
+                  }
                 >
                   <Save className="h-5 w-5" />
                 </Button>
@@ -926,7 +1699,7 @@ const ProfilePage: React.FC = () => {
                   />
                 </div>
 
-                {/* Name and Username */}
+                {/* Name, Username, and Email */}
                 {isEditing ? (
                   <div className="w-full space-y-3">
                     <div>
@@ -941,15 +1714,94 @@ const ProfilePage: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <Label htmlFor="username">Username</Label>
+                      <Label htmlFor="email">Email Address</Label>
                       <Input
-                        id="username"
-                        value={formData.username}
+                        id="email"
+                        type="email"
+                        value={formData.email}
                         onChange={(e) =>
-                          handleInputChange("username", e.target.value)
+                          handleInputChange("email", e.target.value)
                         }
-                        placeholder="Choose a username"
+                        placeholder="Enter your email address"
                       />
+                      {validationErrors.email && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {validationErrors.email}
+                        </p>
+                      )}
+                      {formData.email !== user?.email && (
+                        <p className="text-sm text-blue-600 mt-1">
+                          ⚠️ Changing your email will require confirmation
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="username">Username</Label>
+                      <div className="relative">
+                        <Input
+                          id="username"
+                          value={formData.username}
+                          onChange={(e) => {
+                            const newUsername = e.target.value.toLowerCase();
+                            handleInputChange("username", newUsername);
+                            // Trigger uniqueness check after a short delay
+                            if (
+                              newUsername &&
+                              newUsername !== profile?.username
+                            ) {
+                              setTimeout(() => {
+                                if (formData.username === newUsername) {
+                                  checkUsernameUniqueness(newUsername);
+                                }
+                              }, 500);
+                            }
+                          }}
+                          placeholder="Choose a username (lowercase, dots, underscores allowed)"
+                          className={cn(
+                            validationErrors.username
+                              ? "border-red-500 focus-visible:ring-red-500"
+                              : formData.username &&
+                                  !validationErrors.username &&
+                                  !checkingUsername &&
+                                  formData.username !== profile?.username
+                                ? "border-green-500 focus-visible:ring-green-500"
+                                : "",
+                          )}
+                        />
+                        {checkingUsername && (
+                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                            <span className="text-xs text-blue-600 font-medium">
+                              Checking...
+                            </span>
+                          </div>
+                        )}
+                        {!checkingUsername &&
+                          formData.username &&
+                          !validationErrors.username &&
+                          formData.username !== profile?.username && (
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                              <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                                <Check className="w-3 h-3 text-white" />
+                              </div>
+                              <span className="text-xs text-green-600 font-medium">
+                                Available
+                              </span>
+                            </div>
+                          )}
+                      </div>
+                      {validationErrors.username && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <X className="w-4 h-4 text-red-500" />
+                          <p className="text-sm text-red-600">
+                            {validationErrors.username}
+                          </p>
+                        </div>
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">
+                        Only lowercase letters, numbers, dots (.) and
+                        underscores (_) allowed
+                      </p>
                     </div>
                   </div>
                 ) : (
@@ -981,6 +1833,7 @@ const ProfilePage: React.FC = () => {
               variant="outline"
               className="flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-auto"
               style={{ backgroundColor: "#025DFB0D" }}
+              onClick={() => navigate("/my-gear")}
             >
               My gear
             </Button>
@@ -988,6 +1841,14 @@ const ProfilePage: React.FC = () => {
               variant="outline"
               className="flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-auto flex items-center justify-center gap-2"
               style={{ backgroundColor: "#025DFB0D" }}
+              onClick={() => {
+                // Trigger file input for gear upload
+                const gearInput = document.createElement("input");
+                gearInput.type = "file";
+                gearInput.accept = "image/*";
+                gearInput.onchange = (e) => handleGearUpload(e as any);
+                gearInput.click();
+              }}
             >
               Add gear
               <Plus className="w-5 h-5" />
@@ -1052,9 +1913,13 @@ const ProfilePage: React.FC = () => {
                 <button
                   onClick={handlePhotoUpload}
                   disabled={uploadingPhoto}
-                  className={`bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex-col relative transition-colors flex items-center justify-center disabled:opacity-50 ${
+                  className={`bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex-col relative transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation ${
                     isSingleColumn ? "h-20 rounded-lg mb-2" : "aspect-square"
                   }`}
+                  style={{
+                    WebkitTapHighlightColor: "transparent",
+                    touchAction: "manipulation",
+                  }}
                 >
                   {uploadingPhoto ? (
                     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600 dark:border-gray-300" />
@@ -1078,11 +1943,16 @@ const ProfilePage: React.FC = () => {
 
                 {/* Show uploaded photos */}
                 {uploadedPhotos.map((photo, index) => {
-                  // Extract URL properly - handle both string URLs and metadata objects
+                  // All photos should now be ImageMetadata objects - simplified parsing
                   let photoUrl: string;
                   let metadata: ImageMetadata | null = null;
 
+                  // Handle legacy data that might still be strings
                   if (typeof photo === "string") {
+                    console.warn(
+                      `[ProfilePage] Legacy string photo detected at index ${index}:`,
+                      photo,
+                    );
                     // Check if it's a JSON string that needs parsing
                     if (photo.startsWith("{") && photo.includes('"url"')) {
                       try {
@@ -1090,24 +1960,47 @@ const ProfilePage: React.FC = () => {
                         photoUrl = parsed.url || photo;
                         metadata = parsed;
                         console.log(
-                          `[ProfilePage] Parsed metadata for photo ${index}:`,
+                          `[ProfilePage] Parsed legacy metadata for photo ${index}:`,
                           metadata,
                         );
                       } catch (parseError) {
                         console.warn(
-                          `[ProfilePage] Failed to parse photo metadata at index ${index}:`,
+                          `[ProfilePage] Failed to parse legacy photo metadata at index ${index}:`,
                           parseError,
                         );
                         photoUrl = photo;
+                        // Create minimal metadata for legacy string URLs
+                        metadata = {
+                          url: photo,
+                          timestamp: new Date().toISOString(),
+                          fishInfo: {
+                            name: "Unknown",
+                            estimatedSize: "Unknown",
+                            estimatedWeight: "Unknown",
+                            confidence: 0,
+                          },
+                        };
                       }
                     } else {
                       photoUrl = photo;
+                      // Create minimal metadata for plain string URLs
+                      metadata = {
+                        url: photo,
+                        timestamp: new Date().toISOString(),
+                        fishInfo: {
+                          name: "Unknown",
+                          estimatedSize: "Unknown",
+                          estimatedWeight: "Unknown",
+                          confidence: 0,
+                        },
+                      };
                     }
                   } else {
+                    // Standard case - photo is already an ImageMetadata object
                     photoUrl = photo.url || String(photo);
                     metadata = photo as ImageMetadata;
                     console.log(
-                      `[ProfilePage] Direct metadata for photo ${index}:`,
+                      `[ProfilePage] Standard metadata for photo ${index}:`,
                       {
                         hasMetadata: !!metadata,
                         fishInfo: metadata?.fishInfo,
@@ -1118,34 +2011,6 @@ const ProfilePage: React.FC = () => {
                       },
                     );
                   }
-
-                  // Debug logging for overlay conditions
-                  const shouldShowOverlay =
-                    metadata &&
-                    !imageLoadingStates[`${photoUrl}-${index}`] &&
-                    !imageErrors[`${photoUrl}-${index}`] &&
-                    (metadata?.fishInfo?.name !== "Unknown" ||
-                      metadata?.location);
-                  console.log(
-                    `[ProfilePage] Overlay conditions for photo ${index}:`,
-                    {
-                      hasMetadata: !!metadata,
-                      hasFishInfo: !!metadata?.fishInfo,
-                      fishName: metadata?.fishInfo?.name,
-                      hasLocation: !!metadata?.location,
-                      isLoading: imageLoadingStates[`${photoUrl}-${index}`],
-                      hasError: imageErrors[`${photoUrl}-${index}`],
-                      shouldShowOverlay,
-                      metadataPreview: metadata
-                        ? {
-                            fishName: metadata.fishInfo?.name,
-                            confidence: metadata.fishInfo?.confidence,
-                            hasLocation: !!metadata.location,
-                            locationAddress: metadata.location?.address,
-                          }
-                        : null,
-                    },
-                  );
 
                   const imageKey = `${photoUrl}-${index}`;
                   const isLoading = imageLoadingStates[imageKey];
@@ -1287,91 +2152,16 @@ const ProfilePage: React.FC = () => {
                           }}
                         />
 
-                        {/* Fish Info Overlay - Always show in single column mode with labels */}
-                        {isSingleColumn && !isLoading && !hasError && (
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent pointer-events-none">
-                            <div className="absolute bottom-0 left-0 right-0 text-white">
-                              {/* Fish Information - Always show with labels */}
-                              <div className="px-3 pb-3 space-y-3">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  <div className="flex items-center">
-                                    <span className="font-bold text-lg">
-                                      {metadata?.fishInfo?.name &&
-                                      metadata.fishInfo.name !== "Unknown"
-                                        ? metadata.fishInfo.name
-                                        : "AI info not available"}
-                                    </span>
-                                  </div>
-                                  {metadata?.fishInfo?.confidence &&
-                                    metadata.fishInfo.confidence > 0 && (
-                                      <div className="bg-white/25 backdrop-blur-sm text-white border border-white/30 text-xs px-2 py-1 rounded-full">
-                                        {Math.round(
-                                          metadata.fishInfo.confidence * 100,
-                                        )}
-                                        % confident
-                                      </div>
-                                    )}
-                                </div>
-
-                                {/* Size, Weight, and Location - All with consistent spacing */}
-                                <div className="space-y-2 text-sm">
-                                  <div className="flex items-center gap-2">
-                                    <Ruler className="w-3 h-3" />
-                                    <span className="font-normal">
-                                      Size:{" "}
-                                      {metadata?.fishInfo?.estimatedSize &&
-                                      metadata.fishInfo.estimatedSize !==
-                                        "Unknown"
-                                        ? metadata.fishInfo.estimatedSize
-                                        : "AI info not available"}
-                                    </span>
-                                  </div>
-
-                                  <div className="flex items-center gap-2">
-                                    <Weight className="w-3 h-3" />
-                                    <span className="font-normal">
-                                      Weight:{" "}
-                                      {metadata?.fishInfo?.estimatedWeight &&
-                                      metadata.fishInfo.estimatedWeight !==
-                                        "Unknown"
-                                        ? metadata.fishInfo.estimatedWeight
-                                        : "AI info not available"}
-                                    </span>
-                                  </div>
-
-                                  <div className="flex items-center gap-2">
-                                    <MapPin className="w-3 h-3" />
-                                    <span className="font-normal">
-                                      Location:{" "}
-                                      {metadata?.location
-                                        ? metadata.location.address ||
-                                          `${metadata.location.latitude.toFixed(4)}, ${metadata.location.longitude.toFixed(4)}`
-                                        : "AI info not available"}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Logo - Aligned left with same spacing as info */}
-                                <div className="flex justify-start">
-                                  <img
-                                    src="/logo-light.svg"
-                                    alt="Lishka Logo"
-                                    className="w-40 h-12 brightness-0 invert"
-                                    onError={(e) => {
-                                      // Fallback to text
-                                      const parent =
-                                        e.currentTarget.parentElement;
-                                      if (parent) {
-                                        parent.innerHTML =
-                                          '<div class="text-lg font-bold text-white">LISHKA</div>';
-                                      }
-                                    }}
-                                  />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        )}
+                        {/* Fish Info Overlay - Use FishInfoOverlay component - Only show in single column */}
+                        {!isLoading &&
+                          !hasError &&
+                          metadata &&
+                          isSingleColumn && (
+                            <FishInfoOverlay
+                              metadata={metadata}
+                              isSingleColumn={isSingleColumn}
+                            />
+                          )}
                       </button>
 
                       {/* 3-dots menu - only show in single column mode */}
@@ -1396,7 +2186,27 @@ const ProfilePage: React.FC = () => {
                                 <MoreVertical className="w-5 h-5 rotate-90" />
                               </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-32">
+                            <DropdownMenuContent align="end" className="w-40">
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSharePhoto(index);
+                                }}
+                                disabled={loading}
+                              >
+                                <Share className="w-4 h-4 mr-2" />
+                                Share
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleEditAIInfo(index);
+                                }}
+                                disabled={loading}
+                              >
+                                <Pencil className="w-4 h-4 mr-2" />
+                                Edit AI Info
+                              </DropdownMenuItem>
                               <DropdownMenuItem
                                 onClick={(e) => {
                                   e.stopPropagation();
@@ -1425,6 +2235,13 @@ const ProfilePage: React.FC = () => {
                 onChange={handlePhotoChange}
                 className="hidden"
                 disabled={uploadingPhoto}
+                key="photo-input"
+                style={{
+                  position: "absolute",
+                  left: "-9999px",
+                  opacity: 0,
+                  pointerEvents: "none",
+                }}
               />
               {/* Camera input for taking new photos */}
               <input
@@ -1435,6 +2252,7 @@ const ProfilePage: React.FC = () => {
                 onChange={handlePhotoChange}
                 className="hidden"
                 disabled={uploadingPhoto}
+                key="camera-input"
               />
             </TabsContent>
 
@@ -1553,6 +2371,227 @@ const ProfilePage: React.FC = () => {
               {loading ? "Uploading..." : "Save Avatar"}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit AI Info Dialog */}
+      <Dialog open={showEditAIDialog} onOpenChange={setShowEditAIDialog}>
+        <DialogContent className="sm:max-w-[425px] w-[95%] mx-auto rounded-lg max-h-[90vh] overflow-y-auto [&>button]:hidden">
+          <DialogHeader className="pb-2">
+            <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
+              <Fish className="w-5 h-5" />
+              Edit Fish Information
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="space-y-3">
+            {editingMetadata && (
+              <>
+                <div>
+                  <Label
+                    htmlFor="fish-name"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Fish Name
+                  </Label>
+                  <Input
+                    id="fish-name"
+                    value={editingMetadata.fishInfo?.name || ""}
+                    onChange={(e) => {
+                      setEditingMetadata((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              fishInfo: {
+                                ...prev.fishInfo,
+                                name: e.target.value,
+                                confidence: prev.fishInfo?.confidence || 0,
+                                estimatedSize:
+                                  prev.fishInfo?.estimatedSize || "Unknown",
+                                estimatedWeight:
+                                  prev.fishInfo?.estimatedWeight || "Unknown",
+                              },
+                            }
+                          : null,
+                      );
+                    }}
+                    placeholder="Enter fish name"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="fish-size"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Estimated Size
+                  </Label>
+                  <Input
+                    id="fish-size"
+                    value={editingMetadata.fishInfo?.estimatedSize || ""}
+                    onChange={(e) => {
+                      setEditingMetadata((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              fishInfo: {
+                                ...prev.fishInfo,
+                                name: prev.fishInfo?.name || "Unknown",
+                                confidence: prev.fishInfo?.confidence || 0,
+                                estimatedSize: e.target.value,
+                                estimatedWeight:
+                                  prev.fishInfo?.estimatedWeight || "Unknown",
+                              },
+                            }
+                          : null,
+                      );
+                    }}
+                    placeholder="e.g., 40-50 cm"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label
+                    htmlFor="fish-weight"
+                    className="text-sm font-medium text-gray-700 dark:text-gray-300"
+                  >
+                    Estimated Weight
+                  </Label>
+                  <Input
+                    id="fish-weight"
+                    value={editingMetadata.fishInfo?.estimatedWeight || ""}
+                    onChange={(e) => {
+                      setEditingMetadata((prev) =>
+                        prev
+                          ? {
+                              ...prev,
+                              fishInfo: {
+                                ...prev.fishInfo,
+                                name: prev.fishInfo?.name || "Unknown",
+                                confidence: prev.fishInfo?.confidence || 0,
+                                estimatedSize:
+                                  prev.fishInfo?.estimatedSize || "Unknown",
+                                estimatedWeight: e.target.value,
+                              },
+                            }
+                          : null,
+                      );
+                    }}
+                    placeholder="e.g., 2-3 kg"
+                    className="mt-1"
+                  />
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Location
+                  </Label>
+                  <div className="h-40 border rounded-lg overflow-hidden relative">
+                    {typeof window !== "undefined" && (
+                      <div className="w-full h-full">
+                        <MapContainer
+                          center={[
+                            editingMetadata?.location?.latitude || 35.8997,
+                            editingMetadata?.location?.longitude || 14.5146,
+                          ]}
+                          zoom={13}
+                          style={{ height: "100%", width: "100%" }}
+                          className="z-0"
+                        >
+                          <TileLayer
+                            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                          />
+                          <MapClickHandler
+                            onLocationSelect={(lat, lng, name) => {
+                              const location = {
+                                latitude: lat,
+                                longitude: lng,
+                                name,
+                              };
+                              setTempLocationData(location);
+                              if (editingMetadata) {
+                                setEditingMetadata({
+                                  ...editingMetadata,
+                                  location: {
+                                    latitude: lat,
+                                    longitude: lng,
+                                    address: name,
+                                  },
+                                });
+                              }
+                            }}
+                          />
+                          {(editingMetadata?.location || tempLocationData) && (
+                            <Marker
+                              position={[
+                                tempLocationData?.latitude ||
+                                  editingMetadata?.location?.latitude ||
+                                  35.8997,
+                                tempLocationData?.longitude ||
+                                  editingMetadata?.location?.longitude ||
+                                  14.5146,
+                              ]}
+                            />
+                          )}
+                        </MapContainer>
+                        {(editingMetadata?.location || tempLocationData) && (
+                          <div className="absolute bottom-2 left-2 right-2 bg-white dark:bg-gray-800 px-2 py-1 rounded shadow-md">
+                            <span className="text-xs font-medium text-gray-700 dark:text-gray-300 truncate block">
+                              {tempLocationData?.name ||
+                                editingMetadata?.location?.address ||
+                                `${(tempLocationData?.latitude || editingMetadata?.location?.latitude || 0).toFixed(4)}, ${(tempLocationData?.longitude || editingMetadata?.location?.longitude || 0).toFixed(4)}`}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+
+          <div className="mt-4">
+            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
+              <p className="text-xs text-blue-800 dark:text-blue-200">
+                <strong>Note:</strong> Updating this information will remove the
+                AI confidence indicator.
+              </p>
+            </div>
+          </div>
+
+          {/* Cancel and Save Buttons at bottom */}
+          <div className="mt-4 pt-2 flex gap-3">
+            <Button
+              onClick={() => {
+                setShowEditAIDialog(false);
+                setEditingPhotoIndex(null);
+                setEditingMetadata(null);
+                setTempLocationData(null);
+              }}
+              disabled={loading}
+              variant="outline"
+              className="flex-1 h-10 rounded-lg font-medium"
+            >
+              <X className="w-4 h-4 mr-2" />
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEditedAIInfo}
+              disabled={loading}
+              className="flex-1 h-10 bg-gray-900 hover:bg-gray-800 text-white rounded-lg font-medium"
+            >
+              {loading ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              ) : (
+                <Check className="w-4 h-4 mr-2" />
+              )}
+              {loading ? "Saving..." : "Save Changes"}
+            </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

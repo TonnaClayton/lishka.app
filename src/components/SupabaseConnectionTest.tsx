@@ -24,13 +24,9 @@ const SupabaseConnectionTest = () => {
         const supabase = createClient(supabaseUrl, supabaseKey);
 
         // Test connection by trying to get a specific image
-        const { data, error } = await supabase.storage
+        const { data } = supabase.storage
           .from("fish-images")
           .getPublicUrl("sparusaurata.png");
-
-        if (error) {
-          throw error;
-        }
 
         if (data?.publicUrl) {
           // Verify the image exists

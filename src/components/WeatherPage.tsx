@@ -18,8 +18,11 @@ const WeatherPage: React.FC = () => {
   // Set a coastal location for better marine data if none exists
   useEffect(() => {
     const loadLocation = () => {
+      console.log("[WeatherPage] Loading location from localStorage");
       const savedLocation = localStorage.getItem("userLocationFull");
+
       if (!savedLocation) {
+        console.log("[WeatherPage] No saved location, setting default Malta");
         // Malta coordinates as a good default for marine data
         const coastalLocation = {
           latitude: 35.8997,
@@ -36,6 +39,11 @@ const WeatherPage: React.FC = () => {
       } else {
         try {
           const parsedLocation = JSON.parse(savedLocation);
+          console.log(
+            "[WeatherPage] Parsed location from localStorage:",
+            parsedLocation,
+          );
+
           if (parsedLocation) {
             const locationData: LocationData = {
               latitude:
@@ -44,11 +52,12 @@ const WeatherPage: React.FC = () => {
                 parsedLocation.longitude || parsedLocation.lng || 14.5146,
               name: parsedLocation.name || "Malta",
             };
+            console.log("[WeatherPage] Setting location to:", locationData);
             setUserLocation(locationData);
             setLocation(locationData.name);
           }
         } catch (err) {
-          console.error("Error parsing location:", err);
+          console.error("[WeatherPage] Error parsing location:", err);
           // Fallback to default location
           const coastalLocation = {
             latitude: 35.8997,
@@ -65,7 +74,30 @@ const WeatherPage: React.FC = () => {
     loadLocation();
 
     // Listen for storage changes from other components
-    window.addEventListener("storage", loadLocation);
+    const handleStorageChange = (event?: StorageEvent) => {
+      if (
+        !event ||
+        event.key === "userLocation" ||
+        event.key === "userLocationFull"
+      ) {
+        console.log(
+          "[WeatherPage] Storage change detected, reloading location",
+          event?.key,
+        );
+        loadLocation();
+      }
+    };
+
+    const handleLocationChangeEvent = (event: CustomEvent) => {
+      console.log("[WeatherPage] Location change event received", event.detail);
+      loadLocation();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    window.addEventListener(
+      "locationChanged",
+      handleLocationChangeEvent as EventListener,
+    );
 
     // Set data loaded after a short delay to simulate API fetch
     setTimeout(() => {
@@ -73,16 +105,37 @@ const WeatherPage: React.FC = () => {
     }, 1000);
 
     return () => {
-      window.removeEventListener("storage", loadLocation);
+      window.removeEventListener("storage", handleStorageChange);
+      window.removeEventListener(
+        "locationChanged",
+        handleLocationChangeEvent as EventListener,
+      );
     };
   }, []);
 
   // Handle location update from the weather widget
   const handleLocationUpdate = (newLocation: LocationData) => {
+    console.log("[WeatherPage] Location updated to:", newLocation);
     setUserLocation(newLocation);
     setLocation(newLocation.name);
-    localStorage.setItem("userLocation", newLocation.name);
-    localStorage.setItem("userLocationFull", JSON.stringify(newLocation));
+
+    try {
+      localStorage.setItem("userLocation", newLocation.name);
+      localStorage.setItem("userLocationFull", JSON.stringify(newLocation));
+      console.log("[WeatherPage] Saved location to localStorage:", newLocation);
+    } catch (error) {
+      console.error("[WeatherPage] Error saving location:", error);
+    }
+
+    // Dispatch events to notify other components
+    setTimeout(() => {
+      window.dispatchEvent(new Event("storage"));
+      window.dispatchEvent(
+        new CustomEvent("locationChanged", { detail: newLocation }),
+      );
+      console.log("[WeatherPage] Events dispatched for location change");
+    }, 100);
+
     // Force data reload when location changes
     setDataLoaded(false);
     setTimeout(() => {

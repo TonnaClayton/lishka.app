@@ -60,7 +60,7 @@ const EmailVerificationBanner: React.FC = () => {
   }
 
   const handleResendConfirmation = async () => {
-    if (!user.email) return;
+    if (!user?.email) return;
 
     setResending(true);
     setMessage(null);
@@ -82,31 +82,30 @@ const EmailVerificationBanner: React.FC = () => {
 
   return (
     <div
-      className="bg-blue-50 dark:bg-blue-900/20 border-b border-blue-200 dark:border-blue-800"
+      className="border-b"
+      style={{ backgroundColor: "#0251FB" }}
       data-banner-id={bannerId}
       key={bannerId}
     >
       <div className="max-w-7xl mx-auto px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-3" />
             <div className="flex-1">
-              <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              <p className="text-sm text-white font-semibold">
                 Please verify your email address
               </p>
-              <p className="text-xs text-blue-700 dark:text-blue-300">
-                We sent a verification link to <strong>{user.email}</strong>
+              <p className="text-xs text-white/90">
+                We sent a verification link to {user?.email || "your email"}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center space-x-2">
+          <div className="flex items-center">
             <Button
-              variant="ghost"
-              size="sm"
               onClick={handleResendConfirmation}
               disabled={resending}
-              className="text-blue-700 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200 text-xs"
+              variant="ghost"
+              className="text-white hover:bg-white/10 text-xs px-3 py-1.5 rounded-md border border-white/20"
             >
               {resending ? (
                 <>
@@ -114,26 +113,18 @@ const EmailVerificationBanner: React.FC = () => {
                   Sending...
                 </>
               ) : (
-                "Resend Email"
+                <>
+                  <Mail className="w-3 h-3 mr-1" />
+                  Resend Email
+                </>
               )}
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setDismissed(true)}
-              className="text-blue-700 hover:text-blue-800 dark:text-blue-300 dark:hover:text-blue-200 p-1"
-            >
-              <X className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
         {message && (
           <div className="mt-2">
-            <p className="text-xs text-blue-700 dark:text-blue-300">
-              {message}
-            </p>
+            <p className="text-xs text-white/90">{message}</p>
           </div>
         )}
       </div>
