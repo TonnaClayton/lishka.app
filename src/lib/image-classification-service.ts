@@ -39,13 +39,61 @@ export const classifyImage = async (
       };
     }
 
+    // Check if image needs compression before base64 conversion
+    let processedFile = imageFile;
+    const isLargeFile = imageFile.size > 3 * 1024 * 1024; // 3MB threshold
+
+    if (isLargeFile) {
+      console.log(
+        "🗜️ [IMAGE CLASSIFICATION] Large file detected, compressing before AI:",
+        {
+          originalSize: `${(imageFile.size / (1024 * 1024)).toFixed(2)}MB`,
+          fileName: imageFile.name,
+        },
+      );
+
+      try {
+        // Import compression function
+        const { compressImage } = await import("./image-metadata");
+
+        const compressionResult = await Promise.race([
+          compressImage(imageFile, 800, 800, 0.7),
+          new Promise<never>((_, reject) => {
+            setTimeout(() => {
+              reject(new Error("Compression timeout"));
+            }, 10000);
+          }),
+        ]);
+
+        processedFile = compressionResult.compressedFile;
+
+        console.log("✅ [IMAGE CLASSIFICATION] Compression completed:", {
+          originalSize: `${(imageFile.size / (1024 * 1024)).toFixed(2)}MB`,
+          compressedSize: `${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`,
+          compressionRatio: `${compressionResult.compressionInfo.compressionRatio.toFixed(1)}%`,
+        });
+      } catch (compressionError) {
+        console.warn(
+          "⚠️ [IMAGE CLASSIFICATION] Compression failed, using original:",
+          {
+            error: compressionError.message,
+            willUseOriginalFile: true,
+          },
+        );
+        // Continue with original file
+      }
+    }
+
     // Convert image to base64
-    console.log("📷 [IMAGE CLASSIFICATION] Converting to base64...");
+    console.log("📷 [IMAGE CLASSIFICATION] Converting to base64...", {
+      fileSize: `${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`,
+      wasCompressed: processedFile !== imageFile,
+    });
     const base64Image = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       const timeout = setTimeout(() => {
         reject(new Error("Image conversion timeout"));
-      }, 15000);
+      }, 20000); // Increased timeout
 
       reader.onload = () => {
         clearTimeout(timeout);
@@ -55,7 +103,7 @@ export const classifyImage = async (
         clearTimeout(timeout);
         reject(new Error("Failed to read image"));
       };
-      reader.readAsDataURL(imageFile);
+      reader.readAsDataURL(processedFile);
     });
 
     console.log("🚀 [IMAGE CLASSIFICATION] Calling OpenAI...");
@@ -137,12 +185,31 @@ Be decisive - if you see a fish (even if there's also gear in the image), classi
       // Clean content - remove any markdown or extra text
       let cleanContent = content;
       cleanContent = cleanContent.replace(/```json\s*|```\s*/g, "");
+      cleanContent = cleanContent.trim();
 
       // Extract JSON object
       const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         cleanContent = jsonMatch[0];
       }
+
+      // Additional cleaning - remove any non-JSON text before/after
+      const startBrace = cleanContent.indexOf("{");
+      const endBrace = cleanContent.lastIndexOf("}");
+      if (startBrace !== -1 && endBrace !== -1 && endBrace > startBrace) {
+        cleanContent = cleanContent.substring(startBrace, endBrace + 1);
+      }
+
+      // Fix common JSON issues
+      cleanContent = cleanContent
+        .replace(/([{,]\s*)([a-zA-Z_][a-zA-Z0-9_]*)\s*:/g, '$1"$2":') // Add quotes to unquoted keys
+        .replace(/:\s*([a-zA-Z_][a-zA-Z0-9_]*)(\s*[,}])/g, ': "$1"$2') // Add quotes to unquoted string values
+        .replace(/"(\d+\.?\d*)"(\s*[,}])/g, "$1$2") // Remove quotes from numbers
+        .replace(/"(true|false)"(\s*[,}])/g, "$1$2") // Remove quotes from booleans
+        .replace(/,\s*}/g, "}") // Remove trailing commas
+        .replace(/,\s*]/g, "]"); // Remove trailing commas in arrays
+
+      console.log("🧹 [IMAGE CLASSIFICATION] Cleaned JSON:", cleanContent);
 
       const parsed = JSON.parse(cleanContent);
 

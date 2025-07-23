@@ -241,6 +241,7 @@ const ProfilePage: React.FC = () => {
   const [tempLocationData, setTempLocationData] = useState<LocationData | null>(
     null,
   );
+  const [isEmailEditable, setIsEmailEditable] = useState(false);
 
   // Load photos from database and localStorage on component mount
   useEffect(() => {
@@ -898,9 +899,11 @@ const ProfilePage: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      setError("Gear image must be less than 10MB");
+    // Validate file size (max 15MB)
+    if (file.size > 15 * 1024 * 1024) {
+      setError(
+        `Gear image must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+      );
       e.target.value = "";
       return;
     }
@@ -1301,9 +1304,11 @@ const ProfilePage: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 10MB)
-    if (file.size > 10 * 1024 * 1024) {
-      setError("Photo must be less than 10MB");
+    // Validate file size (max 15MB)
+    if (file.size > 15 * 1024 * 1024) {
+      setError(
+        `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+      );
       e.target.value = "";
       return;
     }
@@ -1318,6 +1323,123 @@ const ProfilePage: React.FC = () => {
     setUploadingPhoto(true);
     setError(null);
     setSuccess(null);
+
+    // CRITICAL FIX: Request location permission FIRST, before any processing
+    // This ensures location popup appears immediately for all images
+    console.log(
+      "🔍 [PROFILE PAGE] Requesting location permission before processing:",
+      {
+        fileName: file.name,
+        fileSize: file.size,
+        fileSizeInMB: (file.size / (1024 * 1024)).toFixed(2),
+      },
+    );
+
+    let userLocation: { latitude: number; longitude: number } | null = null;
+    try {
+      // Import getCurrentLocation function
+      const { getCurrentLocation } = await import("@/lib/image-metadata");
+
+      // Request location with timeout - this will show the permission popup
+      userLocation = await Promise.race([
+        getCurrentLocation(),
+        new Promise<never>((_, reject) => {
+          setTimeout(() => {
+            console.log(
+              "⏰ [PROFILE PAGE] Location request timeout - continuing without location",
+            );
+            reject(new Error("Location request timeout"));
+          }, 10000); // 10 second timeout
+        }),
+      ]);
+
+      console.log(
+        "✅ [PROFILE PAGE] Location permission granted:",
+        userLocation,
+      );
+    } catch (locationError) {
+      console.log("ℹ️ [PROFILE PAGE] Location not available or denied:", {
+        error: locationError.message,
+        willContinueWithoutLocation: true,
+      });
+      // Continue without location - this is not a blocking error
+    }
+
+    // CRITICAL FIX: Compress image IMMEDIATELY after validation to prevent AI timeouts
+    // This ensures ALL images (regardless of size) are compressed before AI processing
+    let processedFile = file;
+    let compressionInfo: any = undefined;
+
+    // Always compress images larger than 2MB to prevent AI processing timeouts
+    const shouldCompress = file.size > 2 * 1024 * 1024; // 2MB threshold
+
+    if (shouldCompress) {
+      try {
+        console.log(
+          "🗜️ [PROFILE PAGE] Compressing large image before AI processing:",
+          {
+            originalSize: file.size,
+            originalSizeInMB: (file.size / (1024 * 1024)).toFixed(2),
+            fileName: file.name,
+            fileType: file.type,
+            reason: "Prevent AI timeout for large files",
+          },
+        );
+
+        // Import compression function dynamically
+        const { compressImage } = await import("@/lib/image-metadata");
+
+        // Use aggressive compression settings to ensure small file size for AI
+        const compressionResult = await Promise.race([
+          compressImage(
+            file,
+            800, // Smaller max width for AI processing
+            800, // Smaller max height for AI processing
+            0.7, // Lower quality for smaller file size
+          ),
+          new Promise<never>((_, reject) => {
+            setTimeout(() => {
+              reject(new Error("Image compression timeout"));
+            }, 15000); // 15 second timeout for compression
+          }),
+        ]);
+
+        processedFile = compressionResult.compressedFile;
+        compressionInfo = compressionResult.compressionInfo;
+
+        console.log("✅ [PROFILE PAGE] Large image compression completed:", {
+          originalSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+          compressedSize: `${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`,
+          compressionRatio: `${compressionInfo.compressionRatio.toFixed(1)}%`,
+          sizeDifference: `${((file.size - processedFile.size) / (1024 * 1024)).toFixed(2)}MB saved`,
+          newSizeUnder2MB: processedFile.size < 2 * 1024 * 1024,
+        });
+      } catch (compressionError) {
+        console.error(
+          "❌ [PROFILE PAGE] Image compression failed for large file:",
+          {
+            error: compressionError.message,
+            originalSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+            willTryOriginalButMayTimeout: true,
+          },
+        );
+        // Continue with original file but warn that AI processing may timeout
+        setError(
+          "Image compression failed. Large images may take longer to process.",
+        );
+        setTimeout(() => setError(null), 5000);
+      }
+    } else {
+      console.log(
+        "ℹ️ [PROFILE PAGE] Image size acceptable, skipping compression:",
+        {
+          fileSize: file.size,
+          fileSizeInMB: (file.size / (1024 * 1024)).toFixed(2),
+          threshold: "2MB",
+          reason: "File already small enough for AI processing",
+        },
+      );
+    }
 
     // Set overall timeout for the entire upload process
     const uploadTimeout = new Promise<never>((_, reject) => {
@@ -1348,20 +1470,49 @@ const ProfilePage: React.FC = () => {
         }
 
         // Process image metadata (fish identification, location, etc.) with timeout
-        console.log("🚀 [PROFILE DEBUG] Starting image metadata processing...");
+        // CRITICAL FIX: Use the pre-compressed file for ALL AI processing
+        // This ensures consistent behavior regardless of original file size
+        console.log(
+          "🚀 [PROFILE DEBUG] Starting AI processing with pre-compressed file:",
+          {
+            originalFileSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+            processedFileSize: `${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`,
+            compressionApplied: processedFile !== file,
+            fileName: processedFile.name,
+            hasPreObtainedLocation: !!userLocation,
+            fileReadyForAI: processedFile.size < 5 * 1024 * 1024, // Should be under 5MB
+            compressionInfo: compressionInfo
+              ? {
+                  ratio: compressionInfo.compressionRatio.toFixed(1) + "%",
+                  originalDimensions: compressionInfo.originalDimensions,
+                  compressedDimensions: compressionInfo.compressedDimensions,
+                }
+              : "No compression applied",
+          },
+        );
         const metadataStart = Date.now();
 
         const metadata = await Promise.race([
-          processImageUpload(file),
+          processImageUpload(processedFile, userLocation),
           new Promise<ImageMetadata>((_, reject) => {
             setTimeout(() => {
               console.error(
-                "⏰ [PROFILE DEBUG] Image processing timeout (45s)",
+                "⏰ [PROFILE DEBUG] Image processing timeout (60s) - even with compression",
+                {
+                  processedFileSize: `${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`,
+                  originalFileSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+                  compressionApplied: processedFile !== file,
+                },
               );
               reject(new Error("Image processing timed out"));
-            }, 45000);
+            }, 60000); // Increased timeout since file should be compressed
           }),
         ]);
+
+        // Add compression info to metadata if available
+        if (compressionInfo) {
+          metadata.compressionInfo = compressionInfo;
+        }
 
         const metadataTime = Date.now() - metadataStart;
         console.log("✅ [PROFILE DEBUG] Image metadata processing completed", {
@@ -1374,9 +1525,17 @@ const ProfilePage: React.FC = () => {
         });
 
         // Upload the photo with timeout
-        console.log("[ProfilePage] Uploading photo to Supabase storage...");
+        // CRITICAL FIX: Upload the compressed file instead of the original
+        console.log(
+          "[ProfilePage] Uploading compressed photo to Supabase storage:",
+          {
+            fileSize: `${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`,
+            fileName: processedFile.name,
+            compressionApplied: processedFile !== file,
+          },
+        );
         const photoUrl = await Promise.race([
-          uploadImageToSupabase(file, "fish-photos"),
+          uploadImageToSupabase(processedFile, "fish-photos"),
           new Promise<never>((_, reject) => {
             setTimeout(() => {
               reject(new Error("Supabase photo upload timed out"));
@@ -1461,11 +1620,8 @@ const ProfilePage: React.FC = () => {
     setValidationErrors({});
 
     try {
-      // Validate email format
-      if (!validateEmailFormat(formData.email)) {
-        setLoading(false);
-        return;
-      }
+      // Skip email validation since email is now non-editable
+      // Email updates are not allowed from this page
 
       // Validate and check username uniqueness if username is provided
       if (formData.username) {
@@ -1480,26 +1636,9 @@ const ProfilePage: React.FC = () => {
 
       console.log("Saving profile with data:", formData);
 
-      // Separate email update from profile update
+      // Email updates are not allowed from this page
+      // Remove email from form data before updating profile
       const { email, ...profileUpdates } = formData;
-
-      // Update email if it has changed
-      if (email !== user?.email) {
-        console.log("Updating email from", user?.email, "to", email);
-        const { error: emailError } = await supabase.auth.updateUser({ email });
-
-        if (emailError) {
-          console.error("Email update error:", emailError);
-          setError(emailError.message || "Failed to update email");
-          setLoading(false);
-          return;
-        }
-
-        // Show message about email confirmation
-        setSuccess(
-          "Profile updated! Please check your new email address to confirm the change.",
-        );
-      }
 
       // Update profile data
       const { error } = await updateProfile(profileUpdates);
@@ -1509,10 +1648,9 @@ const ProfilePage: React.FC = () => {
         console.error("Profile update error:", error);
         setError(error.message || "Failed to update profile");
       } else {
-        if (email === user?.email) {
-          setSuccess("Profile updated successfully!");
-        }
+        setSuccess("Profile updated successfully!");
         setIsEditing(false);
+        setIsEmailEditable(false);
         setTimeout(() => setSuccess(null), 5000);
       }
     } catch (err) {
@@ -1584,7 +1722,7 @@ const ProfilePage: React.FC = () => {
   return (
     <div className="flex flex-col min-h-screen dark:bg-background bg-[#ffffff]">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white dark:bg-gray-800 p-4 w-full lg:hidden border-b">
+      <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 p-4 w-full lg:hidden border-b">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
@@ -1618,6 +1756,7 @@ const ProfilePage: React.FC = () => {
                   onClick={() => {
                     setIsEditing(false);
                     setValidationErrors({});
+                    setIsEmailEditable(false);
                     setFormData({
                       full_name: profile?.full_name || "",
                       username: profile?.username || "",
@@ -1684,12 +1823,14 @@ const ProfilePage: React.FC = () => {
                       )}
                     </AvatarFallback>
                   </Avatar>
-                  <div
-                    className="absolute -bottom-2 -right-2 bg-blue-600 rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
-                    onClick={handleAvatarClick}
-                  >
-                    <Camera className="w-4 h-4 text-white" />
-                  </div>
+                  {isEditing && (
+                    <div
+                      className="absolute -bottom-2 -right-2 bg-blue-600 rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
+                      onClick={handleAvatarClick}
+                    >
+                      <Camera className="w-4 h-4 text-white" />
+                    </div>
+                  )}
                   <input
                     ref={fileInputRef}
                     type="file"
@@ -1713,28 +1854,7 @@ const ProfilePage: React.FC = () => {
                         placeholder="Enter your full name"
                       />
                     </div>
-                    <div>
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={formData.email}
-                        onChange={(e) =>
-                          handleInputChange("email", e.target.value)
-                        }
-                        placeholder="Enter your email address"
-                      />
-                      {validationErrors.email && (
-                        <p className="text-sm text-red-600 mt-1">
-                          {validationErrors.email}
-                        </p>
-                      )}
-                      {formData.email !== user?.email && (
-                        <p className="text-sm text-blue-600 mt-1">
-                          ⚠️ Changing your email will require confirmation
-                        </p>
-                      )}
-                    </div>
+
                     <div>
                       <Label htmlFor="username">Username</Label>
                       <div className="relative">
@@ -1831,11 +1951,18 @@ const ProfilePage: React.FC = () => {
           <div className="flex gap-3">
             <Button
               variant="outline"
-              className="flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-auto"
+              className="flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-auto flex items-center justify-center gap-2"
               style={{ backgroundColor: "#025DFB0D" }}
               onClick={() => navigate("/my-gear")}
             >
               My gear
+              {profile?.gear_items &&
+                Array.isArray(profile.gear_items) &&
+                profile.gear_items.length > 0 && (
+                  <Badge className="bg-blue-600 hover:bg-blue-600 text-white rounded-full min-w-[24px] h-6 flex items-center justify-center text-sm font-medium">
+                    {profile.gear_items.length}
+                  </Badge>
+                )}
             </Button>
             <Button
               variant="outline"
@@ -2258,15 +2385,15 @@ const ProfilePage: React.FC = () => {
 
             <TabsContent value="achievements" className="mt-4">
               <Card className="bg-white dark:bg-gray-800">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <CardHeader className="text-center">
+                  <CardTitle className="flex items-center justify-center gap-2">
                     <Trophy className="w-5 h-5" />
                     Achievements
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12">
-                    <Trophy className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                  <div className="flex flex-col items-center justify-center text-center py-12">
+                    <Trophy className="w-16 h-16 mb-4 text-gray-300 dark:text-gray-600" />
                     <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
                       Coming Soon!
                     </h3>
@@ -2280,15 +2407,15 @@ const ProfilePage: React.FC = () => {
 
             <TabsContent value="trips" className="mt-4">
               <Card className="bg-white dark:bg-gray-800">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
+                <CardHeader className="text-center">
+                  <CardTitle className="flex items-center justify-center gap-2">
                     <MapIcon className="w-5 h-5" />
                     Fishing Trips
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="text-center py-12">
-                    <MapIcon className="w-16 h-16 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                  <div className="flex flex-col items-center justify-center text-center py-12">
+                    <MapIcon className="w-16 h-16 mb-4 text-gray-300 dark:text-gray-600" />
                     <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
                       Coming Soon!
                     </h3>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Package, Waves, Loader2, AlertCircle } from "lucide-react";
+import LoadingDots from "./LoadingDots";
 import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
@@ -698,20 +699,15 @@ Rank ALL gear items (score 1-100) based on suitability for current surface condi
       {analysis.phase === "idle" ||
       analysis.phase === "loading-weather" ||
       analysis.phase === "analyzing-gear" ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="text-center">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-4" />
-            <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
-              {analysis.phase === "loading-weather" &&
-                "Loading weather conditions..."}
-              {analysis.phase === "analyzing-gear" &&
-                "AI is analyzing your gear..."}
-              {analysis.phase === "idle" && "Preparing analysis..."}
-            </p>
-            <p className="text-xs text-gray-500 dark:text-gray-500">
-              This may take a few moments
-            </p>
-          </div>
+        <div className="flex flex-col items-center justify-center py-8">
+          <LoadingDots />
+          <p className="text-sm text-muted-foreground mt-2">
+            {analysis.phase === "loading-weather" &&
+              "Loading weather conditions..."}
+            {analysis.phase === "analyzing-gear" &&
+              "AI is analyzing your gear..."}
+            {analysis.phase === "idle" && "Preparing analysis..."}
+          </p>
         </div>
       ) : analysis.phase === "error" ? (
         <div className="flex items-center justify-center py-12">

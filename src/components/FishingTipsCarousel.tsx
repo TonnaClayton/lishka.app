@@ -459,9 +459,9 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
   if (loading) {
     return (
       <Card className="p-6 border border-border bg-background shadow-sm">
-        <div className="flex items-center justify-center py-8">
+        <div className="flex flex-col items-center justify-center py-8">
           <LoadingDots />
-          <p className="text-sm text-muted-foreground ml-2">
+          <p className="text-sm text-muted-foreground mt-2">
             Generating fishing tips...
           </p>
         </div>

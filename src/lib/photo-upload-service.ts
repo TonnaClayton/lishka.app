@@ -123,9 +123,9 @@ export class PhotoUploadService {
     this.notifyCallbacks("onProgress", "Starting upload...");
 
     try {
-      // Validate file size (max 10MB)
-      if (file.size > 10 * 1024 * 1024) {
-        const errorMsg = "Photo must be less than 10MB";
+      // Validate file size (max 15MB)
+      if (file.size > 15 * 1024 * 1024) {
+        const errorMsg = `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`;
         console.error("❌ [PHOTO UPLOAD SERVICE] File too large:", {
           isMobile,
           fileSize: file.size,
@@ -184,10 +184,10 @@ export class PhotoUploadService {
         return { success: false, error: errorMessage };
       }
 
-      // Process image metadata (fish identification, location, etc.)
+      // Process image metadata (two-stage AI: classification + detailed analysis)
       this.notifyCallbacks("onProgress", "Starting AI analysis...");
       console.log(
-        "🚀 [PHOTO UPLOAD SERVICE] Starting image metadata processing:",
+        "🚀 [PHOTO UPLOAD SERVICE] Starting two-stage AI metadata processing:",
         {
           isMobile,
           deviceType: isMobile ? "mobile" : "desktop",
@@ -198,10 +198,10 @@ export class PhotoUploadService {
       );
 
       const metadataStart = Date.now();
-      this.notifyCallbacks("onProgress", "Sending to OpenAI...");
+      this.notifyCallbacks("onProgress", "Classifying image...");
 
       const metadata = await Promise.race([
-        processImageUpload(file).catch((error) => {
+        processImageUpload(file, null).catch((error) => {
           console.error("❌ [PHOTO UPLOAD SERVICE] Image processing error:", {
             error: error.message,
             isMobile,
@@ -232,7 +232,7 @@ export class PhotoUploadService {
 
       const metadataTime = Date.now() - metadataStart;
       console.log(
-        "✅ [PHOTO UPLOAD SERVICE] Image metadata processing completed",
+        "✅ [PHOTO UPLOAD SERVICE] Two-stage AI metadata processing completed",
         {
           processingTime: metadataTime,
           metadata,
@@ -269,11 +269,24 @@ export class PhotoUploadService {
                 }
               : null,
           },
+          // Two-stage AI specific info
+          twoStageAiInfo: {
+            approach: "classification-first",
+            expectedBenefits: [
+              "improved accuracy",
+              "reduced costs",
+              "better error handling",
+            ],
+            fishDetected:
+              metadata.fishInfo?.name !== "Unknown" &&
+              metadata.fishInfo?.name !== "Fishing Gear Detected",
+            gearDetected: metadata.fishInfo?.name === "Fishing Gear Detected",
+          },
         },
       );
 
-      // Notify that AI analysis is complete
-      this.notifyCallbacks("onProgress", "AI analysis completed");
+      // Notify that two-stage AI analysis is complete
+      this.notifyCallbacks("onProgress", "Two-stage AI analysis completed");
 
       // Upload the photo with enhanced error handling
       this.notifyCallbacks("onProgress", "Uploading to Supabase storage...");

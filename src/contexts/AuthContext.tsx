@@ -204,6 +204,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  // Listen for profile update events from other components
+  useEffect(() => {
+    const handleProfileUpdate = (event: CustomEvent) => {
+      console.log("[AuthContext] Received profileUpdated event:", event.detail);
+      if (event.detail?.updatedProfile) {
+        console.log("[AuthContext] Updating profile state from event");
+        setProfile(event.detail.updatedProfile);
+      }
+    };
+
+    window.addEventListener(
+      "profileUpdated",
+      handleProfileUpdate as EventListener,
+    );
+
+    return () => {
+      window.removeEventListener(
+        "profileUpdated",
+        handleProfileUpdate as EventListener,
+      );
+    };
+  }, []);
+
   // Initialize auth state
   useEffect(() => {
     let mounted = true;

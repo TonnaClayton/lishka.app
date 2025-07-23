@@ -33,6 +33,41 @@ const BottomNav: React.FC = () => {
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
+  // Map gear type to category - helper function
+  const mapGearTypeToCategory = (gearType: string): string => {
+    const type = gearType.toLowerCase();
+    if (
+      type.includes("rod") ||
+      type.includes("reel") ||
+      type.includes("combo")
+    ) {
+      return "rods-reels";
+    } else if (
+      type.includes("lure") ||
+      type.includes("jig") ||
+      type.includes("spoon")
+    ) {
+      return "lures-jigs";
+    } else if (type.includes("bait") || type.includes("chum")) {
+      return "bait-chum";
+    } else if (
+      type.includes("electronic") ||
+      type.includes("finder") ||
+      type.includes("gps")
+    ) {
+      return "electronics";
+    } else if (
+      type.includes("accessory") ||
+      type.includes("hook") ||
+      type.includes("sinker") ||
+      type.includes("swivel")
+    ) {
+      return "accessories";
+    } else {
+      return "other";
+    }
+  };
+
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth < 1024);
@@ -50,6 +85,29 @@ const BottomNav: React.FC = () => {
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+
+    // Validate file size (max 15MB)
+    if (file.size > 15 * 1024 * 1024) {
+      alert(
+        `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+      );
+      e.target.value = "";
+      return;
+    }
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      alert("Please select an image file");
+      e.target.value = "";
+      return;
+    }
+
+    // Show progress notification for large files
+    if (file.size > 5 * 1024 * 1024) {
+      console.log(
+        `🔍 [BOTTOMNAV] Large file detected (${(file.size / (1024 * 1024)).toFixed(1)}MB) - processing may take longer`,
+      );
+    }
 
     console.log(
       `🔍 [BOTTOMNAV SMART UPLOAD] Photo capture started from bottomnav:`,
@@ -159,8 +217,154 @@ const BottomNav: React.FC = () => {
         // Use gear upload service
         const gearResult = await uploadGearImage(file);
 
-        if (gearResult.success) {
+        if (gearResult.success && gearResult.metadata) {
           console.log("✅ [BOTTOMNAV] Gear upload successful:", gearResult);
+
+          try {
+            // Get the AuthContext to access updateProfile function
+            const authContextModule = await import("@/contexts/AuthContext");
+
+            // Get current user from localStorage
+            const currentUser = JSON.parse(
+              localStorage.getItem(
+                "sb-" +
+                  import.meta.env.VITE_SUPABASE_URL?.split("//")[1]?.split(
+                    ".",
+                  )[0] +
+                  "-auth-token",
+              ) || "{}",
+            );
+
+            if (currentUser?.user) {
+              console.log("🔍 [BOTTOMNAV] Creating gear item from metadata:", {
+                gearName: gearResult.metadata.gearInfo?.name,
+                gearType: gearResult.metadata.gearInfo?.type,
+                confidence: gearResult.metadata.gearInfo?.confidence,
+              });
+
+              // Create gear item from metadata
+              const gearItem = {
+                id: `gear_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+                name: gearResult.metadata.gearInfo?.name || "Unknown Gear",
+                category: mapGearTypeToCategory(
+                  gearResult.metadata.gearInfo?.type || "other",
+                ),
+                description: gearResult.metadata.gearInfo?.type || "",
+                brand: gearResult.metadata.gearInfo?.brand || "",
+                model: gearResult.metadata.gearInfo?.model || "",
+                imageUrl: gearResult.metadata.url,
+                timestamp: gearResult.metadata.timestamp,
+                userConfirmed: false,
+                gearType: gearResult.metadata.gearInfo?.type || "unknown",
+                aiConfidence: gearResult.metadata.gearInfo?.confidence || 0,
+                // Enhanced fields
+                size: gearResult.metadata.gearInfo?.size || "",
+                weight: gearResult.metadata.gearInfo?.weight || "",
+                targetFish: gearResult.metadata.gearInfo?.targetFish || "",
+                fishingTechnique:
+                  gearResult.metadata.gearInfo?.fishingTechnique || "",
+                weatherConditions:
+                  gearResult.metadata.gearInfo?.weatherConditions || "",
+                waterConditions:
+                  gearResult.metadata.gearInfo?.waterConditions || "",
+                seasonalUsage:
+                  gearResult.metadata.gearInfo?.seasonalUsage || "",
+                colorPattern: gearResult.metadata.gearInfo?.colorPattern || "",
+                actionType: gearResult.metadata.gearInfo?.actionType || "",
+                depthRange: gearResult.metadata.gearInfo?.depthRange || "",
+                versatility: gearResult.metadata.gearInfo?.versatility || "",
+                compatibleGear:
+                  gearResult.metadata.gearInfo?.compatibleGear || "",
+                // Debug information
+                rawJsonResponse:
+                  gearResult.metadata.gearInfo?.rawJsonResponse || "",
+                openaiPrompt: gearResult.metadata.gearInfo?.openaiPrompt || "",
+              };
+
+              console.log("🔍 [BOTTOMNAV] Created gear item:", {
+                id: gearItem.id,
+                name: gearItem.name,
+                category: gearItem.category,
+                hasImageUrl: !!gearItem.imageUrl,
+              });
+
+              // Get current profile from Supabase and update it
+              const { supabase } = await import("@/lib/supabase");
+              const { data: profile, error: profileError } = await supabase
+                .from("profiles")
+                .select("gear_items")
+                .eq("id", currentUser.user.id)
+                .single();
+
+              if (!profileError) {
+                const currentGear = profile?.gear_items || [];
+                const updatedGear = [gearItem, ...currentGear];
+
+                console.log("🔍 [BOTTOMNAV] Updating profile with gear:", {
+                  currentGearCount: currentGear.length,
+                  newGearCount: updatedGear.length,
+                  newGearId: gearItem.id,
+                });
+
+                // Update profile with new gear using direct Supabase call
+                const { data: updatedProfile, error: updateError } =
+                  await supabase
+                    .from("profiles")
+                    .update({ gear_items: updatedGear })
+                    .eq("id", currentUser.user.id)
+                    .select()
+                    .single();
+
+                if (!updateError && updatedProfile) {
+                  console.log(
+                    "✅ [BOTTOMNAV] Gear saved to profile successfully:",
+                    {
+                      profileId: updatedProfile.id,
+                      gearCount: updatedProfile.gear_items?.length || 0,
+                    },
+                  );
+
+                  // Force refresh the AuthContext profile to show the new gear immediately
+                  try {
+                    // Dispatch a custom event to trigger profile refresh
+                    window.dispatchEvent(
+                      new CustomEvent("profileUpdated", {
+                        detail: {
+                          updatedProfile,
+                          source: "bottomnav-gear-upload",
+                          newGearId: gearItem.id,
+                        },
+                      }),
+                    );
+
+                    console.log(
+                      "🔍 [BOTTOMNAV] Dispatched profileUpdated event",
+                    );
+                  } catch (eventError) {
+                    console.warn(
+                      "⚠️ [BOTTOMNAV] Could not dispatch profile update event:",
+                      eventError,
+                    );
+                  }
+                } else {
+                  console.error(
+                    "❌ [BOTTOMNAV] Error saving gear to profile:",
+                    updateError,
+                  );
+                }
+              } else {
+                console.error(
+                  "❌ [BOTTOMNAV] Error fetching profile:",
+                  profileError,
+                );
+              }
+            }
+          } catch (profileUpdateError) {
+            console.error(
+              "❌ [BOTTOMNAV] Error updating profile with gear:",
+              profileUpdateError,
+            );
+          }
 
           // Trigger a custom event to notify other components about the new gear
           window.dispatchEvent(

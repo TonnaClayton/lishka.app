@@ -55,15 +55,6 @@ const GearDatabaseDebugger = lazy(
 );
 const WhatsNewPage = lazy(() => import("./components/WhatsNewPage"));
 
-// Wrapper component to provide AuthContext within router
-function AppWithAuth() {
-  return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
-  );
-}
-
 // Create router with future flags
 const router = createBrowserRouter(
   [
@@ -398,6 +389,15 @@ function AppContent() {
         )}
       </div>
     </div>
+  );
+}
+
+// Wrapper component to provide AuthContext within router
+function AppWithAuth() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
   );
 }
 

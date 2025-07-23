@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      fish_catches: {
+        Row: {
+          confidence: number | null
+          created_at: string | null
+          id: string
+          image_url: string | null
+          length_cm: number | null
+          scientific_name: string | null
+          species: string | null
+          user_id: string | null
+        }
+        Insert: {
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          length_cm?: number | null
+          scientific_name?: string | null
+          species?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          confidence?: number | null
+          created_at?: string | null
+          id?: string
+          image_url?: string | null
+          length_cm?: number | null
+          scientific_name?: string | null
+          species?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fish_catches_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null

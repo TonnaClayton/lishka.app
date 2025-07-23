@@ -13,8 +13,18 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
   className = "",
   isSingleColumn = true,
 }) => {
+  // Debug logging for metadata
+  console.log("🔍 [FishInfoOverlay] Received metadata:", {
+    metadata,
+    hasFishInfo: !!metadata?.fishInfo,
+    fishInfo: metadata?.fishInfo,
+    hasLocation: !!metadata?.location,
+    location: metadata?.location,
+  });
+
   // Early return if no metadata
   if (!metadata) {
+    console.log("⚠️ [FishInfoOverlay] No metadata provided");
     return (
       <div
         className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none z-10 ${className}`}
@@ -81,6 +91,19 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
     hasValidFishName || hasValidFishSize || hasValidFishWeight;
   const shouldShowConfidence =
     hasValidFishName && confidence > 0 && !metadata.userConfirmed;
+
+  // Debug logging for fish data validation
+  console.log("🔍 [FishInfoOverlay] Fish data validation:", {
+    fishName,
+    fishSize,
+    fishWeight,
+    confidence,
+    hasValidFishName,
+    hasValidFishSize,
+    hasValidFishWeight,
+    hasAnyFishData,
+    shouldShowConfidence,
+  });
 
   return (
     <>
@@ -153,18 +176,6 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
               </div>
             )}
           </div>
-
-          {/* Location Information */}
-          {hasValidLocation && (
-            <div className="space-y-2 text-sm mb-4">
-              <div className="flex items-center gap-2 min-h-[20px]">
-                <MapPin className="w-4 h-4 text-white flex-shrink-0" />
-                <span className="text-white leading-tight">
-                  {location.address}
-                </span>
-              </div>
-            </div>
-          )}
 
           {/* Logo */}
           <div className="pt-1 relative z-20">

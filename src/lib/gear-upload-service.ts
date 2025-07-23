@@ -825,8 +825,11 @@ export const uploadGearImage = async (
 
   try {
     // Validate file
-    if (file.size > 10 * 1024 * 1024) {
-      return { success: false, error: "Image must be less than 10MB" };
+    if (file.size > 15 * 1024 * 1024) {
+      return {
+        success: false,
+        error: `Image must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+      };
     }
 
     if (!file.type.startsWith("image/")) {

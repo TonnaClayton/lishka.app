@@ -265,6 +265,92 @@ const ImageUploadDebugger: React.FC = () => {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
+            {/* Compression Info */}
+            {uploadState.metadata.compressionInfo && (
+              <div className="bg-orange-50 dark:bg-orange-900/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-4 h-4 bg-orange-500 rounded-full flex items-center justify-center">
+                    <span className="text-xs text-white font-bold">C</span>
+                  </div>
+                  <span className="font-medium text-orange-800 dark:text-orange-200">
+                    Image Compression
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Original Size
+                    </p>
+                    <p className="font-medium">
+                      {(
+                        uploadState.metadata.compressionInfo.originalSize /
+                        (1024 * 1024)
+                      ).toFixed(2)}{" "}
+                      MB
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Compressed Size
+                    </p>
+                    <p className="font-medium">
+                      {(
+                        uploadState.metadata.compressionInfo.compressedSize /
+                        (1024 * 1024)
+                      ).toFixed(2)}{" "}
+                      MB
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Compression Ratio
+                    </p>
+                    <p className="font-medium text-green-600">
+                      {uploadState.metadata.compressionInfo.compressionRatio.toFixed(
+                        1,
+                      )}
+                      % saved
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-gray-600 dark:text-gray-400">Quality</p>
+                    <p className="font-medium">
+                      {(
+                        uploadState.metadata.compressionInfo.quality * 100
+                      ).toFixed(0)}
+                      %
+                    </p>
+                  </div>
+                  <div className="col-span-2">
+                    <p className="text-gray-600 dark:text-gray-400">
+                      Dimensions
+                    </p>
+                    <p className="font-medium">
+                      {
+                        uploadState.metadata.compressionInfo.originalDimensions
+                          .width
+                      }
+                      ×
+                      {
+                        uploadState.metadata.compressionInfo.originalDimensions
+                          .height
+                      }{" "}
+                      →{" "}
+                      {
+                        uploadState.metadata.compressionInfo
+                          .compressedDimensions.width
+                      }
+                      ×
+                      {
+                        uploadState.metadata.compressionInfo
+                          .compressedDimensions.height
+                      }
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Metadata Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
@@ -453,6 +539,63 @@ const ImageUploadDebugger: React.FC = () => {
                   )}
               </div>
 
+              {/* Processing Statistics */}
+              <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
+                <h4 className="font-medium mb-2">Processing Statistics:</h4>
+                <div className="space-y-1 text-sm">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-green-600" />
+                    <span>Image upload: Successful</span>
+                  </div>
+                  {uploadState.metadata.compressionInfo ? (
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      <span>
+                        Image compression:{" "}
+                        {uploadState.metadata.compressionInfo.compressionRatio.toFixed(
+                          1,
+                        )}
+                        % size reduction
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-yellow-600" />
+                      <span>Image compression: Not applied</span>
+                    </div>
+                  )}
+                  {uploadState.metadata.fishInfo &&
+                  uploadState.metadata.fishInfo.name !== "Unknown" ? (
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      <span>
+                        AI fish identification:{" "}
+                        {Math.round(
+                          uploadState.metadata.fishInfo.confidence * 100,
+                        )}
+                        % confidence
+                      </span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-yellow-600" />
+                      <span>AI fish identification: No fish detected</span>
+                    </div>
+                  )}
+                  {uploadState.metadata.location ? (
+                    <div className="flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      <span>Location data: Available</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 text-yellow-600" />
+                      <span>Location data: Not available</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
               {/* Overlay Status */}
               <div className="bg-gray-50 dark:bg-gray-700 p-3 rounded-lg">
                 <h4 className="font-medium mb-2">Overlay Status:</h4>
@@ -513,8 +656,10 @@ const ImageUploadDebugger: React.FC = () => {
             <li>Check the overlay status to see which overlays are active</li>
           </ol>
           <p className="mt-3 text-xs">
-            <strong>Note:</strong> Fish identification requires OpenAI API key.
-            Location data comes from image EXIF or browser geolocation.
+            <strong>Note:</strong> Images are automatically compressed before AI
+            analysis to reduce costs and improve performance. Fish
+            identification requires OpenAI API key. Location data comes from
+            image EXIF or browser geolocation.
           </p>
         </CardContent>
       </Card>
