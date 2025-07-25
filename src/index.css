@@ -101,7 +101,7 @@
 
 @layer base {
   * {
-    @apply border-border;
+    @apply border-border scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground;
   }
   body {
     @apply bg-background text-foreground font-['Inter',sans-serif];
