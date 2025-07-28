@@ -4,6 +4,7 @@ import {
   getSupabaseStorageStatus,
 } from "./supabase-storage";
 import { processImageUpload, ImageMetadata } from "./image-metadata";
+import { log } from "./logging";
 
 export interface PhotoUploadResult {
   success: boolean;
@@ -108,7 +109,7 @@ export class PhotoUploadService {
     const deviceInfo = this.getDeviceInfo();
     const isMobile = deviceInfo.isMobile;
 
-    console.log(`🔍 [PHOTO UPLOAD SERVICE] Upload started from ${source}:`, {
+    log(`🔍 [PHOTO UPLOAD SERVICE] Upload started from ${source}:`, {
       fileName: file.name,
       fileSize: file.size,
       fileType: file.type,
@@ -150,7 +151,7 @@ export class PhotoUploadService {
         return { success: false, error: errorMsg };
       }
 
-      console.log(
+      log(
         "✅ [PHOTO UPLOAD SERVICE] File validation passed, starting upload:",
         {
           isMobile,
@@ -161,7 +162,7 @@ export class PhotoUploadService {
 
       // Check Supabase storage configuration
       const storageStatus = getSupabaseStorageStatus();
-      console.log("[SupabaseStorage] 🔍 Checking Supabase storage:", {
+      log("[SupabaseStorage] 🔍 Checking Supabase storage:", {
         storageStatus,
         isMobile,
         deviceType: isMobile ? "mobile" : "desktop",
@@ -186,7 +187,7 @@ export class PhotoUploadService {
 
       // Process image metadata (two-stage AI: classification + detailed analysis)
       this.notifyCallbacks("onProgress", "Starting AI analysis...");
-      console.log(
+      log(
         "🚀 [PHOTO UPLOAD SERVICE] Starting two-stage AI metadata processing:",
         {
           isMobile,
@@ -231,7 +232,7 @@ export class PhotoUploadService {
       ]);
 
       const metadataTime = Date.now() - metadataStart;
-      console.log(
+      log(
         "✅ [PHOTO UPLOAD SERVICE] Two-stage AI metadata processing completed",
         {
           processingTime: metadataTime,
@@ -290,7 +291,7 @@ export class PhotoUploadService {
 
       // Upload the photo with enhanced error handling
       this.notifyCallbacks("onProgress", "Uploading to Supabase storage...");
-      console.log(
+      log(
         "🔍 [PHOTO UPLOAD SERVICE] Starting photo upload to Supabase storage:",
         {
           isMobile,
@@ -321,7 +322,7 @@ export class PhotoUploadService {
         ]);
 
         const uploadTime = Date.now() - uploadStart;
-        console.log("✅ [PHOTO UPLOAD SERVICE] Photo upload successful:", {
+        log("✅ [PHOTO UPLOAD SERVICE] Photo upload successful:", {
           photoUrl,
           uploadTime,
           isMobile,
@@ -367,7 +368,7 @@ export class PhotoUploadService {
       }
 
       const uploadTime = Date.now() - uploadStart;
-      console.log("✅ [PHOTO UPLOAD SERVICE] Photo uploaded successfully:", {
+      log("✅ [PHOTO UPLOAD SERVICE] Photo uploaded successfully:", {
         photoUrl,
         uploadTime,
         isMobile,
@@ -388,7 +389,7 @@ export class PhotoUploadService {
         }),
       };
 
-      console.log("🔍 [PHOTO UPLOAD SERVICE] Complete metadata:", {
+      log("🔍 [PHOTO UPLOAD SERVICE] Complete metadata:", {
         completeMetadata,
         hasFishInfo: !!completeMetadata.fishInfo,
         fishName: completeMetadata.fishInfo?.name,
@@ -443,7 +444,7 @@ export class PhotoUploadService {
         } else {
           successMsg += " Fish data detected!";
         }
-        console.log(
+        log(
           "🎉 [PHOTO UPLOAD SERVICE] Fish info detected - success with fish info:",
           {
             successMsg,
@@ -455,7 +456,7 @@ export class PhotoUploadService {
         );
       } else {
         successMsg = "Photo uploaded successfully!";
-        console.log(
+        log(
           "ℹ️ [PHOTO UPLOAD SERVICE] No fish info detected - generic success:",
           {
             successMsg,
@@ -474,7 +475,7 @@ export class PhotoUploadService {
         url: photoUrl, // Add url property for backward compatibility
       };
 
-      console.log("🎉 [PHOTO UPLOAD SERVICE] Final result:", {
+      log("🎉 [PHOTO UPLOAD SERVICE] Final result:", {
         result,
         hasUrl: !!result.url,
         hasPhotoUrl: !!result.photoUrl,
@@ -528,7 +529,7 @@ export class PhotoUploadService {
       this.notifyCallbacks("onError", errorMsg);
       return { success: false, error: errorMsg };
     } finally {
-      console.log("🔍 [PHOTO UPLOAD SERVICE] Upload process completed:", {
+      log("🔍 [PHOTO UPLOAD SERVICE] Upload process completed:", {
         isMobile: deviceInfo.isMobile,
         deviceType: deviceInfo.isMobile ? "mobile" : "desktop",
         fileName: file.name,

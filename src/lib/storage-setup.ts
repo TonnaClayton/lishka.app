@@ -1,3 +1,4 @@
+import { log } from "./logging";
 import { supabase } from "./supabase";
 
 /**
@@ -6,7 +7,7 @@ import { supabase } from "./supabase";
  */
 export const setupAvatarStorage = async () => {
   try {
-    console.log("Setting up avatar storage bucket...");
+    log("Setting up avatar storage bucket...");
 
     // Add timeout to prevent hanging
     const timeoutPromise = new Promise((_, reject) => {
@@ -24,13 +25,13 @@ export const setupAvatarStorage = async () => {
           .list("", { limit: 1 });
 
         if (!testError) {
-          console.log("Avatars bucket already exists and is accessible");
+          log("Avatars bucket already exists and is accessible");
           return { error: null };
         }
 
-        console.log("Bucket test failed, checking bucket list...", testError);
+        log("Bucket test failed, checking bucket list...", testError);
       } catch (testErr) {
-        console.log("Bucket test threw exception:", testErr);
+        log("Bucket test threw exception:", testErr);
       }
 
       // List all buckets to see what exists
@@ -44,7 +45,7 @@ export const setupAvatarStorage = async () => {
           // Continue anyway - we'll try to create the bucket
         } else {
           buckets = bucketData;
-          console.log("Available buckets:", buckets?.map((b) => b.name) || []);
+          log("Available buckets:", buckets?.map((b) => b.name) || []);
         }
       } catch (listErr) {
         console.error("Exception listing buckets:", listErr);
@@ -54,7 +55,7 @@ export const setupAvatarStorage = async () => {
       const avatarBucket = buckets?.find((bucket) => bucket.name === "avatars");
 
       if (!avatarBucket) {
-        console.log("Creating avatars bucket...");
+        log("Creating avatars bucket...");
         try {
           const { data, error } = await supabase.storage.createBucket(
             "avatars",
@@ -80,24 +81,22 @@ export const setupAvatarStorage = async () => {
               error.message?.includes("already_exists") ||
               error.message?.includes("duplicate key value")
             ) {
-              console.log(
-                "Bucket already exists (creation returned duplicate error)",
-              );
+              log("Bucket already exists (creation returned duplicate error)");
               // Continue to verification
             } else {
               // For other errors, try a simple approach - just return success
               // The upload will fail if the bucket truly doesn't exist
-              console.log("Bucket creation failed, but continuing anyway...");
+              log("Bucket creation failed, but continuing anyway...");
             }
           } else {
-            console.log("Avatars bucket created successfully:", data);
+            log("Avatars bucket created successfully:", data);
           }
         } catch (createErr) {
           console.error("Exception creating bucket:", createErr);
           // Continue anyway - maybe the bucket exists but we can't detect it
         }
       } else {
-        console.log("Avatars bucket found in list");
+        log("Avatars bucket found in list");
       }
 
       // Final verification - try to access the bucket
@@ -115,17 +114,17 @@ export const setupAvatarStorage = async () => {
             verifyError.message?.includes("no objects") ||
             verifyError.message?.includes("not found")
           ) {
-            console.log("Bucket is empty but accessible - this is fine");
+            log("Bucket is empty but accessible - this is fine");
             return { error: null };
           }
 
           // For other verification errors, still return success
           // The actual upload will reveal if there are real issues
-          console.log("Verification failed but continuing anyway...");
+          log("Verification failed but continuing anyway...");
           return { error: null };
         }
 
-        console.log("Avatars bucket setup completed successfully");
+        log("Avatars bucket setup completed successfully");
         return { error: null };
       } catch (verifyErr) {
         console.error("Exception during verification:", verifyErr);
@@ -150,9 +149,7 @@ export const setupAvatarStorage = async () => {
     }
 
     // For other errors, be more lenient - return success and let upload attempt reveal real issues
-    console.log(
-      "Setup had errors but returning success to allow upload attempt",
-    );
+    log("Setup had errors but returning success to allow upload attempt");
     return { error: null };
   }
 };
@@ -172,7 +169,7 @@ export const cleanupOldAvatars = async (
       });
 
     if (error || !files) {
-      console.log("No old avatars to cleanup or error:", error);
+      log("No old avatars to cleanup or error:", error);
       return;
     }
 
@@ -184,7 +181,7 @@ export const cleanupOldAvatars = async (
       .map((file) => file.name);
 
     if (filesToDelete.length > 0) {
-      console.log("Cleaning up old avatars:", filesToDelete);
+      log("Cleaning up old avatars:", filesToDelete);
       const { error: deleteError } = await supabase.storage
         .from("avatars")
         .remove(filesToDelete);
@@ -192,7 +189,7 @@ export const cleanupOldAvatars = async (
       if (deleteError) {
         console.error("Error cleaning up old avatars:", deleteError);
       } else {
-        console.log("Old avatars cleaned up successfully");
+        log("Old avatars cleaned up successfully");
       }
     }
   } catch (err) {

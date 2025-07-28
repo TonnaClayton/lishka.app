@@ -3,6 +3,8 @@
  * Completely rewritten for better reliability and consistency
  */
 
+import { log } from "./logging";
+
 // Simple exponential backoff implementation
 export const sleep = (ms: number) =>
   new Promise((resolve) => setTimeout(resolve, ms));
@@ -361,7 +363,7 @@ export async function generateEnhancedOffshoreFishingLocations(
     depthRange: { min: number; max: number };
   };
 }> {
-  console.log(
+  log(
     `🎣 Generating ${targetCount} enhanced offshore fishing locations within ${radiusNM}NM`,
   );
 
@@ -372,7 +374,7 @@ export async function generateEnhancedOffshoreFishingLocations(
 
   // Find nearby shipwrecks first
   const nearbyShipwrecks = findNearbyShipwrecks(centerLat, centerLng, radiusNM);
-  console.log(`🚢 Found ${nearbyShipwrecks.length} shipwrecks in area`);
+  log(`🚢 Found ${nearbyShipwrecks.length} shipwrecks in area`);
 
   // Add shipwreck locations first (they're guaranteed good fishing spots)
   for (const wreck of nearbyShipwrecks) {
@@ -583,8 +585,8 @@ export async function generateEnhancedOffshoreFishingLocations(
     },
   };
 
-  console.log(`✅ Generated ${locations.length} offshore fishing locations`);
-  console.log(`📊 Debug info:`, debugInfo);
+  log(`✅ Generated ${locations.length} offshore fishing locations`);
+  log(`📊 Debug info:`, debugInfo);
 
   return { locations, debugInfo };
 }
@@ -670,9 +672,7 @@ export function clearOffshoreFishingCache(): void {
       localStorage.removeItem(key);
     });
 
-    console.log(
-      `Cleared ${keysToRemove.length} offshore fishing cache entries`,
-    );
+    log(`Cleared ${keysToRemove.length} offshore fishing cache entries`);
   } catch (error) {
     console.error("Error clearing offshore fishing cache:", error);
   }

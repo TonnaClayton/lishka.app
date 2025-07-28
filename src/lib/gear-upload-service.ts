@@ -4,6 +4,8 @@ import {
   getSupabaseStorageStatus,
 } from "./supabase-storage";
 import { OPENAI_ENABLED, validateOpenAIConfig } from "./openai-toggle";
+import { log } from "./logging";
+import { config } from "@/lib/config";
 
 export interface GearInfo {
   name: string;
@@ -81,12 +83,15 @@ export const identifyGearFromImage = async (
       navigator.userAgent,
     );
 
-  console.log("🎣 [GEAR ID] Starting identification:", {
+  log("🎣 [GEAR ID] Starting identification:", {
     fileName: imageFile.name,
     fileSize: imageFile.size,
     fileType: imageFile.type,
     isMobile,
   });
+
+  // Create appropriate prompt based on detected type
+  let promptText = "";
 
   try {
     // Check OpenAI configuration
@@ -101,7 +106,7 @@ export const identifyGearFromImage = async (
       };
     }
 
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    const apiKey = config.VITE_OPENAI_API_KEY;
     if (!apiKey) {
       console.error("❌ [GEAR ID] No API key");
       return {
@@ -114,7 +119,7 @@ export const identifyGearFromImage = async (
     }
 
     // Convert image to base64 - SIMPLIFIED
-    console.log("📷 [GEAR ID] Converting to base64...");
+    log("📷 [GEAR ID] Converting to base64...");
     const base64Image = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       const timeout = setTimeout(() => {
@@ -132,7 +137,7 @@ export const identifyGearFromImage = async (
       reader.readAsDataURL(imageFile);
     });
 
-    console.log("🚀 [GEAR ID] Calling OpenAI...");
+    log("🚀 [GEAR ID] Calling OpenAI...");
 
     // Get user location for targeted fish recommendations
     let userLocation = "";
@@ -142,7 +147,7 @@ export const identifyGearFromImage = async (
         userLocation = storedLocation;
       }
     } catch (error) {
-      console.log("[GEAR ID] Could not get user location:", error);
+      log("[GEAR ID] Could not get user location:", error);
     }
 
     // First, do a quick analysis to determine gear type
@@ -206,10 +211,7 @@ export const identifyGearFromImage = async (
       }
     }
 
-    console.log("🎯 [GEAR ID] Detected type:", detectedType);
-
-    // Create appropriate prompt based on detected type
-    let promptText;
+    log("🎯 [GEAR ID] Detected type:", detectedType);
 
     if (detectedType === "accessory") {
       // Fishing Accessories specific prompt
@@ -623,7 +625,7 @@ Analyze the image carefully and provide detailed, specific information for every
     const data = await response.json();
     const content = data.choices[0]?.message?.content?.trim();
 
-    console.log("📥 [GEAR ID] Raw response:", {
+    log("📥 [GEAR ID] Raw response:", {
       content,
       usage: data.usage,
       finishReason: data.choices[0]?.finish_reason,
@@ -657,7 +659,7 @@ Analyze the image carefully and provide detailed, specific information for every
       }
 
       gearInfo = JSON.parse(cleanContent);
-      console.log("✅ [GEAR ID] Parsed successfully:", gearInfo);
+      log("✅ [GEAR ID] Parsed successfully:", gearInfo);
     } catch (parseError) {
       console.error("❌ [GEAR ID] Parse failed:", parseError.message);
       console.error("❌ [GEAR ID] Content was:", content);
@@ -769,7 +771,7 @@ Analyze the image carefully and provide detailed, specific information for every
     ].filter(Boolean).length;
 
     const totalTime = Date.now() - startTime;
-    console.log("🎉 [GEAR ID] Success!", {
+    log("🎉 [GEAR ID] Success!", {
       finalGearInfo,
       enhancedFieldsCount,
       totalTime,
@@ -816,7 +818,7 @@ export const uploadGearImage = async (
       navigator.userAgent,
     );
 
-  console.log("🔍 [GEAR UPLOAD] Starting:", {
+  log("🔍 [GEAR UPLOAD] Starting:", {
     fileName: file.name,
     fileSize: file.size,
     fileType: file.type,
@@ -840,17 +842,17 @@ export const uploadGearImage = async (
     let photoUrl: string;
     const supabaseStatus = getSupabaseStorageStatus();
 
-    console.log("🔍 [GEAR UPLOAD] Storage status check:", {
+    log("🔍 [GEAR UPLOAD] Storage status check:", {
       supabaseConfigured: supabaseStatus.configured,
-      supabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
-      supabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+      supabaseUrl: !!config.VITE_SUPABASE_URL,
+      supabaseKey: !!config.VITE_SUPABASE_ANON_KEY,
     });
 
     if (supabaseStatus.configured) {
-      console.log("📤 [GEAR UPLOAD] Using Supabase storage (primary)...");
+      log("📤 [GEAR UPLOAD] Using Supabase storage (primary)...");
       try {
         photoUrl = await uploadImageToSupabase(file, "gear-images");
-        console.log("✅ [GEAR UPLOAD] Supabase upload successful:", photoUrl);
+        log("✅ [GEAR UPLOAD] Supabase upload successful:", photoUrl);
       } catch (supabaseError) {
         console.warn(
           "⚠️ [GEAR UPLOAD] Supabase failed, trying Vercel Blob fallback:",
@@ -867,16 +869,11 @@ export const uploadGearImage = async (
         }
 
         photoUrl = await uploadImage(file);
-        console.log(
-          "✅ [GEAR UPLOAD] Vercel Blob fallback successful:",
-          photoUrl,
-        );
+        log("✅ [GEAR UPLOAD] Vercel Blob fallback successful:", photoUrl);
       }
     } else {
       // Fallback to Vercel Blob if Supabase not configured
-      console.log(
-        "📤 [GEAR UPLOAD] Supabase not configured, using Vercel Blob...",
-      );
+      log("📤 [GEAR UPLOAD] Supabase not configured, using Vercel Blob...");
       const blobStatus = getBlobStorageStatus();
       if (!blobStatus.configured) {
         return {
@@ -886,11 +883,11 @@ export const uploadGearImage = async (
       }
 
       photoUrl = await uploadImage(file);
-      console.log("✅ [GEAR UPLOAD] Vercel Blob upload successful:", photoUrl);
+      log("✅ [GEAR UPLOAD] Vercel Blob upload successful:", photoUrl);
     }
 
     // Identify gear
-    console.log("🤖 [GEAR UPLOAD] Identifying gear...");
+    log("🤖 [GEAR UPLOAD] Identifying gear...");
     const gearInfo = await identifyGearFromImage(file).catch((error) => {
       console.warn("⚠️ [GEAR UPLOAD] AI failed, using fallback:", error);
       return {
@@ -901,7 +898,7 @@ export const uploadGearImage = async (
         openaiPrompt: "Error occurred before prompt could be sent",
       };
     });
-    console.log("✅ [GEAR UPLOAD] Gear identified:", gearInfo);
+    log("✅ [GEAR UPLOAD] Gear identified:", gearInfo);
 
     // Create metadata
     const metadata: GearMetadata = {
@@ -912,7 +909,7 @@ export const uploadGearImage = async (
       userConfirmed: false,
     };
 
-    console.log("🎉 [GEAR UPLOAD] Complete!", {
+    log("🎉 [GEAR UPLOAD] Complete!", {
       hasGearInfo: !!gearInfo,
       gearName: gearInfo?.name,
       gearType: gearInfo?.type,

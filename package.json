@@ -10,6 +10,8 @@
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
     "ts:check": "tsc --noEmit",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "types:supabase": "npx supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/supabase.ts"
   },
   "dependencies": {
@@ -87,7 +89,9 @@
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react-swc": "^3.10.1",
     "autoprefixer": "^10.4.19",
+    "eslint": "^9.32.0",
     "postcss": "^8.4.38",
+    "prettier": "^3.6.2",
     "tailwindcss": "3.4.1",
     "tempo-devtools": "^2.0.109",
     "typescript": "^5.8.2",

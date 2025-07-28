@@ -1,3 +1,5 @@
+import { log } from "./logging";
+
 export function getPlaceholderFishImage(): string {
   return "https://ghep9tkuzzpsmczw.public.blob.vercel-storage.com/default-image.jpg";
 }
@@ -21,14 +23,12 @@ export async function getFishImageUrl(
   name: string,
   scientificName: string,
 ): Promise<string> {
-  console.log(
-    `[FishImageService] Looking up image for ${name} (${scientificName})`,
-  );
+  log(`[FishImageService] Looking up image for ${name} (${scientificName})`);
 
   // Only try dynamic URL generation using scientific name
   if (scientificName) {
     const dynamicUrl = generateDynamicFishImageUrl(scientificName);
-    console.log(
+    log(
       `[FishImageService] Trying dynamic URL for ${scientificName}: ${dynamicUrl}`,
     );
 
@@ -37,9 +37,7 @@ export async function getFishImageUrl(
       const testImage = new Image();
       const imageLoadPromise = new Promise<boolean>((resolve) => {
         const timeout = setTimeout(() => {
-          console.log(
-            `[FishImageService] Image load timeout for: ${dynamicUrl}`,
-          );
+          log(`[FishImageService] Image load timeout for: ${dynamicUrl}`);
           resolve(false);
         }, 8000); // 8 second timeout for image loading test
 
@@ -56,22 +54,20 @@ export async function getFishImageUrl(
 
       const imageExists = await imageLoadPromise;
       if (imageExists) {
-        console.log(`[FishImageService] Dynamic URL accessible: ${dynamicUrl}`);
+        log(`[FishImageService] Dynamic URL accessible: ${dynamicUrl}`);
         return dynamicUrl;
       } else {
-        console.log(
-          `[FishImageService] Dynamic URL not accessible: ${dynamicUrl}`,
-        );
+        log(`[FishImageService] Dynamic URL not accessible: ${dynamicUrl}`);
       }
     } catch (error) {
-      console.log(
+      log(
         `[FishImageService] Error checking dynamic URL: ${dynamicUrl}`,
         error,
       );
     }
   }
 
-  console.log(
+  log(
     `[FishImageService] No image found for ${name} (${scientificName}), using placeholder`,
   );
   return getPlaceholderFishImage();

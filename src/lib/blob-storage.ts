@@ -1,4 +1,6 @@
 import { put } from "@vercel/blob";
+import { config } from "@/lib/config";
+import { log } from "./logging";
 
 /**
  * Vercel Blob Storage Service
@@ -11,25 +13,23 @@ import { put } from "@vercel/blob";
  * Get the blob storage token from environment variables
  */
 function getBlobToken(): string {
-  console.log("[BlobStorage] 🔍 Checking for blob token:", {
-    hasViteToken: !!import.meta.env.VITE_BLOB_READ_WRITE_TOKEN,
-    tokenLength: import.meta.env.VITE_BLOB_READ_WRITE_TOKEN?.length || 0,
-    tokenType: typeof import.meta.env.VITE_BLOB_READ_WRITE_TOKEN,
-    allEnvKeys: Object.keys(import.meta.env).filter((key) =>
-      key.includes("BLOB"),
-    ),
+  log("[BlobStorage] 🔍 Checking for blob token:", {
+    hasViteToken: !!config.VITE_BLOB_READ_WRITE_TOKEN,
+    tokenLength: config.VITE_BLOB_READ_WRITE_TOKEN?.length || 0,
+    tokenType: typeof config.VITE_BLOB_READ_WRITE_TOKEN,
+    allEnvKeys: Object.keys(config).filter((key) => key.includes("BLOB")),
   });
 
   // Check for the VITE_ prefixed version (required for Vite browser access)
-  const token = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
+  const token = config.VITE_BLOB_READ_WRITE_TOKEN;
 
   if (!token) {
     console.error("[BlobStorage] ❌ Token missing:", {
-      VITE_BLOB_READ_WRITE_TOKEN: import.meta.env.VITE_BLOB_READ_WRITE_TOKEN,
-      availableEnvVars: Object.keys(import.meta.env).filter(
+      VITE_BLOB_READ_WRITE_TOKEN: config.VITE_BLOB_READ_WRITE_TOKEN,
+      availableEnvVars: Object.keys(config).filter(
         (key) => key.includes("BLOB") || key.includes("VERCEL"),
       ),
-      allEnvVars: Object.keys(import.meta.env),
+      allEnvVars: Object.keys(config),
     });
     throw new Error(
       "VITE_BLOB_READ_WRITE_TOKEN environment variable is missing. " +
@@ -51,7 +51,7 @@ function getBlobToken(): string {
     );
   }
 
-  console.log("[BlobStorage] ✅ Token validation successful:", {
+  log("[BlobStorage] ✅ Token validation successful:", {
     tokenLength: token.length,
     tokenPrefix: token.substring(0, 10) + "...",
     tokenSuffix: "..." + token.substring(token.length - 4),
@@ -109,7 +109,7 @@ export async function uploadImage(file: File): Promise<string> {
     );
 
   try {
-    console.log("[BlobStorage] 🚀 Starting image upload:", {
+    log("[BlobStorage] 🚀 Starting image upload:", {
       name: file.name,
       size: file.size,
       type: file.type,
@@ -123,7 +123,7 @@ export async function uploadImage(file: File): Promise<string> {
     let token;
     try {
       token = getBlobToken();
-      console.log("[BlobStorage] ✅ Token validation successful:", {
+      log("[BlobStorage] ✅ Token validation successful:", {
         hasToken: !!token,
         tokenLength: token.length,
         tokenPrefix: token.substring(0, 10) + "...",
@@ -134,9 +134,8 @@ export async function uploadImage(file: File): Promise<string> {
         error: tokenError.message,
         isMobile,
         availableEnvVars: {
-          VITE_BLOB_READ_WRITE_TOKEN: !!import.meta.env
-            .VITE_BLOB_READ_WRITE_TOKEN,
-          tokenLength: import.meta.env.VITE_BLOB_READ_WRITE_TOKEN?.length || 0,
+          VITE_BLOB_READ_WRITE_TOKEN: !!config.VITE_BLOB_READ_WRITE_TOKEN,
+          tokenLength: config.VITE_BLOB_READ_WRITE_TOKEN?.length || 0,
         },
       });
       throw new Error(`Failed to get upload token: ${tokenError.message}`);
@@ -144,7 +143,7 @@ export async function uploadImage(file: File): Promise<string> {
 
     try {
       validateFile(file);
-      console.log("[BlobStorage] ✅ File validation passed", { isMobile });
+      log("[BlobStorage] ✅ File validation passed", { isMobile });
     } catch (validationError) {
       console.error("[BlobStorage] ❌ File validation failed:", {
         error: validationError.message,
@@ -158,10 +157,10 @@ export async function uploadImage(file: File): Promise<string> {
 
     // Generate filename
     const fileName = generateFileName(file, "images");
-    console.log("[BlobStorage] 📝 Generated filename:", { fileName, isMobile });
+    log("[BlobStorage] 📝 Generated filename:", { fileName, isMobile });
 
     // Upload to Vercel Blob with detailed logging and timeout
-    console.log("[BlobStorage] 🔄 Initiating Vercel Blob upload...", {
+    log("[BlobStorage] 🔄 Initiating Vercel Blob upload...", {
       isMobile,
     });
     const uploadStartTime = Date.now();
@@ -193,18 +192,19 @@ export async function uploadImage(file: File): Promise<string> {
     const blob = await Promise.race([uploadPromise, timeoutPromise]);
 
     const uploadTime = Date.now() - uploadStartTime;
-    console.log("[BlobStorage] ✅ Upload completed:", {
+    log("[BlobStorage] ✅ Upload completed:", {
       uploadTime: uploadTime + "ms",
       isMobile,
       isSlowUpload: uploadTime > 30000,
     });
 
-    console.log("[BlobStorage] 📋 Blob response details:", {
+    log("[BlobStorage] 📋 Blob response details:", {
       hasUrl: !!blob.url,
       url: blob.url,
       pathname: blob.pathname,
       contentType: blob.contentType,
       contentDisposition: blob.contentDisposition,
+      // @ts-ignore
       size: blob.size,
       downloadUrl: blob.downloadUrl,
       isMobile,
@@ -240,7 +240,7 @@ export async function uploadImage(file: File): Promise<string> {
     // Test URL accessibility
     try {
       const testResponse = await fetch(blob.url, { method: "HEAD" });
-      console.log("[BlobStorage] 🔍 URL accessibility test:", {
+      log("[BlobStorage] 🔍 URL accessibility test:", {
         status: testResponse.status,
         ok: testResponse.ok,
         url: blob.url,
@@ -254,7 +254,7 @@ export async function uploadImage(file: File): Promise<string> {
       });
     }
 
-    console.log("[BlobStorage] 🎉 Upload successful:", {
+    log("[BlobStorage] 🎉 Upload successful:", {
       url: blob.url,
       isMobile,
     });
@@ -363,7 +363,7 @@ export async function uploadAvatar(
   userId: string,
 ): Promise<string> {
   try {
-    console.log("[BlobStorage] Starting avatar upload:", {
+    log("[BlobStorage] Starting avatar upload:", {
       userId,
       fileName: file.name,
       fileSize: file.size,
@@ -384,7 +384,7 @@ export async function uploadAvatar(
     const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
     const fileName = `avatars/${userId}-${timestamp}.${fileExt}`;
 
-    console.log("[BlobStorage] Uploading avatar to:", fileName);
+    log("[BlobStorage] Uploading avatar to:", fileName);
 
     // Upload to Vercel Blob
     const blob = await put(fileName, file, {
@@ -392,7 +392,7 @@ export async function uploadAvatar(
       token: token,
     });
 
-    console.log("[BlobStorage] Avatar upload successful:", blob.url);
+    log("[BlobStorage] Avatar upload successful:", blob.url);
     return blob.url;
   } catch (error) {
     console.error("[BlobStorage] Avatar upload failed:", error);
@@ -422,7 +422,7 @@ export function getBlobStorageStatus(): {
   error?: string;
 } {
   try {
-    const token = import.meta.env.VITE_BLOB_READ_WRITE_TOKEN;
+    const token = config.VITE_BLOB_READ_WRITE_TOKEN;
 
     if (!token) {
       return {

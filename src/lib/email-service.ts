@@ -1,5 +1,7 @@
 // Email service configuration and utilities
 // This file handles the email sending functionality using Resend
+import { config } from "@/lib/config";
+import { log } from "./logging";
 
 export interface EmailTemplate {
   to: string;
@@ -30,8 +32,8 @@ export class EmailService {
   ): Promise<{ success: boolean; error?: string }> {
     try {
       // For development/demo purposes, we'll log the email instead of sending
-      if (import.meta.env.DEV) {
-        console.log("📧 Email would be sent:", {
+      if (config.DEV) {
+        log("📧 Email would be sent:", {
           to: template.to,
           subject: template.subject,
           preview: template.html.substring(0, 200) + "...",
