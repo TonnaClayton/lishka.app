@@ -198,9 +198,7 @@ const ProfilePage: React.FC = () => {
   const photoInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-  const [uploadedPhotos, setUploadedPhotos] = useState<
-    (string | ImageMetadata)[]
-  >([]);
+  const [uploadedPhotos, setUploadedPhotos] = useState<ImageMetadata[]>([]);
   const [photosLoaded, setPhotosLoaded] = useState(false);
   const [isSingleColumn, setIsSingleColumn] = useState(() => {
     // Initialize based on screen size - mobile should default to single column
@@ -1046,9 +1044,10 @@ const ProfilePage: React.FC = () => {
           `[ProfilePage] Legacy string photo in share function:`,
           photo,
         );
-        if (photo.startsWith("{") && photo.includes('"url"')) {
+        const photoString = photo as string;
+        if (photoString.startsWith("{") && photoString.includes('"url"')) {
           try {
-            const parsed = JSON.parse(photo);
+            const parsed = JSON.parse(photoString);
             photoUrl = parsed.url || photo;
             metadata = parsed;
           } catch {
@@ -1138,9 +1137,10 @@ const ProfilePage: React.FC = () => {
         `[ProfilePage] Legacy string photo in edit function:`,
         photo,
       );
-      if (photo.startsWith("{") && photo.includes('"url"')) {
+      const photoString = photo as string;
+      if (photoString.startsWith("{") && photoString.includes('"url"')) {
         try {
-          const parsed = JSON.parse(photo);
+          const parsed = JSON.parse(photoString);
           metadata = parsed;
         } catch {
           // Create default metadata structure for legacy data
@@ -2045,9 +2045,13 @@ const ProfilePage: React.FC = () => {
                       photo,
                     );
                     // Check if it's a JSON string that needs parsing
-                    if (photo.startsWith("{") && photo.includes('"url"')) {
+                    const photoString = photo as string;
+                    if (
+                      photoString.startsWith("{") &&
+                      photoString.includes('"url"')
+                    ) {
                       try {
-                        const parsed = JSON.parse(photo);
+                        const parsed = JSON.parse(photoString);
                         photoUrl = parsed.url || photo;
                         metadata = parsed;
                         log(

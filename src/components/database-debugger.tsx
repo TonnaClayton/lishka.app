@@ -115,7 +115,10 @@ const DatabaseDebugger: React.FC = () => {
       log("[DatabaseDebugger] Clearing test data...");
       const { error } = await supabase
         .from("profiles")
-        .update({ gallery_photos: profile?.gallery_photos || [] })
+        .update({
+          gallery_photos:
+            profile?.gallery_photos.map((photo) => photo.url) || [],
+        })
         .eq("id", user.id);
 
       if (error) {

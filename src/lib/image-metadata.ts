@@ -812,7 +812,10 @@ CRITICAL REQUIREMENTS:
           ...fishInfo,
           compressionInfo,
           debugInfo,
-          openaiPrompt: requestBody.messages[0].content,
+          openaiPrompt:
+            typeof requestBody.messages[0].content === "string"
+              ? requestBody.messages[0].content
+              : JSON.stringify(requestBody.messages[0].content),
           rawJsonResponse: content,
         };
       } else {
@@ -845,7 +848,10 @@ CRITICAL REQUIREMENTS:
           ...fixedResponse,
           compressionInfo,
           debugInfo,
-          openaiPrompt: requestBody.messages[0].content,
+          openaiPrompt:
+            typeof requestBody.messages[0].content === "string"
+              ? requestBody.messages[0].content
+              : JSON.stringify(requestBody.messages[0].content),
           rawJsonResponse: content,
         };
       }

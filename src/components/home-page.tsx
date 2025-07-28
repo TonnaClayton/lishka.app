@@ -408,25 +408,19 @@ const HomePage: React.FC<HomePageProps> = ({
         return;
       }
 
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey.trim()}`,
+      const { text } = await generateTextWithAI({
+        model: "gpt-4",
+        messages: [
+          {
+            role: "system",
+            type: "text",
+            content:
+              "You are a marine biology expert. You must respond with ONLY a valid JSON array. Do not include any explanations, markdown formatting, code blocks, or additional text. Start your response with [ and end with ].",
           },
-          body: JSON.stringify({
-            model: "gpt-4",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are a marine biology expert. You must respond with ONLY a valid JSON array. Do not include any explanations, markdown formatting, code blocks, or additional text. Start your response with [ and end with ].",
-              },
-              {
-                role: "user",
-                content: `You are a marine biology expert with access to authoritative species occurrence data, habitat preferences, and geospatial information. Return a comprehensive JSON list of genuinely toxic marine organisms from the ${seaOcean} near ${cleanLocation} at coordinates ${latitude}, ${longitude}.
+          {
+            role: "user",
+            type: "text",
+            content: `You are a marine biology expert with access to authoritative species occurrence data, habitat preferences, and geospatial information. Return a comprehensive JSON list of genuinely toxic marine organisms from the ${seaOcean} near ${cleanLocation} at coordinates ${latitude}, ${longitude}.
 
 These organisms must meet one of the following strict toxicity criteria:
 
@@ -466,46 +460,39 @@ Rank the results by probability of being encountered at the given coordinates:
 RETURN FORMAT (JSON array only):
 Each entry must follow this format:
 {
-  "name": "Common name",
-  "scientificName": "Genus species",
-  "habitat": "Brief description of where it lives",
-  "difficulty": "Expert",
-  "season": "Seasonal availability or bloom period",
-  "dangerType": "Toxic to handle - reason" or "Toxic to eat - reason",
-  "isToxic": true,
-  "probabilityScore": 0.0 to 1.0
+"name": "Common name",
+"scientificName": "Genus species",
+"habitat": "Brief description of where it lives",
+"difficulty": "Expert",
+"season": "Seasonal availability or bloom period",
+"dangerType": "Toxic to handle - reason" or "Toxic to eat - reason",
+"isToxic": true,
+"probabilityScore": 0.0 to 1.0
 }
 
 Example Output:
 [
-  {
-    "name": "Greater Weever",
-    "scientificName": "Trachinus draco",
-    "habitat": "Sandy and muddy bottoms, shallow coastal waters",
-    "difficulty": "Expert",
-    "season": "Year-round",
-    "dangerType": "Toxic to handle - venomous dorsal and gill spines cause intense pain",
-    "isToxic": true,
-    "probabilityScore": 0.93
-  }
+{
+"name": "Greater Weever",
+"scientificName": "Trachinus draco",
+"habitat": "Sandy and muddy bottoms, shallow coastal waters",
+"difficulty": "Expert",
+"season": "Year-round",
+"dangerType": "Toxic to handle - venomous dorsal and gill spines cause intense pain",
+"isToxic": true,
+"probabilityScore": 0.93
+}
 ]
 
 FINAL RULE:
 Return only genuinely toxic marine organisms. If there are fewer than 20 such species in the region, list only those confirmed. Do not pad the list or make assumptions without habitat match or toxicity confirmation.`,
-              },
-            ],
-            temperature: 0.1,
-            max_tokens: 4000,
-          }),
-        },
-      );
+          },
+        ],
+        temperature: 0.1,
+        maxTokens: 4000,
+      });
 
-      if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const content = data.choices[0].message.content;
+      const content = text;
 
       // Always log the raw API response for debugging
       log("=== RAW OPENAI API RESPONSE FOR TOXIC FISH ===");
@@ -870,11 +857,6 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
           });
       } catch (e) {
         console.error("Error parsing OpenAI response:", e);
-        console.error("Raw response:", content);
-
-        // Log the error details for debugging
-        console.error("JSON parsing failed. Raw content:", content);
-        //console.error("Cleaned content:", cleanContent);
 
         // No fallback data - throw error to show user-friendly message
         throw new Error(

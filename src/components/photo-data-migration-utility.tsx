@@ -41,9 +41,10 @@ const PhotoDataMigrationUtility: React.FC = () => {
       if (typeof photo === "string") {
         stringPhotos++;
         // Try to parse if it's a JSON string
-        if (photo.startsWith("{") && photo.includes('"url"')) {
+        const photoString = photo as string;
+        if (photoString.startsWith("{") && photoString.includes('"url"')) {
           try {
-            const parsed = JSON.parse(photo);
+            const parsed = JSON.parse(photoString);
             if (parsed.url && parsed.timestamp) {
               validMetadata++;
               if (parsed.fishInfo && parsed.fishInfo.name !== "Unknown") {
@@ -108,10 +109,11 @@ const PhotoDataMigrationUtility: React.FC = () => {
         try {
           if (typeof photo === "string") {
             // Handle string photos
-            if (photo.startsWith("{") && photo.includes('"url"')) {
+            const photoString = photo as string;
+            if (photoString.startsWith("{") && photoString.includes('"url"')) {
               // Parse JSON string
               try {
-                const parsed = JSON.parse(photo);
+                const parsed = JSON.parse(photoString);
                 // Ensure it has the correct structure
                 const migratedPhoto: ImageMetadata = {
                   url: parsed.url || photo,

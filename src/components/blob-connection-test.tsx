@@ -16,7 +16,7 @@ const BlobConnectionTest = () => {
       try {
         // Test connection by trying to list blobs
         const blobs = await list({
-          storeId: "store_gHeP9tKUZzpsMcZW",
+          //storeId: "store_gHeP9tKUZzpsMcZW",
         });
 
         // Check if we have any blobs
