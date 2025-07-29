@@ -19,7 +19,7 @@ const OpenAITestButton: React.FC = () => {
     try {
       const { text } = await generateTextWithAI({
         model: "gpt-3.5-turbo",
-        messages: [{ role: "user", type: "text", content: "Say hello" }],
+        messages: [{ role: "user", content: "Say hello" }],
         maxTokens: 10,
       });
 

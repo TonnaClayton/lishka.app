@@ -18,6 +18,8 @@ import SafariScrollFix from "./components/safari-scroll-fix";
 import EmailVerificationBanner from "./components/email-verification-banner";
 import { AuthProvider } from "./contexts/auth-context";
 import { config } from "@/lib/config";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./components/home-page"));
@@ -31,32 +33,32 @@ const GearCategoryPage = lazy(() => import("./components/gear-category-page"));
 const SideNav = lazy(() =>
   import("./components/bottom-nav").then((module) => ({
     default: module.SideNav,
-  })),
+  }))
 );
 const WeatherWidgetPro = lazy(() => import("./components/weather-widget-pro"));
 const SettingsPage = lazy(() => import("./components/settings-page"));
 const FaqPage = lazy(() => import("./components/faq-page"));
 const TermsPage = lazy(() => import("./components/terms-page"));
 const PrivacyPolicyPage = lazy(
-  () => import("./components/privacy-policy-page"),
+  () => import("./components/privacy-policy-page")
 );
 const BlobConnectionTest = lazy(
-  () => import("./components/blob-connection-test"),
+  () => import("./components/blob-connection-test")
 );
 const BlobImageUploader = lazy(
-  () => import("./components/blob-image-uploader"),
+  () => import("./components/blob-image-uploader")
 );
 const BlobImageTest = lazy(() => import("./components/blob-image-test"));
 const AccountStatusChecker = lazy(
-  () => import("./components/account-status-checker"),
+  () => import("./components/account-status-checker")
 );
 const StorageSetup = lazy(() => import("./components/storage-setup"));
 const DatabaseDebugger = lazy(() => import("./components/database-debugger"));
 const ImageUploadDebugger = lazy(
-  () => import("./components/image-upload-debugger"),
+  () => import("./components/image-upload-debugger")
 );
 const GearDatabaseDebugger = lazy(
-  () => import("./components/gear-database-debugger"),
+  () => import("./components/gear-database-debugger")
 );
 const WhatsNewPage = lazy(() => import("./components/whats-new-page"));
 
@@ -94,11 +96,19 @@ const router = createBrowserRouter(
         },
         {
           path: "confirm-email",
-          element: <EmailConfirmationPage />,
+          element: (
+            <ProtectedRoute requireAuth={false}>
+              <EmailConfirmationPage />
+            </ProtectedRoute>
+          ),
         },
         {
           path: "auth/confirm",
-          element: <EmailConfirmationPage />,
+          element: (
+            <ProtectedRoute requireAuth={false}>
+              <EmailConfirmationPage />
+            </ProtectedRoute>
+          ),
         },
         // Protected routes
         {
@@ -296,7 +306,7 @@ const router = createBrowserRouter(
     future: {
       v7_relativeSplatPath: true,
     },
-  },
+  }
 );
 
 function AppContent() {
@@ -311,7 +321,7 @@ function AppContent() {
 
   // Check if we're on auth pages (login/signup) to hide sidebar
   const isAuthPage = ["/login", "/signup", "/forgot-password"].includes(
-    location.pathname,
+    location.pathname
   );
 
   // Track if we're on mobile or desktop
@@ -406,16 +416,29 @@ function AppWithAuth() {
 }
 
 function App() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+        retry: 1,
+        staleTime: 5 * 1000,
+      },
+    },
+  });
+
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center h-screen">
-          <p>Loading...</p>
-        </div>
-      }
-    >
-      <RouterProvider router={router} />
-    </Suspense>
+    <QueryClientProvider client={queryClient}>
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center h-screen">
+            <p>Loading...</p>
+          </div>
+        }
+      >
+        <RouterProvider router={router} />
+      </Suspense>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }
 

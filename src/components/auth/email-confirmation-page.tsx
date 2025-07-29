@@ -28,7 +28,7 @@ const EmailConfirmationPage: React.FC = () => {
         try {
           const { data, error } = await supabase.auth.verifyOtp({
             token_hash: token,
-            type: "email",
+            type: "signup",
           });
 
           if (error) {

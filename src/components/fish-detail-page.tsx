@@ -32,6 +32,7 @@ import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
 import LoadingDots from "./loading-dots";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
+import { generateTextWithAI } from "@/lib/ai";
 
 // Fishing Season Calendar Component
 interface FishingSeasonCalendarProps {
@@ -787,20 +788,12 @@ const FishDetailPage = () => {
         } else {
           log("🌐 Fetching fresh fish info from API");
           // First API call for general fishing information
-          const response = await fetch(
-            "https://api.openai.com/v1/chat/completions",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${apiKey.trim()}`,
-              },
-              body: JSON.stringify({
-                model: "gpt-4o",
-                messages: [
-                  {
-                    role: "system",
-                    content: `You are a professional fishing guide, marine biologist, and tackle expert with deep global knowledge of fish species, seasonal patterns, fishing regulations, and advanced fishing methods.
+          const { text } = await generateTextWithAI({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: `You are a professional fishing guide, marine biologist, and tackle expert with deep global knowledge of fish species, seasonal patterns, fishing regulations, and advanced fishing methods.
 
 CRITICAL ACCURACY REQUIREMENTS:
 🎯 ONLY provide information you are confident is accurate and verifiable
@@ -908,72 +901,67 @@ rigType
 line
 leader
 rodType`,
-                  },
-                  {
-                    role: "user",
-                    content: `Provide detailed fishing information for ${fishIdentifier} in ${userLocation}. Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Return only valid JSON in this exact format:
+              },
+              {
+                role: "user",
+                content: `Provide detailed fishing information for ${fishIdentifier} in ${userLocation}. Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}. Return only valid JSON in this exact format:
 {
-  "name": "Common name of the species",
-  "scientificName": "Scientific name (Latin binomial nomenclature)",
-  "description": "Habitat, behavior, and identifying features specific to the region",
-  "localNames": ["Local names if known, otherwise empty array"],
-  "currentSeasonStatus": "Yes" or "No",
-  "officialSeasonDates": "e.g. 'June 1 - September 30' or 'Year-round'",
-  "fishingLocation": "${userLocation}",
-  "fishingSeasons": {
-    "inSeason": ["Months when it's typically targeted"],
-    "traditionalSeason": ["Traditional local fishing months"],
-    "conservationConcerns": "Status or pressures in this region",
-    "regulations": "Local rules or size/bag limits",
-    "biologicalReasoning": "Why it's in season (spawning, feeding, migration)",
-    "reasoning": "How biology relates to local laws"
+"name": "Common name of the species",
+"scientificName": "Scientific name (Latin binomial nomenclature)",
+"description": "Habitat, behavior, and identifying features specific to the region",
+"localNames": ["Local names if known, otherwise empty array"],
+"currentSeasonStatus": "Yes" or "No",
+"officialSeasonDates": "e.g. 'June 1 - September 30' or 'Year-round'",
+"fishingLocation": "${userLocation}",
+"fishingSeasons": {
+"inSeason": ["Months when it's typically targeted"],
+"traditionalSeason": ["Traditional local fishing months"],
+"conservationConcerns": "Status or pressures in this region",
+"regulations": "Local rules or size/bag limits",
+"biologicalReasoning": "Why it's in season (spawning, feeding, migration)",
+"reasoning": "How biology relates to local laws"
+},
+"allRoundGear": {
+"rods": "All-round rod recommendation",
+"reels": "All-round reel type/size",
+"line": "Line type and strength",
+"leader": "Leader material and size",
+"description": "General setup for multi-method fishing of this species in this location"
+},
+"fishingMethods": [
+{
+  "method": "Name of selected method (e.g. Jigging, Trolling, Bottom Fishing...)",
+  "description": "Why this method works well for this fish in this location",
+  "gear": {
+    "..." : "Method-specific fields from the field guide above"
   },
-  "allRoundGear": {
-    "rods": "All-round rod recommendation",
-    "reels": "All-round reel type/size",
-    "line": "Line type and strength",
-    "leader": "Leader material and size",
-    "description": "General setup for multi-method fishing of this species in this location"
+  "proTip": "Expert tip tailored to this method and location"
+},
+{
+  "method": "Second best method",
+  "description": "...",
+  "gear": {
+    "..." : "Fields depending on method selected"
   },
-  "fishingMethods": [
-    {
-      "method": "Name of selected method (e.g. Jigging, Trolling, Bottom Fishing...)",
-      "description": "Why this method works well for this fish in this location",
-      "gear": {
-        "..." : "Method-specific fields from the field guide above"
-      },
-      "proTip": "Expert tip tailored to this method and location"
-    },
-    {
-      "method": "Second best method",
-      "description": "...",
-      "gear": {
-        "..." : "Fields depending on method selected"
-      },
-      "proTip": "..."
-    },
-    {
-      "method": "Third best method",
-      "description": "...",
-      "gear": {
-        "..." : "Fields depending on method selected"
-      },
-      "proTip": "..."
-    }
-  ]
+  "proTip": "..."
+},
+{
+  "method": "Third best method",
+  "description": "...",
+  "gear": {
+    "..." : "Fields depending on method selected"
+  },
+  "proTip": "..."
+}
+]
 }`,
-                  },
-                ],
-                temperature: 0.0, // Zero temperature for maximum accuracy and consistency
-              }),
-            },
-          );
-
-          if (!response.ok) throw new Error(`API error: ${response.status}`);
-          const data = await response.json();
+              },
+            ],
+            temperature: 0.0, // Zero temperature for maximum accuracy and consistency
+          });
 
           try {
-            const content = data.choices[0].message.content.trim();
+            const content = text;
             const cleanContent = content
               .replace(/```json\n?|```\n?/g, "")
               .trim();
@@ -1039,20 +1027,13 @@ rodType`,
         } else {
           log("🌐 Fetching fresh regulations from API");
           // Second API call for detailed regulations
-          const regulationsResponse = await fetch(
-            "https://api.openai.com/v1/chat/completions",
-            {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${apiKey.trim()}`,
-              },
-              body: JSON.stringify({
-                model: "gpt-4o",
-                messages: [
-                  {
-                    role: "system",
-                    content: `You are a fishing regulations expert. Your primary responsibility is to provide ONLY verifiable, accurate regulatory information. You must be extremely conservative and honest about what you know versus what you don't know.
+
+          const { text } = await generateTextWithAI({
+            model: "gpt-4o",
+            messages: [
+              {
+                role: "system",
+                content: `You are a fishing regulations expert. Your primary responsibility is to provide ONLY verifiable, accurate regulatory information. You must be extremely conservative and honest about what you know versus what you don't know.
 
 CRITICAL ANTI-HALLUCINATION RULES:
 🚫 NEVER create fake regulation numbers, law names, or government authorities
@@ -1085,10 +1066,10 @@ CONFIDENCE LEVELS (be conservative):
 - Low: For most specific local regulations (DEFAULT to this)
 
 REMEMBER: It's better to say "Check with local authorities" than to provide potentially false information that could lead to legal violations.`,
-                  },
-                  {
-                    role: "user",
-                    content: `Provide detailed fishing regulations for ${fishIdentifier} in ${userLocation}.
+              },
+              {
+                role: "user",
+                content: `Provide detailed fishing regulations for ${fishIdentifier} in ${userLocation}.
 Species: ${initialData.name} (Scientific name: ${initialData.scientificName || "Unknown"})
 Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}.
 
@@ -1097,42 +1078,31 @@ IMPORTANT: For countries that are part of the EU (like Malta, Cyprus, Spain, etc
 Return only valid JSON in the following format:
 
 {
-  "sizeLimit": {
-    "value": "Minimum and/or maximum legal size limits (e.g., 'Minimum 25cm', 'No size limit', or 'Check with local authorities')",
-    "source": "The name of the law or governing authority - prioritize EU regulations for EU countries (e.g., 'EU Common Fisheries Policy', 'Malta Fisheries Regulation 2022, Article 5')",
-    "confidence": "High | Medium | Low"
-  },
-  "bagLimit": {
-    "value": "Maximum number of fish allowed per person per day or note if unlimited or seasonal",
-    "source": "Governing authority or law name - prioritize EU regulations for EU countries",
-    "confidence": "High | Medium | Low"
-  },
-  "penalties": {
-    "value": "Yes or No only - do not specify amounts or details",
-    "source": "Law name or enforcement authority",
-    "confidence": "High | Medium | Low"
-  },
-  "lastUpdated": "e.g., '2024-07-01' or 'Check with local authority for most recent regulations'"
+"sizeLimit": {
+"value": "Minimum and/or maximum legal size limits (e.g., 'Minimum 25cm', 'No size limit', or 'Check with local authorities')",
+"source": "The name of the law or governing authority - prioritize EU regulations for EU countries (e.g., 'EU Common Fisheries Policy', 'Malta Fisheries Regulation 2022, Article 5')",
+"confidence": "High | Medium | Low"
+},
+"bagLimit": {
+"value": "Maximum number of fish allowed per person per day or note if unlimited or seasonal",
+"source": "Governing authority or law name - prioritize EU regulations for EU countries",
+"confidence": "High | Medium | Low"
+},
+"penalties": {
+"value": "Yes or No only - do not specify amounts or details",
+"source": "Law name or enforcement authority",
+"confidence": "High | Medium | Low"
+},
+"lastUpdated": "e.g., '2024-07-01' or 'Check with local authority for most recent regulations'"
 }`,
-                  },
-                ],
-                temperature: 0.0, // Zero temperature for completely deterministic results
-              }),
-            },
-          );
-
-          if (!regulationsResponse.ok)
-            throw new Error(
-              `Regulations API error: ${regulationsResponse.status}`,
-            );
-
-          const regulationsData = await regulationsResponse.json();
+              },
+            ],
+            temperature: 0.0, // Zero temperature for completely deterministic results
+          });
 
           // Parse regulations response
           try {
-            const regulationsContent =
-              regulationsData.choices[0].message.content.trim();
-            const cleanRegulationsContent = regulationsContent
+            const cleanRegulationsContent = text
               .replace(/```json\n?|```\n?/g, "")
               .trim();
             regulationsResult = JSON.parse(cleanRegulationsContent);
@@ -1205,20 +1175,12 @@ Return only valid JSON in the following format:
           const updatedFishIdentifier = `${result.name} (${result.scientificName})`;
 
           try {
-            const retryRegulationsResponse = await fetch(
-              "https://api.openai.com/v1/chat/completions",
-              {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                  Authorization: `Bearer ${apiKey.trim()}`,
-                },
-                body: JSON.stringify({
-                  model: "gpt-4o",
-                  messages: [
-                    {
-                      role: "system",
-                      content: `You are a fishing regulations expert with detailed knowledge of local, national, and EU fishing laws. You must provide accurate, verifiable regulatory information for the requested species and location, including size limits, bag limits, open seasons, licensing, and special rules.
+            const { text } = await generateTextWithAI({
+              model: "gpt-4o",
+              messages: [
+                {
+                  role: "system",
+                  content: `You are a fishing regulations expert with detailed knowledge of local, national, and EU fishing laws. You must provide accurate, verifiable regulatory information for the requested species and location, including size limits, bag limits, open seasons, licensing, and special rules.
 
 IMPORTANT: Use the scientific name provided to ensure accurate species identification and regulatory lookup. Scientific names are standardized and will help you provide more precise regulations.
 
@@ -1246,10 +1208,10 @@ CONFIDENCE LEVELS:
 - High: Specific regulatory references with exact article/section numbers
 - Medium: General EU or national regulations that likely apply, with regulation names
 - Low: Information is uncertain, unavailable, or requires verification with local authorities`,
-                    },
-                    {
-                      role: "user",
-                      content: `Provide detailed fishing regulations for ${updatedFishIdentifier} in ${userLocation}.
+                },
+                {
+                  role: "user",
+                  content: `Provide detailed fishing regulations for ${updatedFishIdentifier} in ${userLocation}.
 Species: ${result.name} (Scientific name: ${result.scientificName})
 Today is ${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}.
 
@@ -1258,54 +1220,46 @@ IMPORTANT: For countries that are part of the EU (like Malta, Cyprus, Spain, etc
 Return only valid JSON in the following format:
 
 {
-  "sizeLimit": {
-    "value": "Minimum and/or maximum legal size limits (e.g., 'Minimum 25cm', 'No size limit', or 'Check with local authorities')",
-    "source": "The name of the law or governing authority - prioritize EU regulations for EU countries (e.g., 'EU Common Fisheries Policy', 'Malta Fisheries Regulation 2022, Article 5')",
-    "confidence": "High | Medium | Low"
-  },
-  "bagLimit": {
-    "value": "Maximum number of fish allowed per person per day or note if unlimited or seasonal",
-    "source": "Governing authority or law name - prioritize EU regulations for EU countries",
-    "confidence": "High | Medium | Low"
-  },
-  "penalties": {
-    "value": "Yes or No only - do not specify amounts or details",
-    "source": "Law name or enforcement authority",
-    "confidence": "High | Medium | Low"
-  },
-  "lastUpdated": "e.g., '2024-07-01' or 'Check with local authority for most recent regulations'"
+"sizeLimit": {
+"value": "Minimum and/or maximum legal size limits (e.g., 'Minimum 25cm', 'No size limit', or 'Check with local authorities')",
+"source": "The name of the law or governing authority - prioritize EU regulations for EU countries (e.g., 'EU Common Fisheries Policy', 'Malta Fisheries Regulation 2022, Article 5')",
+"confidence": "High | Medium | Low"
+},
+"bagLimit": {
+"value": "Maximum number of fish allowed per person per day or note if unlimited or seasonal",
+"source": "Governing authority or law name - prioritize EU regulations for EU countries",
+"confidence": "High | Medium | Low"
+},
+"penalties": {
+"value": "Yes or No only - do not specify amounts or details",
+"source": "Law name or enforcement authority",
+"confidence": "High | Medium | Low"
+},
+"lastUpdated": "e.g., '2024-07-01' or 'Check with local authority for most recent regulations'"
 }`,
-                    },
-                  ],
-                  temperature: 0.0, // Zero temperature for deterministic results
-                }),
-              },
+                },
+              ],
+              temperature: 0.0, // Zero temperature for deterministic results
+            });
+
+            const cleanRetryRegulationsContent = text
+              .replace(/```json\n?|```\n?/g, "")
+              .trim();
+            const retryRegulationsResult = JSON.parse(
+              cleanRetryRegulationsContent,
             );
 
-            if (retryRegulationsResponse.ok) {
-              const retryRegulationsData =
-                await retryRegulationsResponse.json();
-              const retryRegulationsContent =
-                retryRegulationsData.choices[0].message.content.trim();
-              const cleanRetryRegulationsContent = retryRegulationsContent
-                .replace(/```json\n?|```\n?/g, "")
-                .trim();
-              const retryRegulationsResult = JSON.parse(
-                cleanRetryRegulationsContent,
-              );
+            log("✅ Retry regulations parsed successfully:", {
+              sizeLimit: retryRegulationsResult.sizeLimit?.confidence,
+              bagLimit: retryRegulationsResult.bagLimit?.confidence,
+              seasonDates: retryRegulationsResult.seasonDates?.confidence,
+              licenseRequired:
+                retryRegulationsResult.licenseRequired?.confidence,
+              penalties: retryRegulationsResult.penalties?.confidence,
+            });
 
-              log("✅ Retry regulations parsed successfully:", {
-                sizeLimit: retryRegulationsResult.sizeLimit?.confidence,
-                bagLimit: retryRegulationsResult.bagLimit?.confidence,
-                seasonDates: retryRegulationsResult.seasonDates?.confidence,
-                licenseRequired:
-                  retryRegulationsResult.licenseRequired?.confidence,
-                penalties: retryRegulationsResult.penalties?.confidence,
-              });
-
-              // Use the retry result if it has better confidence
-              regulationsResult = retryRegulationsResult;
-            }
+            // Use the retry result if it has better confidence
+            regulationsResult = retryRegulationsResult;
           } catch (retryError) {
             console.warn(
               "Retry regulations call failed, using original result:",

@@ -413,13 +413,11 @@ const HomePage: React.FC<HomePageProps> = ({
         messages: [
           {
             role: "system",
-            type: "text",
             content:
               "You are a marine biology expert. You must respond with ONLY a valid JSON array. Do not include any explanations, markdown formatting, code blocks, or additional text. Start your response with [ and end with ].",
           },
           {
             role: "user",
-            type: "text",
             content: `You are a marine biology expert with access to authoritative species occurrence data, habitat preferences, and geospatial information. Return a comprehensive JSON list of genuinely toxic marine organisms from the ${seaOcean} near ${cleanLocation} at coordinates ${latitude}, ${longitude}.
 
 These organisms must meet one of the following strict toxicity criteria:
@@ -758,13 +756,11 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
         messages: [
           {
             role: "system",
-            type: "text",
             content:
               "You are a marine biology expert. You must respond with ONLY a valid JSON array. Do not include any explanations, markdown formatting, code blocks, or additional text. Start your response with [ and end with ].",
           },
           {
             role: "user",
-            type: "text",
             content: `Generate a JSON array with exactly ${pageSize} fish species that are NATIVE and commonly found in the ${getLocationToSeaMapping(userLocation)} near ${cleanLocation} during ${currentMonth}. 
 
 CRITICAL REQUIREMENTS:

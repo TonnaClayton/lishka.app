@@ -68,14 +68,14 @@ const SignupPage: React.FC = () => {
       const { error, needsConfirmation } = await signUp(
         formData.email.trim().toLowerCase(),
         formData.password,
-        formData.fullName.trim(),
+        formData.fullName.trim()
       );
 
       if (error) {
         // Handle specific error types
         if (error.message?.includes("User already registered")) {
           setError(
-            "An account with this email already exists. Try logging in instead.",
+            "An account with this email already exists. Try logging in instead."
           );
         } else if (error.message?.includes("Invalid email")) {
           setError("Please enter a valid email address.");
@@ -83,7 +83,7 @@ const SignupPage: React.FC = () => {
           setError("Password must be at least 6 characters long.");
         } else {
           setError(
-            error.message || "Failed to create account. Please try again.",
+            error.message || "Failed to create account. Please try again."
           );
         }
       } else {
