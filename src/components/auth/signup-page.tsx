@@ -156,8 +156,8 @@ const SignupPage: React.FC = () => {
   }
 
   return (
-    <div className="h-full bg-white dark:bg-gray-900 flex flex-col p-6">
-      <div className="w-full max-w-sm mx-auto h-full flex-1 flex flex-col">
+    <div className="h-full bg-white dark:bg-gray-900 flex overflow-y-auto md:overflow-visible flex-col p-6">
+      <div className="w-full max-w-sm mx-auto h-full  flex-1 flex flex-col">
         {/* Header */}
         <div className="flex items-center justify-between mb-12 mt-4">
           <div className="flex items-center gap-2">
