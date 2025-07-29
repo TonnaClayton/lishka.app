@@ -75,7 +75,7 @@ const HomePage: React.FC<HomePageProps> = ({
       };
       localStorage.setItem(
         "userLocationFull",
-        JSON.stringify(defaultLocationFull),
+        JSON.stringify(defaultLocationFull)
       );
       return defaultLocation;
     }
@@ -371,7 +371,7 @@ const HomePage: React.FC<HomePageProps> = ({
         }
       } catch (e) {
         console.warn(
-          "Could not parse saved location coordinates, using defaults",
+          "Could not parse saved location coordinates, using defaults"
         );
       }
 
@@ -386,7 +386,7 @@ const HomePage: React.FC<HomePageProps> = ({
           "Using cached toxic fish data for",
           userLocation,
           seaOcean,
-          currentMonth,
+          currentMonth
         );
 
         // Handle both old cache format (just fish list) and new format (with debug info)
@@ -536,7 +536,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
           toxicFishData.map((fish) => ({
             name: fish.name,
             scientificName: fish.scientificName,
-          })),
+          }))
         );
 
         // No filtering - keep all fish as returned by OpenAI
@@ -548,7 +548,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
         });
 
         log(
-          `DEBUG: Final toxic fish count (no filtering): ${toxicFishData.length}`,
+          `DEBUG: Final toxic fish count (no filtering): ${toxicFishData.length}`
         );
 
         // Ensure each fish has required fields, clean scientific names, and is marked as toxic
@@ -631,7 +631,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
 
       // Debug log
       log(
-        `DEBUG: Received ${toxicFishWithDefaults.length} toxic fish from OpenAI API for ${cleanLocation} (${seaOcean}) at coordinates ${latitude}, ${longitude}`,
+        `DEBUG: Received ${toxicFishWithDefaults.length} toxic fish from OpenAI API for ${cleanLocation} (${seaOcean}) at coordinates ${latitude}, ${longitude}`
       );
       log(
         "DEBUG: Toxic fish data (ordered by probability):",
@@ -639,7 +639,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
           name: fish.name,
           scientificName: fish.scientificName,
           probabilityScore: fish.probabilityScore,
-        })),
+        }))
       );
 
       setToxicFishList(toxicFishWithDefaults);
@@ -670,7 +670,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
             const browserLang = navigator.language.split("-")[0] || "en";
             localName = await getLocalFishName(
               fish.scientificName,
-              browserLang,
+              browserLang
             );
           } catch (e) {
             console.error(`Error fetching local name for ${fish.name}:`, e);
@@ -690,7 +690,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
               return newList;
             });
           }
-        }),
+        })
       );
     } catch (err) {
       console.error("Error fetching toxic fish data:", err);
@@ -704,7 +704,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
       }
       setToxicFishList([]);
       setError(
-        err instanceof Error ? err.message : "Failed to fetch toxic fish data",
+        err instanceof Error ? err.message : "Failed to fetch toxic fish data"
       );
     } finally {
       log("Finished fetchToxicFishData");
@@ -856,7 +856,7 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
 
         // No fallback data - throw error to show user-friendly message
         throw new Error(
-          "Unable to parse fish data from API response. Please try again.",
+          "Unable to parse fish data from API response. Please try again."
         );
       }
 
@@ -867,7 +867,7 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
         const isToxicInToxicList = toxicFishList.some(
           (toxicFish) =>
             toxicFish.scientificName.toLowerCase() ===
-            fish.scientificName.toLowerCase(),
+            fish.scientificName.toLowerCase()
         );
         return {
           ...fish,
@@ -886,7 +886,7 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
         cacheApiResponse(
           cacheKey,
           crossReferencedFishData,
-          12 * 60 * 60 * 1000,
+          12 * 60 * 60 * 1000
         );
       }
 
@@ -906,7 +906,7 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
             const browserLang = navigator.language.split("-")[0] || "en";
             localName = await getLocalFishName(
               fish.scientificName,
-              browserLang,
+              browserLang
             );
           } catch (e) {
             console.error(`Error fetching local name for ${fish.name}:`, e);
@@ -929,12 +929,12 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
               return newList;
             });
           }
-        }),
+        })
       );
     } catch (err) {
       console.error("Error fetching fish data:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to fetch fish data",
+        err instanceof Error ? err.message : "Failed to fetch fish data"
       );
     } finally {
       if (isLoadMore) {
@@ -1021,7 +1021,7 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
 
       if (locationChanged) {
         log(
-          `Location changed from ${previousLocation} to ${validatedLocation}, clearing cache`,
+          `Location changed from ${previousLocation} to ${validatedLocation}, clearing cache`
         );
 
         // Clear cache only for the old location
@@ -1045,7 +1045,7 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
           }
         } catch (e) {
           console.warn(
-            "Could not parse saved location coordinates for cache clearing",
+            "Could not parse saved location coordinates for cache clearing"
           );
         }
 
@@ -1081,7 +1081,7 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
           }
         } catch (e) {
           console.warn(
-            "Could not parse saved location coordinates for cache checking",
+            "Could not parse saved location coordinates for cache checking"
           );
         }
 
@@ -1112,7 +1112,7 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
           console.error("Error fetching data:", error);
           if (isMounted) {
             setError(
-              error instanceof Error ? error.message : "Failed to fetch data",
+              error instanceof Error ? error.message : "Failed to fetch data"
             );
           }
         }
@@ -1164,7 +1164,7 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
   };
 
   return (
-    <div className="flex flex-col dark:bg-background border-l-0 border-y-0 border-r-0 rounded-xl">
+    <div className="flex flex-col dark:bg-background h-full relative border-l-0 border-y-0 border-r-0 rounded-xl">
       {/* Email Verification Banner */}
       <EmailVerificationBanner />
 
@@ -1201,7 +1201,7 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
         </div>
       </header>
       {/* Main Content */}
-      <div className="flex-1 w-full p-4 lg:p-6 pb-20">
+      <div className="flex-1 w-full p-4 lg:p-6 pb-20 overflow-y-auto">
         {/* Fishing Tips Carousel Section */}
         <div className="mb-8">
           <FishingTipsCarousel location={userLocation} />
@@ -1391,7 +1391,7 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
         onLocationSelect={(newLocation) => {
           log(
             "[HomePage] LocationModal onLocationSelect called with:",
-            newLocation,
+            newLocation
           );
           // Update the location in the title
           setUserLocation(newLocation.name);

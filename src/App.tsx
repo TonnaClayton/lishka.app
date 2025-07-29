@@ -368,7 +368,7 @@ function AppContent() {
           {/* Email verification banner - only show on non-auth pages */}
           {!isAuthPage && <EmailVerificationBanner />}
 
-          <div className="w-full flex-1">
+          <div className="w-full h-full flex-1">
             {/* Tempo routes - render before outlet to catch tempo routes first */}
             {config.VITE_TEMPO && useRoutes(routes)}
             {/* Outlet for nested routes with suspense boundary */}
