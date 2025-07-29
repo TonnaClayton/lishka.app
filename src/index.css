@@ -105,13 +105,16 @@
   }
   body {
     @apply bg-background text-foreground font-['Inter',sans-serif];
-    min-height: 100%;
-    overflow-y: auto;
-    position: relative;
+    height: 100%;
   }
   html {
     height: 100%;
+    overflow: hidden;
     -webkit-overflow-scrolling: touch;
+  }
+
+  #root {
+    height: 100%;
   }
 }
 
@@ -149,7 +152,7 @@
 
   /* Mobile viewport fix */
   @media (max-width: 640px) {
-    html {
+    /* html {
       height: -webkit-fill-available;
     }
     body {
@@ -159,7 +162,7 @@
     .min-h-screen {
       min-height: 100vh;
       min-height: -webkit-fill-available;
-    }
+    } */
 
     /* Mobile-specific spacing adjustments */
     .card-grid-mobile {

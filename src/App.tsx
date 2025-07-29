@@ -20,6 +20,7 @@ import { AuthProvider } from "./contexts/auth-context";
 import { config } from "@/lib/config";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { cn } from "./lib/utils";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./components/home-page"));
@@ -342,10 +343,10 @@ function AppContent() {
   }, []);
 
   return (
-    <div className="w-full h-screen overflow-hidden">
+    <div className="w-full h-full overflow-hidden">
       <SafariScrollFix />
       {/* Use flexbox layout for desktop */}
-      <div className="mx-auto relative flex w-full h-full">
+      <div className="flex w-full h-full">
         {/* Side Navigation - flex-none (fixed width) - hidden on auth pages */}
         {!isAuthPage && (
           <Suspense
@@ -359,12 +360,15 @@ function AppContent() {
 
         {/* Main content area - flex-auto (flexible width) */}
         <div
-          className={`flex-1 max-w-full h-full flex flex-col overflow-hidden ${!isAuthPage ? "lg:ml-[var(--sidebar-width)]" : ""}`}
+          className={cn(
+            "flex-1 max-w-full h-full flex flex-col overflow-hidden",
+            !isAuthPage ? "lg:ml-[var(--sidebar-width)]" : ""
+          )}
         >
           {/* Email verification banner - only show on non-auth pages */}
           {!isAuthPage && <EmailVerificationBanner />}
 
-          <div className="w-full flex-1 overflow-y-auto pb-32 lg:pb-4">
+          <div className="w-full flex-1">
             {/* Tempo routes - render before outlet to catch tempo routes first */}
             {config.VITE_TEMPO && useRoutes(routes)}
             {/* Outlet for nested routes with suspense boundary */}
@@ -387,18 +391,16 @@ function AppContent() {
 
         {/* Weather widget sidebar - flex-none (fixed width) */}
         {shouldShowWeatherWidget && (
-          <div className="hidden lg:block lg:w-[380px] lg:flex-none h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 overflow-hidden">
-            <div className="h-full overflow-y-auto">
-              <Suspense
-                fallback={
-                  <div className="p-4 animate-pulse">
-                    <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
-                  </div>
-                }
-              >
-                <WeatherWidgetPro />
-              </Suspense>
-            </div>
+          <div className="hidden lg:block lg:w-[380px] lg:flex-none bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 h-full overflow-y-auto">
+            <Suspense
+              fallback={
+                <div className="p-4 animate-pulse">
+                  <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+                </div>
+              }
+            >
+              <WeatherWidgetPro />
+            </Suspense>
           </div>
         )}
       </div>
