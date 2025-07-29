@@ -1,4 +1,5 @@
 import { ImageMetadata } from "./image-metadata";
+import { log } from "./logging";
 
 /**
  * Unified overlay service that handles overlay rendering decisions consistently
@@ -34,7 +35,7 @@ export class OverlayService {
   ): boolean {
     const isMobile = this.isMobileDevice();
 
-    console.log("🔍 [OVERLAY SERVICE] shouldShowOverlay called:", {
+    log("🔍 [OVERLAY SERVICE] shouldShowOverlay called:", {
       hasMetadata: !!metadata,
       isSingleColumn,
       forceShow,
@@ -44,7 +45,7 @@ export class OverlayService {
     });
 
     if (!metadata) {
-      console.log("🔍 [OVERLAY SERVICE] No overlay: No metadata");
+      log("🔍 [OVERLAY SERVICE] No overlay: No metadata");
       return false;
     }
 
@@ -53,7 +54,7 @@ export class OverlayService {
     const hasLocation = this.hasLocationInformation(metadata);
     const hasAnyDisplayableInfo = hasFishInfo || hasLocation;
 
-    console.log("🔍 [OVERLAY SERVICE] Data analysis:", {
+    log("🔍 [OVERLAY SERVICE] Data analysis:", {
       hasFishInfo,
       hasLocation,
       hasAnyDisplayableInfo,
@@ -66,10 +67,10 @@ export class OverlayService {
     });
 
     if (!hasAnyDisplayableInfo) {
-      console.log(
-        "🔍 [OVERLAY SERVICE] No overlay: No displayable information",
-        { isMobile, deviceType: isMobile ? "mobile" : "desktop" },
-      );
+      log("🔍 [OVERLAY SERVICE] No overlay: No displayable information", {
+        isMobile,
+        deviceType: isMobile ? "mobile" : "desktop",
+      });
       return false;
     }
 
@@ -83,7 +84,7 @@ export class OverlayService {
 
     // ULTRA CRITICAL: If mobile and has displayable info, ALWAYS return true
     if (isMobile && hasAnyDisplayableInfo) {
-      console.log(
+      log(
         "🔍 [OVERLAY SERVICE] MOBILE OVERRIDE: Forcing overlay display on mobile with displayable info",
         {
           isMobile,
@@ -97,7 +98,7 @@ export class OverlayService {
       return true;
     }
 
-    console.log("🔍 [OVERLAY SERVICE] Final display decision:", {
+    log("🔍 [OVERLAY SERVICE] Final display decision:", {
       shouldShow,
       forceMobileOverlay,
       finalDecision,
@@ -150,7 +151,7 @@ export class OverlayService {
   extractPhotoMetadata(photo: string | ImageMetadata): ImageMetadata | null {
     const isMobile = this.isMobileDevice();
 
-    console.log("🔍 [OVERLAY SERVICE] extractPhotoMetadata called:", {
+    log("🔍 [OVERLAY SERVICE] extractPhotoMetadata called:", {
       photoType: typeof photo,
       isString: typeof photo === "string",
       photoPreview:
@@ -164,7 +165,7 @@ export class OverlayService {
       if (photo.startsWith("{") || photo.startsWith("[")) {
         try {
           const parsed = JSON.parse(photo);
-          console.log("🔍 [OVERLAY SERVICE] Successfully parsed JSON string:", {
+          log("🔍 [OVERLAY SERVICE] Successfully parsed JSON string:", {
             hasFishInfo: !!parsed.fishInfo,
             fishName: parsed.fishInfo?.name,
             fishSize: parsed.fishInfo?.estimatedSize,
@@ -187,7 +188,7 @@ export class OverlayService {
         }
       } else {
         // Plain URL string
-        console.log("🔍 [OVERLAY SERVICE] Plain URL string detected:", {
+        log("🔍 [OVERLAY SERVICE] Plain URL string detected:", {
           isMobile,
           deviceType: isMobile ? "mobile" : "desktop",
         });
@@ -196,7 +197,7 @@ export class OverlayService {
     } else {
       // Already an object
       const metadata = photo as ImageMetadata;
-      console.log("🔍 [OVERLAY SERVICE] Object metadata:", {
+      log("🔍 [OVERLAY SERVICE] Object metadata:", {
         hasFishInfo: !!metadata.fishInfo,
         fishName: metadata.fishInfo?.name,
         fishSize: metadata.fishInfo?.estimatedSize,

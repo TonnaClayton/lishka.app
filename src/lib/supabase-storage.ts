@@ -1,4 +1,6 @@
+import { log } from "./logging";
 import { supabase } from "./supabase";
+import { config } from "@/lib/config";
 
 /**
  * Supabase Storage Service
@@ -20,7 +22,7 @@ export async function uploadImageToSupabase(
     );
 
   try {
-    console.log("[SupabaseStorage] 🚀 Starting upload:", {
+    log("[SupabaseStorage] 🚀 Starting upload:", {
       fileName: file.name,
       fileSize: file.size,
       fileType: file.type,
@@ -43,7 +45,7 @@ export async function uploadImageToSupabase(
     const cleanName = file.name.replace(/[^a-zA-Z0-9]/g, "-").toLowerCase();
     const fileName = `${cleanName}-${timestamp}.${fileExt}`;
 
-    console.log("[SupabaseStorage] 📝 Generated filename:", fileName);
+    log("[SupabaseStorage] 📝 Generated filename:", fileName);
 
     // Upload to Supabase Storage
     const { data, error } = await supabase.storage
@@ -71,7 +73,7 @@ export async function uploadImageToSupabase(
       throw new Error("Failed to get public URL");
     }
 
-    console.log("[SupabaseStorage] ✅ Upload successful:", urlData.publicUrl);
+    log("[SupabaseStorage] ✅ Upload successful:", urlData.publicUrl);
     return urlData.publicUrl;
   } catch (error) {
     console.error("[SupabaseStorage] 💥 Upload failed:", {
@@ -93,7 +95,7 @@ export async function uploadAvatarToSupabase(
   userId: string,
 ): Promise<string> {
   try {
-    console.log("[SupabaseStorage] Starting avatar upload:", {
+    log("[SupabaseStorage] Starting avatar upload:", {
       userId,
       fileName: file.name,
       fileSize: file.size,
@@ -123,8 +125,8 @@ export function isSupabaseStorageConfigured(): boolean {
   try {
     return (
       !!supabase &&
-      !!import.meta.env.VITE_SUPABASE_URL &&
-      !!import.meta.env.VITE_SUPABASE_ANON_KEY
+      !!config.VITE_SUPABASE_URL &&
+      !!config.VITE_SUPABASE_ANON_KEY
     );
   } catch {
     return false;
@@ -137,8 +139,8 @@ export function isSupabaseStorageConfigured(): boolean {
 export function getSupabaseStorageStatus() {
   return {
     configured: isSupabaseStorageConfigured(),
-    hasSupabaseUrl: !!import.meta.env.VITE_SUPABASE_URL,
-    hasSupabaseKey: !!import.meta.env.VITE_SUPABASE_ANON_KEY,
+    hasSupabaseUrl: !!config.VITE_SUPABASE_URL,
+    hasSupabaseKey: !!config.VITE_SUPABASE_ANON_KEY,
     supabaseConnected: !!supabase,
   };
 }

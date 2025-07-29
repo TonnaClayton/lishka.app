@@ -1,9 +1,14 @@
 import EXIF from "exif-js";
 import { OPENAI_ENABLED, validateOpenAIConfig } from "./openai-toggle";
+import { log } from "./logging";
+import { config } from "@/lib/config";
 
 export interface ImageMetadata {
   url: string;
   fishInfo?: {
+    debugInfo?: any;
+    openaiPrompt?: string;
+    rawJsonResponse?: any;
     name: string;
     estimatedSize: string;
     estimatedWeight: string;
@@ -110,7 +115,7 @@ export const compressImage = async (
             compressedDimensions: { width, height },
           };
 
-          console.log("🗜️ [IMAGE COMPRESSION] Compression completed:", {
+          log("🗜️ [IMAGE COMPRESSION] Compression completed:", {
             originalSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
             compressedSize: `${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB`,
             compressionRatio: `${compressionInfo.compressionRatio.toFixed(1)}%`,
@@ -141,7 +146,7 @@ export const extractImageMetadata = (file: File): Promise<any> => {
   return new Promise((resolve, reject) => {
     EXIF.getData(file as any, function () {
       const exifData = EXIF.getAllTags(this);
-      console.log("[ImageMetadata] Extracted EXIF data:", exifData);
+      log("[ImageMetadata] Extracted EXIF data:", exifData);
       resolve(exifData);
     });
   });
@@ -160,7 +165,7 @@ export const extractGPSFromEXIF = (
     const lonRef = exifData.GPSLongitudeRef;
 
     if (!lat || !lon) {
-      console.log("[ImageMetadata] No GPS data found in EXIF");
+      log("[ImageMetadata] No GPS data found in EXIF");
       return null;
     }
 
@@ -176,7 +181,7 @@ export const extractGPSFromEXIF = (
     const latitude = convertDMSToDD(lat, latRef);
     const longitude = convertDMSToDD(lon, lonRef);
 
-    console.log("[ImageMetadata] Extracted GPS coordinates:", {
+    log("[ImageMetadata] Extracted GPS coordinates:", {
       latitude,
       longitude,
     });
@@ -272,6 +277,9 @@ export const identifyFishFromImage = async (
   estimatedSize: string;
   estimatedWeight: string;
   confidence: number;
+  debugInfo?: any;
+  openaiPrompt?: string;
+  rawJsonResponse?: string;
   compressionInfo?: {
     originalSize: number;
     compressedSize: number;
@@ -287,7 +295,7 @@ export const identifyFishFromImage = async (
       navigator.userAgent,
     );
 
-  console.log("🐟 [MOBILE OPENAI DEBUG] Starting fish identification process", {
+  log("🐟 [MOBILE OPENAI DEBUG] Starting fish identification process", {
     fileName: imageFile.name,
     fileSize: imageFile.size,
     fileType: imageFile.type,
@@ -315,19 +323,18 @@ export const identifyFishFromImage = async (
     fileType: imageFile.type,
     isMobile,
     openaiEnabled: OPENAI_ENABLED,
-    hasApiKey: !!import.meta.env.VITE_OPENAI_API_KEY,
+    hasApiKey: !!config.VITE_OPENAI_API_KEY,
     configValid: validateOpenAIConfig(),
     processingSteps: [] as string[],
   };
 
   try {
     // Check if OpenAI is enabled and configured
-    console.log("🔧 [MOBILE OPENAI DEBUG] Checking OpenAI configuration", {
+    log("🔧 [MOBILE OPENAI DEBUG] Checking OpenAI configuration", {
       OPENAI_ENABLED,
-      hasApiKey: !!import.meta.env.VITE_OPENAI_API_KEY,
-      apiKeyLength: import.meta.env.VITE_OPENAI_API_KEY?.length || 0,
-      apiKeyPrefix:
-        import.meta.env.VITE_OPENAI_API_KEY?.substring(0, 7) || "N/A",
+      hasApiKey: !!config.VITE_OPENAI_API_KEY,
+      apiKeyLength: config.VITE_OPENAI_API_KEY?.length || 0,
+      apiKeyPrefix: config.VITE_OPENAI_API_KEY?.substring(0, 7) || "N/A",
       isMobile,
       deviceType: isMobile ? "mobile" : "desktop",
     });
@@ -350,7 +357,7 @@ export const identifyFishFromImage = async (
       };
     }
 
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    const apiKey = config.VITE_OPENAI_API_KEY;
     if (!apiKey) {
       console.error("❌ [MOBILE OPENAI DEBUG] OpenAI API key is missing", {
         isMobile,
@@ -384,7 +391,7 @@ export const identifyFishFromImage = async (
       };
     }
 
-    console.log(
+    log(
       "✅ [MOBILE OPENAI DEBUG] OpenAI configuration valid, proceeding with request",
       {
         isMobile,
@@ -406,7 +413,7 @@ export const identifyFishFromImage = async (
         }
       | undefined;
 
-    console.log(
+    log(
       "ℹ️ [MOBILE OPENAI DEBUG] Using pre-processed file (compression handled upstream):",
       {
         isMobile,
@@ -420,7 +427,7 @@ export const identifyFishFromImage = async (
     );
 
     // Convert image to base64 with timeout
-    console.log("📷 [MOBILE OPENAI DEBUG] Converting image to base64...", {
+    log("📷 [MOBILE OPENAI DEBUG] Converting image to base64...", {
       isMobile,
       fileSize: processedFile.size,
       fileSizeInMB: (processedFile.size / (1024 * 1024)).toFixed(2),
@@ -432,7 +439,7 @@ export const identifyFishFromImage = async (
     const base64Image = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
       reader.onload = () => {
-        console.log("✅ [MOBILE OPENAI DEBUG] Image converted to base64", {
+        log("✅ [MOBILE OPENAI DEBUG] Image converted to base64", {
           conversionTime: Date.now() - base64ConversionStart,
           base64Length: (reader.result as string).length,
           isMobile,
@@ -458,23 +465,20 @@ export const identifyFishFromImage = async (
       reader.readAsDataURL(processedFile);
     });
 
-    console.log(
-      "🚀 [MOBILE OPENAI DEBUG] Making request to OpenAI Vision API...",
-      {
-        endpoint: "https://api.openai.com/v1/chat/completions",
-        model: "gpt-4o",
-        requestTime: new Date().toISOString(),
-        isMobile,
-        deviceType: isMobile ? "mobile" : "desktop",
-        connectionInfo: (navigator as any).connection
-          ? {
-              effectiveType: (navigator as any).connection.effectiveType,
-              downlink: (navigator as any).connection.downlink,
-              rtt: (navigator as any).connection.rtt,
-            }
-          : "unknown",
-      },
-    );
+    log("🚀 [MOBILE OPENAI DEBUG] Making request to OpenAI Vision API...", {
+      endpoint: "https://api.openai.com/v1/chat/completions",
+      model: "gpt-4o",
+      requestTime: new Date().toISOString(),
+      isMobile,
+      deviceType: isMobile ? "mobile" : "desktop",
+      connectionInfo: (navigator as any).connection
+        ? {
+            effectiveType: (navigator as any).connection.effectiveType,
+            downlink: (navigator as any).connection.downlink,
+            rtt: (navigator as any).connection.rtt,
+          }
+        : "unknown",
+    });
 
     // Add timeout to the fetch request with mobile-specific handling
     const controller = new AbortController();
@@ -565,11 +569,13 @@ CRITICAL REQUIREMENTS:
         temperature: 0.3,
       };
 
-      console.log("📤 [MOBILE OPENAI DEBUG] Request payload prepared", {
+      log("📤 [MOBILE OPENAI DEBUG] Request payload prepared", {
         messageCount: requestBody.messages.length,
-        hasImageContent: requestBody.messages[1].content.some(
-          (c: any) => c.type === "image_url",
-        ),
+        hasImageContent: Array.isArray(requestBody.messages[1].content)
+          ? requestBody.messages[1].content.some(
+              (c: any) => c.type === "image_url",
+            )
+          : false,
         maxTokens: requestBody.max_tokens,
         temperature: requestBody.temperature,
         isMobile,
@@ -595,7 +601,7 @@ CRITICAL REQUIREMENTS:
       clearTimeout(timeoutId);
       const requestTime = Date.now() - requestStart;
 
-      console.log("📥 [MOBILE OPENAI DEBUG] Received response from OpenAI", {
+      log("📥 [MOBILE OPENAI DEBUG] Received response from OpenAI", {
         status: response.status,
         statusText: response.statusText,
         ok: response.ok,
@@ -626,7 +632,7 @@ CRITICAL REQUIREMENTS:
       }
 
       const data = await response.json();
-      console.log("📋 [MOBILE OPENAI DEBUG] OpenAI response data", {
+      log("📋 [MOBILE OPENAI DEBUG] OpenAI response data", {
         hasChoices: !!data.choices,
         choicesLength: data.choices?.length || 0,
         usage: data.usage,
@@ -637,7 +643,7 @@ CRITICAL REQUIREMENTS:
       });
 
       const content = data.choices[0]?.message?.content?.trim();
-      console.log("🎯 [OPENAI DEBUG] Raw OpenAI response content:", {
+      log("🎯 [OPENAI DEBUG] Raw OpenAI response content:", {
         content,
         contentLength: content?.length || 0,
         hasContent: !!content,
@@ -674,10 +680,7 @@ CRITICAL REQUIREMENTS:
         const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
         if (jsonMatch) {
           cleanContent = jsonMatch[0];
-          console.log(
-            "🧹 [OPENAI DEBUG] Extracted JSON from response:",
-            cleanContent,
-          );
+          log("🧹 [OPENAI DEBUG] Extracted JSON from response:", cleanContent);
         }
 
         // Additional cleaning - remove any non-JSON text before/after
@@ -696,13 +699,10 @@ CRITICAL REQUIREMENTS:
           .replace(/,\s*}/g, "}") // Remove trailing commas
           .replace(/,\s*]/g, "]"); // Remove trailing commas in arrays
 
-        console.log("🧹 [OPENAI DEBUG] Cleaned JSON content:", cleanContent);
+        log("🧹 [OPENAI DEBUG] Cleaned JSON content:", cleanContent);
 
         fishInfo = JSON.parse(cleanContent);
-        console.log(
-          "✅ [OPENAI DEBUG] Successfully parsed JSON response",
-          fishInfo,
-        );
+        log("✅ [OPENAI DEBUG] Successfully parsed JSON response", fishInfo);
       } catch (parseError) {
         console.error("❌ [OPENAI DEBUG] Failed to parse JSON response", {
           content,
@@ -714,9 +714,7 @@ CRITICAL REQUIREMENTS:
         });
 
         // Try to extract information manually if JSON parsing fails
-        console.log(
-          "🔧 [OPENAI DEBUG] Attempting manual extraction from response",
-        );
+        log("🔧 [OPENAI DEBUG] Attempting manual extraction from response");
         try {
           const manualExtraction = {
             name: "Unknown",
@@ -741,10 +739,7 @@ CRITICAL REQUIREMENTS:
             }
           }
 
-          console.log(
-            "🔧 [OPENAI DEBUG] Manual extraction result:",
-            manualExtraction,
-          );
+          log("🔧 [OPENAI DEBUG] Manual extraction result:", manualExtraction);
           debugInfo.processingSteps.push("Manual extraction attempted");
           return {
             ...manualExtraction,
@@ -788,7 +783,7 @@ CRITICAL REQUIREMENTS:
       const isValid =
         hasValidName && hasValidSize && hasValidWeight && hasValidConfidence;
 
-      console.log("🔍 [OPENAI DEBUG] Response validation", {
+      log("🔍 [OPENAI DEBUG] Response validation", {
         isValid,
         hasValidName,
         hasValidSize,
@@ -804,7 +799,7 @@ CRITICAL REQUIREMENTS:
 
       if (isValid) {
         const totalTime = Date.now() - startTime;
-        console.log("🎉 [OPENAI DEBUG] Fish identification successful!", {
+        log("🎉 [OPENAI DEBUG] Fish identification successful!", {
           fishInfo,
           totalTime,
           requestTime,
@@ -817,7 +812,10 @@ CRITICAL REQUIREMENTS:
           ...fishInfo,
           compressionInfo,
           debugInfo,
-          openaiPrompt: requestBody.messages[0].content,
+          openaiPrompt:
+            typeof requestBody.messages[0].content === "string"
+              ? requestBody.messages[0].content
+              : JSON.stringify(requestBody.messages[0].content),
           rawJsonResponse: content,
         };
       } else {
@@ -844,13 +842,16 @@ CRITICAL REQUIREMENTS:
           confidence: hasValidConfidence ? fishInfo.confidence : 0,
         };
 
-        console.log("🔧 [OPENAI DEBUG] Fixed response:", fixedResponse);
+        log("🔧 [OPENAI DEBUG] Fixed response:", fixedResponse);
         debugInfo.processingSteps.push("Response structure fixed");
         return {
           ...fixedResponse,
           compressionInfo,
           debugInfo,
-          openaiPrompt: requestBody.messages[0].content,
+          openaiPrompt:
+            typeof requestBody.messages[0].content === "string"
+              ? requestBody.messages[0].content
+              : JSON.stringify(requestBody.messages[0].content),
           rawJsonResponse: content,
         };
       }
@@ -952,7 +953,7 @@ export const processImageUpload = async (
     language: navigator.language,
   };
 
-  console.log("🔍 [TWO-STAGE AI] Starting image processing:", {
+  log("🔍 [TWO-STAGE AI] Starting image processing:", {
     fileName: file.name,
     fileSize: file.size,
     fileType: file.type,
@@ -982,7 +983,7 @@ export const processImageUpload = async (
   const processingPromise = (async (): Promise<ImageMetadata> => {
     try {
       // Extract EXIF data with timeout and mobile-specific handling
-      console.log("🔍 [TWO-STAGE AI] Starting EXIF extraction:", {
+      log("🔍 [TWO-STAGE AI] Starting EXIF extraction:", {
         isMobile,
         fileName: file.name,
         fileSize: file.size,
@@ -1004,7 +1005,7 @@ export const processImageUpload = async (
       ]);
 
       const exifTime = Date.now() - exifStartTime;
-      console.log("✅ [TWO-STAGE AI] EXIF extraction completed:", {
+      log("✅ [TWO-STAGE AI] EXIF extraction completed:", {
         isMobile,
         extractionTime: exifTime,
         hasExifData: !!exifData,
@@ -1026,7 +1027,7 @@ export const processImageUpload = async (
 
       // Try to get location from EXIF first with mobile-specific logging
       let location = extractGPSFromEXIF(exifData);
-      console.log("🔍 [TWO-STAGE AI] GPS extraction from EXIF:", {
+      log("🔍 [TWO-STAGE AI] GPS extraction from EXIF:", {
         isMobile,
         hasLocation: !!location,
         location,
@@ -1041,14 +1042,14 @@ export const processImageUpload = async (
 
       // Use pre-obtained location if available, otherwise try to get current location
       if (!location && preObtainedLocation) {
-        console.log(
-          "✅ [TWO-STAGE AI] Using pre-obtained location from ProfilePage:",
-          { isMobile, preObtainedLocation },
-        );
+        log("✅ [TWO-STAGE AI] Using pre-obtained location from ProfilePage:", {
+          isMobile,
+          preObtainedLocation,
+        });
         location = preObtainedLocation;
       } else if (!location) {
         try {
-          console.log(
+          log(
             "🔍 [TWO-STAGE AI] No GPS in EXIF and no pre-obtained location, trying current location:",
             { isMobile },
           );
@@ -1068,13 +1069,13 @@ export const processImageUpload = async (
           ]);
 
           const locationTime = Date.now() - locationStartTime;
-          console.log("✅ [TWO-STAGE AI] Current location obtained:", {
+          log("✅ [TWO-STAGE AI] Current location obtained:", {
             isMobile,
             locationTime,
             location,
           });
         } catch (error) {
-          console.log("❌ [TWO-STAGE AI] Could not get current location:", {
+          log("❌ [TWO-STAGE AI] Could not get current location:", {
             isMobile,
             error: error.message,
             errorType: error.constructor.name,
@@ -1085,7 +1086,7 @@ export const processImageUpload = async (
       // Convert coordinates to address if we have location
       if (location) {
         try {
-          console.log("🔍 [TWO-STAGE AI] Starting geocoding:", {
+          log("🔍 [TWO-STAGE AI] Starting geocoding:", {
             isMobile,
             coordinates: location,
           });
@@ -1110,7 +1111,7 @@ export const processImageUpload = async (
             ...location,
             address,
           };
-          console.log("✅ [TWO-STAGE AI] Location extracted:", {
+          log("✅ [TWO-STAGE AI] Location extracted:", {
             isMobile,
             geocodingTime,
             location: metadata.location,
@@ -1135,7 +1136,7 @@ export const processImageUpload = async (
       } | null = null;
 
       try {
-        console.log("🔍 [TWO-STAGE AI] Starting two-stage AI process:", {
+        log("🔍 [TWO-STAGE AI] Starting two-stage AI process:", {
           isMobile,
           fileName: file.name,
           fileSize: file.size,
@@ -1150,9 +1151,7 @@ export const processImageUpload = async (
         const aiProcessStart = Date.now();
 
         // STAGE 1: Image Classification (fish, gear, unknown)
-        console.log(
-          "🎯 [TWO-STAGE AI] Stage 1: Image classification starting...",
-        );
+        log("🎯 [TWO-STAGE AI] Stage 1: Image classification starting...");
         const classificationStart = Date.now();
 
         const classificationResult = await (async () => {
@@ -1163,7 +1162,7 @@ export const processImageUpload = async (
         })();
 
         const classificationTime = Date.now() - classificationStart;
-        console.log("✅ [TWO-STAGE AI] Stage 1: Classification completed", {
+        log("✅ [TWO-STAGE AI] Stage 1: Classification completed", {
           isMobile,
           classificationTime,
           result: classificationResult,
@@ -1177,7 +1176,7 @@ export const processImageUpload = async (
           classificationResult.type === "fish" &&
           classificationResult.confidence > 0.3
         ) {
-          console.log(
+          log(
             "🐟 [TWO-STAGE AI] Stage 2: Fish detected, running detailed identification...",
           );
           const detailedAnalysisStart = Date.now();
@@ -1204,7 +1203,7 @@ export const processImageUpload = async (
               metadata.compressionInfo = identificationResult.compressionInfo;
             }
 
-            console.log(
+            log(
               "✅ [TWO-STAGE AI] Stage 2: Detailed fish identification completed",
               {
                 isMobile,
@@ -1239,15 +1238,12 @@ export const processImageUpload = async (
             };
           }
         } else {
-          console.log(
-            "🚫 [TWO-STAGE AI] Stage 2: Skipped - not classified as fish",
-            {
-              isMobile,
-              classificationType: classificationResult.type,
-              classificationConfidence: classificationResult.confidence,
-              reasoning: classificationResult.reasoning,
-            },
-          );
+          log("🚫 [TWO-STAGE AI] Stage 2: Skipped - not classified as fish", {
+            isMobile,
+            classificationType: classificationResult.type,
+            classificationConfidence: classificationResult.confidence,
+            reasoning: classificationResult.reasoning,
+          });
 
           // Create appropriate info based on classification
           if (classificationResult.type === "gear") {
@@ -1268,7 +1264,7 @@ export const processImageUpload = async (
         }
 
         const totalAiTime = Date.now() - aiProcessStart;
-        console.log("🎉 [TWO-STAGE AI] Complete AI process finished", {
+        log("🎉 [TWO-STAGE AI] Complete AI process finished", {
           isMobile,
           totalAiTime,
           classificationTime,
@@ -1314,16 +1310,13 @@ export const processImageUpload = async (
       // This ensures the FishInfoOverlay always has a fishInfo structure to work with
       if (fishInfo) {
         metadata.fishInfo = fishInfo;
-        console.log(
-          "✅ [TWO-STAGE AI] Fish info added to metadata (guaranteed):",
-          {
-            isMobile,
-            fishInfo: metadata.fishInfo,
-            metadataHasFishInfo: !!metadata.fishInfo,
-            deviceType: isMobile ? "mobile" : "desktop",
-            source: "Two-stage AI analysis or fallback",
-          },
-        );
+        log("✅ [TWO-STAGE AI] Fish info added to metadata (guaranteed):", {
+          isMobile,
+          fishInfo: metadata.fishInfo,
+          metadataHasFishInfo: !!metadata.fishInfo,
+          deviceType: isMobile ? "mobile" : "desktop",
+          source: "Two-stage AI analysis or fallback",
+        });
       } else {
         // This should never happen now, but add extra safety
         metadata.fishInfo = {
@@ -1358,7 +1351,7 @@ export const processImageUpload = async (
       // Return partial metadata even if some processing fails
     }
 
-    console.log("🔍 [TWO-STAGE AI] Final metadata:", {
+    log("🔍 [TWO-STAGE AI] Final metadata:", {
       isMobile,
       metadata,
       hasFishInfo: !!metadata.fishInfo,

@@ -1,4 +1,6 @@
+import { log } from "./logging";
 import { OPENAI_ENABLED, validateOpenAIConfig } from "./openai-toggle";
+import { config } from "@/lib/config";
 
 export interface ClassificationResult {
   type: "fish" | "gear" | "unknown";
@@ -12,7 +14,7 @@ export interface ClassificationResult {
 export const classifyImage = async (
   imageFile: File,
 ): Promise<ClassificationResult> => {
-  console.log("🔍 [IMAGE CLASSIFICATION] Starting classification:", {
+  log("🔍 [IMAGE CLASSIFICATION] Starting classification:", {
     fileName: imageFile.name,
     fileSize: imageFile.size,
     fileType: imageFile.type,
@@ -29,7 +31,7 @@ export const classifyImage = async (
       };
     }
 
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    const apiKey = config.VITE_OPENAI_API_KEY;
     if (!apiKey) {
       console.error("❌ [IMAGE CLASSIFICATION] No API key");
       return {
@@ -44,7 +46,7 @@ export const classifyImage = async (
     const isLargeFile = imageFile.size > 3 * 1024 * 1024; // 3MB threshold
 
     if (isLargeFile) {
-      console.log(
+      log(
         "🗜️ [IMAGE CLASSIFICATION] Large file detected, compressing before AI:",
         {
           originalSize: `${(imageFile.size / (1024 * 1024)).toFixed(2)}MB`,
@@ -67,7 +69,7 @@ export const classifyImage = async (
 
         processedFile = compressionResult.compressedFile;
 
-        console.log("✅ [IMAGE CLASSIFICATION] Compression completed:", {
+        log("✅ [IMAGE CLASSIFICATION] Compression completed:", {
           originalSize: `${(imageFile.size / (1024 * 1024)).toFixed(2)}MB`,
           compressedSize: `${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`,
           compressionRatio: `${compressionResult.compressionInfo.compressionRatio.toFixed(1)}%`,
@@ -85,7 +87,7 @@ export const classifyImage = async (
     }
 
     // Convert image to base64
-    console.log("📷 [IMAGE CLASSIFICATION] Converting to base64...", {
+    log("📷 [IMAGE CLASSIFICATION] Converting to base64...", {
       fileSize: `${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`,
       wasCompressed: processedFile !== imageFile,
     });
@@ -106,7 +108,7 @@ export const classifyImage = async (
       reader.readAsDataURL(processedFile);
     });
 
-    console.log("🚀 [IMAGE CLASSIFICATION] Calling OpenAI...");
+    log("🚀 [IMAGE CLASSIFICATION] Calling OpenAI...");
 
     const prompt = `Analyze this image and determine if it primarily contains:
 1. FISH - Any fish species, whether caught, in water, or being held
@@ -165,7 +167,7 @@ Be decisive - if you see a fish (even if there's also gear in the image), classi
     const data = await response.json();
     const content = data.choices[0]?.message?.content?.trim();
 
-    console.log("📥 [IMAGE CLASSIFICATION] Raw response:", {
+    log("📥 [IMAGE CLASSIFICATION] Raw response:", {
       content,
       usage: data.usage,
     });
@@ -209,7 +211,7 @@ Be decisive - if you see a fish (even if there's also gear in the image), classi
         .replace(/,\s*}/g, "}") // Remove trailing commas
         .replace(/,\s*]/g, "]"); // Remove trailing commas in arrays
 
-      console.log("🧹 [IMAGE CLASSIFICATION] Cleaned JSON:", cleanContent);
+      log("🧹 [IMAGE CLASSIFICATION] Cleaned JSON:", cleanContent);
 
       const parsed = JSON.parse(cleanContent);
 
@@ -228,7 +230,7 @@ Be decisive - if you see a fish (even if there's also gear in the image), classi
             : "No reasoning provided",
       };
 
-      console.log("✅ [IMAGE CLASSIFICATION] Parsed successfully:", result);
+      log("✅ [IMAGE CLASSIFICATION] Parsed successfully:", result);
     } catch (parseError) {
       console.error(
         "❌ [IMAGE CLASSIFICATION] Parse failed:",
@@ -258,7 +260,7 @@ Be decisive - if you see a fish (even if there's also gear in the image), classi
       };
     }
 
-    console.log("🎉 [IMAGE CLASSIFICATION] Final result:", result);
+    log("🎉 [IMAGE CLASSIFICATION] Final result:", result);
     return result;
   } catch (error) {
     console.error("💥 [IMAGE CLASSIFICATION] Failed:", {

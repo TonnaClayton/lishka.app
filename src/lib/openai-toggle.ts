@@ -4,6 +4,9 @@
  * This module provides a way to disable all OpenAI API calls
  */
 
+import { log } from "./logging";
+import { config } from "@/lib/config";
+
 // Set this to true to enable OpenAI API calls
 export const OPENAI_ENABLED = true;
 
@@ -13,11 +16,11 @@ export const FISHING_TIP_ENABLED = true;
 // Helper function to validate OpenAI configuration
 export const validateOpenAIConfig = () => {
   if (!OPENAI_ENABLED) {
-    console.log("[OpenAI] OpenAI is disabled");
+    log("[OpenAI] OpenAI is disabled");
     return false;
   }
 
-  const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+  const apiKey = config.VITE_OPENAI_API_KEY;
   if (!apiKey) {
     console.error(
       "[OpenAI] API key is missing - check VITE_OPENAI_API_KEY environment variable",
@@ -42,7 +45,7 @@ export const validateOpenAIConfig = () => {
     return false;
   }
 
-  console.log("[OpenAI] ✅ Configuration is valid", {
+  log("[OpenAI] ✅ Configuration is valid", {
     hasKey: true,
     keyLength: apiKey.length,
     keyPrefix: apiKey.substring(0, 7) + "...",

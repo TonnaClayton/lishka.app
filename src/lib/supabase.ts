@@ -1,29 +1,30 @@
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/types/supabase";
+import { config } from "@/lib/config";
+import { log } from "./logging";
 
 // Initialize Supabase client with proper configuration
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseKey =
-  import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_KEY;
+const supabaseUrl = config.VITE_SUPABASE_URL;
+const supabaseKey = config.VITE_SUPABASE_ANON_KEY || config.VITE_SUPABASE_KEY;
 
 if (!supabaseUrl) {
   console.error(
-    "Missing Supabase URL. Please check your environment variables.",
+    "Missing Supabase URL. Please check your environment variables."
   );
   console.error("Available env vars:", {
-    VITE_SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL,
-    SUPABASE_URL: import.meta.env.SUPABASE_URL,
+    VITE_SUPABASE_URL: config.VITE_SUPABASE_URL,
+    SUPABASE_URL: config.SUPABASE_URL,
   });
 }
 
 if (!supabaseKey) {
   console.error(
-    "Missing Supabase key. Please check your environment variables.",
+    "Missing Supabase key. Please check your environment variables."
   );
   console.error("Available env vars:", {
-    VITE_SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY,
-    VITE_SUPABASE_KEY: import.meta.env.VITE_SUPABASE_KEY,
-    SUPABASE_ANON_KEY: import.meta.env.SUPABASE_ANON_KEY,
+    VITE_SUPABASE_ANON_KEY: config.VITE_SUPABASE_ANON_KEY,
+    VITE_SUPABASE_KEY: config.VITE_SUPABASE_KEY,
+    SUPABASE_ANON_KEY: config.SUPABASE_ANON_KEY,
   });
 }
 
@@ -53,7 +54,7 @@ export const authService = {
         },
       });
 
-      console.log("SignUp response:", { data, error });
+      log("SignUp response:", { data, error });
       return { data, error };
     } catch (err) {
       console.error("SignUp error:", err);
@@ -70,7 +71,7 @@ export const authService = {
   // Sign in existing user with timeout protection
   async signIn(email: string, password: string) {
     try {
-      console.log("Attempting signIn with:", {
+      log("Attempting signIn with:", {
         email,
         supabaseUrl,
         hasKey: !!supabaseKey,
@@ -80,7 +81,7 @@ export const authService = {
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(
           () => reject(new Error("Login timeout - please try again")),
-          8000,
+          8000
         );
       });
 
@@ -94,7 +95,7 @@ export const authService = {
         timeoutPromise,
       ])) as any;
 
-      console.log("SignIn response:", {
+      log("SignIn response:", {
         hasUser: !!data?.user,
         hasSession: !!data?.session,
         error: error?.message,
@@ -175,10 +176,10 @@ export const authService = {
         type: "signup",
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/confirm`,
+          emailRedirectTo: `${window.location.origin}/auth/confirm?type=signup`,
         },
       });
-      console.log("Resend confirmation response:", { data, error });
+      log("Resend confirmation response:", { data, error });
       return { data, error };
     } catch (err) {
       console.error("ResendConfirmation error:", err);
@@ -255,7 +256,7 @@ export const profileService = {
   async updateProfile(userId: string, updates: any) {
     const startTime = Date.now();
     try {
-      console.log("[ProfileService] 🚀 Starting profile update:", {
+      log("[ProfileService] 🚀 Starting profile update:", {
         userId,
         updateKeys: Object.keys(updates),
         gearItemsCount: updates.gear_items?.length || 0,
@@ -265,7 +266,7 @@ export const profileService = {
 
       // Special handling for gallery_photos to ensure proper array handling
       if (updates.gallery_photos) {
-        console.log("[ProfileService] Gallery photos update detected:", {
+        log("[ProfileService] Gallery photos update detected:", {
           type: typeof updates.gallery_photos,
           isArray: Array.isArray(updates.gallery_photos),
           length: updates.gallery_photos?.length,
@@ -275,7 +276,7 @@ export const profileService = {
 
       // Special handling for gear_items to ensure proper array handling
       if (updates.gear_items) {
-        console.log("[ProfileService] Gear items update detected:", {
+        log("[ProfileService] Gear items update detected:", {
           type: typeof updates.gear_items,
           isArray: Array.isArray(updates.gear_items),
           length: updates.gear_items?.length,
@@ -289,7 +290,7 @@ export const profileService = {
       }
 
       // First check if profile exists with timeout
-      console.log("[ProfileService] 🔍 Checking if profile exists...");
+      log("[ProfileService] 🔍 Checking if profile exists...");
       const checkStartTime = Date.now();
 
       const { data: existingProfile, error: checkError } = await supabase
@@ -299,14 +300,14 @@ export const profileService = {
         .single();
 
       const checkTime = Date.now() - checkStartTime;
-      console.log("[ProfileService] ⏱️ Profile existence check completed:", {
+      log("[ProfileService] ⏱️ Profile existence check completed:", {
         checkTime: `${checkTime}ms`,
         exists: !!existingProfile,
         hasError: !!checkError,
         errorCode: checkError?.code,
       });
 
-      console.log("[ProfileService] Profile existence check:", {
+      log("[ProfileService] Profile existence check:", {
         exists: !!existingProfile,
         error: checkError?.message,
         errorCode: checkError?.code,
@@ -317,9 +318,7 @@ export const profileService = {
       });
 
       if (!existingProfile || checkError) {
-        console.log(
-          "[ProfileService] Profile doesn't exist, creating it first",
-        );
+        log("[ProfileService] Profile doesn't exist, creating it first");
         // Create profile with minimal required data for faster creation
         const profileData = {
           id: userId,
@@ -336,13 +335,13 @@ export const profileService = {
           updated_at: new Date().toISOString(),
         };
 
-        console.log("[ProfileService] Creating profile with data:", {
+        log("[ProfileService] Creating profile with data:", {
           ...profileData,
           gallery_photos: profileData.gallery_photos?.length || 0,
           gear_items: profileData.gear_items?.length || 0,
         });
 
-        console.log("[ProfileService] 📝 Creating new profile...");
+        log("[ProfileService] 📝 Creating new profile...");
         const createStartTime = Date.now();
 
         const { data: newProfile, error: createError } = await supabase
@@ -352,12 +351,12 @@ export const profileService = {
           .single();
 
         const createTime = Date.now() - createStartTime;
-        console.log("[ProfileService] ⏱️ Profile creation completed:", {
+        log("[ProfileService] ⏱️ Profile creation completed:", {
           createTime: `${createTime}ms`,
           success: !!newProfile && !createError,
         });
 
-        console.log("[ProfileService] Profile creation result:", {
+        log("[ProfileService] Profile creation result:", {
           success: !!newProfile && !createError,
           error: createError?.message,
           errorCode: createError?.code,
@@ -376,13 +375,13 @@ export const profileService = {
         updated_at: new Date().toISOString(),
       };
 
-      console.log("[ProfileService] Updating existing profile with:", {
+      log("[ProfileService] Updating existing profile with:", {
         ...updateData,
         gallery_photos: updateData.gallery_photos?.length || "not updating",
         gear_items: updateData.gear_items?.length || "not updating",
       });
 
-      console.log("[ProfileService] 💾 Updating existing profile...");
+      log("[ProfileService] 💾 Updating existing profile...");
       const updateStartTime = Date.now();
 
       const { data, error } = await supabase
@@ -393,13 +392,13 @@ export const profileService = {
         .single();
 
       const updateTime = Date.now() - updateStartTime;
-      console.log("[ProfileService] ⏱️ Profile update completed:", {
+      log("[ProfileService] ⏱️ Profile update completed:", {
         updateTime: `${updateTime}ms`,
         success: !!data && !error,
         totalOperationTime: `${Date.now() - startTime}ms`,
       });
 
-      console.log("[ProfileService] Profile update result:", {
+      log("[ProfileService] Profile update result:", {
         success: !!data && !error,
         error: error?.message,
         errorCode: error?.code,

@@ -10,6 +10,8 @@ import {
   getPlaceholderFishImage,
   handleFishImageError,
 } from "./fish-image-service";
+import { log } from "./logging";
+import { config } from "@/lib/config";
 
 /**
  * Generates a Fishbase image URL for a given scientific name
@@ -53,7 +55,7 @@ export async function getSupabaseImage(
   scientificName: string,
 ): Promise<string | null> {
   // We're not using Supabase anymore
-  console.log(
+  log(
     `Supabase storage has been removed. Using alternative image sources for ${scientificName}`,
   );
   return null;
@@ -71,17 +73,17 @@ export async function getFishImageUrl(
   name: string,
   scientificName: string,
 ): Promise<string> {
-  console.log(`Fetching image for ${name} (${scientificName})`);
+  log(`Fetching image for ${name} (${scientificName})`);
 
   // Use the fish image service to get the image
   try {
     const imageUrl = await getFishImageFromService(name, scientificName);
-    console.log(`Got image for ${scientificName}: ${imageUrl}`);
+    log(`Got image for ${scientificName}: ${imageUrl}`);
     return imageUrl;
   } catch (error) {
     console.error("Error getting fish image:", error);
     // Fall back to Lishka placeholder image
-    console.log(`Using placeholder image for ${name} (${scientificName})`);
+    log(`Using placeholder image for ${name} (${scientificName})`);
     return getPlaceholderFishImage();
   }
 }
@@ -99,16 +101,14 @@ export async function getLocalFishName(
   scientificName: string,
   countryCode: string = "es",
 ): Promise<string | null> {
-  console.log(
-    `Getting local name for ${scientificName} in country ${countryCode}`,
-  );
+  log(`Getting local name for ${scientificName} in country ${countryCode}`);
   if (!scientificName) return null;
 
   try {
     // Get preferred language from localStorage, default to countryCode if not set
     const preferredLanguage =
       localStorage.getItem("preferredLanguage") || countryCode;
-    console.log(`Using preferred language: ${preferredLanguage}`);
+    log(`Using preferred language: ${preferredLanguage}`);
 
     // Force lowercase for consistent comparison
     const languageCode = preferredLanguage.toLowerCase();
@@ -130,7 +130,7 @@ export async function getLocalFishName(
 
     // First try with hardcoded common translations for immediate response
     // This is a fallback to ensure we have some translations for demo purposes
-    console.log(`Checking hardcoded translations for ${scientificName}`);
+    log(`Checking hardcoded translations for ${scientificName}`);
 
     // Common fish translations by scientific name and language
     const commonTranslations = {
@@ -242,29 +242,25 @@ export async function getLocalFishName(
       commonTranslations[scientificName][languageCode]
     ) {
       const localName = commonTranslations[scientificName][languageCode];
-      console.log(
-        `Found hardcoded translation for ${scientificName}: ${localName}`,
-      );
+      log(`Found hardcoded translation for ${scientificName}: ${localName}`);
       return localName;
     }
 
     // If OpenAI is disabled, return null instead of making API call
     if (!OPENAI_ENABLED) {
-      console.log(OPENAI_DISABLED_MESSAGE);
+      log(OPENAI_DISABLED_MESSAGE);
       return null;
     }
 
     // If no hardcoded translation, use OpenAI to get the translation
     // Check if API key is available
-    const apiKey = import.meta.env.VITE_OPENAI_API_KEY;
+    const apiKey = config.VITE_OPENAI_API_KEY;
     if (!apiKey) {
       console.error("OpenAI API key is missing");
       return null;
     }
 
-    console.log(
-      `Using OpenAI to get ${languageName} name for ${scientificName}`,
-    );
+    log(`Using OpenAI to get ${languageName} name for ${scientificName}`);
 
     // Create a cache key for the fish local name API request
     const cacheKey = `fish_local_name_${scientificName}_${languageCode}`;
@@ -308,13 +304,11 @@ export async function getLocalFishName(
 
     // Check if the response is NULL or similar
     if (localName === "NULL" || localName.toLowerCase() === "null") {
-      console.log(
-        `OpenAI couldn't find a ${languageName} name for ${scientificName}`,
-      );
+      log(`OpenAI couldn't find a ${languageName} name for ${scientificName}`);
       return null;
     }
 
-    console.log(
+    log(
       `OpenAI provided ${languageName} name for ${scientificName}: ${localName}`,
     );
 

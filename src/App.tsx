@@ -9,51 +9,59 @@ import {
 } from "react-router-dom";
 import routes from "tempo-routes";
 import { lazy } from "react";
-import LoginPage from "./components/auth/LoginPage";
-import SignupPage from "./components/auth/SignupPage";
-import ForgotPasswordPage from "./components/auth/ForgotPasswordPage";
-import EmailConfirmationPage from "./components/auth/EmailConfirmationPage";
-import ProtectedRoute from "./components/auth/ProtectedRoute";
-import SafariScrollFix from "./components/SafariScrollFix";
-import EmailVerificationBanner from "./components/EmailVerificationBanner";
-import { AuthProvider } from "./contexts/AuthContext";
+import LoginPage from "./components/auth/login-page";
+import SignupPage from "./components/auth/signup-page";
+import ForgotPasswordPage from "./components/auth/forgot-password-page";
+import EmailConfirmationPage from "./components/auth/email-confirmation-page";
+import ProtectedRoute from "./components/auth/protected-route";
+import SafariScrollFix from "./components/safari-scroll-fix";
+import EmailVerificationBanner from "./components/email-verification-banner";
+import { AuthProvider } from "./contexts/auth-context";
+import { config } from "@/lib/config";
+import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
+import { cn } from "./lib/utils";
 
 // Lazy load heavy components for better initial loading performance
-const HomePage = lazy(() => import("./components/HomePage"));
-const FishDetailPage = lazy(() => import("./components/FishDetailPage"));
-const MenuPage = lazy(() => import("./components/MenuPage"));
-const SearchPage = lazy(() => import("./components/SearchPage"));
-const WeatherPage = lazy(() => import("./components/WeatherPage"));
-const ProfilePage = lazy(() => import("./components/ProfilePage"));
-const MyGearPage = lazy(() => import("./components/MyGearPage"));
-const GearCategoryPage = lazy(() => import("./components/GearCategoryPage"));
+const HomePage = lazy(() => import("./components/home-page"));
+const FishDetailPage = lazy(() => import("./components/fish-detail-page"));
+const MenuPage = lazy(() => import("./components/menu-page"));
+const SearchPage = lazy(() => import("./components/search-page"));
+const WeatherPage = lazy(() => import("./components/weather-page"));
+const ProfilePage = lazy(() => import("./components/profile-page"));
+const MyGearPage = lazy(() => import("./components/my-gear-page"));
+const GearCategoryPage = lazy(() => import("./components/gear-category-page"));
 const SideNav = lazy(() =>
-  import("./components/BottomNav").then((module) => ({
+  import("./components/bottom-nav").then((module) => ({
     default: module.SideNav,
-  })),
+  }))
 );
-const WeatherWidgetPro = lazy(() => import("./components/WeatherWidgetPro"));
-const SettingsPage = lazy(() => import("./components/SettingsPage"));
-const FAQPage = lazy(() => import("./components/FAQPage"));
-const TermsPage = lazy(() => import("./components/TermsPage"));
-const PrivacyPolicyPage = lazy(() => import("./components/PrivacyPolicyPage"));
+const WeatherWidgetPro = lazy(() => import("./components/weather-widget-pro"));
+const SettingsPage = lazy(() => import("./components/settings-page"));
+const FaqPage = lazy(() => import("./components/faq-page"));
+const TermsPage = lazy(() => import("./components/terms-page"));
+const PrivacyPolicyPage = lazy(
+  () => import("./components/privacy-policy-page")
+);
 const BlobConnectionTest = lazy(
-  () => import("./components/BlobConnectionTest"),
+  () => import("./components/blob-connection-test")
 );
-const BlobImageUploader = lazy(() => import("./components/BlobImageUploader"));
-const BlobImageTest = lazy(() => import("./components/BlobImageTest"));
+const BlobImageUploader = lazy(
+  () => import("./components/blob-image-uploader")
+);
+const BlobImageTest = lazy(() => import("./components/blob-image-test"));
 const AccountStatusChecker = lazy(
-  () => import("./components/AccountStatusChecker"),
+  () => import("./components/account-status-checker")
 );
-const StorageSetup = lazy(() => import("./components/StorageSetup"));
-const DatabaseDebugger = lazy(() => import("./components/DatabaseDebugger"));
+const StorageSetup = lazy(() => import("./components/storage-setup"));
+const DatabaseDebugger = lazy(() => import("./components/database-debugger"));
 const ImageUploadDebugger = lazy(
-  () => import("./components/ImageUploadDebugger"),
+  () => import("./components/image-upload-debugger")
 );
 const GearDatabaseDebugger = lazy(
-  () => import("./components/GearDatabaseDebugger"),
+  () => import("./components/gear-database-debugger")
 );
-const WhatsNewPage = lazy(() => import("./components/WhatsNewPage"));
+const WhatsNewPage = lazy(() => import("./components/whats-new-page"));
 
 // Create router with future flags
 const router = createBrowserRouter(
@@ -89,11 +97,19 @@ const router = createBrowserRouter(
         },
         {
           path: "confirm-email",
-          element: <EmailConfirmationPage />,
+          element: (
+            <ProtectedRoute requireAuth={false}>
+              <EmailConfirmationPage />
+            </ProtectedRoute>
+          ),
         },
         {
           path: "auth/confirm",
-          element: <EmailConfirmationPage />,
+          element: (
+            <ProtectedRoute requireAuth={false}>
+              <EmailConfirmationPage />
+            </ProtectedRoute>
+          ),
         },
         // Protected routes
         {
@@ -164,7 +180,7 @@ const router = createBrowserRouter(
           path: "faq",
           element: (
             <ProtectedRoute>
-              <FAQPage />
+              <FaqPage />
             </ProtectedRoute>
           ),
         },
@@ -289,10 +305,9 @@ const router = createBrowserRouter(
   ],
   {
     future: {
-      v7_startTransition: true,
       v7_relativeSplatPath: true,
     },
-  },
+  }
 );
 
 function AppContent() {
@@ -307,7 +322,7 @@ function AppContent() {
 
   // Check if we're on auth pages (login/signup) to hide sidebar
   const isAuthPage = ["/login", "/signup", "/forgot-password"].includes(
-    location.pathname,
+    location.pathname
   );
 
   // Track if we're on mobile or desktop
@@ -328,10 +343,10 @@ function AppContent() {
   }, []);
 
   return (
-    <div className="w-full h-screen overflow-hidden">
+    <div className="w-full h-full overflow-hidden">
       <SafariScrollFix />
       {/* Use flexbox layout for desktop */}
-      <div className="mx-auto relative flex w-full h-full">
+      <div className="flex w-full h-full">
         {/* Side Navigation - flex-none (fixed width) - hidden on auth pages */}
         {!isAuthPage && (
           <Suspense
@@ -345,14 +360,17 @@ function AppContent() {
 
         {/* Main content area - flex-auto (flexible width) */}
         <div
-          className={`flex-1 max-w-full h-full flex flex-col overflow-hidden ${!isAuthPage ? "lg:ml-[var(--sidebar-width)]" : ""}`}
+          className={cn(
+            "flex-1 max-w-full h-full flex flex-col overflow-hidden",
+            !isAuthPage ? "lg:ml-[var(--sidebar-width)]" : ""
+          )}
         >
           {/* Email verification banner - only show on non-auth pages */}
           {!isAuthPage && <EmailVerificationBanner />}
 
-          <div className="w-full flex-1 overflow-y-auto pb-32 lg:pb-4">
+          <div className="w-full flex-1">
             {/* Tempo routes - render before outlet to catch tempo routes first */}
-            {import.meta.env.VITE_TEMPO && useRoutes(routes)}
+            {config.VITE_TEMPO && useRoutes(routes)}
             {/* Outlet for nested routes with suspense boundary */}
             <Suspense
               fallback={
@@ -373,18 +391,16 @@ function AppContent() {
 
         {/* Weather widget sidebar - flex-none (fixed width) */}
         {shouldShowWeatherWidget && (
-          <div className="hidden lg:block lg:w-[380px] lg:flex-none h-full bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 overflow-hidden">
-            <div className="h-full overflow-y-auto">
-              <Suspense
-                fallback={
-                  <div className="p-4 animate-pulse">
-                    <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
-                  </div>
-                }
-              >
-                <WeatherWidgetPro />
-              </Suspense>
-            </div>
+          <div className="hidden lg:block lg:w-[380px] lg:flex-none bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 h-full overflow-y-auto">
+            <Suspense
+              fallback={
+                <div className="p-4 animate-pulse">
+                  <div className="h-32 bg-gray-200 dark:bg-gray-700 rounded" />
+                </div>
+              }
+            >
+              <WeatherWidgetPro />
+            </Suspense>
           </div>
         )}
       </div>
@@ -402,16 +418,29 @@ function AppWithAuth() {
 }
 
 function App() {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        refetchOnWindowFocus: false,
+        retry: 1,
+        staleTime: 5 * 1000,
+      },
+    },
+  });
+
   return (
-    <Suspense
-      fallback={
-        <div className="flex items-center justify-center h-screen">
-          <p>Loading...</p>
-        </div>
-      }
-    >
-      <RouterProvider router={router} />
-    </Suspense>
+    <QueryClientProvider client={queryClient}>
+      <Suspense
+        fallback={
+          <div className="flex items-center justify-center h-screen">
+            <p>Loading...</p>
+          </div>
+        }
+      >
+        <RouterProvider router={router} />
+      </Suspense>
+      <ReactQueryDevtools initialIsOpen={false} />
+    </QueryClientProvider>
   );
 }
 
