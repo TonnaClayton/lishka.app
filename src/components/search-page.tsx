@@ -138,7 +138,7 @@ const SearchPage: React.FC = () => {
   const processQuery = async (
     queryText: string,
     userMessage: Message,
-    imageFile?: File,
+    imageFile?: File
   ) => {
     try {
       // Check if OpenAI is disabled
@@ -151,7 +151,7 @@ const SearchPage: React.FC = () => {
       const apiKey = config.VITE_OPENAI_API_KEY;
       if (!apiKey) {
         throw new Error(
-          "OpenAI API key is missing. Please add it in project settings.",
+          "OpenAI API key is missing. Please add it in project settings."
         );
       }
 
@@ -230,7 +230,7 @@ const SearchPage: React.FC = () => {
             ],
             max_tokens: imageFile ? 1000 : undefined,
           }),
-        },
+        }
       );
 
       if (!response.ok) {
@@ -243,7 +243,7 @@ const SearchPage: React.FC = () => {
       // Extract fish data if present
       let fishData: Fish[] = [];
       const fishDataMatch = assistantResponse.match(
-        /\[FISH_DATA\](.+?)\[\/FISH_DATA\]/s,
+        /\[FISH_DATA\](.+?)\[\/FISH_DATA\]/s
       );
 
       let cleanedResponse = assistantResponse;
@@ -268,7 +268,7 @@ const SearchPage: React.FC = () => {
           // Remove the fish data section from the displayed response
           cleanedResponse = assistantResponse.replace(
             /\[FISH_DATA\].+?\[\/FISH_DATA\]/s,
-            "",
+            ""
           );
         } catch (err) {
           console.error("Error parsing fish data:", err);
@@ -329,7 +329,7 @@ const SearchPage: React.FC = () => {
       await processQuery(
         currentQuery || "What can you tell me about this image?",
         userMessage,
-        currentImageFile || undefined,
+        currentImageFile || undefined
       );
     } catch (err) {
       console.error("Error in handleSubmit:", err);
@@ -364,7 +364,7 @@ const SearchPage: React.FC = () => {
 
   return (
     <div
-      className="flex flex-col bg-white dark:bg-black min-h-screen w-full"
+      className="flex flex-col bg-white h-full relative dark:bg-black w-full"
       style={{ "--header-height": "64px" } as React.CSSProperties}
     >
       {/* Header - Fixed at top */}
@@ -405,7 +405,7 @@ const SearchPage: React.FC = () => {
         </div>
       </header>
       {/* Scrollable Content Area - With padding for header and input form */}
-      <div className="flex-1 overflow-y-auto h-full mt-16">
+      <div className="flex-1 overflow-y-auto h-full  pt-16">
         <div className="p-4">
           {messages.length === 0 ? (
             <div className="flex flex-col items-center justify-center min-h-[70vh] max-w-2xl mx-auto text-center space-y-6">
@@ -434,6 +434,7 @@ const SearchPage: React.FC = () => {
             </div>
           ) : (
             <div className="max-w-2xl mx-auto space-y-6">
+              <div className="h-[20px] md:hidden"></div>
               {messages.map((message) => (
                 <div
                   key={message.id}
@@ -485,7 +486,7 @@ const SearchPage: React.FC = () => {
                                 onClick={() => {
                                   navigate(
                                     `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
-                                    { state: { fish } },
+                                    { state: { fish } }
                                   );
                                 }}
                               />
@@ -517,6 +518,8 @@ const SearchPage: React.FC = () => {
                   </Card>
                 </div>
               )}
+
+              <div className="h-[200px] md:hidden"></div>
 
               <div ref={messagesEndRef} />
             </div>
