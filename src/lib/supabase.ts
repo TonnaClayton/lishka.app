@@ -176,7 +176,7 @@ export const authService = {
         type: "signup",
         email: email,
         options: {
-          emailRedirectTo: `${window.location.origin}/auth/confirm?type=signup`,
+          emailRedirectTo: `${window.location.origin}/auth/confirm`,
         },
       });
       log("Resend confirmation response:", { data, error });

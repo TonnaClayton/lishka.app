@@ -1,9 +1,5 @@
-import React, { useEffect, useState, useRef } from "react";
-import {
-  formatTemperature,
-  formatSpeed,
-  formatDistance,
-} from "@/lib/unit-conversion";
+import React, { useState, useMemo } from "react";
+import { formatTemperature, formatSpeed } from "@/lib/unit-conversion";
 
 // Add global type for window.mapSelectionState
 declare global {
@@ -18,7 +14,6 @@ import { Card } from "./ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
 import {
   Loader2,
   Waves,
@@ -49,631 +44,158 @@ import {
 } from "lucide-react";
 import LocationModal from "./location-modal";
 import { log } from "@/lib/logging";
-import { config } from "@/lib/config";
-
-interface WeatherData {
-  hourly: {
-    time: number[] | string[];
-    wave_height?: number[];
-    wave_direction?: number[];
-    swell_wave_height?: number[];
-    swell_wave_direction?: number[];
-    swell_wave_period?: number[];
-    wind_speed_10m: number[];
-    wind_direction_10m: number[];
-    temperature_2m: number[];
-    weather_code?: number[];
-    precipitation?: number[];
-    precipitation_probability?: number[];
-    visibility?: number[];
-  };
-  hourly_units: {
-    wave_height?: string;
-    swell_wave_height?: string;
-    wind_speed_10m: string;
-    temperature_2m: string;
-    precipitation?: string;
-    visibility?: string;
-  };
-  current?: {
-    time: string;
-    temperature_2m: number;
-    apparent_temperature: number;
-    is_day: number;
-    precipitation: number;
-    weather_code: number;
-    wind_speed_10m: number;
-    wind_direction_10m: number;
-    wind_gusts_10m: number;
-    wave_height?: number;
-    wave_direction?: number;
-    swell_wave_height?: number;
-    swell_wave_direction?: number;
-    swell_wave_period?: number;
-  };
-  current_units?: {
-    temperature_2m: string;
-    wind_speed_10m: string;
-    precipitation: string;
-    wave_height?: string;
-    swell_wave_height?: string;
-    swell_wave_period?: string;
-  };
-  daily?: {
-    time: string[];
-    weather_code: number[];
-    temperature_2m_max: number[];
-    temperature_2m_min: number[];
-    sunrise: string[];
-    sunset: string[];
-    uv_index_max: number[];
-  };
-  // Added fields to track if marine data is from nearby coordinates
-  marineDataFromNearby?: boolean;
-  marineCoordinates?: {
-    latitude: number;
-    longitude: number;
-  };
-}
-
-interface LocationData {
-  latitude: number;
-  longitude: number;
-  name: string;
-  _timestamp?: number; // Optional timestamp for forcing refreshes
-}
+import WeatherWidgetProSkeleton from "./weather-widget-pro-skeleton";
+import {
+  useLocation,
+  LocationData,
+  useWeatherData,
+  useFishingAdvice,
+  CurrentConditions,
+} from "@/hooks/queries/location";
+import { cn } from "@/lib/utils";
 
 const WeatherWidget: React.FC<{
   userLocation?: LocationData;
   onLocationUpdate?: (location: LocationData) => void;
 }> = ({ userLocation, onLocationUpdate }) => {
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [location, setLocation] = useState<LocationData | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [isLoadingRecommendation, setIsLoadingRecommendation] = useState(false);
   const [activeTab, setActiveTab] = useState("inshore");
-  const [isLoadingFishingAdvice, setIsLoadingFishingAdvice] = useState(false);
-  const [inshoreAdvice, setInshoreAdvice] = useState("");
-  const [offshoreAdvice, setOffshoreAdvice] = useState("");
+
+  // Use React Query location hook
+  const {
+    location,
+    isLoading: isLoadingLocation,
+    error: locationError,
+    updateLocation,
+    updateLocationAsync,
+    refreshLocation,
+    refreshLocationAsync,
+    isUpdating,
+    isRefreshing,
+  } = useLocation(userLocation);
+
+  // Use React Query weather data hook
+  const {
+    weatherData,
+    isLoading: isLoadingWeather,
+    error: weatherError,
+    isError: isWeatherError,
+    refreshWeather,
+    refreshWeatherAsync,
+    isRefreshing: isRefreshingWeather,
+    getWeatherCondition,
+    lastUpdated,
+  } = useWeatherData(location);
+
+  // Create current conditions object for fishing advice
+  const currentConditions: CurrentConditions | null = useMemo(() => {
+    if (!weatherData || !location) return null;
+
+    // Get current hour index
+    const findCurrentHourIndex = () => {
+      if (!weatherData?.hourly?.time || weatherData.hourly.time.length === 0) {
+        return 0;
+      }
+
+      const now = Math.floor(Date.now() / 1000);
+      let closestIndex = 0;
+      let smallestDiff = Infinity;
+
+      weatherData.hourly.time.forEach((time, index) => {
+        const timeValue =
+          typeof time === "string"
+            ? Math.floor(new Date(time).getTime() / 1000)
+            : time;
+        const diff = Math.abs(timeValue - now);
+        if (diff < smallestDiff) {
+          smallestDiff = diff;
+          closestIndex = index;
+        }
+      });
+
+      return closestIndex;
+    };
+
+    const currentHourIndex = findCurrentHourIndex();
+    const waveHeights =
+      weatherData.hourly.wave_height?.slice(
+        currentHourIndex,
+        currentHourIndex + 1
+      ) || [];
+    const waveDirections =
+      weatherData.hourly.wave_direction?.slice(
+        currentHourIndex,
+        currentHourIndex + 1
+      ) || [];
+    const swellWaveHeights =
+      weatherData.hourly.swell_wave_height?.slice(
+        currentHourIndex,
+        currentHourIndex + 1
+      ) || [];
+    const swellWavePeriods =
+      weatherData.hourly.swell_wave_period?.slice(
+        currentHourIndex,
+        currentHourIndex + 1
+      ) || [];
+    const windSpeeds =
+      weatherData.hourly.wind_speed_10m.slice(
+        currentHourIndex,
+        currentHourIndex + 1
+      ) || [];
+    const windDirections =
+      weatherData.hourly.wind_direction_10m.slice(
+        currentHourIndex,
+        currentHourIndex + 1
+      ) || [];
+    const temperatures =
+      weatherData.hourly.temperature_2m.slice(
+        currentHourIndex,
+        currentHourIndex + 1
+      ) || [];
+
+    return {
+      temperature: temperatures[0] ?? null,
+      windSpeed: windSpeeds[0] ?? null,
+      windDirection: windDirections[0] ?? null,
+      waveHeight: waveHeights[0] ?? null,
+      swellWaveHeight: swellWaveHeights[0] ?? null,
+      swellWavePeriod: swellWavePeriods[0] ?? null,
+      weatherCondition: getWeatherCondition(),
+    };
+  }, [weatherData, location, getWeatherCondition]);
+
+  // Use React Query fishing advice hook
+  const {
+    fishingAdvice,
+    isLoading: isLoadingFishingAdvice,
+    error: fishingAdviceError,
+    isError: isFishingAdviceError,
+    refreshFishingAdvice,
+    refreshFishingAdviceAsync,
+    isRefreshing: isRefreshingFishingAdvice,
+  } = useFishingAdvice(location, currentConditions);
 
   // Removed chart refs as we're using card-based display instead
 
-  // Use user's location if available
-  useEffect(() => {
-    const loadLocation = () => {
-      let locationToUse: LocationData | null = null;
-
-      // First priority: use the location passed as a prop
-      if (userLocation) {
-        log(
-          `Using provided user location: ${userLocation.name} (${userLocation.latitude}, ${userLocation.longitude})`,
-        );
-        locationToUse = userLocation;
-      } else {
-        // Second priority: try to get user's location from localStorage
-        const savedLocation = localStorage.getItem("userLocationFull");
-        if (savedLocation) {
-          try {
-            const parsedLocation = JSON.parse(savedLocation);
-            if (
-              parsedLocation &&
-              (parsedLocation.latitude || parsedLocation.lat)
-            ) {
-              locationToUse = {
-                latitude:
-                  parsedLocation.latitude || parsedLocation.lat || 35.8997,
-                longitude:
-                  parsedLocation.longitude || parsedLocation.lng || 14.5146,
-                name: parsedLocation.name || "Malta",
-              };
-              log(
-                `Using saved location: ${locationToUse.name} (${locationToUse.latitude}, ${locationToUse.longitude})`,
-              );
-            }
-          } catch (err) {
-            console.error("Error parsing user location:", err);
-          }
-        }
-      }
-
-      // If we don't have a location, set Malta as default
-      if (!locationToUse) {
-        log("No location found, setting Malta as default");
-        locationToUse = {
-          latitude: 35.8997,
-          longitude: 14.5146,
-          name: "Malta",
-        };
-        // Also save to localStorage
-        localStorage.setItem("userLocation", locationToUse.name);
-        localStorage.setItem("userLocationFull", JSON.stringify(locationToUse));
-      }
-
-      // Only update location if it's different from current location
-      setLocation((prevLocation) => {
-        if (
-          !prevLocation ||
-          prevLocation.latitude !== locationToUse.latitude ||
-          prevLocation.longitude !== locationToUse.longitude ||
-          prevLocation.name !== locationToUse.name
-        ) {
-          return locationToUse;
-        }
-        return prevLocation;
-      });
-    };
-
-    // Load location initially
-    loadLocation();
-
-    // Listen for storage changes from other components
-    window.addEventListener("storage", loadLocation);
-
-    return () => {
-      window.removeEventListener("storage", loadLocation);
-    };
-  }, [userLocation]);
-
   // Handle location update
-  const handleLocationUpdate = (newLocation: LocationData) => {
-    // Check if location actually changed to prevent unnecessary updates
-    if (
-      location &&
-      location.latitude === newLocation.latitude &&
-      location.longitude === newLocation.longitude &&
-      location.name === newLocation.name
-    ) {
+  const handleLocationUpdate = async (newLocation: LocationData) => {
+    try {
+      // Update location using React Query mutation
+      await updateLocationAsync(newLocation);
+
+      // Notify parent component if callback provided
+      if (onLocationUpdate) {
+        onLocationUpdate(newLocation);
+      }
+
+      // Close the location modal
       setShowLocationModal(false);
-      return;
-    }
-
-    // Reset fishing advice when location changes
-    setInshoreAdvice("");
-    setOffshoreAdvice("");
-
-    // Update location (weather data fetch will be triggered by useEffect)
-    log("Setting new location:", newLocation);
-    setLocation(newLocation);
-
-    // Save to localStorage for persistence across components
-    localStorage.setItem("userLocation", newLocation.name);
-    localStorage.setItem("userLocationFull", JSON.stringify(newLocation));
-
-    // Notify parent component if callback provided
-    if (onLocationUpdate) {
-      onLocationUpdate(newLocation);
-    }
-
-    // Close the location modal
-    setShowLocationModal(false);
-  };
-
-  // Function to generate mock weather data for debugging
-  const generateMockWeatherData = (): WeatherData => {
-    const now = new Date();
-    const times = Array.from({ length: 24 }, (_, i) => {
-      const time = new Date(now.getTime() + i * 60 * 60 * 1000);
-      return time.toISOString();
-    });
-
-    return {
-      hourly: {
-        time: times,
-        // Set all data to null to show '-' in UI
-        wave_height: Array(24).fill(null),
-        wave_direction: Array(24).fill(null),
-        swell_wave_height: Array(24).fill(null),
-        swell_wave_direction: Array(24).fill(null),
-        swell_wave_period: Array(24).fill(null),
-        wind_speed_10m: Array(24).fill(null),
-        wind_direction_10m: Array(24).fill(null),
-        temperature_2m: Array(24).fill(null),
-        weather_code: Array(24).fill(null),
-        precipitation: Array(24).fill(null),
-        precipitation_probability: Array(24).fill(null),
-        visibility: Array(24).fill(null),
-      },
-      hourly_units: {
-        wave_height: "m",
-        swell_wave_height: "m",
-        wind_speed_10m: "km/h",
-        temperature_2m: "°C",
-        precipitation: "mm",
-        visibility: "m",
-      },
-      current: {
-        time: now.toISOString(),
-        temperature_2m: null,
-        apparent_temperature: null,
-        is_day: now.getHours() >= 6 && now.getHours() < 20 ? 1 : 0,
-        precipitation: null,
-        weather_code: null,
-        wind_speed_10m: null,
-        wind_direction_10m: null,
-        wind_gusts_10m: null,
-        wave_height: null,
-        wave_direction: null,
-        swell_wave_height: null,
-        swell_wave_direction: null,
-        swell_wave_period: null,
-      },
-      current_units: {
-        temperature_2m: "°C",
-        wind_speed_10m: "km/h",
-        precipitation: "mm",
-        wave_height: "m",
-        swell_wave_height: "m",
-        swell_wave_period: "s",
-      },
-      daily: {
-        time: Array.from({ length: 7 }, (_, i) => {
-          const date = new Date(now.getTime() + i * 24 * 60 * 60 * 1000);
-          return date.toISOString().split("T")[0];
-        }),
-        weather_code: Array(7).fill(null),
-        temperature_2m_max: Array(7).fill(null),
-        temperature_2m_min: Array(7).fill(null),
-        sunrise: Array(7).fill(null),
-        sunset: Array(7).fill(null),
-        uv_index_max: Array(7).fill(null),
-      },
-    };
-  };
-
-  // Function to fetch weather data from Open-Meteo API
-  const fetchOpenMeteoData = async (
-    lat: number,
-    lng: number,
-  ): Promise<WeatherData> => {
-    log(`Fetching weather data for coordinates: ${lat}, ${lng}`);
-
-    // Construct the API URLs with customer API endpoint and API key
-    const weatherUrl = `https://customer-api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code,precipitation,precipitation_probability,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&current=temperature_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&timezone=auto&apikey=1g8vJZI7DhEIFDIt`;
-
-    const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=wave_height,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period&current=wave_height,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period`;
-
-    try {
-      // Fetch both weather and marine data in parallel
-      const [weatherResponse, marineResponse] = await Promise.all([
-        fetch(weatherUrl),
-        fetch(marineUrl),
-      ]);
-
-      if (!weatherResponse.ok) {
-        throw new Error(`Weather API error: ${weatherResponse.status}`);
-      }
-
-      // We'll continue even if marine API fails, just log the error
-      if (!marineResponse.ok) {
-        console.error(`Marine API error: ${marineResponse.status}`);
-      }
-
-      const weatherData = await weatherResponse.json();
-      const marineData = await marineResponse.json();
-
-      log("🌤️ [WEATHER API] Full response from OpenMeteo:", weatherData);
-      log("🌤️ [WEATHER API] Weather codes in response:", {
-        current: weatherData.current?.weather_code,
-        hourly: weatherData.hourly?.weather_code?.slice(0, 5),
-        daily: weatherData.daily?.weather_code?.slice(0, 3),
-      });
-      log("🌊 [MARINE API] Full response:", marineData);
-
-      // Enhanced API validation logging
-      log("🔍 [API VALIDATION] Request details:", {
-        weatherUrl: weatherUrl,
-        marineUrl: marineUrl,
-        coordinates: { lat, lng },
-        timestamp: new Date().toISOString(),
-        responseStatus: {
-          weather: weatherResponse.status,
-          marine: marineResponse.status,
-        },
-      });
-
-      // Log specific weather data for comparison
-      log("📊 [WEATHER COMPARISON] Key data points:", {
-        currentWeatherCode: weatherData.current?.weather_code,
-        currentCondition: weatherData.current?.weather_code
-          ? getWeatherConditionName(weatherData.current.weather_code)
-          : "N/A",
-        dailyWeatherCodes: weatherData.daily?.weather_code?.slice(0, 7),
-        dailyConditions: weatherData.daily?.weather_code
-          ?.slice(0, 7)
-          ?.map((code) => getWeatherConditionName(code)),
-        temperature: weatherData.current?.temperature_2m,
-        windSpeed: weatherData.current?.wind_speed_10m,
-        location: `${lat}, ${lng}`,
-      });
-
-      // Merge the marine data into the weather data
-      const combinedData: WeatherData = {
-        ...weatherData,
-        hourly: {
-          ...weatherData.hourly,
-          wave_height: marineData.hourly?.wave_height,
-          wave_direction: marineData.hourly?.wave_direction,
-          swell_wave_height: marineData.hourly?.swell_wave_height,
-          swell_wave_direction: marineData.hourly?.swell_wave_direction,
-          swell_wave_period: marineData.hourly?.swell_wave_period,
-        },
-        hourly_units: {
-          ...weatherData.hourly_units,
-          wave_height: marineData.hourly_units?.wave_height,
-          swell_wave_height: marineData.hourly_units?.swell_wave_height,
-          swell_wave_period: marineData.hourly_units?.swell_wave_period,
-        },
-      };
-
-      // Add marine data to current if available
-      if (weatherData.current && marineData.current) {
-        combinedData.current = {
-          ...weatherData.current,
-          wave_height: marineData.current.wave_height,
-          wave_direction: marineData.current.wave_direction,
-          swell_wave_height: marineData.current.swell_wave_height,
-          swell_wave_direction: marineData.current.swell_wave_direction,
-          swell_wave_period: marineData.current.swell_wave_period,
-        };
-
-        combinedData.current_units = {
-          ...weatherData.current_units,
-          wave_height: marineData.current_units?.wave_height,
-          swell_wave_height: marineData.current_units?.swell_wave_height,
-          swell_wave_period: marineData.current_units?.swell_wave_period,
-        };
-      }
-
-      return combinedData;
     } catch (error) {
-      console.error("Error fetching weather data:", error);
-      throw error;
+      console.error("Error updating location:", error);
     }
   };
-
-  // Fetch weather data when location is set
-  useEffect(() => {
-    if (!location || !location.latitude || !location.longitude) return;
-
-    // Prevent unnecessary fetches by checking if we already have data for this location
-    if (
-      weatherData &&
-      lastUpdated &&
-      Math.abs(Date.now() - lastUpdated.getTime()) < 300000
-    ) {
-      // 5 minutes
-      return;
-    }
-
-    let isCancelled = false;
-
-    const fetchWeatherData = async () => {
-      if (isCancelled) return;
-
-      // Reset states only when starting a new fetch
-      setCurrentIndex(0);
-      setWeatherData(null);
-      setLoading(true);
-      setError(null);
-
-      try {
-        log(
-          `Fetching data for: ${location.name} (${location.latitude}, ${location.longitude})`,
-        );
-
-        // Fetch real data from Open-Meteo API
-        const apiData = await fetchOpenMeteoData(
-          location.latitude,
-          location.longitude,
-        );
-
-        if (isCancelled) return;
-
-        // Log the API data
-        log("Fetched weather data from API:", apiData);
-
-        // Set the weather data state
-        setWeatherData(apiData);
-        setLastUpdated(new Date());
-        setError(null);
-
-        // Ensure loading is cleared
-        setLoading(false);
-
-        // Save current weather conditions to localStorage for other components
-        const currentConditions = {
-          temperature:
-            apiData?.current?.temperature_2m ||
-            (apiData.hourly?.temperature_2m?.length > 0
-              ? apiData.hourly.temperature_2m[0]
-              : null),
-          windSpeed:
-            apiData.hourly?.wind_speed_10m?.length > 0
-              ? apiData.hourly.wind_speed_10m[0]
-              : null,
-          windDirection:
-            apiData.hourly?.wind_direction_10m?.length > 0
-              ? apiData.hourly.wind_direction_10m[0]
-              : null,
-          waveHeight:
-            apiData?.current?.wave_height ||
-            (apiData.hourly?.wave_height?.length > 0
-              ? apiData.hourly.wave_height[0]
-              : null),
-          swellWaveHeight:
-            apiData?.current?.swell_wave_height ||
-            (apiData.hourly?.swell_wave_height?.length > 0
-              ? apiData.hourly.swell_wave_height[0]
-              : null),
-          swellWavePeriod:
-            apiData?.current?.swell_wave_period ||
-            (apiData.hourly?.swell_wave_period?.length > 0
-              ? apiData.hourly.swell_wave_period[0]
-              : null),
-          weatherCondition: getWeatherCondition(),
-        };
-        localStorage.setItem(
-          "currentWeatherData",
-          JSON.stringify(currentConditions),
-        );
-      } catch (err) {
-        if (isCancelled) return;
-
-        console.error("Data fetch error:", err);
-        setError(
-          `Failed to fetch weather data: ${err.message || "Unknown error"}`,
-        );
-      } finally {
-        if (!isCancelled) {
-          setLoading(false);
-        }
-      }
-    };
-
-    // Add a small delay to debounce rapid location changes
-    const timeoutId = setTimeout(() => {
-      fetchWeatherData();
-    }, 300);
-
-    return () => {
-      isCancelled = true;
-      clearTimeout(timeoutId);
-    };
-  }, [location?.latitude, location?.longitude, location?.name]);
-
-  // Function to get AI-generated fishing advice based on current conditions
-  const getFishingAdvice = async () => {
-    if (!weatherData || !location) return;
-
-    setIsLoadingFishingAdvice(true);
-
-    try {
-      // Get current season based on hemisphere
-      const now = new Date();
-      const month = now.getMonth() + 1; // 1-12
-
-      // Determine hemisphere based on latitude (negative is southern)
-      const isNorthernHemisphere = location.latitude >= 0;
-
-      let season = "";
-      if (isNorthernHemisphere) {
-        // Northern hemisphere seasons
-        if (month >= 3 && month <= 5) season = "spring";
-        else if (month >= 6 && month <= 8) season = "summer";
-        else if (month >= 9 && month <= 11) season = "autumn";
-        else season = "winter";
-      } else {
-        // Southern hemisphere seasons
-        if (month >= 3 && month <= 5) season = "autumn";
-        else if (month >= 6 && month <= 8) season = "winter";
-        else if (month >= 9 && month <= 11) season = "spring";
-        else season = "summer";
-      }
-
-      // Create prompts for inshore and offshore fishing
-      const inshorePrompt = `You are an expert fishing guide. Based on these weather conditions at ${location.name}, provide brief, practical inshore fishing advice (max 3 sentences):
-      - Temperature: ${currentConditions.temperature !== null ? `${Math.round(currentConditions.temperature)}°C` : "Unknown"}
-      - Wind: ${currentConditions.windSpeed !== null ? `${Math.round(currentConditions.windSpeed)} km/h ${currentConditions.windDirection !== null ? getWindDirection(currentConditions.windDirection) : ""}` : "Unknown"}
-      - Wave height: ${currentConditions.waveHeight !== null ? `${currentConditions.waveHeight.toFixed(1)}m` : "Unknown"}
-      - Season: ${season}
-      - Weather: ${getWeatherCondition()}
-      
-      Focus on inshore fishing tactics, best locations (general types like "sheltered bays" not specific names), and suitable species for these conditions.`;
-
-      const offshorePrompt = `You are an expert fishing guide. Based on these weather conditions at ${location.name}, provide brief, practical offshore fishing advice (max 3 sentences):
-      - Temperature: ${currentConditions.temperature !== null ? `${Math.round(currentConditions.temperature)}°C` : "Unknown"}
-      - Wind: ${currentConditions.windSpeed !== null ? `${Math.round(currentConditions.windSpeed)} km/h ${currentConditions.windDirection !== null ? getWindDirection(currentConditions.windDirection) : ""}` : "Unknown"}
-      - Wave height: ${currentConditions.waveHeight !== null ? `${currentConditions.waveHeight.toFixed(1)}m` : "Unknown"}
-      - Swell height: ${currentConditions.swellWaveHeight !== null ? `${currentConditions.swellWaveHeight.toFixed(1)}m` : "Unknown"}
-      - Swell period: ${currentConditions.swellWavePeriod !== null ? `${currentConditions.swellWavePeriod.toFixed(1)}s` : "Unknown"}
-      - Season: ${season}
-      - Weather: ${getWeatherCondition()}
-      
-      Focus on offshore fishing tactics, suitable depths, and target species for these conditions.`;
-
-      // Make API calls to OpenAI in parallel
-      const [inshoreResponse, offshoreResponse] = await Promise.all([
-        fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${config.VITE_OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-3.5-turbo",
-            messages: [{ role: "user", content: inshorePrompt }],
-            max_tokens: 150,
-            temperature: 0.7,
-          }),
-        }),
-        fetch("https://api.openai.com/v1/chat/completions", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${config.VITE_OPENAI_API_KEY}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-3.5-turbo",
-            messages: [{ role: "user", content: offshorePrompt }],
-            max_tokens: 150,
-            temperature: 0.7,
-          }),
-        }),
-      ]);
-
-      // Process responses
-      if (!inshoreResponse.ok || !offshoreResponse.ok) {
-        throw new Error("Failed to fetch fishing advice");
-      }
-
-      const inshoreData = await inshoreResponse.json();
-      const offshoreData = await offshoreResponse.json();
-
-      // Extract advice text from responses
-      const inshoreAdviceText =
-        inshoreData.choices?.[0]?.message?.content?.trim() ||
-        "No inshore fishing advice available";
-      const offshoreAdviceText =
-        offshoreData.choices?.[0]?.message?.content?.trim() ||
-        "No offshore fishing advice available";
-
-      // Update state with advice
-      setInshoreAdvice(inshoreAdviceText);
-      setOffshoreAdvice(offshoreAdviceText);
-    } catch (error) {
-      console.error("Error fetching fishing advice:", error);
-      setInshoreAdvice(
-        "Unable to generate fishing advice. Please try again later.",
-      );
-      setOffshoreAdvice(
-        "Unable to generate fishing advice. Please try again later.",
-      );
-    } finally {
-      setIsLoadingFishingAdvice(false);
-    }
-  };
-
-  // Automatically fetch fishing advice when weather data is loaded
-  useEffect(() => {
-    if (
-      weatherData &&
-      !isLoadingFishingAdvice &&
-      !inshoreAdvice &&
-      !offshoreAdvice &&
-      location
-    ) {
-      // Debounce fishing advice fetching to prevent rapid calls
-      const timeoutId = setTimeout(() => {
-        getFishingAdvice();
-      }, 1000);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [weatherData, location?.name]);
 
   // Removed chart drawing effect as we're using card-based display instead
 
@@ -694,25 +216,6 @@ const WeatherWidget: React.FC<{
     } catch (err) {
       console.error("Error formatting time:", err);
       return "--:--";
-    }
-  };
-
-  // Format date for display
-  const formatDate = (timeString: number | string) => {
-    try {
-      const date =
-        typeof timeString === "number"
-          ? new Date(timeString * 1000)
-          : new Date(timeString);
-      if (isNaN(date.getTime())) return "--";
-      return date.toLocaleDateString([], {
-        weekday: "short",
-        month: "short",
-        day: "numeric",
-      });
-    } catch (err) {
-      console.error("Error formatting date:", err);
-      return "--";
     }
   };
 
@@ -742,7 +245,7 @@ const WeatherWidget: React.FC<{
   const getFishingConditionsRating = (
     waveHeight: number | null,
     windSpeed: number | null,
-    swellWavePeriod: number | null,
+    swellWavePeriod: number | null
   ) => {
     // If any of the required data is missing, return "Unknown"
     if (waveHeight === null || windSpeed === null) {
@@ -792,63 +295,6 @@ const WeatherWidget: React.FC<{
     if (totalScore >= 3.5) return "Good";
     if (totalScore >= 2.5) return "Fair";
     return "Poor";
-  };
-
-  // Get current date and format it nicely
-  const getCurrentDate = () => {
-    const now = new Date();
-    const options = { weekday: "long", day: "numeric", month: "long" };
-    return now.toLocaleDateString(
-      undefined, // Use browser's locale instead of hardcoding to en-US
-      options as Intl.DateTimeFormatOptions,
-    );
-  };
-
-  // Get weather condition based on WMO weather code (Windy model - codes 0,1,2 merged to "Clear sky")
-  const getWeatherCondition = () => {
-    if (!weatherData) return "-";
-
-    // Use current weather code if available, otherwise use the first hourly code
-    const weatherCode =
-      weatherData.current?.weather_code ??
-      (weatherData.hourly.weather_code &&
-      weatherData.hourly.weather_code.length > 0
-        ? weatherData.hourly.weather_code[0]
-        : null);
-
-    if (weatherCode === null) {
-      return "-";
-    }
-
-    // Modified WMO Weather interpretation codes to match Windy model
-    switch (true) {
-      case weatherCode === 0:
-      case weatherCode === 1:
-      case weatherCode === 2:
-        return "Clear sky"; // Windy model: merge codes 0, 1, 2 into "Clear sky"
-      case weatherCode === 3:
-        return "Overcast";
-      case weatherCode >= 45 && weatherCode <= 49:
-        return "Fog";
-      case weatherCode >= 51 && weatherCode <= 55:
-        return "Drizzle";
-      case weatherCode >= 56 && weatherCode <= 57:
-        return "Freezing Drizzle";
-      case weatherCode >= 61 && weatherCode <= 65:
-        return "Rain";
-      case weatherCode >= 66 && weatherCode <= 67:
-        return "Freezing Rain";
-      case weatherCode >= 71 && weatherCode <= 77:
-        return "Snow";
-      case weatherCode >= 80 && weatherCode <= 82:
-        return "Rain showers";
-      case weatherCode >= 85 && weatherCode <= 86:
-        return "Snow showers";
-      case weatherCode >= 95 && weatherCode <= 99:
-        return "Thunderstorm";
-      default:
-        return "Unknown";
-    }
   };
 
   // Get weather icon based on WMO weather code
@@ -955,115 +401,27 @@ const WeatherWidget: React.FC<{
     return advice.trim();
   };
 
-  // Get weather condition name from weather code (Windy model - codes 0,1,2 merged to "Clear sky")
-  const getWeatherConditionName = (weatherCode: number | null | undefined) => {
-    if (weatherCode === null || weatherCode === undefined) {
-      return "Unknown";
-    }
-
-    // Modified WMO Weather interpretation codes to match Windy model
-    switch (true) {
-      case weatherCode === 0:
-      case weatherCode === 1:
-      case weatherCode === 2:
-        return "Clear sky"; // Windy model: merge codes 0, 1, 2 into "Clear sky"
-      case weatherCode === 3:
-        return "Overcast";
-      case weatherCode >= 45 && weatherCode <= 49:
-        return "Fog";
-      case weatherCode >= 51 && weatherCode <= 55:
-        return "Drizzle";
-      case weatherCode >= 56 && weatherCode <= 57:
-        return "Freezing Drizzle";
-      case weatherCode >= 61 && weatherCode <= 65:
-        return "Rain";
-      case weatherCode >= 66 && weatherCode <= 67:
-        return "Freezing Rain";
-      case weatherCode >= 71 && weatherCode <= 77:
-        return "Snow";
-      case weatherCode >= 80 && weatherCode <= 82:
-        return "Rain showers";
-      case weatherCode >= 85 && weatherCode <= 86:
-        return "Snow showers";
-      case weatherCode >= 95 && weatherCode <= 99:
-        return "Thunderstorm";
-      default:
-        return `Unknown (${weatherCode})`;
-    }
-  };
-
-  const handleRefresh = () => {
+  const handleRefresh = async () => {
     if (location && location.latitude && location.longitude) {
-      // Reset states and clear cached data
-      setLoading(true);
-      setWeatherData(null);
-      setCurrentIndex(0);
-      setError(null);
-      setLastUpdated(null); // Clear last updated to force fresh fetch
-      setInshoreAdvice(""); // Clear fishing advice
-      setOffshoreAdvice("");
+      try {
+        // Reset states and clear cached data
+        setCurrentIndex(0);
 
-      // Trigger a fresh fetch by updating the location with a timestamp
-      const refreshedLocation = {
-        ...location,
-        _timestamp: Date.now(),
-      };
-
-      log("Forcing refresh with new location object:", refreshedLocation);
-      setLocation(refreshedLocation);
+        // Trigger a fresh fetch using React Query mutations
+        await Promise.all([
+          refreshLocationAsync(),
+          refreshWeatherAsync(),
+          refreshFishingAdviceAsync(),
+        ]);
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+      }
     }
   };
 
-  if (!location) {
-    return (
-      <div className="flex flex-col justify-center items-center h-64 bg-gray-50 dark:bg-gray-800 rounded-lg p-6 border-r-0">
-        <MapPin className="h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
-        <p className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2 text-center">
-          No location set
-        </p>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 text-center">
-          Please set your location to get weather data
-        </p>
-        <Button
-          onClick={() => setShowLocationModal(true)}
-          className="bg-[#0251FB] dark:bg-blue-700 text-white hover:bg-[#0251FB]/90 dark:hover:bg-blue-600 rounded-full"
-        >
-          <MapPin className="mr-2 h-4 w-4" /> Set Location
-        </Button>
-      </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="flex flex-col justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0251FB] dark:text-blue-500 mb-4" />
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          Loading weather data...
-        </p>
-      </div>
-    );
-  }
-
-  if (error || !weatherData) {
-    return (
-      <Card className="p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900 shadow-sm">
-        <div className="text-sm text-gray-700 dark:text-red-300 space-y-2">
-          <p>This could be happening because:</p>
-          <ul className="list-disc pl-5">
-            <li>The Open-Meteo API may be temporarily unavailable</li>
-            <li>There might be a network issue with your connection</li>
-            <li>
-              There might be a CORS issue with the API in this environment
-            </li>
-          </ul>
-          <p className="mt-3 text-xs">
-            Please try again later or check your internet connection.
-          </p>
-        </div>
-      </Card>
-    );
-  }
+  const disableRefreshBtn = useMemo(() => {
+    return isRefreshingWeather || isLoadingWeather || isLoadingLocation;
+  }, [isRefreshingWeather, isLoadingWeather, isLoadingLocation]);
 
   // Find the current hour index in the hourly data
   const findCurrentHourIndex = () => {
@@ -1096,49 +454,49 @@ const WeatherWidget: React.FC<{
 
   // Get current time and next few hours starting from current hour
   const times =
-    weatherData.hourly.time.slice(currentHourIndex, currentHourIndex + 24) ||
+    weatherData?.hourly?.time?.slice(currentHourIndex, currentHourIndex + 24) ||
     [];
   const waveHeights =
-    weatherData.hourly.wave_height?.slice(
+    weatherData?.hourly?.wave_height?.slice(
       currentHourIndex,
-      currentHourIndex + 24,
+      currentHourIndex + 24
     ) || Array(24).fill(null);
   const waveDirections =
-    weatherData.hourly.wave_direction?.slice(
+    weatherData?.hourly?.wave_direction?.slice(
       currentHourIndex,
-      currentHourIndex + 24,
+      currentHourIndex + 24
     ) || Array(24).fill(null);
   const swellWaveHeights =
-    weatherData.hourly.swell_wave_height?.slice(
+    weatherData?.hourly?.swell_wave_height?.slice(
       currentHourIndex,
-      currentHourIndex + 24,
+      currentHourIndex + 24
     ) || Array(24).fill(null);
   const swellWaveDirections =
-    weatherData.hourly.swell_wave_direction?.slice(
+    weatherData?.hourly?.swell_wave_direction?.slice(
       currentHourIndex,
-      currentHourIndex + 24,
+      currentHourIndex + 24
     ) || Array(24).fill(null);
   const swellWavePeriods =
-    weatherData.hourly.swell_wave_period?.slice(
+    weatherData?.hourly?.swell_wave_period?.slice(
       currentHourIndex,
-      currentHourIndex + 24,
+      currentHourIndex + 24
     ) || Array(24).fill(null);
   // Define wavePeriods as swellWavePeriods for backward compatibility
   const wavePeriods = swellWavePeriods;
   const windSpeeds =
-    weatherData.hourly.wind_speed_10m.slice(
+    weatherData?.hourly?.wind_speed_10m?.slice(
       currentHourIndex,
-      currentHourIndex + 24,
+      currentHourIndex + 24
     ) || [];
   const windDirections =
-    weatherData.hourly.wind_direction_10m.slice(
+    weatherData?.hourly?.wind_direction_10m?.slice(
       currentHourIndex,
-      currentHourIndex + 24,
+      currentHourIndex + 24
     ) || [];
   const temperatures =
-    weatherData.hourly.temperature_2m.slice(
+    weatherData?.hourly?.temperature_2m?.slice(
       currentHourIndex,
-      currentHourIndex + 24,
+      currentHourIndex + 24
     ) || [];
 
   // Calculate precipitation forecast for the next 6 hours and 24 hours
@@ -1152,21 +510,23 @@ const WeatherWidget: React.FC<{
 
     // Check if we have precipitation probability data
     if (
-      !weatherData.hourly.precipitation_probability ||
-      !weatherData.hourly.precipitation
+      !weatherData?.hourly?.precipitation_probability ||
+      !weatherData?.hourly?.precipitation
     ) {
       return emptyForecast;
     }
 
     // Get precipitation data for next 6 hours
-    const probabilities = weatherData.hourly.precipitation_probability.slice(
-      currentHourIndex,
-      currentHourIndex + 6,
-    );
-    const amounts = weatherData.hourly.precipitation.slice(
-      currentHourIndex,
-      currentHourIndex + 6,
-    );
+    const probabilities =
+      weatherData?.hourly?.precipitation_probability?.slice(
+        currentHourIndex,
+        currentHourIndex + 6
+      ) || [];
+    const amounts =
+      weatherData?.hourly?.precipitation?.slice(
+        currentHourIndex,
+        currentHourIndex + 6
+      ) || [];
 
     // If no valid data, return empty forecast
     if (!probabilities.length || !amounts.length) {
@@ -1221,8 +581,8 @@ const WeatherWidget: React.FC<{
     allTemps: temperatures.slice(0, 5),
   });
 
-  // Create current conditions object with fresh data
-  const currentConditions = {
+  // Create current conditions object with fresh data for display
+  const displayConditions = {
     waveHeight:
       weatherData?.current?.wave_height ||
       (waveHeights.length > 0 ? waveHeights[0] : null),
@@ -1247,12 +607,56 @@ const WeatherWidget: React.FC<{
         (waveHeights.length > 0 ? waveHeights[0] : null),
       windSpeeds.length > 0 ? windSpeeds[0] : null,
       weatherData?.current?.swell_wave_period ||
-        (swellWavePeriods.length > 0 ? swellWavePeriods[0] : null),
+        (swellWavePeriods.length > 0 ? swellWavePeriods[0] : null)
     ),
   };
 
   // Log the current conditions to verify
-  log("Final current conditions:", currentConditions);
+  log("Final current conditions:", displayConditions);
+
+  if (!location) {
+    return (
+      <div className="flex flex-col justify-center items-center h-64 bg-gray-50 dark:bg-gray-800 rounded-lg p-6 border-r-0">
+        <MapPin className="h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
+        <p className="text-lg font-medium text-gray-700 dark:text-gray-300 mb-2 text-center">
+          No location set
+        </p>
+        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4 text-center">
+          Please set your location to get weather data
+        </p>
+        <Button
+          onClick={() => setShowLocationModal(true)}
+          className="bg-[#0251FB] dark:bg-blue-700 text-white hover:bg-[#0251FB]/90 dark:hover:bg-blue-600 rounded-full"
+        >
+          <MapPin className="mr-2 h-4 w-4" /> Set Location
+        </Button>
+      </div>
+    );
+  }
+
+  if (isLoadingLocation || isLoadingWeather) {
+    return <WeatherWidgetProSkeleton />;
+  }
+
+  if (isWeatherError || !weatherData) {
+    return (
+      <Card className="p-4 bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-900 shadow-sm">
+        <div className="text-sm text-gray-700 dark:text-red-300 space-y-2">
+          <p>This could be happening because:</p>
+          <ul className="list-disc pl-5">
+            <li>The Open-Meteo API may be temporarily unavailable</li>
+            <li>There might be a network issue with your connection</li>
+            <li>
+              There might be a CORS issue with the API in this environment
+            </li>
+          </ul>
+          <p className="mt-3 text-xs">
+            Please try again later or check your internet connection.
+          </p>
+        </div>
+      </Card>
+    );
+  }
 
   return (
     <div className="space-y-4 max-w-full overflow-x-hidden w-full py-4 lg:px-4">
@@ -1274,8 +678,12 @@ const WeatherWidget: React.FC<{
         <Button
           variant="ghost"
           size="sm"
+          disabled={disableRefreshBtn}
           onClick={handleRefresh}
-          className="text-[#0251FB] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+          className={cn(
+            "text-[#0251FB] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20",
+            disableRefreshBtn && "opacity-50 cursor-not-allowe animate-spin"
+          )}
         >
           <RefreshCw className="h-4 w-4" />
         </Button>
@@ -1311,11 +719,11 @@ const WeatherWidget: React.FC<{
               {weatherData?.current?.temperature_2m !== undefined &&
               weatherData.current.temperature_2m !== null
                 ? formatTemperature(weatherData.current.temperature_2m).split(
-                    " ",
+                    " "
                   )[0]
                 : currentConditions.temperature !== null
                   ? formatTemperature(currentConditions.temperature).split(
-                      " ",
+                      " "
                     )[0]
                   : "-"}
             </span>
@@ -1325,7 +733,7 @@ const WeatherWidget: React.FC<{
             {weatherData?.current?.apparent_temperature !== undefined &&
             weatherData.current.apparent_temperature !== null
               ? formatTemperature(
-                  weatherData.current.apparent_temperature,
+                  weatherData.current.apparent_temperature
                 ).split(" ")[0]
               : currentConditions.temperature !== null
                 ? formatTemperature(currentConditions.temperature).split(" ")[0]
@@ -1406,7 +814,7 @@ const WeatherWidget: React.FC<{
                   ? "-"
                   : new Date(weatherData.daily.sunrise[0]).toLocaleTimeString(
                       [],
-                      { hour: "2-digit", minute: "2-digit" },
+                      { hour: "2-digit", minute: "2-digit" }
                     )}
               </p>
             </div>
@@ -1420,7 +828,7 @@ const WeatherWidget: React.FC<{
                   ? "-"
                   : new Date(weatherData.daily.sunset[0]).toLocaleTimeString(
                       [],
-                      { hour: "2-digit", minute: "2-digit" },
+                      { hour: "2-digit", minute: "2-digit" }
                     )}
               </p>
             </div>
@@ -1445,14 +853,14 @@ const WeatherWidget: React.FC<{
           <div className="flex items-center gap-2">
             <Badge
               className={`
-              ${currentConditions.fishingConditions === "Excellent" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
-              ${currentConditions.fishingConditions === "Good" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100" : ""}
-              ${currentConditions.fishingConditions === "Fair" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100" : ""}
-              ${currentConditions.fishingConditions === "Poor" ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" : ""}
+              ${displayConditions.fishingConditions === "Excellent" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
+              ${displayConditions.fishingConditions === "Good" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100" : ""}
+              ${displayConditions.fishingConditions === "Fair" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100" : ""}
+              ${displayConditions.fishingConditions === "Poor" ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" : ""}
               text-sm px-3 py-1
             `}
             >
-              {currentConditions.fishingConditions}
+              {displayConditions.fishingConditions}
             </Badge>
             {isLoadingRecommendation && (
               <div className="ml-2">
@@ -1470,12 +878,12 @@ const WeatherWidget: React.FC<{
         <div className="grid grid-cols-3 gap-2 bg-black/20 p-3 rounded-xl">
           <div className="flex flex-col items-center">
             <p className="text-lg font-semibold">
-              {currentConditions.waveHeight !== null &&
-              typeof currentConditions.waveHeight === "number"
-                ? currentConditions.waveHeight.toFixed(1)
+              {displayConditions.waveHeight !== null &&
+              typeof displayConditions.waveHeight === "number"
+                ? displayConditions.waveHeight.toFixed(1)
                 : "-"}{" "}
-              {currentConditions.waveHeight !== null &&
-              typeof currentConditions.waveHeight === "number"
+              {displayConditions.waveHeight !== null &&
+              typeof displayConditions.waveHeight === "number"
                 ? weatherData?.hourly_units?.wave_height || "m"
                 : ""}
             </p>
@@ -1484,13 +892,13 @@ const WeatherWidget: React.FC<{
           <div className="flex flex-col items-center">
             <div className="flex items-center gap-1">
               <p className="text-lg font-semibold">
-                {currentConditions.waveDirection !== null
-                  ? getWindDirection(currentConditions.waveDirection)
+                {displayConditions.waveDirection !== null
+                  ? getWindDirection(displayConditions.waveDirection)
                   : "-"}
               </p>
-              {currentConditions.waveDirection !== null && (
+              {displayConditions.waveDirection !== null && (
                 <span className="text-lg">
-                  {getDirectionArrow(currentConditions.waveDirection)}
+                  {getDirectionArrow(displayConditions.waveDirection)}
                 </span>
               )}
             </div>
@@ -1510,12 +918,12 @@ const WeatherWidget: React.FC<{
         <div className="grid grid-cols-3 gap-1 sm:gap-2 bg-black/20 p-2 sm:p-3 rounded-xl mt-2">
           <div className="flex flex-col items-center">
             <p className="text-lg font-semibold">
-              {currentConditions.swellWaveHeight !== null &&
-              typeof currentConditions.swellWaveHeight === "number"
-                ? currentConditions.swellWaveHeight.toFixed(1)
+              {displayConditions.swellWaveHeight !== null &&
+              typeof displayConditions.swellWaveHeight === "number"
+                ? displayConditions.swellWaveHeight.toFixed(1)
                 : "-"}{" "}
-              {currentConditions.swellWaveHeight !== null &&
-              typeof currentConditions.swellWaveHeight === "number"
+              {displayConditions.swellWaveHeight !== null &&
+              typeof displayConditions.swellWaveHeight === "number"
                 ? weatherData?.hourly_units?.swell_wave_height || "m"
                 : ""}
             </p>
@@ -1523,18 +931,18 @@ const WeatherWidget: React.FC<{
           </div>
           <div className="flex flex-col items-center">
             <p className="text-lg font-semibold">
-              {currentConditions.swellWavePeriod !== null &&
-              typeof currentConditions.swellWavePeriod === "number"
-                ? `${currentConditions.swellWavePeriod.toFixed(1)}s`
+              {displayConditions.swellWavePeriod !== null &&
+              typeof displayConditions.swellWavePeriod === "number"
+                ? `${displayConditions.swellWavePeriod.toFixed(1)}s`
                 : "-"}
             </p>
             <p className="text-xs opacity-80">Swell Duration</p>
           </div>
           <div className="flex flex-col items-center">
             <p className="text-lg font-semibold">
-              {currentConditions.swellWavePeriod !== null &&
-              typeof currentConditions.swellWavePeriod === "number"
-                ? `${currentConditions.swellWavePeriod.toFixed(1)}s`
+              {displayConditions.swellWavePeriod !== null &&
+              typeof displayConditions.swellWavePeriod === "number"
+                ? `${displayConditions.swellWavePeriod.toFixed(1)}s`
                 : "-"}
             </p>
             <p className="text-xs opacity-80">Swell Period</p>
@@ -1575,8 +983,8 @@ const WeatherWidget: React.FC<{
                 <div className="flex items-center justify-center py-4">
                   <Loader2 className="h-6 w-6 animate-spin text-[#0251FB] dark:text-blue-400" />
                 </div>
-              ) : inshoreAdvice ? (
-                <p className="text-sm">{inshoreAdvice}</p>
+              ) : fishingAdvice?.inshore ? (
+                <p className="text-sm">{fishingAdvice.inshore}</p>
               ) : (
                 <p className="text-sm italic">
                   No inshore fishing advice available
@@ -1591,8 +999,8 @@ const WeatherWidget: React.FC<{
                 <div className="flex items-center justify-center py-4">
                   <Loader2 className="h-6 w-6 animate-spin text-[#0251FB] dark:text-blue-400" />
                 </div>
-              ) : offshoreAdvice ? (
-                <p className="text-sm">{offshoreAdvice}</p>
+              ) : fishingAdvice?.offshore ? (
+                <p className="text-sm">{fishingAdvice.offshore}</p>
               ) : (
                 <p className="text-sm italic">
                   No offshore fishing advice available
@@ -1798,10 +1206,11 @@ const WeatherWidget: React.FC<{
           <div className="flex space-x-3 pb-2 min-w-[800px]">
             {times.slice(0, 12).map((time, index) => {
               const precipitation =
-                weatherData.hourly.precipitation?.[currentHourIndex + index] ||
-                0;
+                weatherData?.hourly?.precipitation?.[
+                  currentHourIndex + index
+                ] || 0;
               const precipitationProbability =
-                weatherData.hourly.precipitation_probability?.[
+                weatherData?.hourly?.precipitation_probability?.[
                   currentHourIndex + index
                 ] || 0;
               return (
@@ -1857,11 +1266,11 @@ const WeatherWidget: React.FC<{
               <div className="flex space-x-1 sm:space-x-2 pb-2 min-w-[300px] w-full sm:min-w-[800px] md:min-w-[1200px] lg:min-w-[1600px] sm:w-auto">
                 {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
                   const probability =
-                    weatherData.hourly.precipitation_probability?.[
+                    weatherData?.hourly?.precipitation_probability?.[
                       currentHourIndex + hour
                     ] || 0;
                   const amount =
-                    weatherData.hourly.precipitation?.[
+                    weatherData?.hourly?.precipitation?.[
                       currentHourIndex + hour
                     ] || 0;
                   return (
@@ -1897,7 +1306,7 @@ const WeatherWidget: React.FC<{
         </Card>
       )}
       {/* Weekly Forecast */}
-      {weatherData?.daily && (
+      {weatherData?.daily?.time && weatherData.daily.time.length > 0 && (
         <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
           <h2 className="text-lg font-semibold mb-4 dark:text-white">
             Weekly Forecast
@@ -2020,21 +1429,21 @@ const WeatherWidget: React.FC<{
                           const dayEnd = (index + 1) * 24;
                           // Get wind speeds for this day if available
                           const dayWindSpeeds =
-                            weatherData.hourly?.wind_speed_10m?.slice(
+                            weatherData?.hourly?.wind_speed_10m?.slice(
                               dayStart,
-                              dayEnd,
+                              dayEnd
                             );
                           if (dayWindSpeeds && dayWindSpeeds.length > 0) {
                             // Filter out null values
                             const validSpeeds = dayWindSpeeds.filter(
-                              (s) => s !== null,
+                              (s) => s !== null
                             );
                             if (validSpeeds.length > 0) {
                               // Calculate average wind speed
                               const avgWindSpeed =
                                 validSpeeds.reduce(
                                   (sum, speed) => sum + speed,
-                                  0,
+                                  0
                                 ) / validSpeeds.length;
                               return formatSpeed(avgWindSpeed).split(" ")[0];
                             }
@@ -2049,9 +1458,9 @@ const WeatherWidget: React.FC<{
                           const dayEnd = (index + 1) * 24;
                           // Get wind directions for this day if available
                           const dayWindDirections =
-                            weatherData.hourly?.wind_direction_10m?.slice(
+                            weatherData?.hourly?.wind_direction_10m?.slice(
                               dayStart,
-                              dayEnd,
+                              dayEnd
                             );
                           if (
                             dayWindDirections &&
@@ -2059,14 +1468,14 @@ const WeatherWidget: React.FC<{
                           ) {
                             // Filter out null values
                             const validDirections = dayWindDirections.filter(
-                              (d) => d !== null,
+                              (d) => d !== null
                             );
                             if (validDirections.length > 0) {
                               // Calculate average wind direction
                               const avgWindDirection =
                                 validDirections.reduce(
                                   (sum, direction) => sum + direction,
-                                  0,
+                                  0
                                 ) / validDirections.length;
                               return getWindDirection(avgWindDirection);
                             }
@@ -2082,19 +1491,19 @@ const WeatherWidget: React.FC<{
                         const dayWindDirections =
                           weatherData.hourly?.wind_direction_10m?.slice(
                             dayStart,
-                            dayEnd,
+                            dayEnd
                           );
                         if (dayWindDirections && dayWindDirections.length > 0) {
                           // Filter out null values
                           const validDirections = dayWindDirections.filter(
-                            (d) => d !== null,
+                            (d) => d !== null
                           );
                           if (validDirections.length > 0) {
                             // Calculate average wind direction
                             const avgWindDirection =
                               validDirections.reduce(
                                 (sum, direction) => sum + direction,
-                                0,
+                                0
                               ) / validDirections.length;
                             return (
                               <span className="text-xs">
@@ -2123,14 +1532,14 @@ const WeatherWidget: React.FC<{
                           const dayEnd = (index + 1) * 24;
                           // Get wave heights for this day if available
                           const dayWaveHeights =
-                            weatherData.hourly?.wave_height?.slice(
+                            weatherData?.hourly?.wave_height?.slice(
                               dayStart,
-                              dayEnd,
+                              dayEnd
                             );
                           if (dayWaveHeights && dayWaveHeights.length > 0) {
                             // Filter out null values
                             const validHeights = dayWaveHeights.filter(
-                              (h) => h !== null,
+                              (h) => h !== null
                             );
                             if (validHeights.length > 0) {
                               // Calculate average wave height
@@ -2157,9 +1566,9 @@ const WeatherWidget: React.FC<{
                           const dayEnd = (index + 1) * 24;
                           // Get wave directions for this day if available
                           const dayWaveDirections =
-                            weatherData.hourly?.wave_direction?.slice(
+                            weatherData?.hourly?.wave_direction?.slice(
                               dayStart,
-                              dayEnd,
+                              dayEnd
                             );
                           if (
                             dayWaveDirections &&
@@ -2167,14 +1576,14 @@ const WeatherWidget: React.FC<{
                           ) {
                             // Filter out null values
                             const validDirections = dayWaveDirections.filter(
-                              (d) => d !== null,
+                              (d) => d !== null
                             );
                             if (validDirections.length > 0) {
                               // Calculate average wave direction
                               const avgWaveDirection =
                                 validDirections.reduce(
                                   (sum, direction) => sum + direction,
-                                  0,
+                                  0
                                 ) / validDirections.length;
                               return getWindDirection(avgWaveDirection);
                             }
@@ -2190,19 +1599,19 @@ const WeatherWidget: React.FC<{
                         const dayWaveDirections =
                           weatherData.hourly?.wave_direction?.slice(
                             dayStart,
-                            dayEnd,
+                            dayEnd
                           );
                         if (dayWaveDirections && dayWaveDirections.length > 0) {
                           // Filter out null values
                           const validDirections = dayWaveDirections.filter(
-                            (d) => d !== null,
+                            (d) => d !== null
                           );
                           if (validDirections.length > 0) {
                             // Calculate average wave direction
                             const avgWaveDirection =
                               validDirections.reduce(
                                 (sum, direction) => sum + direction,
-                                0,
+                                0
                               ) / validDirections.length;
                             return (
                               <span className="text-xs">
@@ -2245,7 +1654,9 @@ const WeatherWidget: React.FC<{
             <span>Data provided by Open-Meteo.com</span>
           </div>
           {lastUpdated && (
-            <span>Last updated: {lastUpdated.toLocaleTimeString()}</span>
+            <span>
+              Last updated: {new Date(lastUpdated).toLocaleTimeString()}
+            </span>
           )}
         </div>
       </div>

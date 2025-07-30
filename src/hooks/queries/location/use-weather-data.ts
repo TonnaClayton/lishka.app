@@ -1,0 +1,376 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { log } from "@/lib/logging";
+import { config } from "@/lib/config";
+import { LocationData, locationQueryKeys } from "./use-location-storage";
+
+interface WeatherData {
+  hourly: {
+    time: number[] | string[];
+    wave_height?: number[];
+    wave_direction?: number[];
+    swell_wave_height?: number[];
+    swell_wave_direction?: number[];
+    swell_wave_period?: number[];
+    wind_speed_10m: number[];
+    wind_direction_10m: number[];
+    temperature_2m: number[];
+    weather_code?: number[];
+    precipitation?: number[];
+    precipitation_probability?: number[];
+    visibility?: number[];
+  };
+  hourly_units: {
+    wave_height?: string;
+    swell_wave_height?: string;
+    wind_speed_10m: string;
+    temperature_2m: string;
+    precipitation?: string;
+    visibility?: string;
+  };
+  current?: {
+    time: string;
+    temperature_2m: number;
+    apparent_temperature: number;
+    is_day: number;
+    precipitation: number;
+    weather_code: number;
+    wind_speed_10m: number;
+    wind_direction_10m: number;
+    wind_gusts_10m: number;
+    wave_height?: number;
+    wave_direction?: number;
+    swell_wave_height?: number;
+    swell_wave_direction?: number;
+    swell_wave_period?: number;
+  };
+  current_units?: {
+    temperature_2m: string;
+    wind_speed_10m: string;
+    precipitation: string;
+    wave_height?: string;
+    swell_wave_height?: string;
+    swell_wave_period?: string;
+  };
+  daily?: {
+    time: string[];
+    weather_code: number[];
+    temperature_2m_max: number[];
+    temperature_2m_min: number[];
+    sunrise: string[];
+    sunset: string[];
+    uv_index_max: number[];
+  };
+  marineDataFromNearby?: boolean;
+  marineCoordinates?: {
+    latitude: number;
+    longitude: number;
+  };
+}
+
+export const weatherQueryKeys = {
+  weatherData: (location: LocationData | null) =>
+    [
+      "weather",
+      "data",
+      location?.latitude || "null",
+      location?.longitude || "null",
+      location?.name || "null",
+    ] as const,
+  currentWeatherData: () => ["weather", "current"] as const,
+};
+
+// Function to fetch weather data from Open-Meteo API
+const fetchOpenMeteoData = async (
+  lat: number,
+  lng: number
+): Promise<WeatherData> => {
+  if (!lat || !lng) {
+    throw new Error("Latitude and longitude are required");
+  }
+
+  log(`Fetching weather data for coordinates: ${lat}, ${lng}`);
+
+  // Construct the API URLs with customer API endpoint and API key
+  const weatherUrl = `https://customer-api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code,precipitation,precipitation_probability,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&current=temperature_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&timezone=auto&apikey=1g8vJZI7DhEIFDIt`;
+
+  const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=wave_height,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period&current=wave_height,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period`;
+
+  try {
+    // Fetch both weather and marine data in parallel
+    const [weatherResponse, marineResponse] = await Promise.all([
+      fetch(weatherUrl),
+      fetch(marineUrl),
+    ]);
+
+    if (!weatherResponse.ok) {
+      throw new Error(`Weather API error: ${weatherResponse.status}`);
+    }
+
+    // We'll continue even if marine API fails, just log the error
+    if (!marineResponse.ok) {
+      console.error(`Marine API error: ${marineResponse.status}`);
+    }
+
+    const weatherData = await weatherResponse.json();
+    const marineData = await marineResponse.json();
+
+    log("🌤️ [WEATHER API] Full response from OpenMeteo:", weatherData);
+    log("🌤️ [WEATHER API] Weather codes in response:", {
+      current: weatherData.current?.weather_code,
+      hourly: weatherData.hourly?.weather_code?.slice(0, 5),
+      daily: weatherData.daily?.weather_code?.slice(0, 3),
+    });
+    log("🌊 [MARINE API] Full response:", marineData);
+
+    // Enhanced API validation logging
+    log("🔍 [API VALIDATION] Request details:", {
+      weatherUrl: weatherUrl,
+      marineUrl: marineUrl,
+      coordinates: { lat, lng },
+      timestamp: new Date().toISOString(),
+      responseStatus: {
+        weather: weatherResponse.status,
+        marine: marineResponse.status,
+      },
+    });
+
+    // Log specific weather data for comparison
+    log("📊 [WEATHER COMPARISON] Key data points:", {
+      currentWeatherCode: weatherData.current?.weather_code,
+      currentCondition: weatherData.current?.weather_code
+        ? getWeatherConditionName(weatherData.current.weather_code)
+        : "N/A",
+      dailyWeatherCodes: weatherData.daily?.weather_code?.slice(0, 7),
+      dailyConditions: weatherData.daily?.weather_code
+        ?.slice(0, 7)
+        ?.map((code) => getWeatherConditionName(code)),
+      temperature: weatherData.current?.temperature_2m,
+      windSpeed: weatherData.current?.wind_speed_10m,
+      location: `${lat}, ${lng}`,
+    });
+
+    // Merge the marine data into the weather data
+    const combinedData: WeatherData = {
+      ...weatherData,
+      hourly: {
+        ...weatherData.hourly,
+        wave_height: marineData.hourly?.wave_height,
+        wave_direction: marineData.hourly?.wave_direction,
+        swell_wave_height: marineData.hourly?.swell_wave_height,
+        swell_wave_direction: marineData.hourly?.swell_wave_direction,
+        swell_wave_period: marineData.hourly?.swell_wave_period,
+      },
+      hourly_units: {
+        ...weatherData.hourly_units,
+        wave_height: marineData.hourly_units?.wave_height,
+        swell_wave_height: marineData.hourly_units?.swell_wave_height,
+        swell_wave_period: marineData.hourly_units?.swell_wave_period,
+      },
+    };
+
+    // Add marine data to current if available
+    if (weatherData.current && marineData.current) {
+      combinedData.current = {
+        ...weatherData.current,
+        wave_height: marineData.current.wave_height,
+        wave_direction: marineData.current.wave_direction,
+        swell_wave_height: marineData.current.swell_wave_height,
+        swell_wave_direction: marineData.current.swell_wave_direction,
+        swell_wave_period: marineData.current.swell_wave_period,
+      };
+
+      combinedData.current_units = {
+        ...weatherData.current_units,
+        wave_height: marineData.current_units?.wave_height,
+        swell_wave_height: marineData.current_units?.swell_wave_height,
+        swell_wave_period: marineData.current_units?.swell_wave_period,
+      };
+    }
+
+    return combinedData;
+  } catch (error) {
+    console.error("Error fetching weather data:", error);
+    throw error;
+  }
+};
+
+// Helper function to get weather condition name
+const getWeatherConditionName = (weatherCode: number | null | undefined) => {
+  if (weatherCode === null || weatherCode === undefined) {
+    return "Unknown";
+  }
+
+  // Modified WMO Weather interpretation codes to match Windy model
+  switch (true) {
+    case weatherCode === 0:
+    case weatherCode === 1:
+    case weatherCode === 2:
+      return "Clear sky"; // Windy model: merge codes 0, 1, 2 into "Clear sky"
+    case weatherCode === 3:
+      return "Overcast";
+    case weatherCode >= 45 && weatherCode <= 49:
+      return "Fog";
+    case weatherCode >= 51 && weatherCode <= 55:
+      return "Drizzle";
+    case weatherCode >= 56 && weatherCode <= 57:
+      return "Freezing Drizzle";
+    case weatherCode >= 61 && weatherCode <= 65:
+      return "Rain";
+    case weatherCode >= 66 && weatherCode <= 67:
+      return "Freezing Rain";
+    case weatherCode >= 71 && weatherCode <= 77:
+      return "Snow";
+    case weatherCode >= 80 && weatherCode <= 82:
+      return "Rain showers";
+    case weatherCode >= 85 && weatherCode <= 86:
+      return "Snow showers";
+    case weatherCode >= 95 && weatherCode <= 99:
+      return "Thunderstorm";
+    default:
+      return `Unknown (${weatherCode})`;
+  }
+};
+
+// Hook for fetching weather data
+export const useWeatherData = (location: LocationData | null) => {
+  const queryClient = useQueryClient();
+
+  const weatherQuery = useQuery({
+    queryKey: weatherQueryKeys.weatherData(location),
+    queryFn: () => {
+      if (!location || !location.latitude || !location.longitude) {
+        throw new Error("No valid location available for weather data");
+      }
+      return fetchOpenMeteoData(location.latitude, location.longitude);
+    },
+    enabled: !!location && !!location.latitude && !!location.longitude,
+    staleTime: 5 * 60 * 1000, // 5 minutes
+    gcTime: 10 * 60 * 1000, // 10 minutes
+    retry: 3,
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+  });
+
+  // Mutation for refreshing weather data
+  const refreshWeatherMutation = useMutation({
+    mutationFn: async () => {
+      if (!location || !location.latitude || !location.longitude) {
+        throw new Error("No valid location available for weather refresh");
+      }
+      return fetchOpenMeteoData(location.latitude, location.longitude);
+    },
+    onSuccess: (newWeatherData) => {
+      // Update the weather data cache
+      if (location) {
+        queryClient.setQueryData(
+          weatherQueryKeys.weatherData(location),
+          newWeatherData
+        );
+      }
+
+      // Save current weather conditions to localStorage for other components
+      const currentConditions = {
+        temperature:
+          newWeatherData?.current?.temperature_2m ||
+          (newWeatherData.hourly?.temperature_2m?.length > 0
+            ? newWeatherData.hourly.temperature_2m[0]
+            : null),
+        windSpeed:
+          newWeatherData.hourly?.wind_speed_10m?.length > 0
+            ? newWeatherData.hourly.wind_speed_10m[0]
+            : null,
+        windDirection:
+          newWeatherData.hourly?.wind_direction_10m?.length > 0
+            ? newWeatherData.hourly.wind_direction_10m[0]
+            : null,
+        waveHeight:
+          newWeatherData?.current?.wave_height ||
+          (newWeatherData.hourly?.wave_height?.length > 0
+            ? newWeatherData.hourly.wave_height[0]
+            : null),
+        swellWaveHeight:
+          newWeatherData?.current?.swell_wave_height ||
+          (newWeatherData.hourly?.swell_wave_height?.length > 0
+            ? newWeatherData.hourly.swell_wave_height[0]
+            : null),
+        swellWavePeriod:
+          newWeatherData?.current?.swell_wave_period ||
+          (newWeatherData.hourly?.swell_wave_period?.length > 0
+            ? newWeatherData.hourly.swell_wave_period[0]
+            : null),
+        weatherCondition: getWeatherCondition(newWeatherData),
+      };
+      localStorage.setItem(
+        "currentWeatherData",
+        JSON.stringify(currentConditions)
+      );
+    },
+  });
+
+  // Helper function to get weather condition
+  const getWeatherCondition = (weatherData: WeatherData | null) => {
+    if (!weatherData) return "-";
+
+    // Use current weather code if available, otherwise use the first hourly code
+    const weatherCode =
+      weatherData.current?.weather_code ??
+      (weatherData.hourly.weather_code &&
+      weatherData.hourly.weather_code.length > 0
+        ? weatherData.hourly.weather_code[0]
+        : null);
+
+    if (weatherCode === null) {
+      return "-";
+    }
+
+    // Modified WMO Weather interpretation codes to match Windy model
+    switch (true) {
+      case weatherCode === 0:
+      case weatherCode === 1:
+      case weatherCode === 2:
+        return "Clear sky"; // Windy model: merge codes 0, 1, 2 into "Clear sky"
+      case weatherCode === 3:
+        return "Overcast";
+      case weatherCode >= 45 && weatherCode <= 49:
+        return "Fog";
+      case weatherCode >= 51 && weatherCode <= 55:
+        return "Drizzle";
+      case weatherCode >= 56 && weatherCode <= 57:
+        return "Freezing Drizzle";
+      case weatherCode >= 61 && weatherCode <= 65:
+        return "Rain";
+      case weatherCode >= 66 && weatherCode <= 67:
+        return "Freezing Rain";
+      case weatherCode >= 71 && weatherCode <= 77:
+        return "Snow";
+      case weatherCode >= 80 && weatherCode <= 82:
+        return "Rain showers";
+      case weatherCode >= 85 && weatherCode <= 86:
+        return "Snow showers";
+      case weatherCode >= 95 && weatherCode <= 99:
+        return "Thunderstorm";
+      default:
+        return "Unknown";
+    }
+  };
+
+  return {
+    // Weather data state
+    weatherData: weatherQuery.data,
+    isLoading: weatherQuery.isLoading,
+    error: weatherQuery.error,
+    isError: weatherQuery.isError,
+
+    // Refresh mutation
+    refreshWeather: refreshWeatherMutation.mutate,
+    refreshWeatherAsync: refreshWeatherMutation.mutateAsync,
+    isRefreshing: refreshWeatherMutation.isPending,
+
+    // Helper functions
+    getWeatherCondition: () => getWeatherCondition(weatherQuery.data),
+
+    // Query info
+    isFetching: weatherQuery.isFetching,
+    isStale: weatherQuery.isStale,
+    lastUpdated: weatherQuery.dataUpdatedAt,
+  };
+};
