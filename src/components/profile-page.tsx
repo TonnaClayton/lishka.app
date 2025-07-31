@@ -73,6 +73,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
 import { log } from "@/lib/logging";
+import { exportFishInfoOverlayAsImage } from "@/lib/image-export";
 
 interface LocationData {
   latitude: number;
@@ -1062,29 +1063,59 @@ const ProfilePage: React.FC = () => {
       // Check if Web Share API is available
       if (navigator.share) {
         try {
-          // Fetch the image as a blob for sharing
-          const response = await fetch(photoUrl);
-          const blob = await response.blob();
-          const file = new File([blob], "fish-photo.jpg", { type: blob.type });
-
+          let file: File;
           let shareText = "Check out this fish photo from Lishka!";
-          if (
-            metadata?.fishInfo?.name &&
-            metadata.fishInfo.name !== "Unknown"
-          ) {
-            shareText = `Check out this ${metadata.fishInfo.name} I caught! 🎣`;
-            if (
-              metadata.fishInfo.estimatedSize &&
-              metadata.fishInfo.estimatedSize !== "Unknown"
-            ) {
-              shareText += ` Size: ${metadata.fishInfo.estimatedSize}`;
+
+          // If we have metadata with fish info, export the overlay as an image
+          if (metadata && (metadata.fishInfo || metadata.location)) {
+            try {
+              // Export the FishInfoOverlay as an image
+              const overlayBlob = await exportFishInfoOverlayAsImage(
+                metadata,
+                photoUrl,
+                {
+                  quality: 0.9,
+                }
+              );
+
+              file = new File([overlayBlob], "fish-catch-with-info.png", {
+                type: "image/png",
+              });
+
+              // Create enhanced share text
+              if (
+                metadata?.fishInfo?.name &&
+                metadata.fishInfo.name !== "Unknown"
+              ) {
+                shareText = `Check out this ${metadata.fishInfo.name} I caught! 🎣`;
+                if (
+                  metadata.fishInfo.estimatedSize &&
+                  metadata.fishInfo.estimatedSize !== "Unknown"
+                ) {
+                  shareText += ` Size: ${metadata.fishInfo.estimatedSize}`;
+                }
+                if (
+                  metadata.fishInfo.estimatedWeight &&
+                  metadata.fishInfo.estimatedWeight !== "Unknown"
+                ) {
+                  shareText += ` Weight: ${metadata.fishInfo.estimatedWeight}`;
+                }
+              }
+            } catch (exportError) {
+              console.error(
+                "[ProfilePage] Error exporting overlay:",
+                exportError
+              );
+              // Fallback to original image
+              const response = await fetch(photoUrl);
+              const blob = await response.blob();
+              file = new File([blob], "fish-photo.jpg", { type: blob.type });
             }
-            if (
-              metadata.fishInfo.estimatedWeight &&
-              metadata.fishInfo.estimatedWeight !== "Unknown"
-            ) {
-              shareText += ` Weight: ${metadata.fishInfo.estimatedWeight}`;
-            }
+          } else {
+            // No metadata, use original image
+            const response = await fetch(photoUrl);
+            const blob = await response.blob();
+            file = new File([blob], "fish-photo.jpg", { type: blob.type });
           }
 
           await navigator.share({
@@ -1093,7 +1124,7 @@ const ProfilePage: React.FC = () => {
             files: [file],
           });
 
-          log("[ProfilePage] Photo shared successfully");
+          log("[ProfilePage] Photo with overlay shared successfully");
         } catch (shareError) {
           console.error("[ProfilePage] Error sharing photo:", shareError);
           // Fallback to copying URL
@@ -2120,6 +2151,7 @@ const ProfilePage: React.FC = () => {
                         {/* Main image button */}
                         <button
                           onClick={handleImageClick}
+                          id="fish-info-overlay-container"
                           className="w-full h-full"
                         >
                           {/* Loading spinner */}
