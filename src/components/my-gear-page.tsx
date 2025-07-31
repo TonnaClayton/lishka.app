@@ -261,7 +261,7 @@ const MyGearPage: React.FC = () => {
   // Show loading state while auth is initializing
   if (authLoading) {
     return (
-      <div className="flex flex-col min-h-screen bg-white dark:bg-background">
+      <div className="flex flex-col h-full bg-white dark:bg-background">
         <div className="flex items-center justify-center flex-1">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -278,7 +278,7 @@ const MyGearPage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-background">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 p-4 w-full lg:hidden border-b">
         <div className="flex items-center justify-between">
@@ -291,7 +291,7 @@ const MyGearPage: React.FC = () => {
         </div>
       </header>
       {/* Main Content */}
-      <main className="flex-1 p-4 max-w-2xl mx-auto w-full pb-20 lg:pb-4">
+      <main className="flex-1 p-4 max-w-2xl mx-auto w-full pb-20 lg:pb-4 h-full overflow-y-auto">
         <div className="space-y-6 flex flex-col gap-y-0">
           {/* Alerts */}
           {error && (

@@ -44,7 +44,7 @@ import {
 } from "lucide-react";
 import LocationModal from "./location-modal";
 import { log } from "@/lib/logging";
-import WeatherWidgetProSkeleton from "./weather-widget-pro-skeleton";
+import WeatherWidgetProSkeleton from "./skeletons/weather-widget-pro-skeleton";
 import {
   useLocation,
   LocationData,

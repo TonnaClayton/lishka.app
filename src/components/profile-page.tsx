@@ -73,6 +73,7 @@ import {
 import { supabase } from "@/lib/supabase";
 import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
 import { log } from "@/lib/logging";
+import { exportFishInfoOverlayAsImage } from "@/lib/image-export";
 
 interface LocationData {
   latitude: number;
@@ -115,7 +116,7 @@ const MapClickHandler = ({
       // Attempt to get location name via reverse geocoding
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
         );
         const data = await response.json();
 
@@ -206,7 +207,7 @@ const ProfilePage: React.FC = () => {
       const isMobileScreen = window.innerWidth < 768;
       const isMobileDevice =
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent,
+          navigator.userAgent
         );
       log("[ProfilePage] Initial column detection:", {
         isMobileScreen,
@@ -231,14 +232,14 @@ const ProfilePage: React.FC = () => {
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [showEditAIDialog, setShowEditAIDialog] = useState(false);
   const [editingPhotoIndex, setEditingPhotoIndex] = useState<number | null>(
-    null,
+    null
   );
   const [editingMetadata, setEditingMetadata] = useState<ImageMetadata | null>(
-    null,
+    null
   );
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [tempLocationData, setTempLocationData] = useState<LocationData | null>(
-    null,
+    null
   );
   const [isEmailEditable, setIsEmailEditable] = useState(false);
 
@@ -250,7 +251,7 @@ const ProfilePage: React.FC = () => {
         if (profile?.gallery_photos && Array.isArray(profile.gallery_photos)) {
           log(
             "[ProfilePage] Loaded photos from database:",
-            profile.gallery_photos.length,
+            profile.gallery_photos.length
           );
           setUploadedPhotos(profile.gallery_photos);
         } else {
@@ -261,7 +262,7 @@ const ProfilePage: React.FC = () => {
             if (Array.isArray(parsedPhotos) && parsedPhotos.length > 0) {
               log(
                 "[ProfilePage] Migrating photos from localStorage to database:",
-                parsedPhotos.length,
+                parsedPhotos.length
               );
               setUploadedPhotos(parsedPhotos);
               // Migrate to database
@@ -273,7 +274,7 @@ const ProfilePage: React.FC = () => {
               } catch (migrationError) {
                 console.error(
                   "[ProfilePage] Error migrating photos to database:",
-                  migrationError,
+                  migrationError
                 );
               }
             }
@@ -306,7 +307,7 @@ const ProfilePage: React.FC = () => {
           if (photosChanged) {
             log(
               "[ProfilePage] Saving photos to database:",
-              uploadedPhotos.length,
+              uploadedPhotos.length
             );
             await updateProfile({ gallery_photos: uploadedPhotos });
             log("[ProfilePage] Photos saved to database successfully");
@@ -314,19 +315,19 @@ const ProfilePage: React.FC = () => {
         } catch (error) {
           console.error(
             "[ProfilePage] Error saving photos to database:",
-            error,
+            error
           );
           // Fallback to localStorage if database save fails
           try {
             localStorage.setItem(
               `user_photos_${user.id}`,
-              JSON.stringify(uploadedPhotos),
+              JSON.stringify(uploadedPhotos)
             );
             log("[ProfilePage] Photos saved to localStorage as fallback");
           } catch (localError) {
             console.error(
               "[ProfilePage] Error saving to localStorage fallback:",
-              localError,
+              localError
             );
           }
         }
@@ -380,13 +381,13 @@ const ProfilePage: React.FC = () => {
 
     window.addEventListener(
       "photoUploaded",
-      handlePhotoUploaded as EventListener,
+      handlePhotoUploaded as EventListener
     );
 
     return () => {
       window.removeEventListener(
         "photoUploaded",
-        handlePhotoUploaded as EventListener,
+        handlePhotoUploaded as EventListener
       );
     };
   }, [user?.id]);
@@ -496,7 +497,7 @@ const ProfilePage: React.FC = () => {
       const isMobileScreen = window.innerWidth < 768;
       const isMobileDevice =
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent,
+          navigator.userAgent
         );
 
       log("[ProfilePage] Window resize detected:", {
@@ -694,7 +695,7 @@ const ProfilePage: React.FC = () => {
 
   const getCroppedImg = (
     image: HTMLImageElement,
-    crop: PixelCrop,
+    crop: PixelCrop
   ): Promise<Blob> => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -718,7 +719,7 @@ const ProfilePage: React.FC = () => {
       0,
       0,
       crop.width,
-      crop.height,
+      crop.height
     );
 
     return new Promise((resolve) => {
@@ -730,7 +731,7 @@ const ProfilePage: React.FC = () => {
           resolve(blob);
         },
         "image/jpeg",
-        0.95,
+        0.95
       );
     });
   };
@@ -750,7 +751,7 @@ const ProfilePage: React.FC = () => {
 
       const croppedImageBlob = await getCroppedImg(
         imgRef.current,
-        completedCrop,
+        completedCrop
       );
 
       log("Image cropped successfully, blob size:", croppedImageBlob.size);
@@ -803,13 +804,11 @@ const ProfilePage: React.FC = () => {
       // Handle timeout errors specifically
       if (err instanceof Error && err.message.includes("taking too long")) {
         setError(
-          "Upload is taking too long. Please check your connection and try again.",
+          "Upload is taking too long. Please check your connection and try again."
         );
       } else {
         setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to crop and upload image",
+          err instanceof Error ? err.message : "Failed to crop and upload image"
         );
       }
     } finally {
@@ -837,8 +836,8 @@ const ProfilePage: React.FC = () => {
     log(
       "[ProfilePage] Is mobile:",
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent,
-      ),
+        navigator.userAgent
+      )
     );
 
     if (photoInputRef.current) {
@@ -846,7 +845,7 @@ const ProfilePage: React.FC = () => {
         // For mobile devices, use a more direct approach
         const isMobile =
           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent,
+            navigator.userAgent
           );
 
         if (isMobile) {
@@ -886,7 +885,7 @@ const ProfilePage: React.FC = () => {
     // Validate file size (max 15MB)
     if (file.size > 15 * 1024 * 1024) {
       setError(
-        `Gear image must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+        `Gear image must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`
       );
       e.target.value = "";
       return;
@@ -924,7 +923,7 @@ const ProfilePage: React.FC = () => {
         id: `gear_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: result.metadata.gearInfo?.name || "Unknown Gear",
         category: mapGearTypeToCategory(
-          result.metadata.gearInfo?.type || "other",
+          result.metadata.gearInfo?.type || "other"
         ),
         description: result.metadata.gearInfo?.type || "",
         brand: result.metadata.gearInfo?.brand || "",
@@ -964,7 +963,7 @@ const ProfilePage: React.FC = () => {
       if (updateError) {
         console.error(
           "[ProfilePage] Error updating profile with gear:",
-          updateError,
+          updateError
         );
         setError("Failed to save gear. Please try again.");
         return;
@@ -1042,7 +1041,7 @@ const ProfilePage: React.FC = () => {
       if (typeof photo === "string") {
         console.warn(
           `[ProfilePage] Legacy string photo in share function:`,
-          photo,
+          photo
         );
         const photoString = photo as string;
         if (photoString.startsWith("{") && photoString.includes('"url"')) {
@@ -1064,29 +1063,59 @@ const ProfilePage: React.FC = () => {
       // Check if Web Share API is available
       if (navigator.share) {
         try {
-          // Fetch the image as a blob for sharing
-          const response = await fetch(photoUrl);
-          const blob = await response.blob();
-          const file = new File([blob], "fish-photo.jpg", { type: blob.type });
-
+          let file: File;
           let shareText = "Check out this fish photo from Lishka!";
-          if (
-            metadata?.fishInfo?.name &&
-            metadata.fishInfo.name !== "Unknown"
-          ) {
-            shareText = `Check out this ${metadata.fishInfo.name} I caught! 🎣`;
-            if (
-              metadata.fishInfo.estimatedSize &&
-              metadata.fishInfo.estimatedSize !== "Unknown"
-            ) {
-              shareText += ` Size: ${metadata.fishInfo.estimatedSize}`;
+
+          // If we have metadata with fish info, export the overlay as an image
+          if (metadata && (metadata.fishInfo || metadata.location)) {
+            try {
+              // Export the FishInfoOverlay as an image
+              const overlayBlob = await exportFishInfoOverlayAsImage(
+                metadata,
+                photoUrl,
+                {
+                  quality: 0.9,
+                }
+              );
+
+              file = new File([overlayBlob], "fish-catch-with-info.png", {
+                type: "image/png",
+              });
+
+              // Create enhanced share text
+              if (
+                metadata?.fishInfo?.name &&
+                metadata.fishInfo.name !== "Unknown"
+              ) {
+                shareText = `Check out this ${metadata.fishInfo.name} I caught! 🎣`;
+                if (
+                  metadata.fishInfo.estimatedSize &&
+                  metadata.fishInfo.estimatedSize !== "Unknown"
+                ) {
+                  shareText += ` Size: ${metadata.fishInfo.estimatedSize}`;
+                }
+                if (
+                  metadata.fishInfo.estimatedWeight &&
+                  metadata.fishInfo.estimatedWeight !== "Unknown"
+                ) {
+                  shareText += ` Weight: ${metadata.fishInfo.estimatedWeight}`;
+                }
+              }
+            } catch (exportError) {
+              console.error(
+                "[ProfilePage] Error exporting overlay:",
+                exportError
+              );
+              // Fallback to original image
+              const response = await fetch(photoUrl);
+              const blob = await response.blob();
+              file = new File([blob], "fish-photo.jpg", { type: blob.type });
             }
-            if (
-              metadata.fishInfo.estimatedWeight &&
-              metadata.fishInfo.estimatedWeight !== "Unknown"
-            ) {
-              shareText += ` Weight: ${metadata.fishInfo.estimatedWeight}`;
-            }
+          } else {
+            // No metadata, use original image
+            const response = await fetch(photoUrl);
+            const blob = await response.blob();
+            file = new File([blob], "fish-photo.jpg", { type: blob.type });
           }
 
           await navigator.share({
@@ -1095,7 +1124,7 @@ const ProfilePage: React.FC = () => {
             files: [file],
           });
 
-          log("[ProfilePage] Photo shared successfully");
+          log("[ProfilePage] Photo with overlay shared successfully");
         } catch (shareError) {
           console.error("[ProfilePage] Error sharing photo:", shareError);
           // Fallback to copying URL
@@ -1112,7 +1141,7 @@ const ProfilePage: React.FC = () => {
         } catch (clipboardError) {
           console.error(
             "[ProfilePage] Error copying to clipboard:",
-            clipboardError,
+            clipboardError
           );
           setError("Unable to share photo. Please try again.");
         }
@@ -1135,7 +1164,7 @@ const ProfilePage: React.FC = () => {
     if (typeof photo === "string") {
       console.warn(
         `[ProfilePage] Legacy string photo in edit function:`,
-        photo,
+        photo
       );
       const photoString = photo as string;
       if (photoString.startsWith("{") && photoString.includes('"url"')) {
@@ -1258,7 +1287,7 @@ const ProfilePage: React.FC = () => {
       if (error) {
         console.error(
           "[ProfilePage] Error deleting photo from database:",
-          error,
+          error
         );
         // Revert the local state if database update fails
         setUploadedPhotos(originalPhotos);
@@ -1289,7 +1318,7 @@ const ProfilePage: React.FC = () => {
     // Validate file size (max 15MB)
     if (file.size > 15 * 1024 * 1024) {
       setError(
-        `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+        `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`
       );
       e.target.value = "";
       return;
@@ -1325,7 +1354,7 @@ const ProfilePage: React.FC = () => {
         new Promise<never>((_, reject) => {
           setTimeout(() => {
             log(
-              "⏰ [PROFILE PAGE] Location request timeout - continuing without location",
+              "⏰ [PROFILE PAGE] Location request timeout - continuing without location"
             );
             reject(new Error("Location request timeout"));
           }, 10000); // 10 second timeout
@@ -1368,7 +1397,7 @@ const ProfilePage: React.FC = () => {
             file,
             800, // Smaller max width for AI processing
             800, // Smaller max height for AI processing
-            0.7, // Lower quality for smaller file size
+            0.7 // Lower quality for smaller file size
           ),
           new Promise<never>((_, reject) => {
             setTimeout(() => {
@@ -1394,11 +1423,11 @@ const ProfilePage: React.FC = () => {
             error: compressionError.message,
             originalSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
             willTryOriginalButMayTimeout: true,
-          },
+          }
         );
         // Continue with original file but warn that AI processing may timeout
         setError(
-          "Image compression failed. Large images may take longer to process.",
+          "Image compression failed. Large images may take longer to process."
         );
         setTimeout(() => setError(null), 5000);
       }
@@ -1434,7 +1463,7 @@ const ProfilePage: React.FC = () => {
           const errorMessage = "Supabase storage is not properly configured";
           console.error(
             "[ProfilePage] Supabase storage not configured:",
-            errorMessage,
+            errorMessage
           );
           throw new Error(errorMessage);
         }
@@ -1458,7 +1487,7 @@ const ProfilePage: React.FC = () => {
                   compressedDimensions: compressionInfo.compressedDimensions,
                 }
               : "No compression applied",
-          },
+          }
         );
         const metadataStart = Date.now();
 
@@ -1472,7 +1501,7 @@ const ProfilePage: React.FC = () => {
                   processedFileSize: `${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`,
                   originalFileSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
                   compressionApplied: processedFile !== file,
-                },
+                }
               );
               reject(new Error("Image processing timed out"));
             }, 60000); // Increased timeout since file should be compressed
@@ -1534,14 +1563,14 @@ const ProfilePage: React.FC = () => {
           const successMsg = `Photo uploaded! Identified: ${metadata.fishInfo.name} (${Math.round(metadata.fishInfo.confidence * 100)}% confident)`;
           log(
             "🎉 [PROFILE DEBUG] Fish identified - showing success with fish info:",
-            successMsg,
+            successMsg
           );
           setSuccess(successMsg);
         } else {
           const successMsg = "Photo uploaded successfully!";
           log(
             "ℹ️ [PROFILE DEBUG] No fish identified - showing generic success:",
-            successMsg,
+            successMsg
           );
           setSuccess(successMsg);
         }
@@ -1563,7 +1592,7 @@ const ProfilePage: React.FC = () => {
           err.message.includes("timeout")
         ) {
           setError(
-            "Upload is taking too long. Please check your connection and try again.",
+            "Upload is taking too long. Please check your connection and try again."
           );
         } else {
           setError(err.message);
@@ -1590,7 +1619,7 @@ const ProfilePage: React.FC = () => {
       // Validate and check username uniqueness if username is provided
       if (formData.username) {
         const isUsernameValid = await checkUsernameUniqueness(
-          formData.username,
+          formData.username
         );
         if (!isUsernameValid) {
           setLoading(false);
@@ -1684,7 +1713,7 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen dark:bg-background bg-[#ffffff]">
+    <div className="flex flex-col h-full dark:bg-background bg-[#ffffff]">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 p-4 w-full lg:hidden border-b">
         <div className="flex items-center justify-between">
@@ -1755,316 +1784,331 @@ const ProfilePage: React.FC = () => {
         </div>
       </header>
       {/* Main Content */}
-      <main className="flex-1 p-4 max-w-2xl mx-auto w-full pb-20 lg:pb-4">
-        <div className="space-y-6">
-          {/* Alerts */}
-          {error && (
-            <Alert variant="destructive">
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-          {success && (
-            <Alert className="border-green-200 bg-green-50 text-green-800">
-              <AlertDescription>{success}</AlertDescription>
-            </Alert>
-          )}
-          {/* Profile Header */}
-          <Card className="dark:bg-gray-800 bg-[#ffffff] shadow-none border-none">
-            <CardContent className="pt-6">
-              <div className="flex flex-col items-center text-center">
-                {/* Avatar */}
-                <div className="relative mb-4">
-                  <Avatar
-                    className="w-24 h-24 cursor-pointer hover:opacity-80 transition-opacity"
-                    onClick={handleAvatarClick}
-                  >
-                    <AvatarImage src={profile?.avatar_url || undefined} />
-                    <AvatarFallback className="text-lg">
-                      {profile?.full_name ? (
-                        getInitials(profile.full_name)
-                      ) : (
-                        <User className="w-8 h-8" />
-                      )}
-                    </AvatarFallback>
-                  </Avatar>
-                  {isEditing && (
-                    <div
-                      className="absolute -bottom-2 -right-2 bg-blue-600 rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
+      <main className="flex-1 p-4  w-full pb-20 lg:pb-4 h-full overflow-y-auto">
+        <div className="max-w-2xl mx-auto w-full">
+          <div className="space-y-6">
+            {/* Alerts */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            {success && (
+              <Alert className="border-green-200 bg-green-50 text-green-800">
+                <AlertDescription>{success}</AlertDescription>
+              </Alert>
+            )}
+            {/* Profile Header */}
+            <Card className="dark:bg-gray-800 bg-[#ffffff] shadow-none border-none">
+              <CardContent className="pt-6">
+                <div className="flex flex-col items-center text-center">
+                  {/* Avatar */}
+                  <div className="relative mb-4">
+                    <Avatar
+                      className="w-24 h-24 cursor-pointer hover:opacity-80 transition-opacity"
                       onClick={handleAvatarClick}
                     >
-                      <Camera className="w-4 h-4 text-white" />
-                    </div>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    onChange={handleAvatarChange}
-                    className="hidden"
-                  />
-                </div>
-
-                {/* Name, Username, and Email */}
-                {isEditing ? (
-                  <div className="w-full space-y-3">
-                    <div>
-                      <Label htmlFor="full_name">Full Name</Label>
-                      <Input
-                        id="full_name"
-                        value={formData.full_name}
-                        onChange={(e) =>
-                          handleInputChange("full_name", e.target.value)
-                        }
-                        placeholder="Enter your full name"
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="username">Username</Label>
-                      <div className="relative">
-                        <Input
-                          id="username"
-                          value={formData.username}
-                          onChange={(e) => {
-                            const newUsername = e.target.value.toLowerCase();
-                            handleInputChange("username", newUsername);
-                            // Trigger uniqueness check after a short delay
-                            if (
-                              newUsername &&
-                              newUsername !== profile?.username
-                            ) {
-                              setTimeout(() => {
-                                if (formData.username === newUsername) {
-                                  checkUsernameUniqueness(newUsername);
-                                }
-                              }, 500);
-                            }
-                          }}
-                          placeholder="Choose a username (lowercase, dots, underscores allowed)"
-                          className={cn(
-                            validationErrors.username
-                              ? "border-red-500 focus-visible:ring-red-500"
-                              : formData.username &&
-                                  !validationErrors.username &&
-                                  !checkingUsername &&
-                                  formData.username !== profile?.username
-                                ? "border-green-500 focus-visible:ring-green-500"
-                                : "",
-                          )}
-                        />
-                        {checkingUsername && (
-                          <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                            <span className="text-xs text-blue-600 font-medium">
-                              Checking...
-                            </span>
-                          </div>
+                      <AvatarImage src={profile?.avatar_url || undefined} />
+                      <AvatarFallback className="text-lg">
+                        {profile?.full_name ? (
+                          getInitials(profile.full_name)
+                        ) : (
+                          <User className="w-8 h-8" />
                         )}
-                        {!checkingUsername &&
-                          formData.username &&
-                          !validationErrors.username &&
-                          formData.username !== profile?.username && (
-                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
-                              <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
-                                <Check className="w-3 h-3 text-white" />
-                              </div>
-                              <span className="text-xs text-green-600 font-medium">
-                                Available
+                      </AvatarFallback>
+                    </Avatar>
+                    {isEditing && (
+                      <div
+                        className="absolute -bottom-2 -right-2 bg-blue-600 rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
+                        onClick={handleAvatarClick}
+                      >
+                        <Camera className="w-4 h-4 text-white" />
+                      </div>
+                    )}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAvatarChange}
+                      className="hidden"
+                    />
+                  </div>
+
+                  {/* Name, Username, and Email */}
+                  {isEditing ? (
+                    <div className="w-full space-y-3">
+                      <div>
+                        <Label htmlFor="full_name">Full Name</Label>
+                        <Input
+                          id="full_name"
+                          value={formData.full_name}
+                          onChange={(e) =>
+                            handleInputChange("full_name", e.target.value)
+                          }
+                          placeholder="Enter your full name"
+                        />
+                      </div>
+
+                      <div>
+                        <Label htmlFor="username">Username</Label>
+                        <div className="relative">
+                          <Input
+                            id="username"
+                            value={formData.username}
+                            onChange={(e) => {
+                              const newUsername = e.target.value.toLowerCase();
+                              handleInputChange("username", newUsername);
+                              // Trigger uniqueness check after a short delay
+                              if (
+                                newUsername &&
+                                newUsername !== profile?.username
+                              ) {
+                                setTimeout(() => {
+                                  if (formData.username === newUsername) {
+                                    checkUsernameUniqueness(newUsername);
+                                  }
+                                }, 500);
+                              }
+                            }}
+                            placeholder="Choose a username (lowercase, dots, underscores allowed)"
+                            className={cn(
+                              validationErrors.username
+                                ? "border-red-500 focus-visible:ring-red-500"
+                                : formData.username &&
+                                    !validationErrors.username &&
+                                    !checkingUsername &&
+                                    formData.username !== profile?.username
+                                  ? "border-green-500 focus-visible:ring-green-500"
+                                  : ""
+                            )}
+                          />
+                          {checkingUsername && (
+                            <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-2">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                              <span className="text-xs text-blue-600 font-medium">
+                                Checking...
                               </span>
                             </div>
                           )}
-                      </div>
-                      {validationErrors.username && (
-                        <div className="flex items-center gap-2 mt-1">
-                          <X className="w-4 h-4 text-red-500" />
-                          <p className="text-sm text-red-600">
-                            {validationErrors.username}
-                          </p>
+                          {!checkingUsername &&
+                            formData.username &&
+                            !validationErrors.username &&
+                            formData.username !== profile?.username && (
+                              <div className="absolute right-3 top-1/2 transform -translate-y-1/2 flex items-center gap-1">
+                                <div className="w-4 h-4 rounded-full bg-green-500 flex items-center justify-center">
+                                  <Check className="w-3 h-3 text-white" />
+                                </div>
+                                <span className="text-xs text-green-600 font-medium">
+                                  Available
+                                </span>
+                              </div>
+                            )}
                         </div>
-                      )}
-                      <p className="text-xs text-gray-500 mt-1">
-                        Only lowercase letters, numbers, dots (.) and
-                        underscores (_) allowed
-                      </p>
+                        {validationErrors.username && (
+                          <div className="flex items-center gap-2 mt-1">
+                            <X className="w-4 h-4 text-red-500" />
+                            <p className="text-sm text-red-600">
+                              {validationErrors.username}
+                            </p>
+                          </div>
+                        )}
+                        <p className="text-xs text-gray-500 mt-1">
+                          Only lowercase letters, numbers, dots (.) and
+                          underscores (_) allowed
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div>
-                    <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-                      {profile?.full_name ||
-                        user?.full_name ||
-                        "Anonymous Angler"}
-                    </h2>
-                    {profile?.username && (
-                      <p className="text-gray-600 dark:text-gray-300 mt-1">
-                        @{profile.username}
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {/* Email */}
-                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mt-2">
-                  <Mail className="w-4 h-4" />
-                  <span className="text-sm">{user?.email}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-          {/* Gear Management Buttons */}
-          <div className="flex gap-3">
-            <Button
-              variant="outline"
-              className="flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-auto flex items-center justify-center gap-2"
-              style={{ backgroundColor: "#025DFB0D" }}
-              onClick={() => navigate("/my-gear")}
-            >
-              My gear
-              {profile?.gear_items &&
-                Array.isArray(profile.gear_items) &&
-                profile.gear_items.length > 0 && (
-                  <Badge className="bg-blue-600 hover:bg-blue-600 text-white rounded-full min-w-[24px] h-6 flex items-center justify-center text-sm font-medium">
-                    {profile.gear_items.length}
-                  </Badge>
-                )}
-            </Button>
-            <Button
-              variant="outline"
-              className="flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-auto flex items-center justify-center gap-2"
-              style={{ backgroundColor: "#025DFB0D" }}
-              onClick={() => {
-                // Trigger file input for gear upload
-                const gearInput = document.createElement("input");
-                gearInput.type = "file";
-                gearInput.accept = "image/*";
-                gearInput.onchange = (e) => handleGearUpload(e as any);
-                gearInput.click();
-              }}
-            >
-              Add gear
-              <Plus className="w-5 h-5" />
-            </Button>
-          </div>
-
-          {/* Tabs Section */}
-          <Tabs
-            value={activeTab}
-            onValueChange={setActiveTab}
-            className="w-full"
-          >
-            <TabsList className="grid w-full grid-cols-3 bg-transparent border-none p-0 pb-2 h-auto relative">
-              <TabsTrigger
-                ref={fishGalleryTabRef}
-                value="fish-gallery"
-                className="flex items-center justify-center bg-transparent border-none rounded-none px-4 py-3 relative data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors"
-                onClick={() => setActiveTab("fish-gallery")}
-              >
-                <Fish className="w-6 h-6" />
-              </TabsTrigger>
-              <TabsTrigger
-                ref={achievementsTabRef}
-                value="achievements"
-                className="flex items-center justify-center bg-transparent border-none rounded-none px-4 py-3 relative data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors"
-                onClick={() => setActiveTab("achievements")}
-              >
-                <Trophy className="w-6 h-6" />
-              </TabsTrigger>
-              <TabsTrigger
-                ref={tripsTabRef}
-                value="trips"
-                className="flex items-center justify-center bg-transparent border-none rounded-none px-4 py-3 relative data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors"
-                onClick={() => setActiveTab("trips")}
-              >
-                <MapIcon className="w-6 h-6" />
-              </TabsTrigger>
-
-              {/* Animated sliding border */}
-              <motion.div
-                className="absolute bottom-0 h-0.5 bg-black rounded-full z-10"
-                initial={{ left: 0, width: 0 }}
-                animate={{
-                  left: borderStyle.left,
-                  width: borderStyle.width,
-                }}
-                transition={{
-                  type: "spring",
-                  stiffness: 300,
-                  damping: 30,
-                  mass: 0.8,
-                }}
-              />
-            </TabsList>
-
-            <TabsContent value="fish-gallery" className="mt-4">
-              {/* Dynamic grid layout - 1 or 2 columns based on state */}
-              <div
-                className={`grid gap-px transition-all duration-300 ${isSingleColumn ? "grid-cols-1" : "grid-cols-2"}`}
-              >
-                {/* Add Photo button - always first item in grid, smaller in single column */}
-                <button
-                  onClick={handlePhotoUpload}
-                  disabled={uploadingPhoto}
-                  className={`bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex-col relative transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation ${
-                    isSingleColumn ? "h-20 rounded-lg mb-2" : "aspect-square"
-                  }`}
-                  style={{
-                    WebkitTapHighlightColor: "transparent",
-                    touchAction: "manipulation",
-                  }}
-                >
-                  {uploadingPhoto ? (
-                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600 dark:border-gray-300" />
                   ) : (
-                    <>
-                      <Plus
-                        className={`mb-2 text-gray-600 dark:text-gray-300 ${
-                          isSingleColumn ? "w-6 h-6" : "w-8 h-8"
-                        }`}
-                      />
-                      <span
-                        className={`text-gray-600 dark:text-gray-300 font-medium ${
-                          isSingleColumn ? "text-xs" : "text-xs"
-                        }`}
-                      >
-                        Add Photo
-                      </span>
-                    </>
+                    <div>
+                      <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+                        {profile?.full_name ||
+                          user?.full_name ||
+                          "Anonymous Angler"}
+                      </h2>
+                      {profile?.username && (
+                        <p className="text-gray-600 dark:text-gray-300 mt-1">
+                          @{profile.username}
+                        </p>
+                      )}
+                    </div>
                   )}
-                </button>
 
-                {/* Show uploaded photos */}
-                {uploadedPhotos.map((photo, index) => {
-                  // All photos should now be ImageMetadata objects - simplified parsing
-                  let photoUrl: string;
-                  let metadata: ImageMetadata | null = null;
+                  {/* Email */}
+                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mt-2">
+                    <Mail className="w-4 h-4" />
+                    <span className="text-sm">{user?.email}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            {/* Gear Management Buttons */}
+            <div className="flex gap-3">
+              <Button
+                variant="outline"
+                className="flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-auto flex items-center justify-center gap-2"
+                style={{ backgroundColor: "#025DFB0D" }}
+                onClick={() => navigate("/my-gear")}
+              >
+                My gear
+                {profile?.gear_items &&
+                  Array.isArray(profile.gear_items) &&
+                  profile.gear_items.length > 0 && (
+                    <Badge className="bg-blue-600 hover:bg-blue-600 text-white rounded-full min-w-[24px] h-6 flex items-center justify-center text-sm font-medium">
+                      {profile.gear_items.length}
+                    </Badge>
+                  )}
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-auto flex items-center justify-center gap-2"
+                style={{ backgroundColor: "#025DFB0D" }}
+                onClick={() => {
+                  // Trigger file input for gear upload
+                  const gearInput = document.createElement("input");
+                  gearInput.type = "file";
+                  gearInput.accept = "image/*";
+                  gearInput.onchange = (e) => handleGearUpload(e as any);
+                  gearInput.click();
+                }}
+              >
+                Add gear
+                <Plus className="w-5 h-5" />
+              </Button>
+            </div>
 
-                  // Handle legacy data that might still be strings
-                  if (typeof photo === "string") {
-                    console.warn(
-                      `[ProfilePage] Legacy string photo detected at index ${index}:`,
-                      photo,
-                    );
-                    // Check if it's a JSON string that needs parsing
-                    const photoString = photo as string;
-                    if (
-                      photoString.startsWith("{") &&
-                      photoString.includes('"url"')
-                    ) {
-                      try {
-                        const parsed = JSON.parse(photoString);
-                        photoUrl = parsed.url || photo;
-                        metadata = parsed;
-                        log(
-                          `[ProfilePage] Parsed legacy metadata for photo ${index}:`,
-                          metadata,
-                        );
-                      } catch (parseError) {
-                        console.warn(
-                          `[ProfilePage] Failed to parse legacy photo metadata at index ${index}:`,
-                          parseError,
-                        );
+            {/* Tabs Section */}
+            <Tabs
+              value={activeTab}
+              onValueChange={setActiveTab}
+              className="w-full"
+            >
+              <TabsList className="grid w-full grid-cols-3 bg-transparent border-none p-0 pb-2 h-auto relative">
+                <TabsTrigger
+                  ref={fishGalleryTabRef}
+                  value="fish-gallery"
+                  className="flex items-center justify-center bg-transparent border-none rounded-none px-4 py-3 relative data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors"
+                  onClick={() => setActiveTab("fish-gallery")}
+                >
+                  <Fish className="w-6 h-6" />
+                </TabsTrigger>
+                <TabsTrigger
+                  ref={achievementsTabRef}
+                  value="achievements"
+                  className="flex items-center justify-center bg-transparent border-none rounded-none px-4 py-3 relative data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors"
+                  onClick={() => setActiveTab("achievements")}
+                >
+                  <Trophy className="w-6 h-6" />
+                </TabsTrigger>
+                <TabsTrigger
+                  ref={tripsTabRef}
+                  value="trips"
+                  className="flex items-center justify-center bg-transparent border-none rounded-none px-4 py-3 relative data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors"
+                  onClick={() => setActiveTab("trips")}
+                >
+                  <MapIcon className="w-6 h-6" />
+                </TabsTrigger>
+
+                {/* Animated sliding border */}
+                <motion.div
+                  className="absolute bottom-0 h-0.5 bg-black rounded-full z-10"
+                  initial={{ left: 0, width: 0 }}
+                  animate={{
+                    left: borderStyle.left,
+                    width: borderStyle.width,
+                  }}
+                  transition={{
+                    type: "spring",
+                    stiffness: 300,
+                    damping: 30,
+                    mass: 0.8,
+                  }}
+                />
+              </TabsList>
+
+              <TabsContent value="fish-gallery" className="mt-4">
+                {/* Dynamic grid layout - 1 or 2 columns based on state */}
+                <div
+                  className={`grid gap-px transition-all duration-300 ${isSingleColumn ? "grid-cols-1" : "grid-cols-2"}`}
+                >
+                  {/* Add Photo button - always first item in grid, smaller in single column */}
+                  <button
+                    onClick={handlePhotoUpload}
+                    disabled={uploadingPhoto}
+                    className={`bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex-col relative transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation ${
+                      isSingleColumn ? "h-20 rounded-lg mb-2" : "aspect-square"
+                    }`}
+                    style={{
+                      WebkitTapHighlightColor: "transparent",
+                      touchAction: "manipulation",
+                    }}
+                  >
+                    {uploadingPhoto ? (
+                      <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600 dark:border-gray-300" />
+                    ) : (
+                      <>
+                        <Plus
+                          className={`mb-2 text-gray-600 dark:text-gray-300 ${
+                            isSingleColumn ? "w-6 h-6" : "w-8 h-8"
+                          }`}
+                        />
+                        <span
+                          className={`text-gray-600 dark:text-gray-300 font-medium ${
+                            isSingleColumn ? "text-xs" : "text-xs"
+                          }`}
+                        >
+                          Add Photo
+                        </span>
+                      </>
+                    )}
+                  </button>
+
+                  {/* Show uploaded photos */}
+                  {uploadedPhotos.map((photo, index) => {
+                    // All photos should now be ImageMetadata objects - simplified parsing
+                    let photoUrl: string;
+                    let metadata: ImageMetadata | null = null;
+
+                    // Handle legacy data that might still be strings
+                    if (typeof photo === "string") {
+                      console.warn(
+                        `[ProfilePage] Legacy string photo detected at index ${index}:`,
+                        photo
+                      );
+                      // Check if it's a JSON string that needs parsing
+                      const photoString = photo as string;
+                      if (
+                        photoString.startsWith("{") &&
+                        photoString.includes('"url"')
+                      ) {
+                        try {
+                          const parsed = JSON.parse(photoString);
+                          photoUrl = parsed.url || photo;
+                          metadata = parsed;
+                          log(
+                            `[ProfilePage] Parsed legacy metadata for photo ${index}:`,
+                            metadata
+                          );
+                        } catch (parseError) {
+                          console.warn(
+                            `[ProfilePage] Failed to parse legacy photo metadata at index ${index}:`,
+                            parseError
+                          );
+                          photoUrl = photo;
+                          // Create minimal metadata for legacy string URLs
+                          metadata = {
+                            url: photo,
+                            timestamp: new Date().toISOString(),
+                            fishInfo: {
+                              name: "Unknown",
+                              estimatedSize: "Unknown",
+                              estimatedWeight: "Unknown",
+                              confidence: 0,
+                            },
+                          };
+                        }
+                      } else {
                         photoUrl = photo;
-                        // Create minimal metadata for legacy string URLs
+                        // Create minimal metadata for plain string URLs
                         metadata = {
                           url: photo,
                           timestamp: new Date().toISOString(),
@@ -2077,321 +2121,312 @@ const ProfilePage: React.FC = () => {
                         };
                       }
                     } else {
-                      photoUrl = photo;
-                      // Create minimal metadata for plain string URLs
-                      metadata = {
-                        url: photo,
-                        timestamp: new Date().toISOString(),
-                        fishInfo: {
-                          name: "Unknown",
-                          estimatedSize: "Unknown",
-                          estimatedWeight: "Unknown",
-                          confidence: 0,
-                        },
-                      };
+                      // Standard case - photo is already an ImageMetadata object
+                      photoUrl = photo.url || String(photo);
+                      metadata = photo as ImageMetadata;
+                      log(
+                        `[ProfilePage] Standard metadata for photo ${index}:`,
+                        {
+                          hasMetadata: !!metadata,
+                          fishInfo: metadata?.fishInfo,
+                          location: metadata?.location,
+                          url: metadata?.url,
+                          timestamp: metadata?.timestamp,
+                          fullMetadata: metadata,
+                        }
+                      );
                     }
-                  } else {
-                    // Standard case - photo is already an ImageMetadata object
-                    photoUrl = photo.url || String(photo);
-                    metadata = photo as ImageMetadata;
-                    log(`[ProfilePage] Standard metadata for photo ${index}:`, {
-                      hasMetadata: !!metadata,
-                      fishInfo: metadata?.fishInfo,
-                      location: metadata?.location,
-                      url: metadata?.url,
-                      timestamp: metadata?.timestamp,
-                      fullMetadata: metadata,
-                    });
-                  }
 
-                  const imageKey = `${photoUrl}-${index}`;
-                  const isLoading = imageLoadingStates[imageKey];
-                  const hasError = imageErrors[imageKey];
+                    const imageKey = `${photoUrl}-${index}`;
+                    const isLoading = imageLoadingStates[imageKey];
+                    const hasError = imageErrors[imageKey];
 
-                  return (
-                    <div
-                      key={index}
-                      className={`relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden bg-gray-100 dark:bg-gray-700 ${
-                        isSingleColumn ? "" : "aspect-square"
-                      }`}
-                    >
-                      {/* Main image button */}
-                      <button
-                        onClick={handleImageClick}
-                        className="w-full h-full"
+                    return (
+                      <div
+                        key={index}
+                        className={`relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden bg-gray-100 dark:bg-gray-700 ${
+                          isSingleColumn ? "" : "aspect-square"
+                        }`}
                       >
-                        {/* Loading spinner */}
-                        {isLoading && (
-                          <div className="absolute inset-0 flex items-center justify-center">
-                            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
-                          </div>
-                        )}
-
-                        {/* Error state */}
-                        {hasError && (
-                          <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
-                            <svg
-                              className="w-8 h-8 mb-2"
-                              fill="none"
-                              stroke="currentColor"
-                              viewBox="0 0 24 24"
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                strokeWidth={2}
-                                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"
-                              />
-                            </svg>
-                            <span className="text-xs">Failed to load</span>
-                          </div>
-                        )}
-
-                        {/* Image */}
-                        <img
-                          src={photoUrl}
-                          alt={`Uploaded photo ${index + 1}`}
-                          className={`w-full transition-opacity duration-200 ${
-                            isLoading ? "opacity-0" : "opacity-100"
-                          } ${hasError ? "hidden" : ""} ${
-                            isSingleColumn
-                              ? "h-auto object-contain"
-                              : "h-full object-cover"
-                          }`}
-                          onLoadStart={() => {
-                            log(
-                              `[ProfilePage] Image ${index + 1} started loading:`,
-                              photoUrl,
-                            );
-                            setImageLoadingStates((prev) => ({
-                              ...prev,
-                              [imageKey]: true,
-                            }));
-                            setImageErrors((prev) => ({
-                              ...prev,
-                              [imageKey]: false,
-                            }));
-                          }}
-                          onLoad={() => {
-                            log(
-                              `[ProfilePage] Image ${index + 1} loaded successfully:`,
-                              photoUrl,
-                            );
-                            setImageLoadingStates((prev) => ({
-                              ...prev,
-                              [imageKey]: false,
-                            }));
-                            setImageErrors((prev) => ({
-                              ...prev,
-                              [imageKey]: false,
-                            }));
-                          }}
-                          onError={(e) => {
-                            console.error(
-                              `[ProfilePage] Error loading image ${index + 1}:`,
-                              {
-                                url: photoUrl,
-                                error: e,
-                                isHttps: photoUrl.startsWith("https://"),
-                                domain: (() => {
-                                  try {
-                                    return new URL(photoUrl).hostname;
-                                  } catch {
-                                    return "invalid-url";
-                                  }
-                                })(),
-                                urlLength: photoUrl.length,
-                                hasValidExtension:
-                                  /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(
-                                    photoUrl,
-                                  ),
-                              },
-                            );
-
-                            // Try to get more details about the error
-                            fetch(photoUrl, { method: "HEAD" })
-                              .then((response) => {
-                                console.error(
-                                  `[ProfilePage] HTTP status for failed image ${index + 1}:`,
-                                  {
-                                    status: response.status,
-                                    statusText: response.statusText,
-                                    url: photoUrl,
-                                  },
-                                );
-                              })
-                              .catch((fetchError) => {
-                                console.error(
-                                  `[ProfilePage] Network error for image ${index + 1}:`,
-                                  {
-                                    error: fetchError.message,
-                                    url: photoUrl,
-                                  },
-                                );
-                              });
-
-                            setImageLoadingStates((prev) => ({
-                              ...prev,
-                              [imageKey]: false,
-                            }));
-                            setImageErrors((prev) => ({
-                              ...prev,
-                              [imageKey]: true,
-                            }));
-
-                            // Don't automatically remove images - let user decide
-                            // Show error state instead of removing the image
-                          }}
-                        />
-
-                        {/* Fish Info Overlay - Use FishInfoOverlay component - Only show in single column */}
-                        {!isLoading &&
-                          !hasError &&
-                          metadata &&
-                          isSingleColumn && (
-                            <FishInfoOverlay
-                              metadata={metadata}
-                              isSingleColumn={isSingleColumn}
-                            />
+                        {/* Main image button */}
+                        <button
+                          onClick={handleImageClick}
+                          id="fish-info-overlay-container"
+                          className="w-full h-full"
+                        >
+                          {/* Loading spinner */}
+                          {isLoading && (
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600" />
+                            </div>
                           )}
-                      </button>
 
-                      {/* 3-dots menu - only show in single column mode */}
-                      {isSingleColumn && (
-                        <div className="absolute top-2 right-2 z-20">
-                          <DropdownMenu
-                            open={openMenuIndex === index}
-                            onOpenChange={(open) => {
-                              setOpenMenuIndex(open ? index : null);
+                          {/* Error state */}
+                          {hasError && (
+                            <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
+                              <svg
+                                className="w-8 h-8 mb-2"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={2}
+                                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L4.268 16.5c-.77.833.192 2.5 1.732 2.5z"
+                                />
+                              </svg>
+                              <span className="text-xs">Failed to load</span>
+                            </div>
+                          )}
+
+                          {/* Image */}
+                          <img
+                            src={photoUrl}
+                            alt={`Uploaded photo ${index + 1}`}
+                            className={`w-full transition-opacity duration-200 ${
+                              isLoading ? "opacity-0" : "opacity-100"
+                            } ${hasError ? "hidden" : ""} ${
+                              isSingleColumn
+                                ? "h-auto object-contain"
+                                : "h-full object-cover"
+                            }`}
+                            onLoadStart={() => {
+                              log(
+                                `[ProfilePage] Image ${index + 1} started loading:`,
+                                photoUrl
+                              );
+                              setImageLoadingStates((prev) => ({
+                                ...prev,
+                                [imageKey]: true,
+                              }));
+                              setImageErrors((prev) => ({
+                                ...prev,
+                                [imageKey]: false,
+                              }));
                             }}
-                          >
-                            <DropdownMenuTrigger asChild>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setOpenMenuIndex(
-                                    openMenuIndex === index ? null : index,
+                            onLoad={() => {
+                              log(
+                                `[ProfilePage] Image ${index + 1} loaded successfully:`,
+                                photoUrl
+                              );
+                              setImageLoadingStates((prev) => ({
+                                ...prev,
+                                [imageKey]: false,
+                              }));
+                              setImageErrors((prev) => ({
+                                ...prev,
+                                [imageKey]: false,
+                              }));
+                            }}
+                            onError={(e) => {
+                              console.error(
+                                `[ProfilePage] Error loading image ${index + 1}:`,
+                                {
+                                  url: photoUrl,
+                                  error: e,
+                                  isHttps: photoUrl.startsWith("https://"),
+                                  domain: (() => {
+                                    try {
+                                      return new URL(photoUrl).hostname;
+                                    } catch {
+                                      return "invalid-url";
+                                    }
+                                  })(),
+                                  urlLength: photoUrl.length,
+                                  hasValidExtension:
+                                    /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(
+                                      photoUrl
+                                    ),
+                                }
+                              );
+
+                              // Try to get more details about the error
+                              fetch(photoUrl, { method: "HEAD" })
+                                .then((response) => {
+                                  console.error(
+                                    `[ProfilePage] HTTP status for failed image ${index + 1}:`,
+                                    {
+                                      status: response.status,
+                                      statusText: response.statusText,
+                                      url: photoUrl,
+                                    }
                                   );
-                                }}
-                                className="text-white p-1.5 transition-colors"
-                              >
-                                <MoreVertical className="w-5 h-5 rotate-90" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-40">
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleSharePhoto(index);
-                                }}
-                                disabled={loading}
-                              >
-                                <Share className="w-4 h-4 mr-2" />
-                                Share
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleEditAIInfo(index);
-                                }}
-                                disabled={loading}
-                              >
-                                <Pencil className="w-4 h-4 mr-2" />
-                                Edit AI Info
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleDeletePhoto(index);
-                                }}
-                                className="text-red-600 hover:text-red-700 focus:text-red-700"
-                                disabled={loading}
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                      )}
+                                })
+                                .catch((fetchError) => {
+                                  console.error(
+                                    `[ProfilePage] Network error for image ${index + 1}:`,
+                                    {
+                                      error: fetchError.message,
+                                      url: photoUrl,
+                                    }
+                                  );
+                                });
+
+                              setImageLoadingStates((prev) => ({
+                                ...prev,
+                                [imageKey]: false,
+                              }));
+                              setImageErrors((prev) => ({
+                                ...prev,
+                                [imageKey]: true,
+                              }));
+
+                              // Don't automatically remove images - let user decide
+                              // Show error state instead of removing the image
+                            }}
+                          />
+
+                          {/* Fish Info Overlay - Use FishInfoOverlay component - Only show in single column */}
+                          {!isLoading &&
+                            !hasError &&
+                            metadata &&
+                            isSingleColumn && (
+                              <FishInfoOverlay
+                                metadata={metadata}
+                                isSingleColumn={isSingleColumn}
+                              />
+                            )}
+                        </button>
+
+                        {/* 3-dots menu - only show in single column mode */}
+                        {isSingleColumn && (
+                          <div className="absolute top-2 right-2 z-20">
+                            <DropdownMenu
+                              open={openMenuIndex === index}
+                              onOpenChange={(open) => {
+                                setOpenMenuIndex(open ? index : null);
+                              }}
+                            >
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setOpenMenuIndex(
+                                      openMenuIndex === index ? null : index
+                                    );
+                                  }}
+                                  className="text-white p-1.5 transition-colors"
+                                >
+                                  <MoreVertical className="w-5 h-5 rotate-90" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-40">
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSharePhoto(index);
+                                  }}
+                                  disabled={loading}
+                                >
+                                  <Share className="w-4 h-4 mr-2" />
+                                  Share
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleEditAIInfo(index);
+                                  }}
+                                  disabled={loading}
+                                >
+                                  <Pencil className="w-4 h-4 mr-2" />
+                                  Edit AI Info
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleDeletePhoto(index);
+                                  }}
+                                  className="text-red-600 hover:text-red-700 focus:text-red-700"
+                                  disabled={loading}
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" />
+                                  Delete
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Gallery input for selecting existing photos */}
+                <input
+                  ref={photoInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                  disabled={uploadingPhoto}
+                  key="photo-input"
+                  style={{
+                    position: "absolute",
+                    left: "-9999px",
+                    opacity: 0,
+                    pointerEvents: "none",
+                  }}
+                />
+                {/* Camera input for taking new photos */}
+                <input
+                  ref={cameraInputRef}
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  onChange={handlePhotoChange}
+                  className="hidden"
+                  disabled={uploadingPhoto}
+                  key="camera-input"
+                />
+              </TabsContent>
+
+              <TabsContent value="achievements" className="mt-4">
+                <Card className="bg-white dark:bg-gray-800">
+                  <CardHeader className="text-center">
+                    <CardTitle className="flex items-center justify-center gap-2">
+                      <Trophy className="w-5 h-5" />
+                      Achievements
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col items-center justify-center text-center py-12">
+                      <Trophy className="w-16 h-16 mb-4 text-gray-300 dark:text-gray-600" />
+                      <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                        Coming Soon!
+                      </h3>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Track your fishing milestones and unlock achievements
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
 
-              {/* Gallery input for selecting existing photos */}
-              <input
-                ref={photoInputRef}
-                type="file"
-                accept="image/*"
-                onChange={handlePhotoChange}
-                className="hidden"
-                disabled={uploadingPhoto}
-                key="photo-input"
-                style={{
-                  position: "absolute",
-                  left: "-9999px",
-                  opacity: 0,
-                  pointerEvents: "none",
-                }}
-              />
-              {/* Camera input for taking new photos */}
-              <input
-                ref={cameraInputRef}
-                type="file"
-                accept="image/*"
-                capture="environment"
-                onChange={handlePhotoChange}
-                className="hidden"
-                disabled={uploadingPhoto}
-                key="camera-input"
-              />
-            </TabsContent>
-
-            <TabsContent value="achievements" className="mt-4">
-              <Card className="bg-white dark:bg-gray-800">
-                <CardHeader className="text-center">
-                  <CardTitle className="flex items-center justify-center gap-2">
-                    <Trophy className="w-5 h-5" />
-                    Achievements
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col items-center justify-center text-center py-12">
-                    <Trophy className="w-16 h-16 mb-4 text-gray-300 dark:text-gray-600" />
-                    <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
-                      Coming Soon!
-                    </h3>
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Track your fishing milestones and unlock achievements
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="trips" className="mt-4">
-              <Card className="bg-white dark:bg-gray-800">
-                <CardHeader className="text-center">
-                  <CardTitle className="flex items-center justify-center gap-2">
-                    <MapIcon className="w-5 h-5" />
-                    Fishing Trips
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex flex-col items-center justify-center text-center py-12">
-                    <MapIcon className="w-16 h-16 mb-4 text-gray-300 dark:text-gray-600" />
-                    <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
-                      Coming Soon!
-                    </h3>
-                    <p className="text-gray-500 dark:text-gray-400">
-                      Log and track your fishing adventures
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            </TabsContent>
-          </Tabs>
+              <TabsContent value="trips" className="mt-4">
+                <Card className="bg-white dark:bg-gray-800">
+                  <CardHeader className="text-center">
+                    <CardTitle className="flex items-center justify-center gap-2">
+                      <MapIcon className="w-5 h-5" />
+                      Fishing Trips
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex flex-col items-center justify-center text-center py-12">
+                      <MapIcon className="w-16 h-16 mb-4 text-gray-300 dark:text-gray-600" />
+                      <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
+                        Coming Soon!
+                      </h3>
+                      <p className="text-gray-500 dark:text-gray-400">
+                        Log and track your fishing adventures
+                      </p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </TabsContent>
+            </Tabs>
+          </div>
         </div>
       </main>
       {/* Bottom Navigation */}
@@ -2504,7 +2539,7 @@ const ProfilePage: React.FC = () => {
                                   prev.fishInfo?.estimatedWeight || "Unknown",
                               },
                             }
-                          : null,
+                          : null
                       );
                     }}
                     placeholder="Enter fish name"
@@ -2536,7 +2571,7 @@ const ProfilePage: React.FC = () => {
                                   prev.fishInfo?.estimatedWeight || "Unknown",
                               },
                             }
-                          : null,
+                          : null
                       );
                     }}
                     placeholder="e.g., 40-50 cm"
@@ -2568,7 +2603,7 @@ const ProfilePage: React.FC = () => {
                                 estimatedWeight: e.target.value,
                               },
                             }
-                          : null,
+                          : null
                       );
                     }}
                     placeholder="e.g., 2-3 kg"

@@ -19,6 +19,9 @@ import { useImperialUnits } from "@/lib/unit-conversion";
 import BottomNav from "./bottom-nav";
 import TextareaAutosize from "react-textarea-autosize";
 import { useAuth } from "@/contexts/auth-context";
+import useDeviceSize from "@/hooks/use-device-size";
+import useIsMobile from "@/hooks/use-is-mobile";
+import { cn } from "@/lib/utils";
 
 interface Message {
   id: string;
@@ -65,6 +68,11 @@ const SearchPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const deviceSize = useDeviceSize();
+  const isMobile = useIsMobile();
+
+  console.log(deviceSize);
 
   // Get user location from multiple sources
   useEffect(() => {
@@ -405,34 +413,49 @@ const SearchPage: React.FC = () => {
         </div>
       </header>
       {/* Scrollable Content Area - With padding for header and input form */}
-      <div className="flex-1 overflow-y-auto h-full  pt-16">
-        <div className="p-4">
-          {messages.length === 0 ? (
-            <div className="flex flex-col items-center justify-center min-h-[70vh] max-w-2xl mx-auto text-center space-y-6">
-              <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
-                <MapPin className="h-8 w-8 text-blue-500" />
-              </div>
-              <h2 className="text-2xl font-bold dark:text-white">
-                Ask me anything about fishing!
-              </h2>
-              <p className="text-muted-foreground dark:text-gray-400">
-                Get AI advice on techniques, species identification, fishing
-                spots, sonar image readings and more.
-              </p>
-              <div className="grid grid-cols-2 gap-2 w-full max-w-md">
-                {suggestions.map((suggestion, index) => (
-                  <Button
-                    key={`suggestion-${index}`}
-                    variant="outline"
-                    className="text-left justify-start h-auto py-3 px-4 dark:bg-gray-800 dark:border-gray-700"
-                    onClick={() => handleSuggestionClick(suggestion)}
-                  >
-                    {suggestion}
-                  </Button>
-                ))}
-              </div>
+
+      {messages.length === 0 ? (
+        <div
+          className={cn(
+            "flex-1 h-full",
+            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-16"
+          )}
+        >
+          <div
+            className={cn(
+              "flex flex-col items-center justify-center px-4 max-w-2xl mx-auto text-center space-y-6"
+            )}
+          >
+            <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
+              <MapPin className="h-8 w-8 text-blue-500" />
             </div>
-          ) : (
+            <h2 className="text-2xl font-bold dark:text-white">
+              Ask me anything about fishing!
+            </h2>
+            <p className="text-muted-foreground dark:text-gray-400">
+              Get AI advice on techniques, species identification, fishing
+              spots, sonar image readings and more.
+            </p>
+            <div className="flex flex-wrap justify-center gap-2 w-full max-w-md">
+              {suggestions.map((suggestion, index) => (
+                <Button
+                  key={`suggestion-${index}`}
+                  variant="outline"
+                  className="text-left justify-start h-auto py-3 px-2 dark:bg-gray-800 dark:border-gray-700"
+                  onClick={() => handleSuggestionClick(suggestion)}
+                >
+                  {suggestion}
+                </Button>
+              ))}
+            </div>
+            {isMobile && deviceSize.height < 850 && (
+              <div className="h-[300px] md:hidden"></div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className={cn("flex-1 overflow-y-auto h-full pt-16")}>
+          <div className="p-4">
             <div className="max-w-2xl mx-auto space-y-6">
               <div className="h-[20px] md:hidden"></div>
               {messages.map((message) => (
@@ -523,9 +546,10 @@ const SearchPage: React.FC = () => {
 
               <div ref={messagesEndRef} />
             </div>
-          )}
+          </div>
         </div>
-      </div>
+      )}
+
       {/* Input Form - Fixed at bottom on mobile, static on desktop */}
       <div className="fixed bottom-16 left-0 right-0 z-20 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 md:static md:bottom-auto md:border-t md:w-full md:mx-auto md:mb-4">
         <form

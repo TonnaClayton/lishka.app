@@ -1,7 +1,7 @@
 import React from "react";
-import { Card } from "./ui/card";
-import { Skeleton } from "./ui/skeleton";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "./ui/tabs";
+import { Card } from "../ui/card";
+import { Skeleton } from "../ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
 const WeatherWidgetProSkeleton: React.FC = () => {
   return (

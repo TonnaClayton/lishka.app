@@ -169,7 +169,7 @@ const GearCategoryPage: React.FC = () => {
     compatibleGear: "",
   });
   const [expandedCardIndex, setExpandedCardIndex] = useState<number | null>(
-    null,
+    null
   );
 
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -436,7 +436,7 @@ const GearCategoryPage: React.FC = () => {
 
           // Filter gear items by category
           categoryGear = profile.gear_items.filter(
-            (item: GearItem) => item.category === categoryId,
+            (item: GearItem) => item.category === categoryId
           );
 
           log("[GearCategoryPage] 🔍 FILTERED GEAR FOR CATEGORY:", {
@@ -462,7 +462,7 @@ const GearCategoryPage: React.FC = () => {
           log(
             "[GearCategoryPage] Using mock data for category:",
             categoryId,
-            categoryGear.length,
+            categoryGear.length
           );
         }
 
@@ -471,16 +471,16 @@ const GearCategoryPage: React.FC = () => {
         // Auto-expand the specific gear item if gearId is provided
         if (gearId) {
           const gearIndex = categoryGear.findIndex(
-            (item) => item.id === gearId,
+            (item) => item.id === gearId
           );
           if (gearIndex !== -1) {
             log(
-              `[GearCategoryPage] Auto-expanding gear at index ${gearIndex} with ID ${gearId}`,
+              `[GearCategoryPage] Auto-expanding gear at index ${gearIndex} with ID ${gearId}`
             );
             setExpandedCardIndex(gearIndex);
           } else {
             console.warn(
-              `[GearCategoryPage] Gear with ID ${gearId} not found in category ${categoryId}`,
+              `[GearCategoryPage] Gear with ID ${gearId} not found in category ${categoryId}`
             );
           }
         }
@@ -522,7 +522,7 @@ const GearCategoryPage: React.FC = () => {
       // Get current full gear list and replace items for this category
       const currentGear = profile?.gear_items || [];
       const otherCategoryGear = currentGear.filter(
-        (item: GearItem) => item.category !== categoryId,
+        (item: GearItem) => item.category !== categoryId
       );
       const finalGearList = [...otherCategoryGear, ...newGearList];
 
@@ -611,7 +611,7 @@ const GearCategoryPage: React.FC = () => {
       if (saveResult.error) {
         console.error(
           "[GearCategoryPage] Failed to save updated gear:",
-          saveResult.error,
+          saveResult.error
         );
         setError("Failed to update gear. Please try again.");
         return;
@@ -644,7 +644,7 @@ const GearCategoryPage: React.FC = () => {
       if (saveResult.error) {
         console.error(
           "[GearCategoryPage] Failed to delete gear:",
-          saveResult.error,
+          saveResult.error
         );
         setError("Failed to delete gear. Please try again.");
         return;
@@ -666,7 +666,7 @@ const GearCategoryPage: React.FC = () => {
   // Show loading state while auth is initializing
   if (authLoading) {
     return (
-      <div className="flex flex-col min-h-screen bg-white dark:bg-background">
+      <div className="flex flex-col h-full bg-white dark:bg-background">
         <div className="flex items-center justify-center flex-1">
           <div className="text-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-4"></div>
@@ -683,7 +683,7 @@ const GearCategoryPage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gray-50 dark:bg-background">
+    <div className="flex flex-col h-full bg-gray-50 dark:bg-background">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 p-4 w-full lg:hidden border-b">
         <div className="flex items-center justify-between">
@@ -699,7 +699,7 @@ const GearCategoryPage: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 p-4 max-w-2xl mx-auto w-full pb-20 lg:pb-4">
+      <main className="flex-1 p-4 max-w-2xl mx-auto w-full pb-20 lg:pb-4 h-full overflow-y-auto">
         <div className="space-y-6">
           {/* Alerts */}
           {error && (
@@ -796,7 +796,7 @@ const GearCategoryPage: React.FC = () => {
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setOpenMenuIndex(
-                                    openMenuIndex === index ? null : index,
+                                    openMenuIndex === index ? null : index
                                   );
                                 }}
                                 className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-1.5 sm:p-2 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 w-7 h-7 sm:w-8 sm:h-8 flex items-center justify-center flex-shrink-0"
@@ -858,7 +858,7 @@ const GearCategoryPage: React.FC = () => {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setOpenMenuIndex(
-                                      openMenuIndex === index ? null : index,
+                                      openMenuIndex === index ? null : index
                                     );
                                   }}
                                   className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 p-2 transition-colors rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 w-8 h-8 flex items-center justify-center"

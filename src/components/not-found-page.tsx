@@ -8,7 +8,7 @@ const NotFoundPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col min-h-screen bg-white dark:bg-gray-950">
+    <div className="flex flex-col h-full bg-white dark:bg-gray-950">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 w-full border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center">
