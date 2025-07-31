@@ -2,14 +2,14 @@ import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-export const queryKeys = {
+export const authQueryKeys = {
   useVerifyAuthToken: (token: string) => ["useVerifyAuthToken", token] as const,
   useResendAuthToken: (email: string) => ["useResendAuthToken", email] as const,
 };
 
 export const useVerifyAuthToken = (token: string) =>
   useQuery({
-    queryKey: queryKeys.useVerifyAuthToken(token),
+    queryKey: authQueryKeys.useVerifyAuthToken(token),
     queryFn: async () => {
       const { data, error } = await supabase.auth.verifyOtp({
         token_hash: token,

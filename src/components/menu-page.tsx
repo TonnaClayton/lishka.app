@@ -18,7 +18,7 @@ const MenuPage: React.FC = () => {
   const navigate = useNavigate();
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F7F7]">
+    <div className="flex flex-col h-full bg-[#F7F7F7]">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full">
         <div className="flex items-center">
@@ -29,7 +29,7 @@ const MenuPage: React.FC = () => {
         </div>
       </header>
       {/* Main Content */}
-      <main className="flex-1 p-4 max-w-3xl mx-auto pb-20">
+      <main className="flex-1 p-4 max-w-3xl mx-auto pb-20 h-full overflow-y-auto">
         <div className="space-y-4 w-full">
           {/* Plan Section */}
           <div className="space-y-2">

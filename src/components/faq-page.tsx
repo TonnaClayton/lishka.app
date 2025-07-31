@@ -77,7 +77,7 @@ const FaqPage: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F7F7] dark:bg-gray-900">
+    <div className="flex flex-col h-full bg-[#F7F7F7] dark:bg-gray-900">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 w-full border-b border-gray-200 dark:border-gray-800">
         <div className="flex items-center">
@@ -90,63 +90,64 @@ const FaqPage: React.FC = () => {
         </div>
       </header>
       {/* Main Content */}
-      <main className="flex-1 p-4 max-w-3xl mx-auto pb-20 w-full">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
-          <Accordion type="single" collapsible className="w-full">
-            {faqs.map((faq, index) => {
-              const isFirst = index === 0;
-              const isLast = index === faqs.length - 1;
-              let triggerClasses =
-                "px-6 py-4 text-left hover:no-underline hover:bg-white dark:hover:bg-gray-800 dark:text-white bg-white dark:bg-gray-800 data-[state=open]:bg-white dark:data-[state=open]:bg-gray-800";
+      <main className="flex-1 p-4 pb-20 w-full h-full overflow-y-auto">
+        <div className="max-w-3xl mx-auto w-full">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+            <Accordion type="single" collapsible className="w-full">
+              {faqs.map((faq, index) => {
+                const isFirst = index === 0;
+                const isLast = index === faqs.length - 1;
+                let triggerClasses =
+                  "px-6 py-4 text-left hover:no-underline hover:bg-white dark:hover:bg-gray-800 dark:text-white bg-white dark:bg-gray-800 data-[state=open]:bg-white dark:data-[state=open]:bg-gray-800";
 
-              if (isFirst) {
-                triggerClasses += " rounded-t-lg";
+                if (isFirst) {
+                  triggerClasses += " rounded-t-lg";
+                }
+                if (isLast) {
+                  triggerClasses += " rounded-b-lg";
+                }
+
+                return (
+                  <AccordionItem
+                    key={index}
+                    value={`item-${index}`}
+                    className="border-b border-gray-200 dark:border-gray-700 last:border-b-0"
+                  >
+                    <AccordionTrigger className={triggerClasses}>
+                      <span className="font-medium">{faq.question}</span>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-6 pb-4 text-gray-600 dark:text-gray-300 leading-relaxed">
+                      {faq.answer}
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
+            </Accordion>
+          </div>
+
+          {/* Contact Section */}
+          <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
+            <h2 className="text-lg font-semibold mb-2 dark:text-white">
+              Still have questions?
+            </h2>
+            <p className="text-gray-600 dark:text-gray-300 mb-4">
+              Can't find what you're looking for? We're here to help!
+            </p>
+            <Button
+              onClick={() =>
+                window.open("https://www.instagram.com/lishka.app/", "_blank")
               }
-              if (isLast) {
-                triggerClasses += " rounded-b-lg";
-              }
-
-              return (
-                <AccordionItem
-                  key={index}
-                  value={`item-${index}`}
-                  className="border-b border-gray-200 dark:border-gray-700 last:border-b-0"
-                >
-                  <AccordionTrigger className={triggerClasses}>
-                    <span className="font-medium">{faq.question}</span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-6 pb-4 text-gray-600 dark:text-gray-300 leading-relaxed">
-                    {faq.answer}
-                  </AccordionContent>
-                </AccordionItem>
-              );
-            })}
-          </Accordion>
-        </div>
-
-        {/* Contact Section */}
-        <div className="mt-6 bg-white dark:bg-gray-800 rounded-lg p-6 shadow-sm">
-          <h2 className="text-lg font-semibold mb-2 dark:text-white">
-            Still have questions?
-          </h2>
-          <p className="text-gray-600 dark:text-gray-300 mb-4">
-            Can't find what you're looking for? We're here to help!
-          </p>
-          <Button
-            onClick={() =>
-              window.open("https://www.instagram.com/lishka.app/", "_blank")
-            }
-            className="w-full sm:w-auto"
-          >
-            Contact Us on Instagram
-          </Button>
+              className="w-full sm:w-auto"
+            >
+              Contact Us on Instagram
+            </Button>
+          </div>
         </div>
       </main>
       {/* Bottom Navigation */}
       <div className="lg:hidden">
         <BottomNav />
       </div>
-      <div className="hidden lg:block lg:h-16"></div>
     </div>
   );
 };
