@@ -423,7 +423,8 @@ const SearchPage: React.FC = () => {
         >
           <div
             className={cn(
-              "flex flex-col items-center justify-center px-4 max-w-2xl mx-auto text-center space-y-6"
+              "flex flex-col items-center justify-center px-4 max-w-2xl mx-auto text-center space-y-6",
+              !(isMobile && deviceSize.height < 850) && "h-full"
             )}
           >
             <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
