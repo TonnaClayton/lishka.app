@@ -8,25 +8,17 @@ import {
   Camera,
   User,
   Mail,
-  MapPin,
-  Settings,
-  LogOut,
   Edit3,
   Save,
   X,
   Fish,
-  Calendar,
-  Ruler,
   Crop as CropIcon,
   Check,
-  Package,
   Plus,
-  Upload,
   Trophy,
   MapIcon,
   MoreVertical,
   Trash2,
-  Weight,
   Menu,
   Share,
   Pencil,
@@ -34,11 +26,9 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { cn } from "@/lib/utils";
 import {
@@ -57,13 +47,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { toBlob } from "html-to-image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/auth-context";
 import {
@@ -73,7 +57,6 @@ import {
 import { supabase } from "@/lib/supabase";
 import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
 import { log } from "@/lib/logging";
-import { exportFishInfoOverlayAsImage } from "@/lib/image-export";
 
 interface LocationData {
   latitude: number;
@@ -175,6 +158,8 @@ const ProfilePage: React.FC = () => {
     uploadAvatar,
   } = useAuth();
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const fishInfoOverlayRef = useRef<HTMLDivElement>(null);
 
   // Debug logging
   log("ProfilePage - User:", user);
@@ -1070,13 +1055,21 @@ const ProfilePage: React.FC = () => {
           if (metadata && (metadata.fishInfo || metadata.location)) {
             try {
               // Export the FishInfoOverlay as an image
-              const overlayBlob = await exportFishInfoOverlayAsImage(
-                metadata,
-                photoUrl,
-                {
-                  quality: 0.9,
-                }
-              );
+              // const overlayBlob = await exportFishInfoOverlayAsImage(
+              //   metadata,
+              //   photoUrl,
+              //   {
+              //     quality: 0.9,
+              //   }
+              // );
+
+              if (fishInfoOverlayRef.current === null) {
+                return;
+              }
+
+              const overlayBlob = await toBlob(fishInfoOverlayRef.current, {
+                cacheBust: true,
+              });
 
               file = new File([overlayBlob], "fish-catch-with-info.png", {
                 type: "image/png",
@@ -2151,7 +2144,6 @@ const ProfilePage: React.FC = () => {
                         {/* Main image button */}
                         <button
                           onClick={handleImageClick}
-                          id="fish-info-overlay-container"
                           className="w-full h-full"
                         >
                           {/* Loading spinner */}
@@ -2181,113 +2173,119 @@ const ProfilePage: React.FC = () => {
                             </div>
                           )}
 
-                          {/* Image */}
-                          <img
-                            src={photoUrl}
-                            alt={`Uploaded photo ${index + 1}`}
-                            className={`w-full transition-opacity duration-200 ${
-                              isLoading ? "opacity-0" : "opacity-100"
-                            } ${hasError ? "hidden" : ""} ${
-                              isSingleColumn
-                                ? "h-auto object-contain"
-                                : "h-full object-cover"
-                            }`}
-                            onLoadStart={() => {
-                              log(
-                                `[ProfilePage] Image ${index + 1} started loading:`,
-                                photoUrl
-                              );
-                              setImageLoadingStates((prev) => ({
-                                ...prev,
-                                [imageKey]: true,
-                              }));
-                              setImageErrors((prev) => ({
-                                ...prev,
-                                [imageKey]: false,
-                              }));
-                            }}
-                            onLoad={() => {
-                              log(
-                                `[ProfilePage] Image ${index + 1} loaded successfully:`,
-                                photoUrl
-                              );
-                              setImageLoadingStates((prev) => ({
-                                ...prev,
-                                [imageKey]: false,
-                              }));
-                              setImageErrors((prev) => ({
-                                ...prev,
-                                [imageKey]: false,
-                              }));
-                            }}
-                            onError={(e) => {
-                              console.error(
-                                `[ProfilePage] Error loading image ${index + 1}:`,
-                                {
-                                  url: photoUrl,
-                                  error: e,
-                                  isHttps: photoUrl.startsWith("https://"),
-                                  domain: (() => {
-                                    try {
-                                      return new URL(photoUrl).hostname;
-                                    } catch {
-                                      return "invalid-url";
-                                    }
-                                  })(),
-                                  urlLength: photoUrl.length,
-                                  hasValidExtension:
-                                    /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(
-                                      photoUrl
-                                    ),
-                                }
-                              );
+                          <div
+                            ref={fishInfoOverlayRef}
+                            className="w-full h-full"
+                            id="fish-info-overlay-container"
+                          >
+                            {/* Image */}
+                            <img
+                              src={photoUrl}
+                              alt={`Uploaded photo ${index + 1}`}
+                              className={`w-full transition-opacity duration-200 ${
+                                isLoading ? "opacity-0" : "opacity-100"
+                              } ${hasError ? "hidden" : ""} ${
+                                isSingleColumn
+                                  ? "h-auto object-contain"
+                                  : "h-full object-cover"
+                              }`}
+                              onLoadStart={() => {
+                                log(
+                                  `[ProfilePage] Image ${index + 1} started loading:`,
+                                  photoUrl
+                                );
+                                setImageLoadingStates((prev) => ({
+                                  ...prev,
+                                  [imageKey]: true,
+                                }));
+                                setImageErrors((prev) => ({
+                                  ...prev,
+                                  [imageKey]: false,
+                                }));
+                              }}
+                              onLoad={() => {
+                                log(
+                                  `[ProfilePage] Image ${index + 1} loaded successfully:`,
+                                  photoUrl
+                                );
+                                setImageLoadingStates((prev) => ({
+                                  ...prev,
+                                  [imageKey]: false,
+                                }));
+                                setImageErrors((prev) => ({
+                                  ...prev,
+                                  [imageKey]: false,
+                                }));
+                              }}
+                              onError={(e) => {
+                                console.error(
+                                  `[ProfilePage] Error loading image ${index + 1}:`,
+                                  {
+                                    url: photoUrl,
+                                    error: e,
+                                    isHttps: photoUrl.startsWith("https://"),
+                                    domain: (() => {
+                                      try {
+                                        return new URL(photoUrl).hostname;
+                                      } catch {
+                                        return "invalid-url";
+                                      }
+                                    })(),
+                                    urlLength: photoUrl.length,
+                                    hasValidExtension:
+                                      /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(
+                                        photoUrl
+                                      ),
+                                  }
+                                );
 
-                              // Try to get more details about the error
-                              fetch(photoUrl, { method: "HEAD" })
-                                .then((response) => {
-                                  console.error(
-                                    `[ProfilePage] HTTP status for failed image ${index + 1}:`,
-                                    {
-                                      status: response.status,
-                                      statusText: response.statusText,
-                                      url: photoUrl,
-                                    }
-                                  );
-                                })
-                                .catch((fetchError) => {
-                                  console.error(
-                                    `[ProfilePage] Network error for image ${index + 1}:`,
-                                    {
-                                      error: fetchError.message,
-                                      url: photoUrl,
-                                    }
-                                  );
-                                });
+                                // Try to get more details about the error
+                                fetch(photoUrl, { method: "HEAD" })
+                                  .then((response) => {
+                                    console.error(
+                                      `[ProfilePage] HTTP status for failed image ${index + 1}:`,
+                                      {
+                                        status: response.status,
+                                        statusText: response.statusText,
+                                        url: photoUrl,
+                                      }
+                                    );
+                                  })
+                                  .catch((fetchError) => {
+                                    console.error(
+                                      `[ProfilePage] Network error for image ${index + 1}:`,
+                                      {
+                                        error: fetchError.message,
+                                        url: photoUrl,
+                                      }
+                                    );
+                                  });
 
-                              setImageLoadingStates((prev) => ({
-                                ...prev,
-                                [imageKey]: false,
-                              }));
-                              setImageErrors((prev) => ({
-                                ...prev,
-                                [imageKey]: true,
-                              }));
+                                setImageLoadingStates((prev) => ({
+                                  ...prev,
+                                  [imageKey]: false,
+                                }));
+                                setImageErrors((prev) => ({
+                                  ...prev,
+                                  [imageKey]: true,
+                                }));
 
-                              // Don't automatically remove images - let user decide
-                              // Show error state instead of removing the image
-                            }}
-                          />
+                                // Don't automatically remove images - let user decide
+                                // Show error state instead of removing the image
+                              }}
+                            />
 
-                          {/* Fish Info Overlay - Use FishInfoOverlay component - Only show in single column */}
-                          {!isLoading &&
-                            !hasError &&
-                            metadata &&
-                            isSingleColumn && (
-                              <FishInfoOverlay
-                                metadata={metadata}
-                                isSingleColumn={isSingleColumn}
-                              />
-                            )}
+                            {/* Fish Info Overlay - Use FishInfoOverlay component - Only show in single column */}
+                            {!isLoading &&
+                              !hasError &&
+                              metadata &&
+                              isSingleColumn && (
+                                <FishInfoOverlay
+                                  metadata={metadata}
+                                  isSingleColumn={isSingleColumn}
+                                />
+                              )}
+                          </div>
                         </button>
 
                         {/* 3-dots menu - only show in single column mode */}
