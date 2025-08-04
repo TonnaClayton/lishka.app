@@ -2,6 +2,7 @@ import React from "react";
 import { Fish, Ruler, Weight, MapPin } from "lucide-react";
 import { ImageMetadata } from "@/lib/image-metadata";
 import { log } from "@/lib/logging";
+import { cn } from "@/lib/utils";
 
 interface FishInfoOverlayProps {
   metadata: ImageMetadata;
@@ -109,7 +110,10 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
   return (
     <>
       <div
-        className={`absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none z-10 ${className}`}
+        className={cn(
+          `absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none z-10 `,
+          className
+        )}
       >
         <div
           className="absolute bottom-0 left-0 right-0 p-4 text-white"

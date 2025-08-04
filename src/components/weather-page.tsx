@@ -33,7 +33,7 @@ const WeatherPage: React.FC = () => {
         localStorage.setItem("userLocation", coastalLocation.name);
         localStorage.setItem(
           "userLocationFull",
-          JSON.stringify(coastalLocation),
+          JSON.stringify(coastalLocation)
         );
         setUserLocation(coastalLocation);
         setLocation(coastalLocation.name);
@@ -42,7 +42,7 @@ const WeatherPage: React.FC = () => {
           const parsedLocation = JSON.parse(savedLocation);
           log(
             "[WeatherPage] Parsed location from localStorage:",
-            parsedLocation,
+            parsedLocation
           );
 
           if (parsedLocation) {
@@ -83,7 +83,7 @@ const WeatherPage: React.FC = () => {
       ) {
         log(
           "[WeatherPage] Storage change detected, reloading location",
-          event?.key,
+          event?.key
         );
         loadLocation();
       }
@@ -97,7 +97,7 @@ const WeatherPage: React.FC = () => {
     window.addEventListener("storage", handleStorageChange);
     window.addEventListener(
       "locationChanged",
-      handleLocationChangeEvent as EventListener,
+      handleLocationChangeEvent as EventListener
     );
 
     // Set data loaded after a short delay to simulate API fetch
@@ -109,7 +109,7 @@ const WeatherPage: React.FC = () => {
       window.removeEventListener("storage", handleStorageChange);
       window.removeEventListener(
         "locationChanged",
-        handleLocationChangeEvent as EventListener,
+        handleLocationChangeEvent as EventListener
       );
     };
   }, []);
@@ -132,7 +132,7 @@ const WeatherPage: React.FC = () => {
     setTimeout(() => {
       window.dispatchEvent(new Event("storage"));
       window.dispatchEvent(
-        new CustomEvent("locationChanged", { detail: newLocation }),
+        new CustomEvent("locationChanged", { detail: newLocation })
       );
       log("[WeatherPage] Events dispatched for location change");
     }, 100);
@@ -145,7 +145,7 @@ const WeatherPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col min-h-screen bg-[#F7F7F7] dark:bg-background max-w-full overflow-hidden">
+    <div className="flex flex-col h-full bg-[#F7F7F7] dark:bg-background max-w-full overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full lg:hidden">
         <div className="flex justify-between items-center">
@@ -167,23 +167,26 @@ const WeatherPage: React.FC = () => {
         </div>
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 lg:p-6 lg:max-w-3xl lg:mx-auto pb-20 w-full">
-        <div className="mb-4">
-          <h1 className="text-2xl font-bold mb-1 dark:text-white lg:text-3xl">
-            {location} Weather
-          </h1>
-          <div className="flex items-center">
-            <MapPin className="h-4 w-4 text-blue-500 mr-1" />
-            <p className="text-sm text-muted-foreground dark:text-gray-300 lg:text-base">
-              Marine conditions for fishing
-            </p>
+      <div className="flex-1 overflow-y-auto">
+        <div className=" p-4 lg:p-6 lg:max-w-3xl lg:mx-auto pb-20 w-full">
+          <div className="mb-4">
+            <h1 className="text-2xl font-bold mb-1 dark:text-white lg:text-3xl">
+              {location} Weather
+            </h1>
+            <div className="flex items-center">
+              <MapPin className="h-4 w-4 text-blue-500 mr-1" />
+              <p className="text-sm text-muted-foreground dark:text-gray-300 lg:text-base">
+                Marine conditions for fishing
+              </p>
+            </div>
           </div>
-        </div>
 
-        <WeatherWidget
-          userLocation={userLocation}
-          onLocationUpdate={handleLocationUpdate}
-        />
+          <WeatherWidget
+            userLocation={userLocation}
+            onLocationUpdate={handleLocationUpdate}
+            className="px-0 lg:px-0"
+          />
+        </div>
       </div>
 
       <BottomNav />
