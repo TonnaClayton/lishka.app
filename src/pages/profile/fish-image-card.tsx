@@ -342,47 +342,49 @@ function FishImageCard({
 
       {/* 3-dots menu - only show in single column mode */}
       {isSingleColumn && (
-        <div className="absolute top-2 right-2 z-20">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="text-white p-1.5 transition-colors">
-                <MoreVertical className="w-5 h-5 rotate-90" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-40">
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleSharePhoto();
-                }}
-                disabled={loading}
-              >
-                <Share className="w-4 h-4 mr-2" />
-                Share
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleEditAIInfo();
-                }}
-                disabled={loading}
-              >
-                <Pencil className="w-4 h-4 mr-2" />
-                Edit AI Info
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleDeletePhoto();
-                }}
-                className="text-red-600 hover:text-red-700 focus:text-red-700"
-                disabled={loading}
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+        <div className="absolute bottom-5 right-0 h-10 w-full z-20">
+          <div className="flex items-center justify-end pr-5">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="text-white p-1.5 transition-colors">
+                  <MoreVertical className="w-5 h-5 rotate-90" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-40">
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSharePhoto();
+                  }}
+                  disabled={loading}
+                >
+                  <Share className="w-4 h-4 mr-2" />
+                  Share
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleEditAIInfo();
+                  }}
+                  disabled={loading}
+                >
+                  <Pencil className="w-4 h-4 mr-2" />
+                  Edit AI Info
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeletePhoto();
+                  }}
+                  className="text-red-600 hover:text-red-700 focus:text-red-700"
+                  disabled={loading}
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       )}
     </div>
