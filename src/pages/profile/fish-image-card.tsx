@@ -342,7 +342,7 @@ function FishImageCard({
 
       {/* 3-dots menu - only show in single column mode */}
       {isSingleColumn && (
-        <div className="absolute bottom-5 right-0 h-10 w-full z-20">
+        <div className="absolute bottom-28 right-0 h-10 w-full z-20">
           <div className="flex items-center justify-end pr-5">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
