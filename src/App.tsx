@@ -26,7 +26,7 @@ import { cn } from "./lib/utils";
 const HomePage = lazy(() => import("./components/home-page"));
 const FishDetailPage = lazy(() => import("./components/fish-detail-page"));
 const MenuPage = lazy(() => import("./components/menu-page"));
-const SearchPage = lazy(() => import("./components/search-page"));
+const SearchPage = lazy(() => import("./pages/search"));
 const WeatherPage = lazy(() => import("./components/weather-page"));
 const ProfilePage = lazy(() => import("./pages/profile"));
 const MyGearPage = lazy(() => import("./components/my-gear-page"));
