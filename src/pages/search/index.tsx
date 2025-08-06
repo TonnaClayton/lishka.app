@@ -1,22 +1,26 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, MapPin, ChevronLeft, Loader2, Image } from "lucide-react";
-import { Button } from "./ui/button";
-import { Switch } from "./ui/switch";
-import { Card } from "./ui/card";
-import { Textarea } from "./ui/textarea";
-import FishCard from "./fish-card";
 import {
-  getPlaceholderFishImage,
-  getFishImageUrlSync,
-  handleFishImageError,
-} from "@/lib/fish-image-service";
+  Send,
+  MapPin,
+  ArrowLeft,
+  Loader2,
+  Image,
+  ChevronLeft,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Switch } from "@/components/ui/switch";
+import { Card } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import FishCard from "@/components/fish-card";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
 
 import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
 import { useImperialUnits } from "@/lib/unit-conversion";
-import BottomNav from "./bottom-nav";
+import BottomNav from "@/components/bottom-nav";
 import TextareaAutosize from "react-textarea-autosize";
 import { useAuth } from "@/contexts/auth-context";
 import useDeviceSize from "@/hooks/use-device-size";
@@ -71,8 +75,6 @@ const SearchPage: React.FC = () => {
 
   const deviceSize = useDeviceSize();
   const isMobile = useIsMobile();
-
-  console.log(deviceSize);
 
   // Get user location from multiple sources
   useEffect(() => {
@@ -146,7 +148,7 @@ const SearchPage: React.FC = () => {
   const processQuery = async (
     queryText: string,
     userMessage: Message,
-    imageFile?: File,
+    imageFile?: File
   ) => {
     try {
       // Check if OpenAI is disabled
@@ -159,7 +161,7 @@ const SearchPage: React.FC = () => {
       const apiKey = config.VITE_OPENAI_API_KEY;
       if (!apiKey) {
         throw new Error(
-          "OpenAI API key is missing. Please add it in project settings.",
+          "OpenAI API key is missing. Please add it in project settings."
         );
       }
 
@@ -238,7 +240,7 @@ const SearchPage: React.FC = () => {
             ],
             max_tokens: imageFile ? 1000 : undefined,
           }),
-        },
+        }
       );
 
       if (!response.ok) {
@@ -248,10 +250,12 @@ const SearchPage: React.FC = () => {
       const data = await response.json();
       const assistantResponse = data.choices[0].message.content;
 
+      console.log("assistantResponse", assistantResponse);
+
       // Extract fish data if present
       let fishData: Fish[] = [];
       const fishDataMatch = assistantResponse.match(
-        /\[FISH_DATA\](.+?)\[\/FISH_DATA\]/s,
+        /\[FISH_DATA\](.+?)\[\/?FISH_DATA\]/s
       );
 
       let cleanedResponse = assistantResponse;
@@ -275,8 +279,8 @@ const SearchPage: React.FC = () => {
 
           // Remove the fish data section from the displayed response
           cleanedResponse = assistantResponse.replace(
-            /\[FISH_DATA\].+?\[\/FISH_DATA\]/s,
-            "",
+            /\[FISH_DATA\].+?\[\/?FISH_DATA\]/s,
+            ""
           );
         } catch (err) {
           console.error("Error parsing fish data:", err);
@@ -337,7 +341,7 @@ const SearchPage: React.FC = () => {
       await processQuery(
         currentQuery || "What can you tell me about this image?",
         userMessage,
-        currentImageFile || undefined,
+        currentImageFile || undefined
       );
     } catch (err) {
       console.error("Error in handleSubmit:", err);
@@ -417,13 +421,13 @@ const SearchPage: React.FC = () => {
         <div
           className={cn(
             "flex-1 h-full",
-            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-16",
+            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-16"
           )}
         >
           <div
             className={cn(
               "flex flex-col items-center justify-center px-4 max-w-2xl mx-auto text-center space-y-6",
-              !(isMobile && deviceSize.height < 850) && "h-full",
+              !(isMobile && deviceSize.height < 850) && "h-full"
             )}
           >
             <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
@@ -475,7 +479,42 @@ const SearchPage: React.FC = () => {
                         />
                       </div>
                     )}
-                    <div className="whitespace-pre-wrap">{message.content}</div>
+                    <div className="">
+                      <ReactMarkdown
+                        components={{
+                          ol: ({ children }) => (
+                            <ol className="list-decimal">{children}</ol>
+                          ),
+                          ul: ({ children }) => (
+                            <ul className="list-disc">{children}</ul>
+                          ),
+                          li: ({ children }) => (
+                            <li className="ml-4">{children}</li>
+                          ),
+                          p: ({ children }) => (
+                            <p className="mb-3 text-sm text-text">{children}</p>
+                          ),
+                          h1: ({ children }) => (
+                            <h1 className="text-2xl font-bold mb-1 dark:text-white lg:text-3xl">
+                              {children}
+                            </h1>
+                          ),
+                          h2: ({ children }) => (
+                            <h2 className="text-xl font-bold mb-1 dark:text-white lg:text-2xl">
+                              {children}
+                            </h2>
+                          ),
+                          h3: ({ children }) => (
+                            <h3 className="text-lg font-bold mb-1 dark:text-white lg:text-xl">
+                              {children}
+                            </h3>
+                          ),
+                        }}
+                        remarkPlugins={[remarkGfm]}
+                      >
+                        {message.content}
+                      </ReactMarkdown>
+                    </div>
 
                     {/* Display fish cards if available */}
                     {message.fishResults && message.fishResults.length > 0 && (
@@ -509,7 +548,7 @@ const SearchPage: React.FC = () => {
                                 onClick={() => {
                                   navigate(
                                     `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
-                                    { state: { fish } },
+                                    { state: { fish } }
                                   );
                                 }}
                               />
