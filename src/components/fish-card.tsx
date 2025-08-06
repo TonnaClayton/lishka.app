@@ -94,7 +94,7 @@ const FishCard = ({
         {isToxic && (
           <Badge
             variant="destructive"
-            className="absolute bottom-2 right-2 text-xs py-0 shadow-lg rounded-[32px]"
+            className="absolute bottom-2 right-2 text-xs py-0 shadow-lg rounded-[32px] bg-[#FF004D]"
           >
             Toxic
           </Badge>

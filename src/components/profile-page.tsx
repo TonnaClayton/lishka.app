@@ -4,7 +4,7 @@ import ReactCrop, { Crop, PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
+  ChevronLeft,
   Camera,
   User,
   Mail,
@@ -116,7 +116,7 @@ const MapClickHandler = ({
       // Attempt to get location name via reverse geocoding
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
         );
         const data = await response.json();
 
@@ -207,7 +207,7 @@ const ProfilePage: React.FC = () => {
       const isMobileScreen = window.innerWidth < 768;
       const isMobileDevice =
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
+          navigator.userAgent,
         );
       log("[ProfilePage] Initial column detection:", {
         isMobileScreen,
@@ -232,14 +232,14 @@ const ProfilePage: React.FC = () => {
   const [checkingUsername, setCheckingUsername] = useState(false);
   const [showEditAIDialog, setShowEditAIDialog] = useState(false);
   const [editingPhotoIndex, setEditingPhotoIndex] = useState<number | null>(
-    null
+    null,
   );
   const [editingMetadata, setEditingMetadata] = useState<ImageMetadata | null>(
-    null
+    null,
   );
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [tempLocationData, setTempLocationData] = useState<LocationData | null>(
-    null
+    null,
   );
   const [isEmailEditable, setIsEmailEditable] = useState(false);
 
@@ -251,7 +251,7 @@ const ProfilePage: React.FC = () => {
         if (profile?.gallery_photos && Array.isArray(profile.gallery_photos)) {
           log(
             "[ProfilePage] Loaded photos from database:",
-            profile.gallery_photos.length
+            profile.gallery_photos.length,
           );
           setUploadedPhotos(profile.gallery_photos);
         } else {
@@ -262,7 +262,7 @@ const ProfilePage: React.FC = () => {
             if (Array.isArray(parsedPhotos) && parsedPhotos.length > 0) {
               log(
                 "[ProfilePage] Migrating photos from localStorage to database:",
-                parsedPhotos.length
+                parsedPhotos.length,
               );
               setUploadedPhotos(parsedPhotos);
               // Migrate to database
@@ -274,7 +274,7 @@ const ProfilePage: React.FC = () => {
               } catch (migrationError) {
                 console.error(
                   "[ProfilePage] Error migrating photos to database:",
-                  migrationError
+                  migrationError,
                 );
               }
             }
@@ -307,7 +307,7 @@ const ProfilePage: React.FC = () => {
           if (photosChanged) {
             log(
               "[ProfilePage] Saving photos to database:",
-              uploadedPhotos.length
+              uploadedPhotos.length,
             );
             await updateProfile({ gallery_photos: uploadedPhotos });
             log("[ProfilePage] Photos saved to database successfully");
@@ -315,19 +315,19 @@ const ProfilePage: React.FC = () => {
         } catch (error) {
           console.error(
             "[ProfilePage] Error saving photos to database:",
-            error
+            error,
           );
           // Fallback to localStorage if database save fails
           try {
             localStorage.setItem(
               `user_photos_${user.id}`,
-              JSON.stringify(uploadedPhotos)
+              JSON.stringify(uploadedPhotos),
             );
             log("[ProfilePage] Photos saved to localStorage as fallback");
           } catch (localError) {
             console.error(
               "[ProfilePage] Error saving to localStorage fallback:",
-              localError
+              localError,
             );
           }
         }
@@ -381,13 +381,13 @@ const ProfilePage: React.FC = () => {
 
     window.addEventListener(
       "photoUploaded",
-      handlePhotoUploaded as EventListener
+      handlePhotoUploaded as EventListener,
     );
 
     return () => {
       window.removeEventListener(
         "photoUploaded",
-        handlePhotoUploaded as EventListener
+        handlePhotoUploaded as EventListener,
       );
     };
   }, [user?.id]);
@@ -497,7 +497,7 @@ const ProfilePage: React.FC = () => {
       const isMobileScreen = window.innerWidth < 768;
       const isMobileDevice =
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent
+          navigator.userAgent,
         );
 
       log("[ProfilePage] Window resize detected:", {
@@ -695,7 +695,7 @@ const ProfilePage: React.FC = () => {
 
   const getCroppedImg = (
     image: HTMLImageElement,
-    crop: PixelCrop
+    crop: PixelCrop,
   ): Promise<Blob> => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -719,7 +719,7 @@ const ProfilePage: React.FC = () => {
       0,
       0,
       crop.width,
-      crop.height
+      crop.height,
     );
 
     return new Promise((resolve) => {
@@ -731,7 +731,7 @@ const ProfilePage: React.FC = () => {
           resolve(blob);
         },
         "image/jpeg",
-        0.95
+        0.95,
       );
     });
   };
@@ -751,7 +751,7 @@ const ProfilePage: React.FC = () => {
 
       const croppedImageBlob = await getCroppedImg(
         imgRef.current,
-        completedCrop
+        completedCrop,
       );
 
       log("Image cropped successfully, blob size:", croppedImageBlob.size);
@@ -804,11 +804,13 @@ const ProfilePage: React.FC = () => {
       // Handle timeout errors specifically
       if (err instanceof Error && err.message.includes("taking too long")) {
         setError(
-          "Upload is taking too long. Please check your connection and try again."
+          "Upload is taking too long. Please check your connection and try again.",
         );
       } else {
         setError(
-          err instanceof Error ? err.message : "Failed to crop and upload image"
+          err instanceof Error
+            ? err.message
+            : "Failed to crop and upload image",
         );
       }
     } finally {
@@ -836,8 +838,8 @@ const ProfilePage: React.FC = () => {
     log(
       "[ProfilePage] Is mobile:",
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
-      )
+        navigator.userAgent,
+      ),
     );
 
     if (photoInputRef.current) {
@@ -845,7 +847,7 @@ const ProfilePage: React.FC = () => {
         // For mobile devices, use a more direct approach
         const isMobile =
           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent
+            navigator.userAgent,
           );
 
         if (isMobile) {
@@ -885,7 +887,7 @@ const ProfilePage: React.FC = () => {
     // Validate file size (max 15MB)
     if (file.size > 15 * 1024 * 1024) {
       setError(
-        `Gear image must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`
+        `Gear image must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
       );
       e.target.value = "";
       return;
@@ -923,7 +925,7 @@ const ProfilePage: React.FC = () => {
         id: `gear_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: result.metadata.gearInfo?.name || "Unknown Gear",
         category: mapGearTypeToCategory(
-          result.metadata.gearInfo?.type || "other"
+          result.metadata.gearInfo?.type || "other",
         ),
         description: result.metadata.gearInfo?.type || "",
         brand: result.metadata.gearInfo?.brand || "",
@@ -963,7 +965,7 @@ const ProfilePage: React.FC = () => {
       if (updateError) {
         console.error(
           "[ProfilePage] Error updating profile with gear:",
-          updateError
+          updateError,
         );
         setError("Failed to save gear. Please try again.");
         return;
@@ -1041,7 +1043,7 @@ const ProfilePage: React.FC = () => {
       if (typeof photo === "string") {
         console.warn(
           `[ProfilePage] Legacy string photo in share function:`,
-          photo
+          photo,
         );
         const photoString = photo as string;
         if (photoString.startsWith("{") && photoString.includes('"url"')) {
@@ -1075,7 +1077,7 @@ const ProfilePage: React.FC = () => {
                 photoUrl,
                 {
                   quality: 0.9,
-                }
+                },
               );
 
               file = new File([overlayBlob], "fish-catch-with-info.png", {
@@ -1104,7 +1106,7 @@ const ProfilePage: React.FC = () => {
             } catch (exportError) {
               console.error(
                 "[ProfilePage] Error exporting overlay:",
-                exportError
+                exportError,
               );
               // Fallback to original image
               const response = await fetch(photoUrl);
@@ -1141,7 +1143,7 @@ const ProfilePage: React.FC = () => {
         } catch (clipboardError) {
           console.error(
             "[ProfilePage] Error copying to clipboard:",
-            clipboardError
+            clipboardError,
           );
           setError("Unable to share photo. Please try again.");
         }
@@ -1164,7 +1166,7 @@ const ProfilePage: React.FC = () => {
     if (typeof photo === "string") {
       console.warn(
         `[ProfilePage] Legacy string photo in edit function:`,
-        photo
+        photo,
       );
       const photoString = photo as string;
       if (photoString.startsWith("{") && photoString.includes('"url"')) {
@@ -1287,7 +1289,7 @@ const ProfilePage: React.FC = () => {
       if (error) {
         console.error(
           "[ProfilePage] Error deleting photo from database:",
-          error
+          error,
         );
         // Revert the local state if database update fails
         setUploadedPhotos(originalPhotos);
@@ -1318,7 +1320,7 @@ const ProfilePage: React.FC = () => {
     // Validate file size (max 15MB)
     if (file.size > 15 * 1024 * 1024) {
       setError(
-        `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`
+        `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
       );
       e.target.value = "";
       return;
@@ -1354,7 +1356,7 @@ const ProfilePage: React.FC = () => {
         new Promise<never>((_, reject) => {
           setTimeout(() => {
             log(
-              "⏰ [PROFILE PAGE] Location request timeout - continuing without location"
+              "⏰ [PROFILE PAGE] Location request timeout - continuing without location",
             );
             reject(new Error("Location request timeout"));
           }, 10000); // 10 second timeout
@@ -1397,7 +1399,7 @@ const ProfilePage: React.FC = () => {
             file,
             800, // Smaller max width for AI processing
             800, // Smaller max height for AI processing
-            0.7 // Lower quality for smaller file size
+            0.7, // Lower quality for smaller file size
           ),
           new Promise<never>((_, reject) => {
             setTimeout(() => {
@@ -1423,11 +1425,11 @@ const ProfilePage: React.FC = () => {
             error: compressionError.message,
             originalSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
             willTryOriginalButMayTimeout: true,
-          }
+          },
         );
         // Continue with original file but warn that AI processing may timeout
         setError(
-          "Image compression failed. Large images may take longer to process."
+          "Image compression failed. Large images may take longer to process.",
         );
         setTimeout(() => setError(null), 5000);
       }
@@ -1463,7 +1465,7 @@ const ProfilePage: React.FC = () => {
           const errorMessage = "Supabase storage is not properly configured";
           console.error(
             "[ProfilePage] Supabase storage not configured:",
-            errorMessage
+            errorMessage,
           );
           throw new Error(errorMessage);
         }
@@ -1487,7 +1489,7 @@ const ProfilePage: React.FC = () => {
                   compressedDimensions: compressionInfo.compressedDimensions,
                 }
               : "No compression applied",
-          }
+          },
         );
         const metadataStart = Date.now();
 
@@ -1501,7 +1503,7 @@ const ProfilePage: React.FC = () => {
                   processedFileSize: `${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`,
                   originalFileSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
                   compressionApplied: processedFile !== file,
-                }
+                },
               );
               reject(new Error("Image processing timed out"));
             }, 60000); // Increased timeout since file should be compressed
@@ -1563,14 +1565,14 @@ const ProfilePage: React.FC = () => {
           const successMsg = `Photo uploaded! Identified: ${metadata.fishInfo.name} (${Math.round(metadata.fishInfo.confidence * 100)}% confident)`;
           log(
             "🎉 [PROFILE DEBUG] Fish identified - showing success with fish info:",
-            successMsg
+            successMsg,
           );
           setSuccess(successMsg);
         } else {
           const successMsg = "Photo uploaded successfully!";
           log(
             "ℹ️ [PROFILE DEBUG] No fish identified - showing generic success:",
-            successMsg
+            successMsg,
           );
           setSuccess(successMsg);
         }
@@ -1592,7 +1594,7 @@ const ProfilePage: React.FC = () => {
           err.message.includes("timeout")
         ) {
           setError(
-            "Upload is taking too long. Please check your connection and try again."
+            "Upload is taking too long. Please check your connection and try again.",
           );
         } else {
           setError(err.message);
@@ -1619,7 +1621,7 @@ const ProfilePage: React.FC = () => {
       // Validate and check username uniqueness if username is provided
       if (formData.username) {
         const isUsernameValid = await checkUsernameUniqueness(
-          formData.username
+          formData.username,
         );
         if (!isUsernameValid) {
           setLoading(false);
@@ -1719,7 +1721,7 @@ const ProfilePage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-6 w-6" />
+              <ChevronLeft className="h-6 w-6" />
             </Button>
             <h1 className="text-xl font-bold ml-2 dark:text-white">Profile</h1>
           </div>
@@ -1879,7 +1881,7 @@ const ProfilePage: React.FC = () => {
                                     !checkingUsername &&
                                     formData.username !== profile?.username
                                   ? "border-green-500 focus-visible:ring-green-500"
-                                  : ""
+                                  : "",
                             )}
                           />
                           {checkingUsername && (
@@ -1945,7 +1947,7 @@ const ProfilePage: React.FC = () => {
             <div className="flex gap-3">
               <Button
                 variant="outline"
-                className="flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-auto flex items-center justify-center gap-2"
+                className="flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-auto flex items-center justify-center gap-2 rounded-lg"
                 style={{ backgroundColor: "#025DFB0D" }}
                 onClick={() => navigate("/my-gear")}
               >
@@ -1960,7 +1962,7 @@ const ProfilePage: React.FC = () => {
               </Button>
               <Button
                 variant="outline"
-                className="flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-auto flex items-center justify-center gap-2"
+                className="flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-auto flex items-center justify-center gap-2 rounded-lg"
                 style={{ backgroundColor: "#025DFB0D" }}
                 onClick={() => {
                   // Trigger file input for gear upload
@@ -2072,7 +2074,7 @@ const ProfilePage: React.FC = () => {
                     if (typeof photo === "string") {
                       console.warn(
                         `[ProfilePage] Legacy string photo detected at index ${index}:`,
-                        photo
+                        photo,
                       );
                       // Check if it's a JSON string that needs parsing
                       const photoString = photo as string;
@@ -2086,12 +2088,12 @@ const ProfilePage: React.FC = () => {
                           metadata = parsed;
                           log(
                             `[ProfilePage] Parsed legacy metadata for photo ${index}:`,
-                            metadata
+                            metadata,
                           );
                         } catch (parseError) {
                           console.warn(
                             `[ProfilePage] Failed to parse legacy photo metadata at index ${index}:`,
-                            parseError
+                            parseError,
                           );
                           photoUrl = photo;
                           // Create minimal metadata for legacy string URLs
@@ -2133,7 +2135,7 @@ const ProfilePage: React.FC = () => {
                           url: metadata?.url,
                           timestamp: metadata?.timestamp,
                           fullMetadata: metadata,
-                        }
+                        },
                       );
                     }
 
@@ -2195,7 +2197,7 @@ const ProfilePage: React.FC = () => {
                             onLoadStart={() => {
                               log(
                                 `[ProfilePage] Image ${index + 1} started loading:`,
-                                photoUrl
+                                photoUrl,
                               );
                               setImageLoadingStates((prev) => ({
                                 ...prev,
@@ -2209,7 +2211,7 @@ const ProfilePage: React.FC = () => {
                             onLoad={() => {
                               log(
                                 `[ProfilePage] Image ${index + 1} loaded successfully:`,
-                                photoUrl
+                                photoUrl,
                               );
                               setImageLoadingStates((prev) => ({
                                 ...prev,
@@ -2237,9 +2239,9 @@ const ProfilePage: React.FC = () => {
                                   urlLength: photoUrl.length,
                                   hasValidExtension:
                                     /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(
-                                      photoUrl
+                                      photoUrl,
                                     ),
-                                }
+                                },
                               );
 
                               // Try to get more details about the error
@@ -2251,7 +2253,7 @@ const ProfilePage: React.FC = () => {
                                       status: response.status,
                                       statusText: response.statusText,
                                       url: photoUrl,
-                                    }
+                                    },
                                   );
                                 })
                                 .catch((fetchError) => {
@@ -2260,7 +2262,7 @@ const ProfilePage: React.FC = () => {
                                     {
                                       error: fetchError.message,
                                       url: photoUrl,
-                                    }
+                                    },
                                   );
                                 });
 
@@ -2289,7 +2291,6 @@ const ProfilePage: React.FC = () => {
                               />
                             )}
                         </button>
-
                         {/* 3-dots menu - only show in single column mode */}
                         {isSingleColumn && (
                           <div className="absolute top-2 right-2 z-20">
@@ -2304,7 +2305,7 @@ const ProfilePage: React.FC = () => {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     setOpenMenuIndex(
-                                      openMenuIndex === index ? null : index
+                                      openMenuIndex === index ? null : index,
                                     );
                                   }}
                                   className="text-white p-1.5 transition-colors"
@@ -2383,10 +2384,9 @@ const ProfilePage: React.FC = () => {
               </TabsContent>
 
               <TabsContent value="achievements" className="mt-4">
-                <Card className="bg-white dark:bg-gray-800">
+                <Card className="bg-white dark:bg-gray-800 border border-[#e8e8e9]">
                   <CardHeader className="text-center">
                     <CardTitle className="flex items-center justify-center gap-2">
-                      <Trophy className="w-5 h-5" />
                       Achievements
                     </CardTitle>
                   </CardHeader>
@@ -2408,7 +2408,6 @@ const ProfilePage: React.FC = () => {
                 <Card className="bg-white dark:bg-gray-800">
                   <CardHeader className="text-center">
                     <CardTitle className="flex items-center justify-center gap-2">
-                      <MapIcon className="w-5 h-5" />
                       Fishing Trips
                     </CardTitle>
                   </CardHeader>
@@ -2500,7 +2499,6 @@ const ProfilePage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Edit AI Info Dialog */}
       <Dialog open={showEditAIDialog} onOpenChange={setShowEditAIDialog}>
         <DialogContent className="sm:max-w-[425px] w-[95%] mx-auto rounded-lg max-h-[90vh] overflow-y-auto [&>button]:hidden">
@@ -2539,7 +2537,7 @@ const ProfilePage: React.FC = () => {
                                   prev.fishInfo?.estimatedWeight || "Unknown",
                               },
                             }
-                          : null
+                          : null,
                       );
                     }}
                     placeholder="Enter fish name"
@@ -2571,7 +2569,7 @@ const ProfilePage: React.FC = () => {
                                   prev.fishInfo?.estimatedWeight || "Unknown",
                               },
                             }
-                          : null
+                          : null,
                       );
                     }}
                     placeholder="e.g., 40-50 cm"
@@ -2603,7 +2601,7 @@ const ProfilePage: React.FC = () => {
                                 estimatedWeight: e.target.value,
                               },
                             }
-                          : null
+                          : null,
                       );
                     }}
                     placeholder="e.g., 2-3 kg"

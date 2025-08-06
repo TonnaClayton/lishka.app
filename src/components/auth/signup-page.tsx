@@ -70,14 +70,14 @@ const SignupPage: React.FC = () => {
       const { error, needsConfirmation } = await signUp(
         data.email.trim().toLowerCase(),
         data.password,
-        data.fullName.trim()
+        data.fullName.trim(),
       );
 
       if (error) {
         // Handle specific error types
         if (error.message?.includes("User already registered")) {
           setError(
-            "An account with this email already exists. Try logging in instead."
+            "An account with this email already exists. Try logging in instead.",
           );
         } else if (error.message?.includes("Invalid email")) {
           setError("Please enter a valid email address.");
@@ -85,7 +85,7 @@ const SignupPage: React.FC = () => {
           setError("Password must be at least 6 characters long.");
         } else {
           setError(
-            error.message || "Failed to create account. Please try again."
+            error.message || "Failed to create account. Please try again.",
           );
         }
       } else {
@@ -209,14 +209,14 @@ const SignupPage: React.FC = () => {
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
                       Full Name
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="text"
                         placeholder="Enter your full name"
-                        className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
+                        className="text-base border-gray-200 rounded-xl bg-gray-50 focus:bg-white px-3 rounded-lg py-4 h-[56px]"
                         disabled={loading}
                         {...field}
                       />
@@ -231,14 +231,14 @@ const SignupPage: React.FC = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
                       Email
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         placeholder="Enter your email"
-                        className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
+                        className="text-base border-gray-200 rounded-xl bg-gray-50 focus:bg-white px-3 rounded-lg py-4 h-[56px]"
                         disabled={loading}
                         {...field}
                       />
@@ -253,7 +253,7 @@ const SignupPage: React.FC = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
                       Password
                     </FormLabel>
                     <FormControl>
@@ -261,7 +261,7 @@ const SignupPage: React.FC = () => {
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Create a password (min. 6 characters)"
-                          className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700 pr-12"
+                          className="text-base border-gray-200 rounded-xl bg-gray-50 focus:bg-white px-3 rounded-lg py-4 h-[56px]"
                           disabled={loading}
                           minLength={6}
                           {...field}
@@ -292,7 +292,7 @@ const SignupPage: React.FC = () => {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
                       Confirm Password
                     </FormLabel>
                     <FormControl>
@@ -300,7 +300,7 @@ const SignupPage: React.FC = () => {
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
                           placeholder="Confirm your password"
-                          className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700 pr-12"
+                          className="text-base border-gray-200 rounded-xl bg-gray-50 focus:bg-white px-3 rounded-lg py-4 h-[56px]"
                           disabled={loading}
                           {...field}
                         />
@@ -330,7 +330,7 @@ const SignupPage: React.FC = () => {
               <div className="pt-4">
                 <Button
                   type="submit"
-                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed h-[56px]"
                   disabled={loading}
                 >
                   {loading ? "Creating Account..." : "Create Account"}

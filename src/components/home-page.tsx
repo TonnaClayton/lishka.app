@@ -68,7 +68,7 @@ const HomePage: React.FC<HomePageProps> = ({
       };
       localStorage.setItem(
         "userLocationFull",
-        JSON.stringify(defaultLocationFull)
+        JSON.stringify(defaultLocationFull),
       );
       return defaultLocation;
     }
@@ -221,7 +221,6 @@ const HomePage: React.FC<HomePageProps> = ({
     <div className="flex flex-col dark:bg-background h-full relative border-l-0 border-y-0 border-r-0 rounded-xl">
       {/* Email Verification Banner */}
       <EmailVerificationBanner />
-
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full lg:hidden dark:bg-gray-800 border-t-0 border-x-0 border-b">
         <div className="flex justify-between items-center">
@@ -257,7 +256,7 @@ const HomePage: React.FC<HomePageProps> = ({
       {/* Main Content */}
       <div className="flex-1 w-full py-4 lg:py-6 pb-20 overflow-y-auto">
         {/* Fishing Tips Carousel Section */}
-        <div className="mb-8 px-4 lg:px-6">
+        <div className="px-4 lg:px-6 mb-9">
           <FishingTipsCarousel location={userLocation} />
         </div>
 
@@ -272,7 +271,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
               Toxic & Risky Catches
             </h2>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm mb-4 text-gray-600">
               Venomous and toxic fish found in {getSeaName(userLocation)}.
             </p>
           </div>
@@ -365,7 +364,7 @@ const HomePage: React.FC<HomePageProps> = ({
           <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
             Active fish in {getCurrentMonth()}
           </h2>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm mb-4 text-gray-600">
             Discover fish species available in your area this month
           </p>
         </div>
@@ -438,7 +437,7 @@ const HomePage: React.FC<HomePageProps> = ({
         onLocationSelect={(newLocation) => {
           log(
             "[HomePage] LocationModal onLocationSelect called with:",
-            newLocation
+            newLocation,
           );
           // Update the location in the title
           setUserLocation(newLocation.name);

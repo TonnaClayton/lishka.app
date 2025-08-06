@@ -76,20 +76,20 @@ const LoginPage: React.FC = () => {
 
         if (errorMsg.includes("Email not confirmed")) {
           setError(
-            "Your email address hasn't been verified yet. Please check your inbox for a verification email."
+            "Your email address hasn't been verified yet. Please check your inbox for a verification email.",
           );
           setShowEmailVerification(true);
         } else if (errorMsg.includes("Invalid login credentials")) {
           setError(
-            "Invalid email or password. Please check your credentials and try again."
+            "Invalid email or password. Please check your credentials and try again.",
           );
         } else if (errorMsg.includes("Too many requests")) {
           setError(
-            "Too many login attempts. Please wait a few minutes before trying again."
+            "Too many login attempts. Please wait a few minutes before trying again.",
           );
         } else if (errorMsg.includes("Network") || errorMsg.includes("fetch")) {
           setError(
-            "Network connection error. Please check your internet connection and try again."
+            "Network connection error. Please check your internet connection and try again.",
           );
         } else {
           setError(errorMsg);
@@ -125,7 +125,7 @@ const LoginPage: React.FC = () => {
       } else {
         setError(null);
         alert(
-          "Verification email sent! Please check your inbox and spam folder."
+          "Verification email sent! Please check your inbox and spam folder.",
         );
         setShowEmailVerification(false);
       }
@@ -158,10 +158,10 @@ const LoginPage: React.FC = () => {
 
         {/* Title */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+          <h1 className="font-bold text-gray-900 dark:text-white mb-2 text-4xl">
             Welcome Back
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400 text-lg">
             Sign in to your Lishka account
           </p>
         </div>
@@ -214,14 +214,14 @@ const LoginPage: React.FC = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
                       Email
                     </FormLabel>
-                    <FormControl>
+                    <FormControl className="px-3 rounded-lg py-4 h-[56px]">
                       <Input
                         type="email"
                         placeholder="Enter your email"
-                        className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
+                        className="text-base border-gray-200 rounded-xl bg-gray-50 focus:bg-white"
                         disabled={loading}
                         {...field}
                       />
@@ -236,7 +236,7 @@ const LoginPage: React.FC = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
                       Password
                     </FormLabel>
                     <FormControl>
@@ -244,7 +244,7 @@ const LoginPage: React.FC = () => {
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter your password"
-                          className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700 pr-12"
+                          className="px-3 h-[56px] py-4 text-base border-gray-200 rounded-xl bg-gray-50 focus:bg-white"
                           disabled={loading}
                           {...field}
                         />
@@ -278,10 +278,10 @@ const LoginPage: React.FC = () => {
                 </Link>
               </div>
 
-              <div className="pt-4 space-y-3">
+              <div className="space-y-3 mt-0">
                 <Button
                   type="submit"
-                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed h-[56px]"
                   disabled={loading}
                 >
                   {loading ? "Signing in..." : "Sign In"}
