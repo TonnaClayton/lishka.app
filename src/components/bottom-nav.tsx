@@ -91,7 +91,7 @@ const BottomNav: React.FC = () => {
     // Validate file size (max 15MB)
     if (file.size > 15 * 1024 * 1024) {
       alert(
-        `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+        `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`
       );
       e.target.value = "";
       return;
@@ -107,7 +107,7 @@ const BottomNav: React.FC = () => {
     // Show progress notification for large files
     if (file.size > 5 * 1024 * 1024) {
       log(
-        `🔍 [BOTTOMNAV] Large file detected (${(file.size / (1024 * 1024)).toFixed(1)}MB) - processing may take longer`,
+        `🔍 [BOTTOMNAV] Large file detected (${(file.size / (1024 * 1024)).toFixed(1)}MB) - processing may take longer`
       );
     }
 
@@ -171,7 +171,7 @@ const BottomNav: React.FC = () => {
                   source: "bottomnav",
                   type: "fish",
                 },
-              }),
+              })
             );
 
             // Show success message with fish info if available
@@ -226,8 +226,8 @@ const BottomNav: React.FC = () => {
               localStorage.getItem(
                 "sb-" +
                   config.VITE_SUPABASE_URL?.split("//")[1]?.split(".")[0] +
-                  "-auth-token",
-              ) || "{}",
+                  "-auth-token"
+              ) || "{}"
             );
 
             if (currentUser?.user) {
@@ -242,7 +242,7 @@ const BottomNav: React.FC = () => {
                 id: `gear_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
                 name: gearResult.metadata.gearInfo?.name || "Unknown Gear",
                 category: mapGearTypeToCategory(
-                  gearResult.metadata.gearInfo?.type || "other",
+                  gearResult.metadata.gearInfo?.type || "other"
                 ),
                 description: gearResult.metadata.gearInfo?.type || "",
                 brand: gearResult.metadata.gearInfo?.brand || "",
@@ -335,33 +335,33 @@ const BottomNav: React.FC = () => {
                           source: "bottomnav-gear-upload",
                           newGearId: gearItem.id,
                         },
-                      }),
+                      })
                     );
 
                     log("🔍 [BOTTOMNAV] Dispatched profileUpdated event");
                   } catch (eventError) {
                     console.warn(
                       "⚠️ [BOTTOMNAV] Could not dispatch profile update event:",
-                      eventError,
+                      eventError
                     );
                   }
                 } else {
                   console.error(
                     "❌ [BOTTOMNAV] Error saving gear to profile:",
-                    updateError,
+                    updateError
                   );
                 }
               } else {
                 console.error(
                   "❌ [BOTTOMNAV] Error fetching profile:",
-                  profileError,
+                  profileError
                 );
               }
             }
           } catch (profileUpdateError) {
             console.error(
               "❌ [BOTTOMNAV] Error updating profile with gear:",
-              profileUpdateError,
+              profileUpdateError
             );
           }
 
@@ -373,7 +373,7 @@ const BottomNav: React.FC = () => {
                 source: "bottomnav",
                 type: "gear",
               },
-            }),
+            })
           );
 
           // Show success message with gear info if available
@@ -430,7 +430,7 @@ const BottomNav: React.FC = () => {
                   source: "bottomnav",
                   type: "unknown",
                 },
-              }),
+              })
             );
 
             alert("Photo uploaded successfully!");
@@ -567,7 +567,7 @@ export const SideNav: React.FC = () => {
   useEffect(() => {
     document.documentElement.style.setProperty(
       "--sidebar-width",
-      isCollapsed ? "4rem" : "16rem",
+      isCollapsed ? "4rem" : "16rem"
     );
   }, [isCollapsed]);
 
@@ -712,7 +712,7 @@ export const SideNav: React.FC = () => {
                     log("[SideNav] No signOut function, using fallback");
                     localStorage.clear();
                     sessionStorage.clear();
-                    window.location.href = "/login";
+                    window.location.href = "/onboarding";
                   }
                   log("[SideNav] Sign out completed");
                 } catch (err) {
@@ -720,7 +720,7 @@ export const SideNav: React.FC = () => {
                   // Fallback on error: clear everything and redirect
                   localStorage.clear();
                   sessionStorage.clear();
-                  window.location.href = "/login";
+                  window.location.href = "/onboarding";
                 }
               }}
               className={`flex items-center py-3 rounded-lg ${isCollapsed ? "justify-center" : "px-4"} text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800`}

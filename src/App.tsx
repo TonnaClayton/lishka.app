@@ -23,6 +23,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { cn } from "./lib/utils";
 
 // Lazy load heavy components for better initial loading performance
+const OnboardingPage = lazy(() => import("./pages/onboarding"));
 const HomePage = lazy(() => import("./components/home-page"));
 const FishDetailPage = lazy(() => import("./components/fish-detail-page"));
 const MenuPage = lazy(() => import("./components/menu-page"));
@@ -73,6 +74,14 @@ const router = createBrowserRouter(
       element: <AppWithAuth />,
       children: [
         // Public routes
+        {
+          path: "onboarding",
+          element: (
+            <ProtectedRoute requireAuth={false}>
+              <OnboardingPage />
+            </ProtectedRoute>
+          ),
+        },
         {
           path: "login",
           element: (
@@ -323,9 +332,12 @@ function AppContent() {
   const shouldShowWeatherWidget = ["/", "/search"].includes(location.pathname);
 
   // Check if we're on auth pages (login/signup) to hide sidebar
-  const isAuthPage = ["/login", "/signup", "/forgot-password"].includes(
-    location.pathname
-  );
+  const isAuthPage = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/onboarding",
+  ].includes(location.pathname);
 
   // Track if we're on mobile or desktop
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);

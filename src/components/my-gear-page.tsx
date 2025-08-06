@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
-  ArrowLeft,
+  ChevronLeft,
   Plus,
   Package,
   Upload,
@@ -284,7 +284,7 @@ const MyGearPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-6 w-6" />
+              <ChevronLeft className="h-6 w-6" />
             </Button>
             <h1 className="text-xl font-bold ml-2 dark:text-white">My Gear</h1>
           </div>
@@ -352,7 +352,7 @@ const MyGearPage: React.FC = () => {
                           {categoryGear.length}
                         </span>
                       )}
-                      <ChevronRight className="w-5 h-5 text-blue-600" />
+                      <ChevronRight className="w-5 h-5 text-[#191B1F]" />
                     </div>
                   </div>
                 </div>
@@ -365,7 +365,6 @@ const MyGearPage: React.FC = () => {
       <div className="lg:hidden">
         <BottomNav />
       </div>
-
       {/* Edit Gear Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="w-[calc(100vw-2rem)] max-w-md px-6 py-6">
@@ -503,7 +502,6 @@ const MyGearPage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Gear Detail Modal */}
       <GearDetailModal
         isOpen={!!selectedGearId}

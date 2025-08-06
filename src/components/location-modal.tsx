@@ -387,7 +387,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] w-[90%] rounded-lg max-h-[80vh] shadow-xl dark:bg-card dark:border-border/30 [&>button]:hidden">
+      <DialogContent className="sm:max-w-[600px] w-[90%] max-h-[80vh] shadow-xl dark:bg-card dark:border-border/30 [&>button]:hidden rounded-2xl">
         <DialogHeader className="flex flex-row items-center justify-between">
           <DialogTitle className="dark:text-white">{title}</DialogTitle>
           <button
@@ -421,7 +421,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
             <Button
               onClick={handleDetectLocation}
               variant="outline"
-              className="w-full h-12 border-2 border-[#0251FB] dark:border-primary text-[#0251FB] dark:text-primary hover:bg-[#0251FB] hover:text-white dark:hover:bg-primary dark:hover:text-white rounded-full"
+              className="rounded-full w-full h-12 text-white bg-[#0251FB]"
               disabled={loading}
             >
               <MapPin className="mr-2" />
@@ -431,7 +431,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
             <Button
               onClick={handleMapLocationSelect}
               variant="default"
-              className="confirm-location-button w-full h-12 bg-primary text-white hover:bg-primary/90 rounded-full"
+              className="w-full h-12 rounded-full bg-[#E6EFFF] text-[#0251FB]"
             >
               Set this location
             </Button>

@@ -628,11 +628,11 @@ Rank ALL gear items (score 1-100) based on suitability for current surface condi
   if (userGear.length === 0) {
     return (
       <div className="mb-8">
-        <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
+        <h2 className="font-bold mb-1 text-black dark:text-white text-xl">
           AI Gear Recommendations
         </h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Personalized gear suggestions based on current conditions.
+        <p className="text-sm mb-4 text-gray-600">
+          Based on current conditions: Clear sky, 0.2m waves, 3km/h wind
         </p>
         <div className="flex items-center justify-between py-8 bg-gray-50 dark:bg-gray-800 rounded-lg px-6">
           <div className="text-left">
@@ -689,7 +689,6 @@ Rank ALL gear items (score 1-100) based on suitability for current surface condi
           </div>
         </div>
       </div>
-
       {/* Content based on analysis phase */}
       {analysis.phase === "idle" ||
       analysis.phase === "loading-weather" ||
@@ -754,7 +753,6 @@ Rank ALL gear items (score 1-100) based on suitability for current surface condi
                         </div>
                       )}
                     </div>
-
                     {/* Gear Info */}
                     <div className="p-2 sm:p-3 flex flex-col flex-1">
                       <div className="mb-1">
@@ -792,7 +790,6 @@ Rank ALL gear items (score 1-100) based on suitability for current surface condi
           </div>
         </div>
       )}
-
       {/* Show more indicator */}
       {analysis.phase === "complete" && userGear.length > 20 && (
         <div className="mt-3">
