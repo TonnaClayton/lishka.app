@@ -3,6 +3,7 @@ import {
   Carousel,
   CarouselContent,
   CarouselItem,
+  CarouselDot,
   type CarouselApi,
 } from "@/components/ui/carousel";
 import ScreenOne from "./screen-one";
@@ -34,6 +35,8 @@ export default function OnboardingPage() {
     });
   }, [api]);
 
+  const showContinueButton = isMobile || current > 5;
+
   return (
     <div className="bg-white dark:bg-gray-900 h-full w-full">
       <div className="grid grid-cols-1 md:grid-cols-[1fr_560px] h-full">
@@ -62,24 +65,55 @@ export default function OnboardingPage() {
               className="h-full w-full ml-0"
             >
               <CarouselItem className="h-full w-full p-0">
-                <ScreenOne onNext={() => api?.scrollNext()} />
+                <ScreenOne />
               </CarouselItem>
               <CarouselItem className="h-full w-full p-0">
-                <ScreenTwo onNext={() => api?.scrollNext()} />
+                <ScreenTwo />
               </CarouselItem>
               <CarouselItem className="h-full w-full p-0">
-                <ScreenThree onNext={() => api?.scrollNext()} />
+                <ScreenThree />
               </CarouselItem>
               <CarouselItem className="h-full w-full p-0">
-                <ScreenFour onNext={() => api?.scrollNext()} />
+                <ScreenFour />
               </CarouselItem>
               <CarouselItem className="h-full w-full p-0">
-                <ScreenFive
-                  onNext={() => setShowScreenSix(true)}
-                  isMobile={isMobile}
-                />
+                <ScreenFive />
               </CarouselItem>
             </CarouselContent>
+            <div className="absolute bottom-0 flex w-full flex-col items-center justify-center">
+              <div className="flex space-x-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <CarouselDot
+                    className="mx-1 mt-4"
+                    key={i}
+                    scrollToIndex={i}
+                    selectedClassName="bg-white"
+                  />
+                ))}
+              </div>
+              {showContinueButton && (
+                <div
+                  className={
+                    "size-full h-[120px] flex items-center justify-center px-6 gap-4 gap-x-3 py-5"
+                  }
+                >
+                  <button
+                    className={
+                      "flex-1 py-4 px-6 rounded-full text-white font-medium text-lg transition-colors hover:bg-blue-700 border-gray-200  border-0 bg-[#0251FB]"
+                    }
+                    onClick={() => {
+                      if (current === 5) {
+                        setShowScreenSix(true);
+                      } else {
+                        api?.scrollNext();
+                      }
+                    }}
+                  >
+                    {current === 5 ? "Continue" : "Next"}
+                  </button>
+                </div>
+              )}
+            </div>
           </Carousel>
         </div>
       </div>

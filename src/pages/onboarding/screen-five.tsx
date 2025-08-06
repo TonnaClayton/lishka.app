@@ -1,10 +1,4 @@
-export default function ScreenFive({
-  onNext,
-  isMobile,
-}: {
-  onNext: () => void;
-  isMobile: boolean;
-}) {
+export default function ScreenFive() {
   return (
     <div className="w-full h-full flex flex-col bg-[#2E8EB1] relative overflow-hidden">
       <div className="z-10 w-full h-[50%] bg-transparent"></div>
@@ -29,30 +23,8 @@ export default function ScreenFive({
             Get a glimpse of upcoming features, know when they’ll arrive, and
             never miss an update.
           </p>
-          <div className={"flex space-x-2"}>
-            <div className={"w-2 h-2 bg-gray-300 rounded-full"} />
-            <div className={"w-2 h-2 bg-gray-300 rounded-full"} />
-            <div className={"w-2 h-2 bg-gray-300 rounded-full"} />
-            <div className={"w-2 h-2 bg-gray-300 rounded-full"} />
-            <div className={"w-8 h-2 rounded-full bg-blue-600"} />
-          </div>
         </div>
-        <div
-          className={
-            "size-full h-[120px] flex items-center justify-center px-6 gap-4 gap-x-3 py-5"
-          }
-        >
-          {isMobile && (
-            <button
-              className={
-                "flex-1 py-4 px-6 rounded-full text-white font-medium text-lg transition-colors hover:bg-blue-700 border-gray-200 border-0 bg-[#0251FB]"
-              }
-              onClick={onNext}
-            >
-              Continue
-            </button>
-          )}
-        </div>
+        <div className="h-[100px]"></div>
       </div>
       <img
         src={"/images/tempo-image-20250804T181410487Z.png"}

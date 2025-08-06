@@ -1,4 +1,4 @@
-export default function ScreenFour({ onNext }: { onNext: () => void }) {
+export default function ScreenFour() {
   return (
     <div className="h-full w-full flex flex-col">
       <div className="z-10 w-full h-[50%] bg-transparent"></div>
@@ -23,29 +23,8 @@ export default function ScreenFour({ onNext }: { onNext: () => void }) {
             Discover which fish are active now, month by month. Get seasonal
             trends to target the right species, right when they’re biting.
           </p>
-          <div className={"flex space-x-2"}>
-            <div className={"w-2 h-2 bg-gray-300 rounded-full"} />
-            <div className={"w-2 h-2 bg-gray-300 rounded-full"} />
-            <div className={"w-2 h-2 bg-gray-300 rounded-full"} />
-            <div className={"w-8 h-2 rounded-full bg-blue-600"} />
-
-            <div className={"w-2 h-2 bg-gray-300 rounded-full"} />
-          </div>
         </div>
-        <div
-          className={
-            "size-full h-[120px] flex items-center justify-center px-6 gap-4 gap-x-3 py-5"
-          }
-        >
-          <button
-            className={
-              "flex-1 py-4 px-6 rounded-full text-white font-medium text-lg transition-colors hover:bg-blue-700 border-gray-200  border-0 bg-[#0251FB]"
-            }
-            onClick={onNext}
-          >
-            Next
-          </button>
-        </div>
+        <div className="h-[100px]"></div>
       </div>
       <img
         src={"/images/tempo-image-20250804T180827109Z.png"}
