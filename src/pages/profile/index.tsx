@@ -799,7 +799,7 @@ const ProfilePage: React.FC = () => {
   // Redirect to login if no user
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/login", { replace: true });
+      navigate("/onboarding", { replace: true });
     }
   }, [user, authLoading, navigate]);
 
