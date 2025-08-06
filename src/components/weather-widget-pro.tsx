@@ -57,7 +57,8 @@ import { cn } from "@/lib/utils";
 const WeatherWidget: React.FC<{
   userLocation?: LocationData;
   onLocationUpdate?: (location: LocationData) => void;
-}> = ({ userLocation, onLocationUpdate }) => {
+  className?: string;
+}> = ({ userLocation, onLocationUpdate, className }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [isLoadingRecommendation, setIsLoadingRecommendation] = useState(false);
@@ -659,7 +660,12 @@ const WeatherWidget: React.FC<{
   }
 
   return (
-    <div className="space-y-4 max-w-full overflow-x-hidden w-full py-4 lg:px-4">
+    <div
+      className={cn(
+        "space-y-4 max-w-full overflow-x-hidden w-full py-4 lg:px-4",
+        className
+      )}
+    >
       {/* Location Button */}
       <div className="flex justify-between items-center">
         <Button
