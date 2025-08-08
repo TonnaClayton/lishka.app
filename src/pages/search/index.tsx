@@ -124,7 +124,7 @@ const SearchPage: React.FC = () => {
   // Scroll to bottom of messages when new messages are added
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, followUpQuestions, followUpLoading]);
 
   // Listen for units changes from settings
   useEffect(() => {
@@ -396,17 +396,40 @@ const SearchPage: React.FC = () => {
       });
       let questions: string[] = [];
       try {
+        // First try to parse as regular JSON
         questions = JSON.parse(aiResponse.text);
-        if (!Array.isArray(questions)) throw new Error();
-      } catch {
-        // fallback: try to extract array from text
-        const match = aiResponse.text.match(/\[(.*?)\]/s);
-        if (match) {
+        if (!Array.isArray(questions)) throw new Error("Not an array");
+      } catch (err) {
+        // Try to extract array from quoted string
+        try {
+          const trimmedText = aiResponse.text.trim();
+          // Remove outer quotes if present
+          const cleanText =
+            trimmedText.startsWith('"') && trimmedText.endsWith('"')
+              ? trimmedText.slice(1, -1)
+              : trimmedText;
+
+          // Parse the cleaned text
+          questions = JSON.parse(cleanText);
+          if (!Array.isArray(questions)) throw new Error("Still not an array");
+        } catch (secondErr) {
+          // Final fallback: try to extract array using regex
           try {
-            questions = JSON.parse(`[${match[1]}]`);
-          } catch {}
+            const match = aiResponse.text.match(/\[(.*?)\]/s);
+            if (match) {
+              const arrayContent = match[1];
+              // Split by comma and clean up quotes
+              questions = arrayContent
+                .split(",")
+                .map((item) => item.trim().replace(/^["']|["']$/g, ""))
+                .filter((item) => item.length > 0);
+            }
+          } catch (thirdErr) {
+            questions = [];
+          }
         }
       }
+
       setFollowUpQuestions(
         Array.isArray(questions)
           ? questions.filter((q) => typeof q === "string" && q.length > 0)
@@ -618,6 +641,22 @@ const SearchPage: React.FC = () => {
                 </div>
               ))}
 
+              {isMobile && (
+                <div className="flex flex-col gap-2">
+                  {followUpQuestions.length > 0 && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Follow-up questions
+                    </p>
+                  )}
+                  <FollowUpQuestions
+                    followUpQuestions={followUpQuestions}
+                    followUpLoading={followUpLoading}
+                    loading={loading}
+                    handleSuggestionClick={handleSuggestionClick}
+                  />
+                </div>
+              )}
+
               {loading && (
                 <div className="flex justify-start">
                   <div className="max-w-[85%] rounded-lg px-4 py-3 bg-gray-100 dark:bg-gray-800">
@@ -636,22 +675,6 @@ const SearchPage: React.FC = () => {
                   <Card className="p-3 bg-red-100 dark:bg-red-900/30 border-red-200 dark:border-red-900 text-red-800 dark:text-red-300 text-sm">
                     {error}
                   </Card>
-                </div>
-              )}
-
-              {isMobile && (
-                <div className="flex flex-col gap-2">
-                  {followUpQuestions.length > 0 && (
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Follow-up questions
-                    </p>
-                  )}
-                  <FollowUpQuestions
-                    followUpQuestions={followUpQuestions}
-                    followUpLoading={followUpLoading}
-                    loading={loading}
-                    handleSuggestionClick={handleSuggestionClick}
-                  />
                 </div>
               )}
 
