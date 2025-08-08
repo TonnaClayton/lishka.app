@@ -174,7 +174,7 @@ const SearchPage: React.FC = () => {
 
       const systemMessage = {
         role: "system",
-        content: `You are a fishing expert AI that provides helpful information about fishing techniques, fish species, and fishing locations. ${unitsInstruction} If you mention specific fish species, provide detailed information about them including name, scientific name, habitat, difficulty level, and season availability. ${useLocationContext ? "Focus on fish species and fishing techniques relevant to the user's location." : "Provide global information without focusing on any specific location."}`,
+        content: `You are a fishing expert AI that provides helpful information about fishing techniques, fish species, and fishing locations. ${unitsInstruction} If you mention specific fish species, provide detailed information about them including name, scientific name, habitat, difficulty level, and season availability. ${useLocationContext ? "Focus on fish species and fishing techniques relevant to the user's location." : "Provide global information without focusing on any specific location."}. Make sure to close every open [FISH_DATA] tag.`,
       };
 
       const previousMessages = messages
