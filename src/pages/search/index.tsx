@@ -815,27 +815,27 @@ const FollowUpQuestions = ({
   return (
     <TooltipProvider>
       {followUpLoading ? (
-        <div className="flex flex-wrap gap-2 mb-3 w-full max-w-2xl mx-auto">
+        <div className="flex overflow-x-auto gap-2 mb-3 w-full max-w-2xl mx-auto scrollbar-hide">
           {[1, 2, 3].map((i) => (
             <div
               key={`skeleton-chip-${i}`}
-              className="rounded-full px-4 py-2 bg-gray-200 dark:bg-gray-700 animate-pulse h-8 w-32"
+              className="rounded-full px-4 py-2 bg-gray-200 dark:bg-gray-700 animate-pulse h-8 w-32 flex-shrink-0"
             />
           ))}
         </div>
       ) : followUpQuestions.length > 0 ? (
-        <div className="flex flex-wrap gap-2 mb-3 w-full max-w-2xl mx-auto">
+        <div className="flex overflow-x-auto gap-2 pb-3 mb-1 w-full max-w-2xl mx-auto scrollbar-hide">
           {followUpQuestions.map((q, i) => (
             <Tooltip key={`followup-tooltip-${i}`}>
               <TooltipTrigger asChild>
                 <Button
                   key={`followup-${i}`}
                   variant="outline"
-                  className="rounded-full px-2 py-2 text-xs truncate justify-start w-fit max-w-xs sm:max-w-lg overflow-hidden whitespace-nowrap"
+                  className="rounded-full px-2 py-2 text-xs truncate justify-start flex-shrink-0 overflow-hidden whitespace-nowrap bg-[#025DFB1A] hover:bg-[#025DFB33] text-[#0251FB] hover:text-[#0251FB] shadow-none border-none"
                   onClick={() => handleSuggestionClick(q)}
                   disabled={loading}
                 >
-                  <span className="truncate min-w-0 block">{q}</span>
+                  <span className="">{q}</span>
                 </Button>
               </TooltipTrigger>
               <TooltipContent side="top">{q}</TooltipContent>
