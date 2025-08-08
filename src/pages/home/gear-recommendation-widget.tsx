@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Package, Waves, Loader2, AlertCircle } from "lucide-react";
-import LoadingDots from "./loading-dots";
+import LoadingDots from "@/components/loading-dots";
 import { useAuth } from "@/contexts/auth-context";
-import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
@@ -112,7 +110,7 @@ const GearRecommendationWidget: React.FC = () => {
               ) {
                 log(
                   "[GearRecommendation] Location changed to:",
-                  locationData.name,
+                  locationData.name
                 );
                 return locationData;
               }
@@ -140,7 +138,7 @@ const GearRecommendationWidget: React.FC = () => {
         ) {
           log(
             "[GearRecommendation] Using default location:",
-            defaultLocation.name,
+            defaultLocation.name
           );
           return defaultLocation;
         }
@@ -178,7 +176,7 @@ const GearRecommendationWidget: React.FC = () => {
     // Listen for custom location change events (same-page changes)
     window.addEventListener(
       "locationChanged",
-      handleLocationChange as EventListener,
+      handleLocationChange as EventListener
     );
 
     // Start polling as fallback
@@ -188,7 +186,7 @@ const GearRecommendationWidget: React.FC = () => {
       window.removeEventListener("storage", loadLocation);
       window.removeEventListener(
         "locationChanged",
-        handleLocationChange as EventListener,
+        handleLocationChange as EventListener
       );
       if (locationCheckInterval) {
         clearInterval(locationCheckInterval);
@@ -257,7 +255,7 @@ const GearRecommendationWidget: React.FC = () => {
   // Generate cache key for analysis results
   const getCacheKey = (
     location: { latitude: number; longitude: number; name: string },
-    gearIds: string[],
+    gearIds: string[]
   ) => {
     const locationKey = `${location.latitude.toFixed(3)}-${location.longitude.toFixed(3)}-${location.name}`;
     const gearKey = gearIds.sort().join(",");
@@ -333,7 +331,7 @@ const GearRecommendationWidget: React.FC = () => {
 
       const recommendations = await generateAIRecommendations(
         userGear,
-        weatherConditions,
+        weatherConditions
       );
 
       // Phase 3: Complete
@@ -442,7 +440,7 @@ const GearRecommendationWidget: React.FC = () => {
   // Generate AI recommendations
   const generateAIRecommendations = async (
     gear: GearItem[],
-    conditions: WeatherConditions,
+    conditions: WeatherConditions
   ): Promise<AIRecommendation[]> => {
     if (!config.VITE_OPENAI_API_KEY) {
       log("[GearRecommendation] No OpenAI API key available");
@@ -463,7 +461,7 @@ User's Gear Collection:
 ${gear
   .map(
     (item, index) =>
-      `${index + 1}. ID: ${item.id} | Name: ${item.name} | Category: ${item.category} | Type: ${item.gearType || "Unknown"} | Target: ${item.targetFish || "Various"} | Depth: ${item.depthRange || "Any"}`,
+      `${index + 1}. ID: ${item.id} | Name: ${item.name} | Category: ${item.category} | Type: ${item.gearType || "Unknown"} | Target: ${item.targetFish || "Various"} | Depth: ${item.depthRange || "Any"}`
   )
   .join("\n")}
 
@@ -496,7 +494,7 @@ Rank ALL gear items (score 1-100) based on suitability for current surface condi
             max_tokens: 2000,
             temperature: 0.3,
           }),
-        },
+        }
       );
 
       if (!response.ok) {

@@ -1,6 +1,6 @@
 import React from "react";
-import { Skeleton } from "../ui/skeleton";
-import { Card, CardContent } from "../ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Card, CardContent } from "@/components/ui/card";
 import FishingTipsSkeleton from "./fishing-tips-skeleton";
 import GearRecommendationSkeleton from "./gear-recommendation-skeleton";
 import ToxicFishSkeleton from "./toxic-fish-skeleton";
