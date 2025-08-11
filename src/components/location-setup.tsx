@@ -9,6 +9,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { motion, AnimatePresence } from "framer-motion";
 import { log } from "@/lib/logging";
+import { useUpdateProfile } from "@/hooks/queries";
 
 interface LocationSetupProps {
   onLocationSet: (location: { lat: number; lng: number; name: string }) => void;
@@ -30,6 +31,7 @@ const LocationSetup = ({
     name: string;
   } | null>(null);
   const [countdown, setCountdown] = useState<number | null>(null);
+  const updateProfile = useUpdateProfile();
 
   const handleDetectLocation = () => {
     setIsDetecting(true);
@@ -150,9 +152,6 @@ const LocationSetup = ({
 
   const handleContinue = () => {
     if (location) {
-      // Save location to localStorage for other components to use
-      localStorage.setItem("userLocation", location.name);
-
       // Also save the full location object for components that need coordinates
       const fullLocationData = {
         latitude: location.lat,
@@ -163,13 +162,10 @@ const LocationSetup = ({
             : location.name,
       };
 
-      localStorage.setItem(
-        "userLocationFull",
-        JSON.stringify(fullLocationData),
-      );
-
-      // Force a storage event to notify other components
-      window.dispatchEvent(new Event("storage"));
+      updateProfile.mutate({
+        location_coordinates: fullLocationData,
+        location: location.name,
+      });
 
       // Call the onLocationSet callback with the location data
       onLocationSet(location);

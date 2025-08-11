@@ -1,11 +1,9 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect, useMemo, useState } from "react";
 import { log } from "@/lib/logging";
-import {
-  useLocationStorage,
-  LocationData,
-  locationQueryKeys,
-} from "./use-location-storage";
+import { LocationData, locationQueryKeys } from "./use-location-storage";
+import { useProfile, useUpdateProfile } from "@/hooks/queries";
+import { useAuth } from "@/contexts/auth-context";
 
 // Default location (Malta)
 const DEFAULT_LOCATION: LocationData = {
@@ -14,23 +12,25 @@ const DEFAULT_LOCATION: LocationData = {
   name: "Malta",
 };
 
-export const useLocation = (userLocation?: LocationData) => {
+export const useUserLocation = () => {
   const queryClient = useQueryClient();
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(
-    null
+    null,
   );
+  const updateProfile = useUpdateProfile();
+  const { user } = useAuth();
+  const { data: profile, isLoading: isLoadingProfile } = useProfile(user?.id);
+  const userLocation = useMemo(() => {
+    const locationCoordinates = profile?.location_coordinates as any;
 
-  const {
-    savedLocation,
-    isLoading: isLoadingSaved,
-    error: savedLocationError,
-    saveLocation,
-    saveLocationAsync,
-    clearLocation,
-    clearLocationAsync,
-    isSaving,
-    isClearing,
-  } = useLocationStorage();
+    return locationCoordinates
+      ? {
+          latitude: locationCoordinates.latitude,
+          longitude: locationCoordinates.longitude,
+          name: profile.location || "Unknown Location",
+        }
+      : null;
+  }, [profile]);
 
   // Query for the current active location
   const locationQuery = useQuery({
@@ -41,26 +41,18 @@ export const useLocation = (userLocation?: LocationData) => {
       // First priority: use the location passed as a prop
       if (userLocation) {
         log(
-          `Using provided user location: ${userLocation.name} (${userLocation.latitude}, ${userLocation.longitude})`
+          `Using provided user location: ${userLocation.name} (${userLocation.latitude}, ${userLocation.longitude})`,
         );
         locationToUse = userLocation;
-      } else if (savedLocation) {
-        // Second priority: use saved location from localStorage
-        log(
-          `Using saved location: ${savedLocation.name} (${savedLocation.latitude}, ${savedLocation.longitude})`
-        );
-        locationToUse = savedLocation;
       } else {
         // Third priority: use default location
         log("No location found, setting Malta as default");
         locationToUse = DEFAULT_LOCATION;
-        // Also save to localStorage
-        saveLocation(DEFAULT_LOCATION);
       }
 
       return locationToUse;
     },
-    enabled: !isLoadingSaved, // Only run when saved location is loaded
+    enabled: !!userLocation, // Only run when saved location is loaded
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
   });
@@ -81,7 +73,10 @@ export const useLocation = (userLocation?: LocationData) => {
       }
 
       // Save to localStorage
-      await saveLocationAsync(newLocation);
+      await updateProfile.mutateAsync({
+        location_coordinates: newLocation,
+        location: newLocation.name,
+      });
 
       return newLocation;
     },
@@ -89,7 +84,7 @@ export const useLocation = (userLocation?: LocationData) => {
       // Update the current location cache
       queryClient.setQueryData(
         locationQueryKeys.userLocation(),
-        updatedLocation
+        updatedLocation,
       );
       setCurrentLocation(updatedLocation);
     },
@@ -115,9 +110,18 @@ export const useLocation = (userLocation?: LocationData) => {
       // Update the current location cache
       queryClient.setQueryData(
         locationQueryKeys.userLocation(),
-        refreshedLocation
+        refreshedLocation,
       );
       setCurrentLocation(refreshedLocation);
+    },
+  });
+
+  const clearLocation = useMutation({
+    mutationFn: async () => {
+      await updateProfile.mutateAsync({
+        location_coordinates: null,
+        location: null,
+      });
     },
   });
 
@@ -145,27 +149,20 @@ export const useLocation = (userLocation?: LocationData) => {
   return {
     // Current location state
     location: currentLocation,
-    isLoading: locationQuery.isLoading || isLoadingSaved,
-    error: locationQuery.error || savedLocationError,
-
-    // Saved location state
-    savedLocation,
-    isLoadingSaved,
-    savedLocationError,
+    isLoading: locationQuery.isLoading || isLoadingProfile,
+    error: locationQuery.error,
 
     // Mutations
     updateLocation: updateLocationMutation.mutate,
     updateLocationAsync: updateLocationMutation.mutateAsync,
     refreshLocation: refreshLocationMutation.mutate,
     refreshLocationAsync: refreshLocationMutation.mutateAsync,
-    clearLocation,
-    clearLocationAsync,
+    clearLocation: clearLocation.mutate,
+    clearLocationAsync: clearLocation.mutateAsync,
 
     // Loading states
     isUpdating: updateLocationMutation.isPending,
     isRefreshing: refreshLocationMutation.isPending,
-    isSaving,
-    isClearing,
 
     // Helper functions
     hasLocation: !!currentLocation,

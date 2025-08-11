@@ -9,7 +9,7 @@ const supabaseKey = config.VITE_SUPABASE_ANON_KEY || config.VITE_SUPABASE_KEY;
 
 if (!supabaseUrl) {
   console.error(
-    "Missing Supabase URL. Please check your environment variables."
+    "Missing Supabase URL. Please check your environment variables.",
   );
   console.error("Available env vars:", {
     VITE_SUPABASE_URL: config.VITE_SUPABASE_URL,
@@ -19,7 +19,7 @@ if (!supabaseUrl) {
 
 if (!supabaseKey) {
   console.error(
-    "Missing Supabase key. Please check your environment variables."
+    "Missing Supabase key. Please check your environment variables.",
   );
   console.error("Available env vars:", {
     VITE_SUPABASE_ANON_KEY: config.VITE_SUPABASE_ANON_KEY,
@@ -81,7 +81,7 @@ export const authService = {
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(
           () => reject(new Error("Login timeout - please try again")),
-          8000
+          8000,
         );
       });
 

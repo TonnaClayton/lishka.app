@@ -40,7 +40,7 @@ export const compressImage = async (
   file: File,
   maxWidth: number = 1024,
   maxHeight: number = 1024,
-  quality: number = 0.8
+  quality: number = 0.8,
 ): Promise<{
   compressedFile: File;
   compressionInfo: {
@@ -100,7 +100,7 @@ export const compressImage = async (
             {
               type: "image/jpeg",
               lastModified: Date.now(),
-            }
+            },
           );
 
           const compressionInfo = {
@@ -128,7 +128,7 @@ export const compressImage = async (
           resolve({ compressedFile, compressionInfo });
         },
         "image/jpeg",
-        quality
+        quality,
       );
     };
 
@@ -157,7 +157,7 @@ export const extractImageMetadata = (file: File): Promise<any> => {
  * Extract GPS coordinates from EXIF data
  */
 export const extractGPSFromEXIF = (
-  exifData: any
+  exifData: any,
 ): { latitude: number; longitude: number } | null => {
   try {
     const lat = exifData.GPSLatitude;
@@ -221,7 +221,7 @@ export const getCurrentLocation = (): Promise<{
         enableHighAccuracy: true,
         timeout: 10000,
         maximumAge: 300000, // 5 minutes
-      }
+      },
     );
   });
 };
@@ -231,11 +231,11 @@ export const getCurrentLocation = (): Promise<{
  */
 export const coordinatesToAddress = async (
   latitude: number,
-  longitude: number
+  longitude: number,
 ): Promise<string> => {
   try {
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
     );
 
     if (!response.ok) {
@@ -262,7 +262,7 @@ export const coordinatesToAddress = async (
   } catch (error) {
     console.error(
       "[ImageMetadata] Error converting coordinates to address:",
-      error
+      error,
     );
     return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
   }
@@ -272,7 +272,7 @@ export const coordinatesToAddress = async (
  * Identify fish using OpenAI Vision API with timeout and image compression
  */
 export const identifyFishFromImage = async (
-  imageFile: File
+  imageFile: File,
 ): Promise<{
   name: string;
   estimatedSize: string;
@@ -293,7 +293,7 @@ export const identifyFishFromImage = async (
   const startTime = Date.now();
   const isMobile =
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
+      navigator.userAgent,
     );
 
   log("🐟 [MOBILE OPENAI DEBUG] Starting fish identification process", {
@@ -346,7 +346,7 @@ export const identifyFishFromImage = async (
         {
           isMobile,
           deviceType: isMobile ? "mobile" : "desktop",
-        }
+        },
       );
       debugInfo.processingSteps.push("OpenAI disabled in configuration");
       return {
@@ -380,7 +380,7 @@ export const identifyFishFromImage = async (
         {
           isMobile,
           deviceType: isMobile ? "mobile" : "desktop",
-        }
+        },
       );
       debugInfo.processingSteps.push("OpenAI configuration validation failed");
       return {
@@ -397,7 +397,7 @@ export const identifyFishFromImage = async (
       {
         isMobile,
         deviceType: isMobile ? "mobile" : "desktop",
-      }
+      },
     );
 
     // Skip compression here since it should already be done in ProfilePage
@@ -424,7 +424,7 @@ export const identifyFishFromImage = async (
         reason:
           "Compression should be handled in ProfilePage before this function",
         isOptimalSize: imageFile.size < 3 * 1024 * 1024, // Under 3MB is good for AI
-      }
+      },
     );
 
     // Convert image to base64 with timeout
@@ -574,7 +574,7 @@ CRITICAL REQUIREMENTS:
         messageCount: requestBody.messages.length,
         hasImageContent: Array.isArray(requestBody.messages[1].content)
           ? requestBody.messages[1].content.some(
-              (c: any) => c.type === "image_url"
+              (c: any) => c.type === "image_url",
             )
           : false,
         maxTokens: requestBody.max_tokens,
@@ -596,7 +596,7 @@ CRITICAL REQUIREMENTS:
           signal: controller.signal,
           // Add headers to handle larger payloads
           keepalive: false,
-        }
+        },
       );
 
       clearTimeout(timeoutId);
@@ -613,7 +613,7 @@ CRITICAL REQUIREMENTS:
         isSlowResponse: requestTime > 20000,
       });
       debugInfo.processingSteps.push(
-        `OpenAI response received (${response.status}, ${requestTime}ms)`
+        `OpenAI response received (${response.status}, ${requestTime}ms)`,
       );
 
       if (!response.ok) {
@@ -627,7 +627,7 @@ CRITICAL REQUIREMENTS:
           requestTime,
         });
         debugInfo.processingSteps.push(
-          `OpenAI API error: ${response.status} - ${errorText}`
+          `OpenAI API error: ${response.status} - ${errorText}`,
         );
         throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
       }
@@ -751,10 +751,10 @@ CRITICAL REQUIREMENTS:
         } catch (manualError) {
           console.error(
             "❌ [OPENAI DEBUG] Manual extraction also failed:",
-            manualError
+            manualError,
           );
           debugInfo.processingSteps.push(
-            `Manual extraction failed: ${manualError.message}`
+            `Manual extraction failed: ${manualError.message}`,
           );
           return {
             name: "Unknown",
@@ -807,7 +807,7 @@ CRITICAL REQUIREMENTS:
           compressionInfo,
         });
         debugInfo.processingSteps.push(
-          `Fish identification successful (${totalTime}ms total)`
+          `Fish identification successful (${totalTime}ms total)`,
         );
         return {
           ...fishInfo,
@@ -830,7 +830,7 @@ CRITICAL REQUIREMENTS:
               "estimatedWeight",
               "confidence",
             ],
-          }
+          },
         );
 
         // Try to fix the response by providing defaults for missing fields
@@ -866,7 +866,7 @@ CRITICAL REQUIREMENTS:
           {
             totalTime,
             timeout: "30 seconds",
-          }
+          },
         );
         debugInfo.processingSteps.push(`Request timed out (${totalTime}ms)`);
         return {
@@ -930,12 +930,12 @@ CRITICAL REQUIREMENTS:
  */
 export const processImageUpload = async (
   file: File,
-  preObtainedLocation?: { latitude: number; longitude: number } | null
+  preObtainedLocation?: { latitude: number; longitude: number } | null,
 ): Promise<ImageMetadata> => {
   // Detect device type and capture comprehensive device info
   const isMobile =
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent
+      navigator.userAgent,
     );
   const deviceInfo = {
     isMobile,
@@ -1052,7 +1052,7 @@ export const processImageUpload = async (
         try {
           log(
             "🔍 [TWO-STAGE AI] No GPS in EXIF and no pre-obtained location, trying current location:",
-            { isMobile }
+            { isMobile },
           );
 
           const locationStartTime = Date.now();
@@ -1178,7 +1178,7 @@ export const processImageUpload = async (
           classificationResult.confidence > 0.3
         ) {
           log(
-            "🐟 [TWO-STAGE AI] Stage 2: Fish detected, running detailed identification..."
+            "🐟 [TWO-STAGE AI] Stage 2: Fish detected, running detailed identification...",
           );
           const detailedAnalysisStart = Date.now();
 
@@ -1217,7 +1217,7 @@ export const processImageUpload = async (
                 hasCompressionInfo: !!identificationResult?.compressionInfo,
                 compressionRatio:
                   identificationResult?.compressionInfo?.compressionRatio,
-              }
+              },
             );
           } catch (detailedError) {
             console.error(
@@ -1227,7 +1227,7 @@ export const processImageUpload = async (
                 error: detailedError.message,
                 errorType: detailedError.constructor.name,
                 willCreateBasicFishInfo: true,
-              }
+              },
             );
 
             // Create basic fish info based on classification result
@@ -1333,7 +1333,7 @@ export const processImageUpload = async (
             fishInfo: metadata.fishInfo,
             reason: "fishInfo was unexpectedly null",
             deviceType: isMobile ? "mobile" : "desktop",
-          }
+          },
         );
       }
     } catch (error) {
@@ -1370,7 +1370,7 @@ export const processImageUpload = async (
   } catch (error) {
     const isMobile =
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent
+        navigator.userAgent,
       );
     console.error(
       "❌ [TWO-STAGE AI] Metadata processing failed or timed out:",
@@ -1384,7 +1384,7 @@ export const processImageUpload = async (
           size: file.size,
           type: file.type,
         },
-      }
+      },
     );
     // Return basic metadata if processing fails
     return metadata;

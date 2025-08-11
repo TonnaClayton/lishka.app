@@ -15,7 +15,6 @@ import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
 import { useImperialUnits } from "@/lib/unit-conversion";
 import BottomNav from "@/components/bottom-nav";
 import TextareaAutosize from "react-textarea-autosize";
-import { useAuth } from "@/contexts/auth-context";
 import useDeviceSize from "@/hooks/use-device-size";
 import useIsMobile from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
@@ -26,6 +25,7 @@ import {
   TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
+import { useUserLocation } from "@/hooks/queries";
 
 interface Message {
   id: string;
@@ -56,7 +56,7 @@ const DEFAULT_SUGGESTIONS = [
 
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { location } = useUserLocation();
 
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -68,7 +68,6 @@ const SearchPage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imperialUnits, setImperialUnits] =
     useState<boolean>(useImperialUnits());
-  const [currentLocation, setCurrentLocation] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -77,49 +76,6 @@ const SearchPage: React.FC = () => {
 
   const deviceSize = useDeviceSize();
   const isMobile = useIsMobile();
-
-  // Get user location from multiple sources
-  useEffect(() => {
-    const getUserLocation = () => {
-      // First try profile location
-      if (profile?.location && profile.location.trim()) {
-        setCurrentLocation(profile.location);
-        return;
-      }
-
-      // Then try localStorage location
-      try {
-        const savedLocation = localStorage.getItem("userLocationFull");
-        if (savedLocation) {
-          const parsedLocation = JSON.parse(savedLocation);
-          if (parsedLocation?.name) {
-            setCurrentLocation(parsedLocation.name);
-            return;
-          }
-        }
-      } catch (error) {
-        console.error("Error parsing saved location:", error);
-      }
-
-      // Fallback to default
-      setCurrentLocation("Malta");
-    };
-
-    getUserLocation();
-
-    // Listen for location changes
-    const handleLocationChange = () => {
-      getUserLocation();
-    };
-
-    window.addEventListener("storage", handleLocationChange);
-    window.addEventListener("locationChanged", handleLocationChange);
-
-    return () => {
-      window.removeEventListener("storage", handleLocationChange);
-      window.removeEventListener("locationChanged", handleLocationChange);
-    };
-  }, [profile?.location]);
 
   // Scroll to bottom of messages when new messages are added
   useEffect(() => {
@@ -150,7 +106,7 @@ const SearchPage: React.FC = () => {
   const processQuery = async (
     queryText: string,
     userMessage: Message,
-    imageFile?: File
+    imageFile?: File,
   ) => {
     try {
       // Check if OpenAI is disabled
@@ -163,7 +119,7 @@ const SearchPage: React.FC = () => {
       const apiKey = config.VITE_OPENAI_API_KEY;
       if (!apiKey) {
         throw new Error(
-          "OpenAI API key is missing. Please add it in project settings."
+          "OpenAI API key is missing. Please add it in project settings.",
         );
       }
 
@@ -242,7 +198,7 @@ const SearchPage: React.FC = () => {
             ],
             max_tokens: imageFile ? 1000 : undefined,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -257,7 +213,7 @@ const SearchPage: React.FC = () => {
       // Extract fish data if present
       let fishData: Fish[] = [];
       const fishDataMatch = assistantResponse.match(
-        /\[FISH_DATA\](.+?)\[\/?FISH_DATA\]/s
+        /\[FISH_DATA\](.+?)\[\/?FISH_DATA\]/s,
       );
 
       let cleanedResponse = assistantResponse;
@@ -282,7 +238,7 @@ const SearchPage: React.FC = () => {
           // Remove the fish data section from the displayed response
           cleanedResponse = assistantResponse.replace(
             /\[FISH_DATA\].+?\[\/?FISH_DATA\]/s,
-            ""
+            "",
           );
         } catch (err) {
           console.error("Error parsing fish data:", err);
@@ -343,7 +299,7 @@ const SearchPage: React.FC = () => {
       await processQuery(
         currentQuery || "What can you tell me about this image?",
         userMessage,
-        currentImageFile || undefined
+        currentImageFile || undefined,
       );
     } catch (err) {
       console.error("Error in handleSubmit:", err);
@@ -433,7 +389,7 @@ const SearchPage: React.FC = () => {
       setFollowUpQuestions(
         Array.isArray(questions)
           ? questions.filter((q) => typeof q === "string" && q.length > 0)
-          : []
+          : [],
       );
     } catch (err) {
       setFollowUpQuestions([]);
@@ -486,7 +442,7 @@ const SearchPage: React.FC = () => {
           />
           <span className="text-xs text-blue-500 dark:text-blue-400">
             {useLocationContext
-              ? currentLocation || "Getting location..."
+              ? location?.name || "Getting location..."
               : "Global search"}
           </span>
           <Switch
@@ -502,13 +458,13 @@ const SearchPage: React.FC = () => {
         <div
           className={cn(
             "flex-1 h-full",
-            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-16"
+            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-16",
           )}
         >
           <div
             className={cn(
               "flex flex-col items-center justify-center px-4 max-w-2xl mx-auto text-center space-y-6",
-              !(isMobile && deviceSize.height < 850) && "h-full"
+              !(isMobile && deviceSize.height < 850) && "h-full",
             )}
           >
             <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
@@ -629,7 +585,7 @@ const SearchPage: React.FC = () => {
                                 onClick={() => {
                                   navigate(
                                     `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
-                                    { state: { fish } }
+                                    { state: { fish } },
                                   );
                                 }}
                               />
