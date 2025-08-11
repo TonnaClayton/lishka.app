@@ -1,0 +1,167 @@
+import { useQuery } from "@tanstack/react-query";
+import { generateTextWithAI } from "@/lib/ai";
+import {
+    getFishImageUrl as getFishImageUrlFromService,
+    getPlaceholderFishImage,
+} from "@/lib/fish-image-service";
+import { config } from "@/lib/config";
+import { log } from "@/lib/logging";
+import {
+    validateAndSanitizeRegulations,
+    validateFishingData,
+} from "@/lib/fish";
+
+// Types for fish details
+export interface FishingGear {
+    rods?: string;
+    reels?: string;
+    line?: string;
+    leader?: string;
+    bait?: string[];
+    lures?: string[];
+    depth?: string;
+    jigType?: string;
+    jigWeight?: string;
+    jigColor?: string;
+    rodType?: string;
+    reelType?: string;
+    hookSize?: string;
+    rigType?: string;
+    weight?: string;
+    lureType?: string;
+    lureSize?: string;
+    lureColor?: string;
+    trollingSpeed?: string;
+    [key: string]: any;
+}
+
+export interface FishingMethod {
+    title?: string;
+    method?: string;
+    description?: string;
+    gear?: FishingGear;
+    proTip?: string;
+    [key: string]: any;
+}
+
+export interface FishingRegulations {
+    sizeLimit: {
+        value: string;
+        source: string;
+        confidence: string;
+    };
+    bagLimit: {
+        value: string;
+        source: string;
+        confidence: string;
+    };
+    seasonDates: {
+        value: string;
+        source: string;
+        confidence: string;
+    };
+    licenseRequired: {
+        value: string;
+        source: string;
+        confidence: string;
+    };
+    additionalRules: Array<{
+        rule: string;
+        source: string;
+        confidence: string;
+    }>;
+    penalties: {
+        value: string;
+        source: string;
+        confidence: string;
+    };
+    lastUpdated: string;
+    validationFlags?: {
+        suspiciousSourcesDetected: boolean;
+        genericSourcesReplaced: boolean;
+        confidenceDowngraded: boolean;
+    };
+    lastValidated?: string;
+}
+
+export interface FishingSeasons {
+    inSeason: string[];
+    traditionalSeason: string[];
+    conservationConcerns: string;
+    regulations: string;
+    notInSeason: string[];
+    reasoning: string;
+}
+
+export interface FishDetails {
+    name: string;
+    scientificName: string;
+    description: string;
+    image?: string;
+    fishingMethods?: FishingMethod[];
+    fishingSeasons?: FishingSeasons;
+    fishingRegulations?: FishingRegulations;
+    allRoundGear?: FishingGear;
+    localNames?: string[];
+    currentSeasonStatus?: string;
+    officialSeasonDates?: string;
+    fishingLocation?: string;
+    isToxic?: boolean;
+    dangerType?: string;
+}
+
+const fetchFishDetails = async (
+    fishName: string,
+    location: string,
+    initialData?: any,
+) => {
+    try {
+    } catch (err) {
+        throw err;
+    }
+};
+
+// React Query hook for fish details
+export const useFishDetails = (
+    fishName: string,
+    location: string,
+    initialData?: any,
+    enabled: boolean = true,
+) => {
+    return useQuery({
+        queryKey: ["fishDetails", fishName, location],
+        queryFn: () => fetchFishDetails(fishName, location, initialData),
+        enabled: enabled && !!fishName && !!location,
+        staleTime: 24 * 60 * 60 * 1000, // 24 hours
+        gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days
+        retry: 2,
+        retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    });
+};
+
+// React Query hook for fish image
+export const useFishImage = (
+    fishName: string,
+    scientificName: string,
+    enabled: boolean = true,
+) => {
+    return useQuery({
+        queryKey: ["fishImage", fishName, scientificName],
+        queryFn: async () => {
+            try {
+                const imageUrl = await getFishImageUrlFromService(
+                    fishName,
+                    scientificName,
+                );
+                return imageUrl;
+            } catch (error) {
+                console.error(`Error loading fish image:`, error);
+                return getPlaceholderFishImage();
+            }
+        },
+        enabled: enabled && !!fishName,
+        staleTime: 7 * 24 * 60 * 60 * 1000, // 7 days
+        gcTime: 30 * 24 * 60 * 60 * 1000, // 30 days
+        retry: 1,
+    });
+};

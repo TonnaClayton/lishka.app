@@ -13,10 +13,8 @@ import GearRecommendationWidget from "./gear-recommendation-widget";
 import HomePageSkeleton from "./home-page-skeleton";
 import ToxicFishSkeleton from "./toxic-fish-skeleton";
 import FishingTipsCarousel from "./fishing-tips-carousel";
-import { log } from "@/lib/logging";
 
 // Import Dialog components from ui folder
-import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog";
 import {
   useFishDataInfinite,
   useProfile,
@@ -53,6 +51,21 @@ const HomePage: React.FC<HomePageProps> = ({
 
   const userLocation = useMemo(() => {
     return profile?.location || DEFAULT_LOCATION.name;
+  }, [profile]);
+
+  const openLocationModal = useMemo(() => {
+    if (profile == undefined) {
+      return false;
+    }
+
+    if (
+      profile?.location == "" ||
+      profile?.location == null ||
+      isLocationModalOpen
+    ) {
+      return true;
+    }
+    return false;
   }, [profile]);
 
   // React Query hooks
@@ -371,9 +384,9 @@ const HomePage: React.FC<HomePageProps> = ({
       <BottomNav />
       {/* Location Modal */}
       <LocationModal
-        isOpen={isLocationModalOpen || profile?.location == ""}
+        isOpen={openLocationModal}
         onClose={() => {
-          if (profile?.location != "") {
+          if (profile?.location != "" && profile?.location != null) {
             setIsLocationModalOpen(false);
           }
         }}
