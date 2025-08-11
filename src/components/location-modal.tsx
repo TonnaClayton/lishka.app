@@ -2,7 +2,13 @@ import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { MapPin, Navigation, Check } from "lucide-react";
 import LoadingDots from "./loading-dots";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "./ui/dialog";
 import {
   MapContainer,
   TileLayer,
@@ -13,12 +19,16 @@ import {
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { log } from "@/lib/logging";
+import { useUpdateProfile, useUserLocation } from "@/hooks/queries";
+import { DEFAULT_LOCATION } from "@/lib/const";
 
 interface LocationData {
   latitude: number;
   longitude: number;
   name: string;
   countryCode?: string;
+  state?: string;
+  city?: string;
 }
 
 interface LocationModalProps {
@@ -27,6 +37,7 @@ interface LocationModalProps {
   onLocationSelect: (location: LocationData) => void;
   currentLocation?: LocationData | null;
   title?: string;
+  trigger?: React.ReactNode;
 }
 
 // Fix Leaflet icon issue with proper CDN URLs
@@ -41,39 +52,18 @@ L.Icon.Default.mergeOptions({
 });
 
 // Map Selection Component
-const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
+const MapSelection = ({
+  onLocationSelect,
+  currentLocation,
+}: {
+  onLocationSelect: (location: LocationData) => void;
+  currentLocation: LocationData;
+}) => {
   const [selectedPosition, setSelectedPosition] = useState<
     [number, number] | null
   >(null);
   const [locationName, setLocationName] = useState("");
   const [map, setMap] = useState<L.Map | null>(null);
-
-  // Load actual coordinates from localStorage if available
-  const getDefaultPosition = () => {
-    if (currentLocation) {
-      return [
-        currentLocation.latitude || currentLocation.lat,
-        currentLocation.longitude || currentLocation.lng,
-      ];
-    }
-
-    // Try to get coordinates from localStorage
-    try {
-      const savedLocationFull = localStorage.getItem("userLocationFull");
-      if (savedLocationFull) {
-        const locationData = JSON.parse(savedLocationFull);
-        if (locationData.latitude && locationData.longitude) {
-          return [locationData.latitude, locationData.longitude];
-        }
-      }
-    } catch (e) {
-      console.warn("Could not parse saved location coordinates");
-    }
-
-    return [35.8997, 14.5146]; // Malta as fallback
-  };
-
-  const defaultPosition = getDefaultPosition();
 
   // Make selectedPosition and locationName available to parent component
   React.useEffect(() => {
@@ -82,13 +72,13 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
       selectedPosition,
       locationName,
     };
-  }, [selectedPosition, locationName]);
+  }, [selectedPosition, locationName, currentLocation]);
 
   // Set initial marker if we have a current location
   useEffect(() => {
     if (currentLocation) {
-      const lat = currentLocation.latitude || currentLocation.lat;
-      const lng = currentLocation.longitude || currentLocation.lng;
+      const lat = currentLocation.latitude;
+      const lng = currentLocation.longitude;
       if (lat && lng) {
         setSelectedPosition([lat, lng]);
         setLocationName(currentLocation.name);
@@ -105,10 +95,10 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
   // Make sure map is centered when it's created
   useEffect(() => {
     if (map && currentLocation) {
-      const lat = currentLocation.latitude || currentLocation.lat;
-      const lng = currentLocation.longitude || currentLocation.lng;
+      const lat = currentLocation.latitude;
+      const lng = currentLocation.longitude;
       log(
-        `Map created, centering on: ${lat}, ${lng} (${currentLocation.name})`,
+        `Map created, centering on: ${lat}, ${lng} (${currentLocation.name})`
       );
       map.setView([lat, lng], 15);
     }
@@ -124,7 +114,7 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
         // Attempt to get location name via reverse geocoding
         try {
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
           );
           const data = await response.json();
 
@@ -180,7 +170,12 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
   return (
     <div className="relative h-full flex flex-col gap-y-6 justify-center items-center">
       <MapContainer
-        center={defaultPosition as L.LatLngTuple}
+        center={
+          [
+            currentLocation?.latitude,
+            currentLocation?.longitude,
+          ] as L.LatLngTuple
+        }
         // Zoom in closer if we have a current location
         zoom={currentLocation ? 15 : 13}
         style={{ height: "100%", width: "100%" }}
@@ -208,16 +203,20 @@ const MapSelection = ({ onLocationSelect, currentLocation = null }) => {
   );
 };
 
-const LocationModal: React.FC<LocationModalProps> = ({
+const LocationModal = ({
   isOpen,
   onClose,
   onLocationSelect,
   currentLocation = null,
   title = "Update Your Location",
-}) => {
+  trigger,
+}: LocationModalProps) => {
   const [loading, setLoading] = useState(false);
+  const [isPending, startTransition] = React.useTransition();
+  const { updateLocationAsync } = useUserLocation();
 
-  const handleLocationUpdate = (newLocation: LocationData) => {
+  const handleLocationUpdate = async (newLocation: LocationData) => {
+    //startTransition(async () => {
     log("[LocationModal] Updating location:", newLocation);
 
     // Clean the location name
@@ -233,39 +232,27 @@ const LocationModal: React.FC<LocationModalProps> = ({
       name: cleanName,
     };
 
-    // Save both formats to localStorage
     try {
-      localStorage.setItem("userLocation", cleanName);
-      localStorage.setItem(
-        "userLocationFull",
-        JSON.stringify(fullLocationData),
-      );
-      log("[LocationModal] Saved to localStorage:", {
-        userLocation: cleanName,
-        userLocationFull: fullLocationData,
+      setLoading(true);
+      await updateLocationAsync({
+        name: cleanName,
+        latitude: newLocation.latitude,
+        longitude: newLocation.longitude,
+        countryCode: newLocation.countryCode,
+        state: newLocation.state,
+        city: newLocation.city,
       });
     } catch (error) {
-      console.error("[LocationModal] Error saving to localStorage:", error);
+      console.error("[LocationModal] Error saving to database:", error);
     }
 
-    // Add a small delay to ensure localStorage is written
-    setTimeout(() => {
-      // Force a storage event to notify other components
-      window.dispatchEvent(new Event("storage"));
-
-      // Dispatch custom location change event
-      window.dispatchEvent(
-        new CustomEvent("locationChanged", { detail: fullLocationData }),
-      );
-
-      log("[LocationModal] Events dispatched for location change");
-    }, 100);
-
+    setLoading(false);
     // Call the onLocationSelect callback with the location data
     onLocationSelect(fullLocationData);
 
     // Close the modal
     onClose();
+    // });
   };
 
   const handleDetectLocation = () => {
@@ -282,7 +269,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
           // Attempt to get location name via reverse geocoding
           try {
             const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
             );
             const data = await response.json();
             log("Reverse geocoding data:", data);
@@ -349,7 +336,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
           enableHighAccuracy: true,
           timeout: 10000,
           maximumAge: 0,
-        },
+        }
       );
     } else {
       // If geolocation is not supported, set a default location
@@ -361,7 +348,7 @@ const LocationModal: React.FC<LocationModalProps> = ({
 
       log(
         "Setting default location (no geolocation support):",
-        defaultLocation,
+        defaultLocation
       );
       handleLocationUpdate(defaultLocation);
       setLoading(false);
@@ -387,8 +374,9 @@ const LocationModal: React.FC<LocationModalProps> = ({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-[600px] w-[90%] max-h-[80vh] shadow-xl dark:bg-card dark:border-border/30 [&>button]:hidden rounded-2xl">
-        <DialogHeader className="flex flex-row items-center justify-between">
+      {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
+      <DialogContent className="sm:max-w-[600px] w-[90%] rounded-[16px] max-h-[80vh] shadow-xl dark:bg-card dark:border-border/30 [&>button]:hidden p-4">
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0">
           <DialogTitle className="dark:text-white">{title}</DialogTitle>
           <button
             onClick={onClose}
@@ -413,16 +401,16 @@ const LocationModal: React.FC<LocationModalProps> = ({
         <div className="w-full rounded-md overflow-hidden h-[400px] mb-4">
           <MapSelection
             onLocationSelect={handleLocationUpdate}
-            currentLocation={currentLocation}
+            currentLocation={currentLocation || DEFAULT_LOCATION}
           />
         </div>
-        <div className="mb-4">
+        <div className="">
           <div className="flex flex-col gap-2">
             <Button
               onClick={handleDetectLocation}
               variant="outline"
-              className="rounded-full w-full h-12 text-white bg-[#0251FB]"
-              disabled={loading}
+              className="w-full h-12 border-none shadow-none bg-[#0251FB] hover:bg-[#0251FB] text-white hover:text-white rounded-full"
+              disabled={isPending || loading}
             >
               <MapPin className="mr-2" />
               {loading ? "Detecting..." : "Detect my location"}
@@ -430,8 +418,9 @@ const LocationModal: React.FC<LocationModalProps> = ({
 
             <Button
               onClick={handleMapLocationSelect}
+              disabled={isPending}
               variant="default"
-              className="w-full h-12 rounded-full bg-[#E6EFFF] text-[#0251FB]"
+              className="confirm-location-button w-full bg-[#025DFB1A] h-12 text-[#0251FB] hover:bg-[#025DFB33] hover:text-[#0251FB] rounded-full shadow-none border-none"
             >
               Set this location
             </Button>

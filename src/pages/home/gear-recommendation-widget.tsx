@@ -1,13 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Package, Waves, Loader2, AlertCircle } from "lucide-react";
-import LoadingDots from "./loading-dots";
+import LoadingDots from "@/components/loading-dots";
 import { useAuth } from "@/contexts/auth-context";
-import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
+import { useUserLocation } from "@/hooks/queries";
 
 interface GearItem {
   id: string;
@@ -65,11 +64,7 @@ interface AnalysisState {
 const GearRecommendationWidget: React.FC = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const [location, setLocation] = useState<{
-    latitude: number;
-    longitude: number;
-    name: string;
-  } | null>(null);
+  const { location } = useUserLocation();
   const [analysis, setAnalysis] = useState<AnalysisState>({
     phase: "idle",
     weatherConditions: null,
@@ -82,119 +77,6 @@ const GearRecommendationWidget: React.FC = () => {
     profile?.gear_items && Array.isArray(profile.gear_items)
       ? profile.gear_items
       : [];
-
-  // Load location from localStorage and listen for changes
-  useEffect(() => {
-    const loadLocation = () => {
-      try {
-        const savedLocation = localStorage.getItem("userLocationFull");
-        if (savedLocation) {
-          const parsedLocation = JSON.parse(savedLocation);
-          if (
-            parsedLocation &&
-            (parsedLocation.latitude || parsedLocation.lat)
-          ) {
-            const locationData = {
-              latitude:
-                parsedLocation.latitude || parsedLocation.lat || 35.8997,
-              longitude:
-                parsedLocation.longitude || parsedLocation.lng || 14.5146,
-              name: parsedLocation.name || "Malta",
-            };
-
-            // Only update if location actually changed
-            setLocation((prevLocation) => {
-              if (
-                !prevLocation ||
-                prevLocation.latitude !== locationData.latitude ||
-                prevLocation.longitude !== locationData.longitude ||
-                prevLocation.name !== locationData.name
-              ) {
-                log(
-                  "[GearRecommendation] Location changed to:",
-                  locationData.name,
-                );
-                return locationData;
-              }
-              return prevLocation;
-            });
-            return;
-          }
-        }
-      } catch (err) {
-        console.error("[GearRecommendation] Error parsing location:", err);
-      }
-
-      // Default location
-      const defaultLocation = {
-        latitude: 35.8997,
-        longitude: 14.5146,
-        name: "Malta",
-      };
-      setLocation((prevLocation) => {
-        if (
-          !prevLocation ||
-          prevLocation.latitude !== defaultLocation.latitude ||
-          prevLocation.longitude !== defaultLocation.longitude ||
-          prevLocation.name !== defaultLocation.name
-        ) {
-          log(
-            "[GearRecommendation] Using default location:",
-            defaultLocation.name,
-          );
-          return defaultLocation;
-        }
-        return prevLocation;
-      });
-    };
-
-    // Custom event listener for location changes within the same page
-    const handleLocationChange = (event: CustomEvent) => {
-      log("[GearRecommendation] Received location change event:", event.detail);
-      loadLocation();
-    };
-
-    // Polling mechanism to detect localStorage changes (fallback)
-    let locationCheckInterval: NodeJS.Timeout;
-    let lastLocationString = localStorage.getItem("userLocationFull");
-
-    const startLocationPolling = () => {
-      locationCheckInterval = setInterval(() => {
-        const currentLocationString = localStorage.getItem("userLocationFull");
-        if (currentLocationString !== lastLocationString) {
-          log("[GearRecommendation] Location change detected via polling");
-          lastLocationString = currentLocationString;
-          loadLocation();
-        }
-      }, 1000); // Check every second
-    };
-
-    // Initial load
-    loadLocation();
-
-    // Listen for storage events (cross-tab changes)
-    window.addEventListener("storage", loadLocation);
-
-    // Listen for custom location change events (same-page changes)
-    window.addEventListener(
-      "locationChanged",
-      handleLocationChange as EventListener,
-    );
-
-    // Start polling as fallback
-    startLocationPolling();
-
-    return () => {
-      window.removeEventListener("storage", loadLocation);
-      window.removeEventListener(
-        "locationChanged",
-        handleLocationChange as EventListener,
-      );
-      if (locationCheckInterval) {
-        clearInterval(locationCheckInterval);
-      }
-    };
-  }, []);
 
   // Track previous location to detect changes
   const [previousLocation, setPreviousLocation] = useState<string | null>(null);
@@ -257,7 +139,7 @@ const GearRecommendationWidget: React.FC = () => {
   // Generate cache key for analysis results
   const getCacheKey = (
     location: { latitude: number; longitude: number; name: string },
-    gearIds: string[],
+    gearIds: string[]
   ) => {
     const locationKey = `${location.latitude.toFixed(3)}-${location.longitude.toFixed(3)}-${location.name}`;
     const gearKey = gearIds.sort().join(",");
@@ -333,7 +215,7 @@ const GearRecommendationWidget: React.FC = () => {
 
       const recommendations = await generateAIRecommendations(
         userGear,
-        weatherConditions,
+        weatherConditions
       );
 
       // Phase 3: Complete
@@ -442,7 +324,7 @@ const GearRecommendationWidget: React.FC = () => {
   // Generate AI recommendations
   const generateAIRecommendations = async (
     gear: GearItem[],
-    conditions: WeatherConditions,
+    conditions: WeatherConditions
   ): Promise<AIRecommendation[]> => {
     if (!config.VITE_OPENAI_API_KEY) {
       log("[GearRecommendation] No OpenAI API key available");
@@ -463,7 +345,7 @@ User's Gear Collection:
 ${gear
   .map(
     (item, index) =>
-      `${index + 1}. ID: ${item.id} | Name: ${item.name} | Category: ${item.category} | Type: ${item.gearType || "Unknown"} | Target: ${item.targetFish || "Various"} | Depth: ${item.depthRange || "Any"}`,
+      `${index + 1}. ID: ${item.id} | Name: ${item.name} | Category: ${item.category} | Type: ${item.gearType || "Unknown"} | Target: ${item.targetFish || "Various"} | Depth: ${item.depthRange || "Any"}`
   )
   .join("\n")}
 
@@ -496,7 +378,7 @@ Rank ALL gear items (score 1-100) based on suitability for current surface condi
             max_tokens: 2000,
             temperature: 0.3,
           }),
-        },
+        }
       );
 
       if (!response.ok) {

@@ -1,7 +1,7 @@
-import { uploadImage, getBlobStorageStatus } from "./blob-storage";
+import { getBlobStorageStatus, uploadImage } from "./blob-storage";
 import {
-  uploadImageToSupabase,
   getSupabaseStorageStatus,
+  uploadImageToSupabase,
 } from "./supabase-storage";
 import { OPENAI_ENABLED, validateOpenAIConfig } from "./openai-toggle";
 import { log } from "./logging";
@@ -76,6 +76,7 @@ export interface GearUploadResult {
  */
 export const identifyGearFromImage = async (
   imageFile: File,
+  userLocation: string,
 ): Promise<GearInfo | null> => {
   const startTime = Date.now();
   const isMobile =
@@ -140,15 +141,6 @@ export const identifyGearFromImage = async (
     log("🚀 [GEAR ID] Calling OpenAI...");
 
     // Get user location for targeted fish recommendations
-    let userLocation = "";
-    try {
-      const storedLocation = localStorage.getItem("userLocation");
-      if (storedLocation) {
-        userLocation = storedLocation;
-      }
-    } catch (error) {
-      log("[GEAR ID] Could not get user location:", error);
-    }
 
     // First, do a quick analysis to determine gear type
     const typeDetectionPrompt = `Analyze this fishing gear image and determine the primary type. Return ONLY one word: "rod", "reel", "combo", "lure", "jig", "bait", "chum", "accessory", "electronics", or "other".`;
@@ -240,7 +232,11 @@ When specifying target use or species, prioritize fishing styles and species com
   "material": "construction material (e.g., 'High carbon steel', 'Brass', 'Lead')",
   "coating": "finish or anti-corrosion layer (e.g., 'Nickel-plated', 'Teflon coated')",
   "function": "primary use (e.g., 'Secure bait presentation', 'Prevent line twist')",
-  "targetUse": "${userLocation ? `styles and species in ${userLocation}` : "intended fishing application"} (e.g., 'Light tackle shore fishing, seabream')",
+  "targetUse": "${
+    userLocation
+      ? `styles and species in ${userLocation}`
+      : "intended fishing application"
+  } (e.g., 'Light tackle shore fishing, seabream')",
   "fishingTechnique": "suitable fishing styles (e.g., 'Bottom fishing, trolling, jigging')",
   "riggingCompatibility": "works best with (e.g., 'Fluorocarbon leaders, soft baits')",
   "durability": "build quality (e.g., 'High tensile strength, corrosion-resistant')",
@@ -252,7 +248,9 @@ When specifying target use or species, prioritize fishing styles and species com
   "skillLevel": "user suitability (e.g., 'All-levels', 'Beginner-friendly')",
   "versatility": "flexibility of use (e.g., 'Suitable for many rigs and species')",
   "bestConditions": "ideal usage scenario (e.g., 'Calm to moderate current, clear water')",
-  "fishingLocation": "common usage zones${userLocation ? ` around ${userLocation}` : ""} (e.g., 'Reef edges, rocky bottom, piers')"
+  "fishingLocation": "common usage zones${
+    userLocation ? ` around ${userLocation}` : ""
+  } (e.g., 'Reef edges, rocky bottom, piers')"
 }
 
 Analyze the image carefully and provide detailed, specific information for every field. Use your expertise to make educated assessments even if some details aren't perfectly clear. Return ONLY the JSON object with no additional text.`;
@@ -282,12 +280,16 @@ When specifying target fish, prioritize species commonly found in or near this l
   "form": "presentation form (e.g., 'Whole', 'Cut', 'Minced', 'Block', 'Pellets')",
   "size": "approximate dimensions in cm (e.g., '15 cm', '3 cm chunks')",
   "weight": "in grams and oz (e.g., '500g (17.6 oz)')",
-  "targetFish": "${userLocation ? `key species in ${userLocation}` : "target fish species"} (e.g., 'Grouper, Amberjack, Tuna')",
+  "targetFish": "${
+    userLocation ? `key species in ${userLocation}` : "target fish species"
+  } (e.g., 'Grouper, Amberjack, Tuna')",
   "fishingTechnique": "best suited technique (e.g., 'Drift fishing with chum slick', 'Bottom fishing with cut bait')",
   "applicationMethod": "how it is used (e.g., 'Hooked through nose', 'Chummed from boat')",
   "weatherConditions": "best weather (e.g., 'Calm seas, warm temperatures')",
   "waterConditions": "ideal water clarity and temp (e.g., 'Clear to stained, 18–26°C')",
-  "seasonalUsage": "best times${userLocation ? ` in ${userLocation}` : ""} (e.g., 'Spring and summer')",
+  "seasonalUsage": "best times${
+    userLocation ? ` in ${userLocation}` : ""
+  } (e.g., 'Spring and summer')",
   "scentStrength": "odor intensity (e.g., 'Strong oily scent', 'Mild natural smell')",
   "color": "natural or dyed (e.g., 'Natural silver', 'Bright red')",
   "storageRequirements": "storage needs (e.g., 'Keep frozen', 'Refrigerate after opening')",
@@ -299,7 +301,9 @@ When specifying target fish, prioritize species commonly found in or near this l
   "visibility": "visibility effect in water (e.g., 'Clouds water with scent trail')",
   "chumEffectiveness": "for chum only (e.g., 'High oil content, strong dispersal')",
   "legalNotes": "if any regulation considerations (e.g., 'Check local rules for live bait')",
-  "fishingLocation": "ideal locations${userLocation ? ` around ${userLocation}` : ""} (e.g., 'Reefs, piers, drop-offs')",
+  "fishingLocation": "ideal locations${
+    userLocation ? ` around ${userLocation}` : ""
+  } (e.g., 'Reefs, piers, drop-offs')",
   "timeOfDay": "best timing (e.g., 'Early morning, dusk')",
   "currentConditions": "best current use (e.g., 'Slow drift', 'Anchored with slick')"
 }
@@ -343,11 +347,17 @@ When specifying target fish, prioritize species commonly found in or near this l
   "dragSystem": "type and strength (e.g., 'Front drag, max 8kg/17.6lb')",
   "bearingCount": "number of ball bearings (e.g., '6+1 BB')",
   "weight": "weight in grams and oz (e.g., '270g (9.5 oz)')",
-  "targetFish": "${userLocation ? `common species in ${userLocation}` : "primary target species"} (e.g., 'Sea bass, snapper, trout')",
+  "targetFish": "${
+    userLocation
+      ? `common species in ${userLocation}`
+      : "primary target species"
+  } (e.g., 'Sea bass, snapper, trout')",
   "fishingTechnique": "typical technique (e.g., 'Bottom fishing, casting, jigging')",
   "weatherConditions": "best suited conditions (e.g., 'Calm to moderate wind, overcast')",
   "waterConditions": "best water type (e.g., 'Clear, brackish, or murky')",
-  "seasonalUsage": "best seasons${userLocation ? ` for ${userLocation}` : ""} (e.g., 'Year-round, peak in spring and summer')",
+  "seasonalUsage": "best seasons${
+    userLocation ? ` for ${userLocation}` : ""
+  } (e.g., 'Year-round, peak in spring and summer')",
   "priceRange": "estimated price category (e.g., '$100-150', 'Mid-range', 'High-end')",
   "skillLevel": "user suitability (e.g., 'Beginner', 'All-levels', 'Advanced anglers')",
   "waterType": "Freshwater, Saltwater, or Both",
@@ -357,7 +367,9 @@ When specifying target fish, prioritize species commonly found in or near this l
   "storageRequirements": "storage advice (e.g., 'Use rod sleeve, avoid humidity')",
   "compatibleLine": "recommended line type and rating (e.g., 'Braid 10-20 lb, Mono 8-12 lb')",
   "compatibleLureWeight": "lure weight range (e.g., '5-20g')",
-  "fishingLocation": "best suited locations${userLocation ? ` near ${userLocation}` : ""} (e.g., 'Shoreline, reef, kayak, offshore')",
+  "fishingLocation": "best suited locations${
+    userLocation ? ` near ${userLocation}` : ""
+  } (e.g., 'Shoreline, reef, kayak, offshore')",
   "timeOfDay": "optimal timing (e.g., 'Morning and dusk')",
   "structureType": "ideal structural zones (e.g., 'Rocky bottom, reefs, open water')"
 }
@@ -406,7 +418,9 @@ When describing use and target fish, consider fishing practices and species comm
   "controlType": "control interface (e.g., 'Foot pedal, remote control, mobile app')",
   "features": "notable features (e.g., 'Anchor lock, autopilot, sonar built-in')",
 
-  "targetFish": "${userLocation ? `species targeted in ${userLocation}` : "target species"} (e.g., 'Dentex, Tuna, Grouper')",
+  "targetFish": "${
+    userLocation ? `species targeted in ${userLocation}` : "target species"
+  } (e.g., 'Dentex, Tuna, Grouper')",
   "fishingTechnique": "fishing styles it supports (e.g., 'Trolling, vertical jigging, live sonar')",
   "waterType": "Freshwater, Saltwater, or Both",
   "weatherResistance": "rating (e.g., 'IPX7 waterproof')",
@@ -417,7 +431,9 @@ When describing use and target fish, consider fishing practices and species comm
   "versatility": "range of use cases (e.g., 'Kayak to offshore boat setups')",
   "maintenanceLevel": "maintenance needs (e.g., 'Flush connectors after salt use')",
   "storageRequirements": "care instructions (e.g., 'Remove and store dry after trip')",
-  "fishingLocation": "common use zones${userLocation ? ` in ${userLocation}` : ""} (e.g., 'Drop-offs, reefs, trolling lanes')"
+  "fishingLocation": "common use zones${
+    userLocation ? ` in ${userLocation}` : ""
+  } (e.g., 'Drop-offs, reefs, trolling lanes')"
 }
 
 Analyze the image carefully and provide detailed, specific information for every field. Use your expertise to make educated assessments even if some details aren't perfectly clear. Return ONLY the JSON object with no additional text.`;
@@ -492,11 +508,17 @@ When specifying target fish, prioritize species commonly found in or near this l
   "confidence": 0.85,
   "size": "precise measurement in cm (e.g., '8.9 cm', '12.7 cm')",
   "weight": "weight specification in grams and oz (e.g., '7g (1/4 oz)', '14g (1/2 oz)')",
-  "targetFish": "${userLocation ? `primary fish species for ${userLocation} area` : "primary fish species this targets"} (e.g., 'Bass, Pike, Walleye')",
+  "targetFish": "${
+    userLocation
+      ? `primary fish species for ${userLocation} area`
+      : "primary fish species this targets"
+  } (e.g., 'Bass, Pike, Walleye')",
   "fishingTechnique": "detailed technique description (e.g., 'Cast and steady retrieve with occasional pauses')",
   "weatherConditions": "optimal weather (e.g., 'Overcast skies, light wind')",
   "waterConditions": "best water conditions (e.g., 'Clear to slightly stained water')",
-  "seasonalUsage": "best seasons and months${userLocation ? ` for ${userLocation}` : ""} (e.g., 'Spring through fall, peak in summer')",
+  "seasonalUsage": "best seasons and months${
+    userLocation ? ` for ${userLocation}` : ""
+  } (e.g., 'Spring through fall, peak in summer')",
   "colorPattern": "detailed color description (e.g., 'Silver body with blue back and red accents')",
   "actionType": "movement characteristics (e.g., 'Tight wobbling action with flash')",
   "depthRange": "operating depth in meters (e.g., '0.6-1.8m', 'Surface to 1m')",
@@ -516,7 +538,9 @@ When specifying target fish, prioritize species commonly found in or near this l
   "maintenanceLevel": "maintenance needs (e.g., 'Low maintenance', 'Rinse after saltwater use')",
   "storageRequirements": "storage needs (e.g., 'Store in tackle box, avoid extreme heat')",
   "compatibleGear": "compatible equipment - REQUIRED FIELD (e.g., 'Medium action rods, spinning reels', 'Heavy tackle for big fish')",
-  "fishingLocation": "best locations${userLocation ? ` near ${userLocation}` : ""} (e.g., 'Shore casting, boat trolling, pier fishing')",
+  "fishingLocation": "best locations${
+    userLocation ? ` near ${userLocation}` : ""
+  } (e.g., 'Shore casting, boat trolling, pier fishing')",
   "timeOfDay": "optimal timing (e.g., 'Dawn and dusk, overcast days')",
   "currentConditions": "current preferences (e.g., 'Still to slow current')",
   "structureType": "structure compatibility (e.g., 'Open water, around cover, weed edges')"
@@ -547,11 +571,17 @@ When specifying target fish, prioritize species commonly found in or near this l
   "confidence": 0.85,
   "size": "precise measurement in cm (e.g., '8.9 cm', '12.7 cm')",
   "weight": "weight specification in grams and oz (e.g., '7g (1/4 oz)', '14g (1/2 oz)')",
-  "targetFish": "${userLocation ? `primary fish species for ${userLocation} area` : "primary fish species this targets"} (e.g., 'Bass, Pike, Walleye')",
+  "targetFish": "${
+    userLocation
+      ? `primary fish species for ${userLocation} area`
+      : "primary fish species this targets"
+  } (e.g., 'Bass, Pike, Walleye')",
   "fishingTechnique": "detailed technique description (e.g., 'Cast and steady retrieve with occasional pauses')",
   "weatherConditions": "optimal weather (e.g., 'Overcast skies, light wind')",
   "waterConditions": "best water conditions (e.g., 'Clear to slightly stained water')",
-  "seasonalUsage": "best seasons and months${userLocation ? ` for ${userLocation}` : ""} (e.g., 'Spring through fall, peak in summer')",
+  "seasonalUsage": "best seasons and months${
+    userLocation ? ` for ${userLocation}` : ""
+  } (e.g., 'Spring through fall, peak in summer')",
   "colorPattern": "detailed color description (e.g., 'Silver body with blue back and red accents')",
   "actionType": "movement characteristics (e.g., 'Tight wobbling action with flash')",
   "depthRange": "operating depth in meters (e.g., '0.6-1.8m', 'Surface to 1m')",
@@ -571,7 +601,9 @@ When specifying target fish, prioritize species commonly found in or near this l
   "maintenanceLevel": "maintenance needs (e.g., 'Low maintenance', 'Rinse after saltwater use')",
   "storageRequirements": "storage needs (e.g., 'Store in tackle box, avoid extreme heat')",
   "compatibleGear": "compatible equipment - REQUIRED FIELD (e.g., 'Medium action rods, spinning reels', 'Heavy tackle for big fish')",
-  "fishingLocation": "best locations${userLocation ? ` near ${userLocation}` : ""} (e.g., 'Shore casting, boat trolling, pier fishing')",
+  "fishingLocation": "best locations${
+    userLocation ? ` near ${userLocation}` : ""
+  } (e.g., 'Shore casting, boat trolling, pier fishing')",
   "timeOfDay": "optimal timing (e.g., 'Dawn and dusk, overcast days')",
   "currentConditions": "current preferences (e.g., 'Still to slow current')",
   "structureType": "structure compatibility (e.g., 'Open water, around cover, weed edges')"
@@ -801,7 +833,9 @@ Analyze the image carefully and provide detailed, specific information for every
       name: "Unknown Gear",
       type: "unknown",
       confidence: 0,
-      rawJsonResponse: `Error during AI identification: ${error instanceof Error ? error.message : String(error)}`,
+      rawJsonResponse: `Error during AI identification: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
       openaiPrompt: promptText || "Error occurred before prompt could be sent",
     };
   }
@@ -812,6 +846,7 @@ Analyze the image carefully and provide detailed, specific information for every
  */
 export const uploadGearImage = async (
   file: File,
+  userLocation?: string,
 ): Promise<GearUploadResult> => {
   const isMobile =
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -830,7 +865,10 @@ export const uploadGearImage = async (
     if (file.size > 15 * 1024 * 1024) {
       return {
         success: false,
-        error: `Image must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+        error: `Image must be less than 15MB (current: ${(
+          file.size /
+          (1024 * 1024)
+        ).toFixed(1)}MB)`,
       };
     }
 
@@ -864,7 +902,11 @@ export const uploadGearImage = async (
         if (!blobStatus.configured) {
           return {
             success: false,
-            error: `Both storage options failed. Supabase: ${supabaseError instanceof Error ? supabaseError.message : String(supabaseError)}. Blob: ${blobStatus.error || "Not configured"}`,
+            error: `Both storage options failed. Supabase: ${
+              supabaseError instanceof Error
+                ? supabaseError.message
+                : String(supabaseError)
+            }. Blob: ${blobStatus.error || "Not configured"}`,
           };
         }
 
@@ -878,7 +920,11 @@ export const uploadGearImage = async (
       if (!blobStatus.configured) {
         return {
           success: false,
-          error: `No storage configured. Supabase: ${supabaseStatus.hasSupabaseUrl ? "URL OK" : "No URL"}, ${supabaseStatus.hasSupabaseKey ? "Key OK" : "No Key"}. Blob: ${blobStatus.error || "Not configured"}`,
+          error: `No storage configured. Supabase: ${
+            supabaseStatus.hasSupabaseUrl ? "URL OK" : "No URL"
+          }, ${supabaseStatus.hasSupabaseKey ? "Key OK" : "No Key"}. Blob: ${
+            blobStatus.error || "Not configured"
+          }`,
         };
       }
 
@@ -888,16 +934,20 @@ export const uploadGearImage = async (
 
     // Identify gear
     log("🤖 [GEAR UPLOAD] Identifying gear...");
-    const gearInfo = await identifyGearFromImage(file).catch((error) => {
-      console.warn("⚠️ [GEAR UPLOAD] AI failed, using fallback:", error);
-      return {
-        name: "Unknown Gear",
-        type: "unknown",
-        confidence: 0,
-        rawJsonResponse: `Error during AI identification: ${error instanceof Error ? error.message : String(error)}`,
-        openaiPrompt: "Error occurred before prompt could be sent",
-      };
-    });
+    const gearInfo = await identifyGearFromImage(file, userLocation).catch(
+      (error) => {
+        console.warn("⚠️ [GEAR UPLOAD] AI failed, using fallback:", error);
+        return {
+          name: "Unknown Gear",
+          type: "unknown",
+          confidence: 0,
+          rawJsonResponse: `Error during AI identification: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+          openaiPrompt: "Error occurred before prompt could be sent",
+        };
+      },
+    );
     log("✅ [GEAR UPLOAD] Gear identified:", gearInfo);
 
     // Create metadata

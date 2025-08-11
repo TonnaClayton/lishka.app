@@ -5,6 +5,7 @@ import { uploadImageToSupabase } from "@/lib/supabase-storage";
 import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
 import { uploadGearImage, GearUploadResult } from "@/lib/gear-upload-service";
 import { log } from "@/lib/logging";
+import { useUserLocation } from "./location";
 
 export const profileQueryKeys = {
   useProfile: (userId: string) => ["profile", userId] as const,
@@ -169,7 +170,7 @@ export const useUploadPhoto = () => {
       // Upload to Supabase storage
       const photoUrl = await uploadImageToSupabase(
         processedFile,
-        "fish-photos"
+        "fish-photos",
       );
 
       // Create complete metadata object
@@ -203,7 +204,7 @@ export const useUploadPhoto = () => {
               ...oldData,
               gallery_photos: updatedPhotos,
             };
-          }
+          },
         );
 
         if (updatedPhotos.length > 0) {
@@ -234,7 +235,7 @@ export const useDeletePhoto = () => {
     mutationFn: async (photoIndex: number) => {
       // Get current photos from cache
       const currentProfile = queryClient.getQueryData(
-        profileQueryKeys.useProfile(user?.id || "")
+        profileQueryKeys.useProfile(user?.id || ""),
       ) as any;
 
       if (!currentProfile?.gallery_photos) {
@@ -243,7 +244,7 @@ export const useDeletePhoto = () => {
 
       // Remove photo from array
       const updatedPhotos = currentProfile.gallery_photos.filter(
-        (_: any, index: number) => index !== photoIndex
+        (_: any, index: number) => index !== photoIndex,
       );
 
       // Update profile in database
@@ -271,7 +272,7 @@ export const useDeletePhoto = () => {
               ...oldData,
               gallery_photos: updatedPhotos,
             };
-          }
+          },
         );
       }
     },
@@ -292,7 +293,7 @@ export const useUpdatePhotoMetadata = () => {
     }) => {
       // Get current photos from cache
       const currentProfile = queryClient.getQueryData(
-        profileQueryKeys.useProfile(user?.id || "")
+        profileQueryKeys.useProfile(user?.id || ""),
       ) as any;
 
       if (!currentProfile?.gallery_photos) {
@@ -328,7 +329,7 @@ export const useUpdatePhotoMetadata = () => {
               ...oldData,
               gallery_photos: updatedPhotos,
             };
-          }
+          },
         );
       }
     },
@@ -339,7 +340,7 @@ export const useUpdatePhotoMetadata = () => {
 export const useUploadGear = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();
-
+  const { location: userLocation } = useUserLocation();
   return useMutation({
     mutationFn: async (file: File) => {
       log("[useUploadGear] Starting gear upload:", {
@@ -349,7 +350,7 @@ export const useUploadGear = () => {
       });
 
       // Upload and process gear image
-      const result = await uploadGearImage(file);
+      const result = await uploadGearImage(file, userLocation?.name);
 
       if (!result.success || !result.metadata) {
         throw new Error(result.error || "Failed to upload gear");
@@ -360,7 +361,7 @@ export const useUploadGear = () => {
         id: `gear_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: result.metadata.gearInfo?.name || "Unknown Gear",
         category: mapGearTypeToCategory(
-          result.metadata.gearInfo?.type || "other"
+          result.metadata.gearInfo?.type || "other",
         ),
         description: result.metadata.gearInfo?.type || "",
         brand: result.metadata.gearInfo?.brand || "",
@@ -403,7 +404,7 @@ export const useUploadGear = () => {
               ...oldData,
               gear_items: updatedGear,
             };
-          }
+          },
         );
       }
     },

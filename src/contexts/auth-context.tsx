@@ -17,6 +17,7 @@ type AuthUser = {
 
 import { ImageMetadata } from "@/lib/image-metadata";
 import { log } from "@/lib/logging";
+import { useProfile } from "@/hooks/queries";
 
 type Profile = {
   id: string;
@@ -48,7 +49,8 @@ interface AuthContextType {
   ) => Promise<{ error: any; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
-  resetPassword: (email: string) => Promise<{ error: any }>;
+  forgotPassword: (email: string) => Promise<{ error: any }>;
+  resetPassword: (password: string) => Promise<{ error: any }>;
   confirmEmail: (token: string) => Promise<{ error: any }>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
@@ -77,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const {} = useProfile(user?.id);
 
   // Convert Supabase User to AuthUser
   const convertUser = (supabaseUser: User | null): AuthUser | null => {
@@ -469,9 +472,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const resetPassword = async (email: string) => {
+  const forgotPassword = async (email: string) => {
     try {
-      const { data, error } = await authService.resetPassword(email);
+      const { data, error } = await authService.forgotPassword(email);
+      return { error };
+    } catch (err) {
+      console.error("ForgotPassword error:", err);
+      return { error: { message: "An unexpected error occurred" } };
+    }
+  };
+
+  const resetPassword = async (password: string) => {
+    try {
+      const { data, error } = await authService.resetPassword(password);
       return { error };
     } catch (err) {
       console.error("ResetPassword error:", err);
@@ -1012,6 +1025,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     signIn,
     signOut,
     resetPassword,
+    forgotPassword,
     confirmEmail,
     resendConfirmation,
     updateProfile,

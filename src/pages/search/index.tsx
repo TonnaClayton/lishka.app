@@ -22,10 +22,17 @@ import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
 import { useImperialUnits } from "@/lib/unit-conversion";
 import BottomNav from "@/components/bottom-nav";
 import TextareaAutosize from "react-textarea-autosize";
-import { useAuth } from "@/contexts/auth-context";
 import useDeviceSize from "@/hooks/use-device-size";
 import useIsMobile from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
+import { generateTextWithAI } from "@/lib/ai";
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+  TooltipProvider,
+} from "@/components/ui/tooltip";
+import { useUserLocation } from "@/hooks/queries";
 
 interface Message {
   id: string;
@@ -56,7 +63,7 @@ const DEFAULT_SUGGESTIONS = [
 
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
-  const { profile } = useAuth();
+  const { location } = useUserLocation();
 
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -68,61 +75,19 @@ const SearchPage: React.FC = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imperialUnits, setImperialUnits] =
     useState<boolean>(useImperialUnits());
-  const [currentLocation, setCurrentLocation] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
+  const [followUpLoading, setFollowUpLoading] = useState(false);
 
   const deviceSize = useDeviceSize();
   const isMobile = useIsMobile();
 
-  // Get user location from multiple sources
-  useEffect(() => {
-    const getUserLocation = () => {
-      // First try profile location
-      if (profile?.location && profile.location.trim()) {
-        setCurrentLocation(profile.location);
-        return;
-      }
-
-      // Then try localStorage location
-      try {
-        const savedLocation = localStorage.getItem("userLocationFull");
-        if (savedLocation) {
-          const parsedLocation = JSON.parse(savedLocation);
-          if (parsedLocation?.name) {
-            setCurrentLocation(parsedLocation.name);
-            return;
-          }
-        }
-      } catch (error) {
-        console.error("Error parsing saved location:", error);
-      }
-
-      // Fallback to default
-      setCurrentLocation("Malta");
-    };
-
-    getUserLocation();
-
-    // Listen for location changes
-    const handleLocationChange = () => {
-      getUserLocation();
-    };
-
-    window.addEventListener("storage", handleLocationChange);
-    window.addEventListener("locationChanged", handleLocationChange);
-
-    return () => {
-      window.removeEventListener("storage", handleLocationChange);
-      window.removeEventListener("locationChanged", handleLocationChange);
-    };
-  }, [profile?.location]);
-
   // Scroll to bottom of messages when new messages are added
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
+  }, [messages, followUpQuestions, followUpLoading]);
 
   // Listen for units changes from settings
   useEffect(() => {
@@ -172,7 +137,7 @@ const SearchPage: React.FC = () => {
 
       const systemMessage = {
         role: "system",
-        content: `You are a fishing expert AI that provides helpful information about fishing techniques, fish species, and fishing locations. ${unitsInstruction} If you mention specific fish species, provide detailed information about them including name, scientific name, habitat, difficulty level, and season availability. ${useLocationContext ? "Focus on fish species and fishing techniques relevant to the user's location." : "Provide global information without focusing on any specific location."}`,
+        content: `You are a fishing expert AI that provides helpful information about fishing techniques, fish species, and fishing locations. ${unitsInstruction} If you mention specific fish species, provide detailed information about them including name, scientific name, habitat, difficulty level, and season availability. ${useLocationContext ? "Focus on fish species and fishing techniques relevant to the user's location." : "Provide global information without focusing on any specific location."}. Make sure to close every open [FISH_DATA] tag.`,
       };
 
       const previousMessages = messages
@@ -207,7 +172,7 @@ const SearchPage: React.FC = () => {
         userMessageContent = [
           {
             type: "text",
-            text: `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`,
+            text: `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format and do not forget to close the JSON section: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`,
           },
           {
             type: "image_url",
@@ -217,7 +182,7 @@ const SearchPage: React.FC = () => {
           },
         ];
       } else {
-        userMessageContent = `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`;
+        userMessageContent = `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format and do not forget to close the JSON section: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`;
       }
 
       const response = await fetch(
@@ -374,6 +339,84 @@ const SearchPage: React.FC = () => {
     }
   };
 
+  // AI follow-up generation
+  const fetchFollowUpQuestions = async (contextMessages: Message[]) => {
+    setFollowUpLoading(true);
+    try {
+      // Only use the last 4 messages for context
+      const context = contextMessages.slice(-4).map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+      }));
+      const systemPrompt =
+        "You are a fishing assistant AI. Given the conversation so far, suggest 3 contextually relevant follow-up questions the user might want to ask next. Respond ONLY with a JSON array of questions, e.g. ['Question 1', 'Question 2', 'Question 3']. Do not include any other text.";
+      const aiResponse = await generateTextWithAI({
+        messages: context,
+        system: systemPrompt,
+        model: "gpt-3.5-turbo",
+        maxTokens: 100,
+        temperature: 0.7,
+      });
+      let questions: string[] = [];
+      try {
+        // First try to parse as regular JSON
+        questions = JSON.parse(aiResponse.text);
+        if (!Array.isArray(questions)) throw new Error("Not an array");
+      } catch (err) {
+        // Try to extract array from quoted string
+        try {
+          const trimmedText = aiResponse.text.trim();
+          // Remove outer quotes if present
+          const cleanText =
+            trimmedText.startsWith('"') && trimmedText.endsWith('"')
+              ? trimmedText.slice(1, -1)
+              : trimmedText;
+
+          // Parse the cleaned text
+          questions = JSON.parse(cleanText);
+          if (!Array.isArray(questions)) throw new Error("Still not an array");
+        } catch (secondErr) {
+          // Final fallback: try to extract array using regex
+          try {
+            const match = aiResponse.text.match(/\[(.*?)\]/s);
+            if (match) {
+              const arrayContent = match[1];
+              // Split by comma and clean up quotes
+              questions = arrayContent
+                .split(",")
+                .map((item) => item.trim().replace(/^["']|["']$/g, ""))
+                .filter((item) => item.length > 0);
+            }
+          } catch (thirdErr) {
+            questions = [];
+          }
+        }
+      }
+
+      setFollowUpQuestions(
+        Array.isArray(questions)
+          ? questions.filter((q) => typeof q === "string" && q.length > 0)
+          : []
+      );
+    } catch (err) {
+      setFollowUpQuestions([]);
+    } finally {
+      setFollowUpLoading(false);
+    }
+  };
+
+  // Update follow-up questions after each assistant message
+  useEffect(() => {
+    if (
+      messages.length > 0 &&
+      messages[messages.length - 1].role === "assistant"
+    ) {
+      fetchFollowUpQuestions(messages);
+    } else if (messages.length === 0) {
+      setFollowUpQuestions([]);
+    }
+  }, [messages]);
+
   return (
     <div
       className="flex flex-col bg-white h-full relative dark:bg-black w-full"
@@ -406,7 +449,7 @@ const SearchPage: React.FC = () => {
           />
           <span className="text-xs text-[#025DFB] dark:text-blue-400">
             {useLocationContext
-              ? currentLocation || "Getting location..."
+              ? location?.name || "Getting location..."
               : "Global search"}
           </span>
           <Switch
@@ -445,7 +488,7 @@ const SearchPage: React.FC = () => {
                 <Button
                   key={`suggestion-${index}`}
                   variant="outline"
-                  className="text-left h-auto py-5 px-4 py-3 px-2 dark:bg-gray-800 dark:border-gray-700 rounded-2xl border-0 bg-[#E6EFFF] text-[#0251fb] justify-center items-center w-[48%]"
+                  className="text-left h-auto py-3 px-2 dark:bg-gray-800 dark:border-gray-700 rounded-2xl border-0 bg-[#E6EFFF] text-[#0251fb] justify-center items-center w-[48%]"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
                   {suggestion}
@@ -465,13 +508,21 @@ const SearchPage: React.FC = () => {
               {messages.map((message) => (
                 <div
                   key={message.id}
-                  className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                  className={cn(
+                    "flex",
+                    message.role === "user" ? "justify-end" : "justify-start"
+                  )}
                 >
                   <div
-                    className={`max-w-[85%] rounded-lg px-4 py-3 ${message.role === "user" ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"}`}
+                    className={cn(
+                      "rounded-lg pt-3 w-fit max-w-[85%]",
+                      message.role === "user"
+                        ? "bg-blue-500 text-white"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    )}
                   >
                     {message.image && (
-                      <div className="mb-3">
+                      <div className="mb-3 px-4">
                         <img
                           src={message.image}
                           alt="Uploaded image"
@@ -479,7 +530,7 @@ const SearchPage: React.FC = () => {
                         />
                       </div>
                     )}
-                    <div className="">
+                    <div className="px-4">
                       <ReactMarkdown
                         components={{
                           ol: ({ children }) => (
@@ -518,9 +569,11 @@ const SearchPage: React.FC = () => {
 
                     {/* Display fish cards if available */}
                     {message.fishResults && message.fishResults.length > 0 && (
-                      <div className="mt-4 space-y-4">
-                        <h3 className="font-medium text-sm">Fish Species:</h3>
-                        <div className="grid grid-cols-1 gap-4">
+                      <div className="mt-4 space-y-4 w-full">
+                        <h3 className="font-medium text-sm px-4">
+                          Fish Species:
+                        </h3>
+                        <div className="flex w-full overflow-x-auto gap-4 px-4 pb-3">
                           {message.fishResults
                             .filter((fish) => {
                               // Filter out generic fish names
@@ -545,6 +598,7 @@ const SearchPage: React.FC = () => {
                                 habitat={fish.habitat}
                                 difficulty={fish.difficulty}
                                 isToxic={fish.toxic}
+                                className="w-[200px] min-h-[250px] flex-shrink-0"
                                 onClick={() => {
                                   navigate(
                                     `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
@@ -556,9 +610,26 @@ const SearchPage: React.FC = () => {
                         </div>
                       </div>
                     )}
+                    <div className="pb-3 px-4"></div>
                   </div>
                 </div>
               ))}
+
+              {isMobile && (
+                <div className="flex flex-col gap-2">
+                  {followUpQuestions.length > 0 && (
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Follow-up questions
+                    </p>
+                  )}
+                  <FollowUpQuestions
+                    followUpQuestions={followUpQuestions}
+                    followUpLoading={followUpLoading}
+                    loading={loading}
+                    handleSuggestionClick={handleSuggestionClick}
+                  />
+                </div>
+              )}
 
               {loading && (
                 <div className="flex justify-start">
@@ -589,7 +660,19 @@ const SearchPage: React.FC = () => {
         </div>
       )}
       {/* Input Form - Fixed at bottom on mobile, static on desktop */}
-      <div className="bottom-16 left-0 right-0 z-20 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 md:static md:bottom-auto md:border-t md:w-full md:mx-auto md:mb-4 static mb-16">
+
+      <div className="fixed bottom-16 left-0 right-0 z-20 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 md:static md:bottom-auto md:border-t md:w-full md:mx-auto md:mb-4">
+        {/* Follow-up questions chips or loading skeleton */}
+
+        {!isMobile && (
+          <FollowUpQuestions
+            followUpQuestions={followUpQuestions}
+            followUpLoading={followUpLoading}
+            loading={loading}
+            handleSuggestionClick={handleSuggestionClick}
+          />
+        )}
+
         <form
           ref={formRef}
           onSubmit={handleSubmit}
@@ -682,11 +765,58 @@ const SearchPage: React.FC = () => {
           </div>
         </form>
       </div>
+
       {/* Bottom Navigation - Fixed at bottom on mobile, hidden on desktop */}
       <div className="fixed bottom-0 left-0 right-0 z-20 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 md:hidden">
         <BottomNav />
       </div>
     </div>
+  );
+};
+
+const FollowUpQuestions = ({
+  followUpQuestions,
+  followUpLoading,
+  loading,
+  handleSuggestionClick,
+}: {
+  followUpQuestions: string[];
+  followUpLoading: boolean;
+  loading: boolean;
+  handleSuggestionClick: (suggestion: string) => void;
+}) => {
+  return (
+    <TooltipProvider>
+      {followUpLoading ? (
+        <div className="flex overflow-x-auto gap-2 mb-3 w-full max-w-2xl mx-auto scrollbar-hide">
+          {[1, 2, 3].map((i) => (
+            <div
+              key={`skeleton-chip-${i}`}
+              className="rounded-full px-4 py-2 bg-gray-200 dark:bg-gray-700 animate-pulse h-8 w-32 flex-shrink-0"
+            />
+          ))}
+        </div>
+      ) : followUpQuestions.length > 0 ? (
+        <div className="flex overflow-x-auto gap-2 pb-3 mb-1 w-full max-w-2xl mx-auto scrollbar-hide">
+          {followUpQuestions.map((q, i) => (
+            <Tooltip key={`followup-tooltip-${i}`}>
+              <TooltipTrigger asChild>
+                <Button
+                  key={`followup-${i}`}
+                  variant="outline"
+                  className="rounded-full px-2 py-2 text-xs truncate justify-start flex-shrink-0 overflow-hidden whitespace-nowrap bg-[#025DFB1A] hover:bg-[#025DFB33] text-[#0251FB] hover:text-[#0251FB] shadow-none border-none"
+                  onClick={() => handleSuggestionClick(q)}
+                  disabled={loading}
+                >
+                  <span className="">{q}</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="top">{q}</TooltipContent>
+            </Tooltip>
+          ))}
+        </div>
+      ) : null}
+    </TooltipProvider>
   );
 };
 

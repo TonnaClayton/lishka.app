@@ -1,29 +1,26 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { MapPin, User, Menu } from "lucide-react";
-import BottomNav from "./bottom-nav";
-import FishCard from "./fish-card";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Skeleton } from "./ui/skeleton";
+import BottomNav from "@/components/bottom-nav";
+import FishCard from "@/components/fish-card";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 
-import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
-
-import LoadingDots from "./loading-dots";
-import LocationModal from "./location-modal";
-import FishingTipsCarousel from "./fishing-tips-carousel";
-import OffshoreFishingLocations from "./offshore-fishing-locations";
-import EmailVerificationBanner from "./email-verification-banner";
+import LoadingDots from "@/components/loading-dots";
+import LocationModal from "@/components/location-modal";
+import EmailVerificationBanner from "@/components/email-verification-banner";
 import GearRecommendationWidget from "./gear-recommendation-widget";
-import HomePageSkeleton from "./skeletons/home-page-skeleton";
-import ToxicFishSkeleton from "./skeletons/toxic-fish-skeleton";
-import { log } from "@/lib/logging";
+import HomePageSkeleton from "./home-page-skeleton";
+import ToxicFishSkeleton from "./toxic-fish-skeleton";
+import FishingTipsCarousel from "./fishing-tips-carousel";
 
 // Import Dialog components from ui folder
-import { Dialog, DialogContent, DialogOverlay } from "./ui/dialog";
-import { useFishDataInfinite, useToxicFishData } from "@/hooks/queries";
+import {
+  useFishDataInfinite,
+  useProfile,
+  useToxicFishData,
+} from "@/hooks/queries";
+import { DEFAULT_LOCATION } from "@/lib/const";
 
 interface HomePageProps {
   location?: string;
@@ -48,32 +45,28 @@ const HomePage: React.FC<HomePageProps> = ({
   onLocationChange = () => {},
 }) => {
   const navigate = useNavigate();
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
+  const { data: profile } = useProfile(user?.id);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
-  const [userLocation, setUserLocation] = useState(() => {
-    // Try to get location from localStorage first
-    const savedLocation = localStorage.getItem("userLocation");
-    log("[HomePage] Initial userLocation from localStorage:", savedLocation);
 
-    // If no saved location, check if we need to set up a default
-    if (!savedLocation) {
-      const defaultLocation = "Malta";
-      log("[HomePage] No saved location, setting default:", defaultLocation);
-      localStorage.setItem("userLocation", defaultLocation);
-      // Also set the full location data
-      const defaultLocationFull = {
-        latitude: 35.8997,
-        longitude: 14.5146,
-        name: defaultLocation,
-      };
-      localStorage.setItem(
-        "userLocationFull",
-        JSON.stringify(defaultLocationFull),
-      );
-      return defaultLocation;
+  const userLocation = useMemo(() => {
+    return profile?.location || DEFAULT_LOCATION.name;
+  }, [profile]);
+
+  const openLocationModal = useMemo(() => {
+    if (profile == undefined) {
+      return false;
     }
-    return savedLocation || location;
-  });
+
+    if (
+      profile?.location == "" ||
+      profile?.location == null ||
+      isLocationModalOpen
+    ) {
+      return true;
+    }
+    return false;
+  }, [profile]);
 
   // React Query hooks
   const {
@@ -89,7 +82,11 @@ const HomePage: React.FC<HomePageProps> = ({
     data: toxicFishData,
     isLoading: loadingToxicFish,
     error: toxicFishError,
-  } = useToxicFishData(userLocation);
+  } = useToxicFishData(
+    userLocation,
+    (profile?.location_coordinates as any)?.latitude,
+    (profile?.location_coordinates as any)?.longitude
+  );
 
   // Extract fish list from infinite query data
   const fishList = fishData?.pages.flatMap((page) => page) || [];
@@ -134,47 +131,6 @@ const HomePage: React.FC<HomePageProps> = ({
       return location;
     }
   };
-
-  // Separate effect for location initialization and listening to changes
-  useEffect(() => {
-    const loadLocation = () => {
-      const savedLocation = localStorage.getItem("userLocation");
-      log("[HomePage] Loading location from localStorage:", savedLocation);
-
-      if (savedLocation) {
-        const validatedLocation = validateLocation(savedLocation);
-        log("[HomePage] Setting userLocation to:", validatedLocation);
-        setUserLocation(validatedLocation);
-      }
-    };
-
-    // Load location initially
-    loadLocation();
-
-    // Listen for location changes from other components
-    const handleLocationChange = (event: Event) => {
-      log("[HomePage] Location change event received", event);
-      loadLocation();
-    };
-
-    const handleStorageChange = (event: StorageEvent) => {
-      if (event.key === "userLocation" || event.key === "userLocationFull") {
-        log("[HomePage] Storage change detected for location", event);
-        loadLocation();
-      }
-    };
-
-    // Add event listeners
-    window.addEventListener("locationChanged", handleLocationChange);
-    window.addEventListener("storage", handleStorageChange);
-
-    return () => {
-      window.removeEventListener("locationChanged", handleLocationChange);
-      window.removeEventListener("storage", handleStorageChange);
-    };
-  }, []);
-
-  // Track previous location to avoid unnecessary cache clearing
 
   const handleFishClick = (fish: FishData) => {
     // Use a sanitized version of the name for the URL
@@ -427,45 +383,23 @@ const HomePage: React.FC<HomePageProps> = ({
       <BottomNav />
       {/* Location Modal */}
       <LocationModal
-        isOpen={isLocationModalOpen}
+        isOpen={openLocationModal}
         onClose={() => {
-          // Only allow closing if a location is already set
-          if (localStorage.getItem("userLocation")) {
+          if (profile?.location != "" && profile?.location != null) {
             setIsLocationModalOpen(false);
           }
         }}
         onLocationSelect={(newLocation) => {
-          log(
-            "[HomePage] LocationModal onLocationSelect called with:",
-            newLocation,
-          );
-          // Update the location in the title
-          setUserLocation(newLocation.name);
-          // Refresh fish data with new location
           onLocationChange(newLocation.name);
         }}
         currentLocation={(() => {
-          // Try to get actual coordinates from localStorage
-          try {
-            const savedLocationFull = localStorage.getItem("userLocationFull");
-            if (savedLocationFull) {
-              const locationData = JSON.parse(savedLocationFull);
-              return {
-                latitude: locationData.latitude || 35.8997,
-                longitude: locationData.longitude || 14.5146,
-                name: locationData.name || userLocation,
-              };
-            }
-          } catch (e) {
-            console.warn("Could not parse saved location coordinates");
-          }
+          const locationCoordinates = profile?.location_coordinates as any;
 
-          // Fallback to default if no saved location
-          return userLocation
+          return locationCoordinates
             ? {
-                latitude: 35.8997, // Default coordinates
-                longitude: 14.5146,
-                name: userLocation,
+                latitude: locationCoordinates.latitude as number | undefined,
+                longitude: locationCoordinates.longitude as number | undefined,
+                name: profile.location,
               }
             : null;
         })()}

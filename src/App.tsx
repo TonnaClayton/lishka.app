@@ -9,23 +9,27 @@ import {
 } from "react-router-dom";
 import routes from "tempo-routes";
 import { lazy } from "react";
-import LoginPage from "./components/auth/login-page";
-import SignupPage from "./components/auth/signup-page";
-import ForgotPasswordPage from "./components/auth/forgot-password-page";
-import EmailConfirmationPage from "./components/auth/email-confirmation-page";
+import {
+  ForgotPasswordPage,
+  ResetPasswordPage,
+  LoginPage,
+  SignupPage,
+  EmailConfirmationPage,
+} from "./pages/auth";
 import ProtectedRoute from "./components/auth/protected-route";
 import SafariScrollFix from "./components/safari-scroll-fix";
 import EmailVerificationBanner from "./components/email-verification-banner";
-import { AuthProvider } from "./contexts/auth-context";
+import { AuthProvider, useAuth } from "./contexts/auth-context";
 import { config } from "@/lib/config";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { cn } from "./lib/utils";
+import { useProfile } from "./hooks/queries";
 
 // Lazy load heavy components for better initial loading performance
 const OnboardingPage = lazy(() => import("./pages/onboarding"));
-const HomePage = lazy(() => import("./components/home-page"));
-const FishDetailPage = lazy(() => import("./components/fish-detail-page"));
+const HomePage = lazy(() => import("./pages/home"));
+const FishDetailPage = lazy(() => import("./pages/fish-detail"));
 const MenuPage = lazy(() => import("./components/menu-page"));
 const SearchPage = lazy(() => import("./pages/search"));
 const WeatherPage = lazy(() => import("./components/weather-page"));
@@ -103,6 +107,14 @@ const router = createBrowserRouter(
           element: (
             <ProtectedRoute requireAuth={false}>
               <ForgotPasswordPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "reset-password",
+          element: (
+            <ProtectedRoute requireAuth={true}>
+              <ResetPasswordPage />
             </ProtectedRoute>
           ),
         },
@@ -324,9 +336,10 @@ const router = createBrowserRouter(
 function AppContent() {
   // Check if we're on the splash page
   const location = useLocation();
+  const { user } = useAuth();
+  const { data: profile } = useProfile(user?.id);
   const navigate = useNavigate();
-  const isSplashPage =
-    location.pathname === "/" && !localStorage.getItem("userLocation");
+  const isSplashPage = location.pathname === "/" && !profile?.location;
 
   // Check if current route should have the weather widget in desktop layout
   const shouldShowWeatherWidget = ["/", "/search"].includes(location.pathname);
@@ -337,6 +350,7 @@ function AppContent() {
     "/signup",
     "/forgot-password",
     "/onboarding",
+    "/reset-password",
   ].includes(location.pathname);
 
   // Track if we're on mobile or desktop

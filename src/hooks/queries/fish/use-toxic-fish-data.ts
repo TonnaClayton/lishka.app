@@ -1,12 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { generateTextWithAI } from "@/lib/ai";
-import { getCachedApiResponse, cacheApiResponse } from "@/lib/api-helpers";
+import { cacheApiResponse, getCachedApiResponse } from "@/lib/api-helpers";
 import { getLocalFishName } from "@/lib/fishbase-api";
 import { getFishImageUrl } from "@/lib/fish-image-service";
-import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
+import { OPENAI_DISABLED_MESSAGE, OPENAI_ENABLED } from "@/lib/openai-toggle";
 import { config } from "@/lib/config";
 import { log } from "@/lib/logging";
 import { FishData, fishQueryKeys } from "./use-fish-data";
+import { useUserLocation } from "../location";
 
 // Helper functions
 const getCurrentMonth = () => {
@@ -185,7 +186,9 @@ export interface ToxicFishResponse {
 
 // Toxic fish data fetching function
 const fetchToxicFishData = async (
-  location: string
+  location: string,
+  userLatitude?: number,
+  userLongitude?: number,
 ): Promise<ToxicFishResponse> => {
   log("Starting fetchToxicFishData");
 
@@ -210,22 +213,13 @@ const fetchToxicFishData = async (
   const seaOcean = getLocationToSeaMapping(location);
 
   // Get coordinates from localStorage
-  let latitude = 35.8997; // Default Malta coordinates
-  let longitude = 14.5146;
-
-  try {
-    const savedLocationFull = localStorage.getItem("userLocationFull");
-    if (savedLocationFull) {
-      const locationData = JSON.parse(savedLocationFull);
-      latitude = locationData.latitude || latitude;
-      longitude = locationData.longitude || longitude;
-    }
-  } catch (e) {
-    console.warn("Could not parse saved location coordinates, using defaults");
-  }
+  let latitude = userLatitude || 35.8997; // Default Malta coordinates
+  let longitude = userLongitude || 14.5146;
 
   // Use month-year instead of exact date for better cache persistence
-  const cacheKey = `toxic_fish_data_v5_${cleanLocation}_${seaOcean}_${currentMonthYear}_${latitude.toFixed(3)}_${longitude.toFixed(3)}`;
+  const cacheKey = `toxic_fish_data_v5_${cleanLocation}_${seaOcean}_${currentMonthYear}_${latitude.toFixed(
+    3,
+  )}_${longitude.toFixed(3)}`;
 
   // Check cache first
   const cachedData = getCachedApiResponse(cacheKey);
@@ -379,7 +373,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
       toxicFishData.map((fish) => ({
         name: fish.name,
         scientificName: fish.scientificName,
-      }))
+      })),
     );
 
     // No filtering - keep all fish as returned by OpenAI
@@ -391,7 +385,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
     };
 
     log(
-      `DEBUG: Final toxic fish count (no filtering): ${toxicFishData.length}`
+      `DEBUG: Final toxic fish count (no filtering): ${toxicFishData.length}`,
     );
 
     // Ensure each fish has required fields, clean scientific names, and is marked as toxic
@@ -474,7 +468,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
 
   // Debug log
   log(
-    `DEBUG: Received ${toxicFishWithDefaults.length} toxic fish from OpenAI API for ${cleanLocation} (${seaOcean}) at coordinates ${latitude}, ${longitude}`
+    `DEBUG: Received ${toxicFishWithDefaults.length} toxic fish from OpenAI API for ${cleanLocation} (${seaOcean}) at coordinates ${latitude}, ${longitude}`,
   );
   log(
     "DEBUG: Toxic fish data (ordered by probability):",
@@ -482,7 +476,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
       name: fish.name,
       scientificName: fish.scientificName,
       probabilityScore: fish.probabilityScore,
-    }))
+    })),
   );
 
   const result = {
@@ -523,17 +517,25 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
           localName: localName || result.toxicFishList[index].localName,
         };
       }
-    })
+    }),
   );
 
   log("Finished fetchToxicFishData");
   return result;
 };
 
-export const useToxicFishData = (location: string) => {
+export const useToxicFishData = (
+  location: string,
+  userLatitude?: number,
+  userLongitude?: number,
+) => {
   return useQuery({
-    queryKey: fishQueryKeys.toxicFishData(location),
-    queryFn: () => fetchToxicFishData(location),
+    queryKey: fishQueryKeys.toxicFishData(
+      location,
+      userLatitude,
+      userLongitude,
+    ),
+    queryFn: () => fetchToxicFishData(location, userLatitude, userLongitude),
     enabled: !!location,
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
     gcTime: 48 * 60 * 60 * 1000, // 48 hours

@@ -28,7 +28,7 @@ type ForgotPasswordFormData = z.infer<typeof forgotPasswordSchema>;
 
 const ForgotPasswordPage: React.FC = () => {
   const navigate = useNavigate();
-  const { resetPassword } = useAuth();
+  const { forgotPassword } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +47,7 @@ const ForgotPasswordPage: React.FC = () => {
     setError(null);
 
     try {
-      const { error } = await resetPassword(data.email);
+      const { error } = await forgotPassword(data.email);
 
       if (error) {
         setError(error.message);
@@ -122,7 +122,7 @@ const ForgotPasswordPage: React.FC = () => {
         {/* Title */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Reset Password
+            Forgot Password
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Enter your email address and we'll send you a link to reset your
@@ -151,7 +151,7 @@ const ForgotPasswordPage: React.FC = () => {
                       <Input
                         type="email"
                         placeholder="Enter your email address"
-                        className="text-base border-gray-200 rounded-xl bg-gray-50 focus:bg-white px-3 rounded-lg py-4 h-[56px]"
+                        className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-lg py-4 h-[56px]"
                         disabled={loading}
                         {...field}
                       />
@@ -164,7 +164,7 @@ const ForgotPasswordPage: React.FC = () => {
               <div className="pt-4">
                 <Button
                   type="submit"
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed h-[56px]"
+                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? "Sending..." : "Send Reset Link"}
