@@ -8,6 +8,7 @@ import {
 } from "@/lib/fish-image-service";
 import { Waves, Trophy, Target, AlertTriangle } from "lucide-react";
 import { log } from "@/lib/logging";
+import { cn } from "@/lib/utils";
 
 interface FishCardProps {
   image?: string;
@@ -19,6 +20,7 @@ interface FishCardProps {
   difficulty?: "Easy" | "Intermediate" | "Hard" | "Advanced" | "Expert";
   isToxic?: boolean;
   dangerType?: string;
+  className?: string;
 
   onClick?: () => void;
 }
@@ -33,6 +35,7 @@ const FishCard = ({
   difficulty = "Intermediate",
   isToxic = false,
   dangerType,
+  className,
 
   onClick = () => {},
 }: FishCardProps) => {
@@ -68,7 +71,10 @@ const FishCard = ({
   }, [name, scientificName, image]);
   return (
     <Card
-      className="overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full border-0 shadow bg-white rounded-xl"
+      className={cn(
+        "overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full border-0 shadow bg-white rounded-xl",
+        className
+      )}
       onClick={onClick}
     >
       <div className="relative w-full aspect-[3/2] overflow-hidden max-w-full">

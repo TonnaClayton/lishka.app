@@ -1,40 +1,30 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
-import BottomNav, { SideNav } from "./bottom-nav";
-import WeatherWidgetPro from "./weather-widget-pro";
-import {
-  ArrowLeft,
-  AlertCircle,
-  AlertTriangle,
-  Shield,
-  Phone,
-  Ruler,
-  ShoppingBag,
-  Calendar,
-  CreditCard,
-  FileText,
-  DollarSign,
-  MapPin,
-  Fish,
-  Gauge,
-  Weight,
-} from "lucide-react";
+import BottomNav, { SideNav } from "@/components/bottom-nav";
+import WeatherWidgetPro from "@/components/weather-widget-pro";
+import { ArrowLeft, AlertCircle } from "lucide-react";
+import { FishDetails, FishingGear, FishingSeasons } from "@/hooks/queries";
 
-import FishCard from "./fish-card";
+import FishCard from "@/components/fish-card";
 import {
   handleFishImageError,
   getPlaceholderFishImage,
   getFishImageUrl as getFishImageUrlFromService,
 } from "@/lib/fish-image-service";
-import { Button } from "./ui/button";
-import { Card } from "./ui/card";
-import { Alert, AlertDescription, AlertTitle } from "./ui/alert";
-import LoadingDots from "./loading-dots";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import LoadingDots from "@/components/loading-dots";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
 import { generateTextWithAI } from "@/lib/ai";
 import { useProfile } from "@/hooks/queries";
 import { useAuth } from "@/contexts/auth-context";
+import FishDetailSkeleton from "./fish-detail-skeleton";
+import {
+  validateAndSanitizeRegulations,
+  validateFishingData,
+} from "@/lib/fish";
 
 // Fishing Season Calendar Component
 interface FishingSeasonCalendarProps {
@@ -80,7 +70,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
     // Convert all season entries to lowercase for comparison
     const seasonEntries = fishingSeasons.inSeason
       .map((season) =>
-        typeof season === "string" ? season.toLowerCase().trim() : "",
+        typeof season === "string" ? season.toLowerCase().trim() : ""
       )
       .filter((season) => season.length > 0);
 
@@ -114,7 +104,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
         season.includes(monthData.short.toLowerCase())
       ) {
         log(
-          `✓ Contains match: ${season} contains ${monthData.full.toLowerCase()}`,
+          `✓ Contains match: ${season} contains ${monthData.full.toLowerCase()}`
         );
         return true;
       }
@@ -150,7 +140,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
             m.full.toLowerCase() === startSeason ||
             m.short.toLowerCase() === startSeason ||
             m.full.toLowerCase().startsWith(startSeason) ||
-            m.short.toLowerCase().startsWith(startSeason),
+            m.short.toLowerCase().startsWith(startSeason)
         );
 
         const endMonth = months.find(
@@ -158,7 +148,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
             m.full.toLowerCase() === endSeason ||
             m.short.toLowerCase() === endSeason ||
             m.full.toLowerCase().startsWith(endSeason) ||
-            m.short.toLowerCase().startsWith(endSeason),
+            m.short.toLowerCase().startsWith(endSeason)
         );
 
         if (startMonth && endMonth) {
@@ -167,7 +157,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
           const currentIdx = monthData.index;
 
           log(
-            `Range indices: start=${startIdx}, end=${endIdx}, current=${currentIdx}`,
+            `Range indices: start=${startIdx}, end=${endIdx}, current=${currentIdx}`
           );
 
           // Handle range that wraps around the year (e.g., Nov-Feb)
@@ -182,13 +172,13 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
 
           if (inRange) {
             log(
-              `✓ Range match: ${monthData.full} is in range ${startSeason}-${endSeason}`,
+              `✓ Range match: ${monthData.full} is in range ${startSeason}-${endSeason}`
             );
             return true;
           }
         } else {
           log(
-            `Could not find months for range: ${startSeason} to ${endSeason}`,
+            `Could not find months for range: ${startSeason} to ${endSeason}`
           );
         }
       }
@@ -204,7 +194,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
             monthData.short.toLowerCase().startsWith(monthName)
           ) {
             log(
-              `✓ List match: ${monthData.full} found in comma-separated list`,
+              `✓ List match: ${monthData.full} found in comma-separated list`
             );
             return true;
           }
@@ -248,7 +238,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
         const isInSeason = isMonthInSeason(monthData);
 
         log(
-          `Month ${monthData.full}: in-season=${isInSeason}, styling=${styling}`,
+          `Month ${monthData.full}: in-season=${isInSeason}, styling=${styling}`
         );
 
         return (
@@ -264,125 +254,11 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
   );
 };
 
-interface FishingGear {
-  rods?: string;
-  reels?: string;
-  line?: string;
-  leader?: string;
-  bait?: string[];
-  lures?: string[];
-  hooks?: string;
-  hook_size_range?: string;
-  depth?: string;
-  speed?: string;
-  structure?: string;
-  sonarTips?: string;
-  jigging_technique?: string;
-  technical_details?: string;
-  // New fields from OpenAI API
-  jigType?: string;
-  jigWeight?: string;
-  jigColor?: string;
-  jiggingStyle?: string;
-  rodType?: string;
-  reelType?: string;
-  hookSize?: string;
-  rigType?: string;
-  weight?: string;
-  lureType?: string;
-  lureSize?: string;
-  lureColor?: string;
-  trollingSpeed?: string;
-  floatType?: string;
-  castingDistance?: string;
-  lureWeight?: string;
-  electricReel?: string;
-  lightAttractors?: string;
-  // Additional fields that might come from API
-  [key: string]: any;
-}
-
-interface FishingMethod {
-  title?: string;
-  method?: string;
-  description?: string;
-  gear?: FishingGear;
-  proTip?: string;
-  // Allow additional fields from OpenAI API
-  [key: string]: any;
-}
-
-interface FishingRegulations {
-  sizeLimit: {
-    value: string;
-    source: string;
-    confidence: string;
-  };
-  bagLimit: {
-    value: string;
-    source: string;
-    confidence: string;
-  };
-  seasonDates: {
-    value: string;
-    source: string;
-    confidence: string;
-  };
-  licenseRequired: {
-    value: string;
-    source: string;
-    confidence: string;
-  };
-  additionalRules: Array<{
-    rule: string;
-    source: string;
-    confidence: string;
-  }>;
-  penalties: {
-    value: string;
-    source: string;
-    confidence: string;
-  };
-  lastUpdated: string;
-  validationFlags?: {
-    suspiciousSourcesDetected: boolean;
-    genericSourcesReplaced: boolean;
-    confidenceDowngraded: boolean;
-  };
-  lastValidated?: string;
-}
-
-interface FishingSeasons {
-  inSeason: string[];
-  traditionalSeason: string[];
-  conservationConcerns: string;
-  regulations: string;
-  notInSeason: string[];
-  reasoning: string;
-}
-
-interface FishDetails {
-  name: string;
-  scientificName: string;
-  description: string;
-  image?: string;
-  fishingMethods?: FishingMethod[];
-  fishingSeasons?: FishingSeasons;
-  fishingRegulations?: FishingRegulations;
-  allRoundGear?: FishingGear;
-  localNames?: string[];
-  currentSeasonStatus?: string;
-  officialSeasonDates?: string;
-  fishingLocation?: string;
-  isToxic?: boolean;
-  dangerType?: string;
-}
-
 const FishDetailPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
-  const { data: profile } = useProfile(user.id);
+  const { data: profile, isLoading: isProfileLoading } = useProfile(user.id);
   const { fishName } = useParams<{ fishName: string }>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -396,7 +272,7 @@ const FishDetailPage = () => {
     type: string,
     fishName: string,
     location: string,
-    scientificName?: string,
+    scientificName?: string
   ) => {
     const key = `${type}_${fishName}_${location}_${scientificName || "unknown"}`
       .toLowerCase()
@@ -408,92 +284,6 @@ const FishDetailPage = () => {
   const CACHE_DURATION = {
     regulations: 7 * 24 * 60 * 60 * 1000, // 7 days
     fishInfo: 24 * 60 * 60 * 1000, // 1 day
-  };
-
-  // Data validation function to check for potentially inaccurate AI responses
-  const validateFishingData = (
-    data: any,
-    fishName: string,
-    location: string,
-  ) => {
-    const warnings = [];
-    const errors = [];
-
-    log(`🔍 Validating fishing data for ${fishName} in ${location}`);
-
-    // Validate trolling distances
-    if (data.fishingMethods) {
-      data.fishingMethods.forEach((method: any, index: number) => {
-        if (method.method && method.method.toLowerCase().includes("troll")) {
-          const trollingDistance = method.gear?.trollingDistance;
-          if (trollingDistance) {
-            const numbers = trollingDistance.match(/\d+/g);
-            if (numbers) {
-              const distances = numbers.map(Number);
-              const maxDistance = Math.max(...distances);
-              const minDistance = Math.min(...distances);
-
-              // Flag suspicious trolling distances
-              if (maxDistance > 300) {
-                errors.push(
-                  `Trolling distance too high: ${trollingDistance} (Method: ${method.method})`,
-                );
-              } else if (maxDistance > 200) {
-                warnings.push(
-                  `Trolling distance seems high: ${trollingDistance} (Method: ${method.method})`,
-                );
-              }
-            }
-          }
-        }
-
-        // Validate depths
-        const depth = method.gear?.depth;
-        if (depth) {
-          const depthNumbers = depth.match(/\d+/g);
-          if (depthNumbers) {
-            const maxDepth = Math.max(...depthNumbers.map(Number));
-            if (maxDepth > 1000) {
-              warnings.push(
-                `Depth seems very deep: ${depth} (Method: ${method.method})`,
-              );
-            }
-          }
-        }
-
-        // Validate trolling speeds
-        const trollingSpeed = method.gear?.trollingSpeed;
-        if (trollingSpeed) {
-          const speedNumbers = trollingSpeed.match(/\d+/g);
-          if (speedNumbers) {
-            const maxSpeed = Math.max(...speedNumbers.map(Number));
-            if (maxSpeed > 15) {
-              warnings.push(
-                `Trolling speed seems high: ${trollingSpeed} (Method: ${method.method})`,
-              );
-            }
-          }
-        }
-      });
-    }
-
-    // Log validation results
-    if (errors.length > 0) {
-      console.error("❌ Data validation errors:", errors);
-    }
-    if (warnings.length > 0) {
-      console.warn("⚠️ Data validation warnings:", warnings);
-    }
-    if (errors.length === 0 && warnings.length === 0) {
-      log("✅ Data validation passed");
-    }
-
-    return {
-      isValid: errors.length === 0,
-      warnings,
-      errors,
-      validationTimestamp: new Date().toISOString(),
-    };
   };
 
   const getCachedData = (cacheKey: string) => {
@@ -533,204 +323,6 @@ const FishDetailPage = () => {
     }
   };
 
-  // Validation function to detect and prevent AI hallucination
-  const validateAndSanitizeRegulations = (
-    regulations: any,
-    location: string,
-  ) => {
-    const validatedRegulations = { ...regulations };
-    const validationFlags = {
-      suspiciousSourcesDetected: false,
-      genericSourcesReplaced: false,
-      confidenceDowngraded: false,
-    };
-
-    // Known legitimate authority patterns by region
-    const legitimateAuthorities = {
-      eu: [
-        "european commission",
-        "directorate-general for maritime affairs",
-        "eu common fisheries policy",
-        "commission regulation",
-      ],
-      spain: [
-        "ministry of agriculture, fisheries and food",
-        "gobierno de españa",
-        "real decreto",
-      ],
-      malta: [
-        "department of fisheries and aquaculture",
-        "malta environment and planning authority",
-        "legal notice",
-      ],
-      cyprus: [
-        "department of fisheries and marine research",
-        "ministry of agriculture",
-        "cyprus fisheries law",
-      ],
-      greece: ["ministry of rural development and food", "hellenic republic"],
-      italy: [
-        "ministry of agricultural, food and forestry policies",
-        "decreto legislativo",
-      ],
-    };
-
-    // Suspicious patterns that indicate potential hallucination
-    const suspiciousPatterns = [
-      /regulation no\. \d{4}\/\d{4}/i, // Generic regulation patterns
-      /article \d+, section \d+/i, // Generic article references
-      /law \d{3}\(i\)\/\d{4}/i, // Specific Cyprus law pattern that might be fabricated
-      /royal decree \d+\/\d{4}/i, // Generic royal decree patterns
-      /legal notice \d+ of \d{4}/i, // Generic legal notice patterns
-    ];
-
-    // Generic terms that should be replaced
-    const genericTerms = [
-      "local regulations",
-      "government authority",
-      "fishing authority",
-      "marine authority",
-      "unknown",
-      "not specified",
-    ];
-
-    // Function to validate a single regulation entry
-    const validateRegulationEntry = (entry: any, fieldName: string) => {
-      if (!entry || typeof entry !== "object") {
-        return {
-          value: "Check with local authorities",
-          source: `Contact local fisheries authority in ${location}`,
-          confidence: "Low",
-        };
-      }
-
-      let { value, source, confidence } = entry;
-      let wasModified = false;
-
-      // Check for suspicious patterns in source
-      if (source && typeof source === "string") {
-        const sourceLower = source.toLowerCase();
-
-        // Check for generic terms
-        const hasGenericTerms = genericTerms.some((term) =>
-          sourceLower.includes(term.toLowerCase()),
-        );
-
-        // Check for suspicious regulation patterns
-        const hasSuspiciousPatterns = suspiciousPatterns.some((pattern) =>
-          pattern.test(source),
-        );
-
-        // Check if source contains legitimate authority references
-        const hasLegitimateAuthority = Object.values(legitimateAuthorities)
-          .flat()
-          .some((auth) => sourceLower.includes(auth.toLowerCase()));
-
-        if (
-          hasGenericTerms ||
-          hasSuspiciousPatterns ||
-          !hasLegitimateAuthority
-        ) {
-          // Replace with safe fallback
-          source = `Contact local fisheries authority in ${location} for current regulations`;
-          confidence = "Low";
-          wasModified = true;
-          validationFlags.suspiciousSourcesDetected = true;
-
-          if (hasGenericTerms) {
-            validationFlags.genericSourcesReplaced = true;
-          }
-        }
-      }
-
-      // Ensure confidence is appropriately conservative
-      if (
-        confidence === "High" &&
-        !source.toLowerCase().includes("european commission")
-      ) {
-        confidence = "Medium";
-        validationFlags.confidenceDowngraded = true;
-        wasModified = true;
-      }
-
-      // If value seems too specific without high confidence, make it more general
-      if (
-        confidence === "Low" &&
-        value &&
-        typeof value === "string" &&
-        (value.includes("cm") ||
-          value.includes("per day") ||
-          value.includes("€"))
-      ) {
-        value = "Check with local authorities";
-        wasModified = true;
-      }
-
-      if (wasModified) {
-        console.warn(
-          `⚠️ Regulation validation: Modified ${fieldName} due to suspicious content`,
-          { original: entry, modified: { value, source, confidence } },
-        );
-      }
-
-      return { value, source, confidence };
-    };
-
-    // Validate each regulation field
-    validatedRegulations.sizeLimit = validateRegulationEntry(
-      regulations.sizeLimit,
-      "sizeLimit",
-    );
-    validatedRegulations.bagLimit = validateRegulationEntry(
-      regulations.bagLimit,
-      "bagLimit",
-    );
-    validatedRegulations.seasonDates = validateRegulationEntry(
-      regulations.seasonDates,
-      "seasonDates",
-    );
-    validatedRegulations.licenseRequired = validateRegulationEntry(
-      regulations.licenseRequired,
-      "licenseRequired",
-    );
-    validatedRegulations.penalties = validateRegulationEntry(
-      regulations.penalties,
-      "penalties",
-    );
-
-    // Validate additional rules
-    if (
-      regulations.additionalRules &&
-      Array.isArray(regulations.additionalRules)
-    ) {
-      validatedRegulations.additionalRules = regulations.additionalRules
-        .map((rule: any, index: number) =>
-          validateRegulationEntry(rule, `additionalRule${index}`),
-        )
-        .filter((rule: any) => rule.value !== "Check with local authorities"); // Remove generic additional rules
-    } else {
-      validatedRegulations.additionalRules = [];
-    }
-
-    // Add validation metadata
-    validatedRegulations.validationFlags = validationFlags;
-    validatedRegulations.lastValidated = new Date().toISOString();
-
-    // Log validation results
-    if (
-      validationFlags.suspiciousSourcesDetected ||
-      validationFlags.genericSourcesReplaced ||
-      validationFlags.confidenceDowngraded
-    ) {
-      console.warn(
-        "🛡️ Regulation validation detected and corrected potential AI hallucination:",
-        validationFlags,
-      );
-    }
-
-    return validatedRegulations;
-  };
-
   useEffect(() => {
     const getFishDetails = async () => {
       if (!fishName) {
@@ -743,7 +335,7 @@ const FishDetailPage = () => {
         const apiKey = config.VITE_OPENAI_API_KEY;
         if (!apiKey) throw new Error("OpenAI API key is missing");
 
-        const userLocation = profile.location || "Unknown Location";
+        const userLocation = profile?.location || "Unknown Location";
 
         const currentMonth = new Date().toLocaleString("default", {
           month: "long",
@@ -768,7 +360,7 @@ const FishDetailPage = () => {
           "fishinfo",
           initialData.name,
           userLocation,
-          initialData.scientificName,
+          initialData.scientificName
         );
         const cachedFishInfo = getCachedData(fishInfoCacheKey);
 
@@ -962,7 +554,7 @@ rodType`,
             const validation = validateFishingData(
               result,
               result.name,
-              userLocation,
+              userLocation
             );
 
             // Add validation metadata to the result
@@ -974,7 +566,7 @@ rodType`,
             } else {
               console.error(
                 "🚫 Not caching data due to validation errors:",
-                validation.errors,
+                validation.errors
               );
             }
           } catch (parseError) {
@@ -1007,7 +599,7 @@ rodType`,
           "regulations",
           result.name,
           userLocation,
-          result.scientificName,
+          result.scientificName
         );
         const cachedRegulations = getCachedData(regulationsCacheKey);
 
@@ -1101,7 +693,7 @@ Return only valid JSON in the following format:
             // Validate and sanitize the regulations result
             regulationsResult = validateAndSanitizeRegulations(
               regulationsResult,
-              userLocation,
+              userLocation
             );
 
             // Cache the successful result
@@ -1160,7 +752,7 @@ Return only valid JSON in the following format:
         ) {
           log(
             "🔄 Retrying regulations with updated scientific name:",
-            result.scientificName,
+            result.scientificName
           );
 
           const updatedFishIdentifier = `${result.name} (${result.scientificName})`;
@@ -1237,7 +829,7 @@ Return only valid JSON in the following format:
               .replace(/```json\n?|```\n?/g, "")
               .trim();
             const retryRegulationsResult = JSON.parse(
-              cleanRetryRegulationsContent,
+              cleanRetryRegulationsContent
             );
 
             log("✅ Retry regulations parsed successfully:", {
@@ -1254,7 +846,7 @@ Return only valid JSON in the following format:
           } catch (retryError) {
             console.warn(
               "Retry regulations call failed, using original result:",
-              retryError,
+              retryError
             );
           }
         }
@@ -1290,11 +882,11 @@ Return only valid JSON in the following format:
         // Load the fish image from Vercel Blob storage
         try {
           log(
-            `Loading image for ${fishDetailsData.name} (${fishDetailsData.scientificName})`,
+            `Loading image for ${fishDetailsData.name} (${fishDetailsData.scientificName})`
           );
           const blobImageUrl = await getFishImageUrlFromService(
             fishDetailsData.name,
-            fishDetailsData.scientificName,
+            fishDetailsData.scientificName
           );
           log(`Got blob image URL: ${blobImageUrl}`);
           setFishImageUrl(blobImageUrl);
@@ -1307,7 +899,7 @@ Return only valid JSON in the following format:
       } catch (err) {
         console.error("Error fetching fish details:", err);
         setError(
-          err instanceof Error ? err.message : "Failed to fetch fish details",
+          err instanceof Error ? err.message : "Failed to fetch fish details"
         );
       } finally {
         setLoading(false);
@@ -1315,9 +907,9 @@ Return only valid JSON in the following format:
     };
 
     getFishDetails();
-  }, [fishName, location.state]);
+  }, [fishName, location.state, profile]);
 
-  if (loading) {
+  if (loading || isProfileLoading) {
     return (
       <div className="flex flex-col h-full bg-white dark:bg-gray-950">
         {/* Header */}
@@ -1339,7 +931,7 @@ Return only valid JSON in the following format:
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex flex-col">
+          <div className="flex-1 flex flex-col overflow-y-auto">
             {/* Desktop Header */}
             <div className="hidden lg:block sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 shadow-sm">
               <div className="flex items-center">
@@ -1356,9 +948,7 @@ Return only valid JSON in the following format:
               </div>
             </div>
 
-            <div className="flex-1 flex items-center justify-center">
-              <LoadingDots color="#0251FB" size={6} />
-            </div>
+            <FishDetailSkeleton />
           </div>
         </div>
 
@@ -1389,7 +979,6 @@ Return only valid JSON in the following format:
           {/* Main Content */}
           <div className="flex-1 flex flex-col overflow-y-auto">
             {/* Desktop Header */}
-            heelo
             <div className="hidden lg:block sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 shadow-sm">
               <div className="flex items-center">
                 <Button
@@ -1752,7 +1341,7 @@ Return only valid JSON in the following format:
                           b &&
                           typeof b === "string" &&
                           b.trim() !== "" &&
-                          b.trim().toLowerCase() !== "n/a",
+                          b.trim().toLowerCase() !== "n/a"
                       );
                     const hasLures =
                       method.gear?.lures &&
@@ -1763,7 +1352,7 @@ Return only valid JSON in the following format:
                           l &&
                           typeof l === "string" &&
                           l.trim() !== "" &&
-                          l.trim().toLowerCase() !== "n/a",
+                          l.trim().toLowerCase() !== "n/a"
                       );
                     const hasJigInfo =
                       (method.gear?.jig_weight &&
@@ -1913,7 +1502,7 @@ Return only valid JSON in the following format:
                                 b &&
                                 typeof b === "string" &&
                                 b.trim() !== "" &&
-                                b.trim().toLowerCase() !== "n/a",
+                                b.trim().toLowerCase() !== "n/a"
                             )
                             .join(", "),
                           color: "emerald",
@@ -1929,7 +1518,7 @@ Return only valid JSON in the following format:
                                 l &&
                                 typeof l === "string" &&
                                 l.trim() !== "" &&
-                                l.trim().toLowerCase() !== "n/a",
+                                l.trim().toLowerCase() !== "n/a"
                             )
                             .join(", "),
                           color: "violet",
@@ -2160,7 +1749,7 @@ Return only valid JSON in the following format:
                     onClick={() =>
                       window.open(
                         "https://www.instagram.com/lishka.app/",
-                        "_blank",
+                        "_blank"
                       )
                     }
                     className="underline hover:no-underline font-medium text-gray-500 dark:text-gray-500"
