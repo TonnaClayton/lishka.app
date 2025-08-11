@@ -16,11 +16,12 @@ import EmailConfirmationPage from "./components/auth/email-confirmation-page";
 import ProtectedRoute from "./components/auth/protected-route";
 import SafariScrollFix from "./components/safari-scroll-fix";
 import EmailVerificationBanner from "./components/email-verification-banner";
-import { AuthProvider } from "./contexts/auth-context";
+import { AuthProvider, useAuth } from "./contexts/auth-context";
 import { config } from "@/lib/config";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { cn } from "./lib/utils";
+import { useProfile } from "./hooks/queries";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./pages/home"));
@@ -34,32 +35,32 @@ const GearCategoryPage = lazy(() => import("./components/gear-category-page"));
 const SideNav = lazy(() =>
   import("./components/bottom-nav").then((module) => ({
     default: module.SideNav,
-  }))
+  })),
 );
 const WeatherWidgetPro = lazy(() => import("./components/weather-widget-pro"));
 const SettingsPage = lazy(() => import("./components/settings-page"));
 const FaqPage = lazy(() => import("./components/faq-page"));
 const TermsPage = lazy(() => import("./components/terms-page"));
 const PrivacyPolicyPage = lazy(
-  () => import("./components/privacy-policy-page")
+  () => import("./components/privacy-policy-page"),
 );
 const BlobConnectionTest = lazy(
-  () => import("./components/blob-connection-test")
+  () => import("./components/blob-connection-test"),
 );
 const BlobImageUploader = lazy(
-  () => import("./components/blob-image-uploader")
+  () => import("./components/blob-image-uploader"),
 );
 const BlobImageTest = lazy(() => import("./components/blob-image-test"));
 const AccountStatusChecker = lazy(
-  () => import("./components/account-status-checker")
+  () => import("./components/account-status-checker"),
 );
 const StorageSetup = lazy(() => import("./components/storage-setup"));
 const DatabaseDebugger = lazy(() => import("./components/database-debugger"));
 const ImageUploadDebugger = lazy(
-  () => import("./components/image-upload-debugger")
+  () => import("./components/image-upload-debugger"),
 );
 const GearDatabaseDebugger = lazy(
-  () => import("./components/gear-database-debugger")
+  () => import("./components/gear-database-debugger"),
 );
 const WhatsNewPage = lazy(() => import("./components/whats-new-page"));
 
@@ -309,22 +310,23 @@ const router = createBrowserRouter(
     future: {
       v7_relativeSplatPath: true,
     },
-  }
+  },
 );
 
 function AppContent() {
   // Check if we're on the splash page
   const location = useLocation();
+  const { user } = useAuth();
+  const { data: profile } = useProfile(user?.id);
   const navigate = useNavigate();
-  const isSplashPage =
-    location.pathname === "/" && !localStorage.getItem("userLocation");
+  const isSplashPage = location.pathname === "/" && !profile?.location;
 
   // Check if current route should have the weather widget in desktop layout
   const shouldShowWeatherWidget = ["/", "/search"].includes(location.pathname);
 
   // Check if we're on auth pages (login/signup) to hide sidebar
   const isAuthPage = ["/login", "/signup", "/forgot-password"].includes(
-    location.pathname
+    location.pathname,
   );
 
   // Track if we're on mobile or desktop
@@ -364,7 +366,7 @@ function AppContent() {
         <div
           className={cn(
             "flex-1 max-w-full h-full flex flex-col overflow-hidden",
-            !isAuthPage ? "lg:ml-[var(--sidebar-width)]" : ""
+            !isAuthPage ? "lg:ml-[var(--sidebar-width)]" : "",
           )}
         >
           {/* Email verification banner - only show on non-auth pages */}

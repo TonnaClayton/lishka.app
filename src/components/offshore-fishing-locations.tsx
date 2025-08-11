@@ -10,6 +10,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { log } from "@/lib/logging";
+import { useUserLocation } from "@/hooks/queries";
 
 interface Coordinates {
   lat: number;
@@ -49,9 +50,9 @@ interface OffshoreFishingLocationsProps {
 }
 
 const OffshoreFishingLocations: React.FC<OffshoreFishingLocationsProps> = ({
-  userLocation,
   userCoordinates,
 }) => {
+  const { location: userLocation } = useUserLocation();
   const [locations, setLocations] = useState<OffshoreFishingLocation[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -64,34 +65,12 @@ const OffshoreFishingLocations: React.FC<OffshoreFishingLocationsProps> = ({
     radius: number;
   } | null>(null);
 
-  // Get user coordinates with fallback
-  const getUserCoordinates = useCallback((): Coordinates => {
-    if (userCoordinates) return userCoordinates;
-
-    try {
-      const savedLocationFull = localStorage.getItem("userLocationFull");
-      if (savedLocationFull) {
-        const locationData = JSON.parse(savedLocationFull);
-        return {
-          lat: locationData.latitude || 35.8997,
-          lng: locationData.longitude || 14.5146,
-        };
-      }
-    } catch (e) {
-      console.warn("Could not parse saved location coordinates");
-    }
-
-    // Default to Malta coordinates
-    return { lat: 35.8997, lng: 14.5146 };
-  }, [userCoordinates]);
-
   // Enhanced fetch function with better error handling
   const fetchOffshoreFishingLocations = useCallback(
     async (forceRefresh: boolean = false) => {
-      const coordinates = getUserCoordinates();
       const currentParams = {
-        lat: coordinates.lat,
-        lng: coordinates.lng,
+        lat: userLocation?.latitude,
+        lng: userLocation?.longitude,
         radius: selectedRadius,
       };
 
@@ -116,10 +95,10 @@ const OffshoreFishingLocations: React.FC<OffshoreFishingLocationsProps> = ({
         const currentYear = new Date().getFullYear();
 
         // Enhanced cache key with version
-        const cacheKey = `offshore_fishing_v3_${coordinates.lat.toFixed(4)}_${coordinates.lng.toFixed(4)}_${selectedRadius}NM_${currentYear}_${currentMonth}`;
+        const cacheKey = `offshore_fishing_v3_${currentParams.lat.toFixed(4)}_${currentParams.lng.toFixed(4)}_${selectedRadius}NM_${currentYear}_${currentMonth}`;
 
         log(
-          `🎣 Fetching fishing locations for ${coordinates.lat.toFixed(4)}, ${coordinates.lng.toFixed(4)} within ${selectedRadius}NM`,
+          `🎣 Fetching fishing locations for ${currentParams.lat.toFixed(4)}, ${currentParams.lng.toFixed(4)} within ${selectedRadius}NM`,
         );
 
         // Check cache first (unless forcing refresh)
@@ -141,8 +120,8 @@ const OffshoreFishingLocations: React.FC<OffshoreFishingLocationsProps> = ({
         // Generate new locations
         log("🔄 Generating new fishing locations...");
         const result = await generateEnhancedOffshoreFishingLocations(
-          coordinates.lat,
-          coordinates.lng,
+          currentParams.lat,
+          currentParams.lng,
           selectedRadius,
           18, // Target 18 locations
         );
@@ -192,7 +171,7 @@ const OffshoreFishingLocations: React.FC<OffshoreFishingLocationsProps> = ({
         setLoading(false);
       }
     },
-    [getUserCoordinates, selectedRadius, lastFetchParams],
+    [userLocation, selectedRadius, lastFetchParams],
   );
 
   // Effect to load locations when component mounts or dependencies change
@@ -246,7 +225,6 @@ const OffshoreFishingLocations: React.FC<OffshoreFishingLocationsProps> = ({
   }, [handleRetry]);
 
   const radiusOptions = [5, 10, 15, 20, 25, 30];
-  const currentUserCoordinates = getUserCoordinates();
 
   // Loading state
   if (loading && locations.length === 0) {
@@ -337,8 +315,8 @@ const OffshoreFishingLocations: React.FC<OffshoreFishingLocationsProps> = ({
           </div>
           <div className="space-y-1 text-xs text-blue-600 dark:text-blue-300">
             <div className="font-mono">
-              📍 Your Location: {currentUserCoordinates.lat.toFixed(6)}°,{" "}
-              {currentUserCoordinates.lng.toFixed(6)}°
+              📍 Your Location: {userLocation?.latitude.toFixed(6)}°,{" "}
+              {userLocation?.longitude.toFixed(6)}°
             </div>
             <div className="font-mono">
               🎯 Search Radius: {selectedRadius} NM
@@ -391,7 +369,7 @@ const OffshoreFishingLocations: React.FC<OffshoreFishingLocationsProps> = ({
                 key={`offshore-${location.coordinates.lat}-${location.coordinates.lng}-${index}`}
                 name={location.name}
                 coordinates={location.coordinates}
-                userCoordinates={currentUserCoordinates}
+                userCoordinates={location.coordinates}
                 distance={location.distance}
                 depth={location.depth}
                 seabedType={location.seabedType}
