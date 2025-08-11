@@ -76,20 +76,20 @@ const LoginPage: React.FC = () => {
 
         if (errorMsg.includes("Email not confirmed")) {
           setError(
-            "Your email address hasn't been verified yet. Please check your inbox for a verification email."
+            "Your email address hasn't been verified yet. Please check your inbox for a verification email.",
           );
           setShowEmailVerification(true);
         } else if (errorMsg.includes("Invalid login credentials")) {
           setError(
-            "Invalid email or password. Please check your credentials and try again."
+            "Invalid email or password. Please check your credentials and try again.",
           );
         } else if (errorMsg.includes("Too many requests")) {
           setError(
-            "Too many login attempts. Please wait a few minutes before trying again."
+            "Too many login attempts. Please wait a few minutes before trying again.",
           );
         } else if (errorMsg.includes("Network") || errorMsg.includes("fetch")) {
           setError(
-            "Network connection error. Please check your internet connection and try again."
+            "Network connection error. Please check your internet connection and try again.",
           );
         } else {
           setError(errorMsg);
@@ -125,7 +125,7 @@ const LoginPage: React.FC = () => {
       } else {
         setError(null);
         alert(
-          "Verification email sent! Please check your inbox and spam folder."
+          "Verification email sent! Please check your inbox and spam folder.",
         );
         setShowEmailVerification(false);
       }

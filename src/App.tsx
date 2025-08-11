@@ -19,11 +19,12 @@ import {
 import ProtectedRoute from "./components/auth/protected-route";
 import SafariScrollFix from "./components/safari-scroll-fix";
 import EmailVerificationBanner from "./components/email-verification-banner";
-import { AuthProvider } from "./contexts/auth-context";
+import { AuthProvider, useAuth } from "./contexts/auth-context";
 import { config } from "@/lib/config";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { cn } from "./lib/utils";
+import { useProfile } from "./hooks/queries";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./components/home-page"));
@@ -326,9 +327,10 @@ const router = createBrowserRouter(
 function AppContent() {
   // Check if we're on the splash page
   const location = useLocation();
+  const { user } = useAuth();
+  const { data: profile } = useProfile(user?.id);
   const navigate = useNavigate();
-  const isSplashPage =
-    location.pathname === "/" && !localStorage.getItem("userLocation");
+  const isSplashPage = location.pathname === "/" && !profile?.location;
 
   // Check if current route should have the weather widget in desktop layout
   const shouldShowWeatherWidget = ["/", "/search"].includes(location.pathname);

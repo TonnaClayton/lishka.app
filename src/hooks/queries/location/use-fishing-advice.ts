@@ -21,7 +21,7 @@ export interface CurrentConditions {
 export const fishingAdviceQueryKeys = {
   fishingAdvice: (
     location: LocationData | null,
-    conditions: CurrentConditions | null
+    conditions: CurrentConditions | null,
   ) =>
     [
       "fishing",
@@ -65,7 +65,7 @@ const getSeason = (latitude: number, month: number) => {
 // Function to fetch fishing advice from AI
 const fetchFishingAdvice = async (
   location: LocationData,
-  conditions: CurrentConditions
+  conditions: CurrentConditions,
 ): Promise<FishingAdvice> => {
   if (!location || !conditions) {
     throw new Error("Location and conditions are required for fishing advice");
@@ -138,7 +138,7 @@ const fetchFishingAdvice = async (
 
 export const useFishingAdvice = (
   location: LocationData | null,
-  conditions: CurrentConditions | null
+  conditions: CurrentConditions | null,
 ) => {
   const queryClient = useQueryClient();
 
@@ -147,7 +147,7 @@ export const useFishingAdvice = (
     queryFn: () => {
       if (!location || !conditions) {
         throw new Error(
-          "Location and conditions are required for fishing advice"
+          "Location and conditions are required for fishing advice",
         );
       }
       return fetchFishingAdvice(location, conditions);
@@ -165,7 +165,7 @@ export const useFishingAdvice = (
     mutationFn: async () => {
       if (!location || !conditions) {
         throw new Error(
-          "Location and conditions are required for fishing advice refresh"
+          "Location and conditions are required for fishing advice refresh",
         );
       }
       return fetchFishingAdvice(location, conditions);
@@ -175,7 +175,7 @@ export const useFishingAdvice = (
       if (location && conditions) {
         queryClient.setQueryData(
           fishingAdviceQueryKeys.fishingAdvice(location, conditions),
-          newAdvice
+          newAdvice,
         );
       }
     },

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
+import { useUserLocation } from "@/hooks/queries";
 
 interface GearItem {
   id: string;
@@ -65,11 +66,7 @@ interface AnalysisState {
 const GearRecommendationWidget: React.FC = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const [location, setLocation] = useState<{
-    latitude: number;
-    longitude: number;
-    name: string;
-  } | null>(null);
+  const { location } = useUserLocation();
   const [analysis, setAnalysis] = useState<AnalysisState>({
     phase: "idle",
     weatherConditions: null,
@@ -82,119 +79,6 @@ const GearRecommendationWidget: React.FC = () => {
     profile?.gear_items && Array.isArray(profile.gear_items)
       ? profile.gear_items
       : [];
-
-  // Load location from localStorage and listen for changes
-  useEffect(() => {
-    const loadLocation = () => {
-      try {
-        const savedLocation = localStorage.getItem("userLocationFull");
-        if (savedLocation) {
-          const parsedLocation = JSON.parse(savedLocation);
-          if (
-            parsedLocation &&
-            (parsedLocation.latitude || parsedLocation.lat)
-          ) {
-            const locationData = {
-              latitude:
-                parsedLocation.latitude || parsedLocation.lat || 35.8997,
-              longitude:
-                parsedLocation.longitude || parsedLocation.lng || 14.5146,
-              name: parsedLocation.name || "Malta",
-            };
-
-            // Only update if location actually changed
-            setLocation((prevLocation) => {
-              if (
-                !prevLocation ||
-                prevLocation.latitude !== locationData.latitude ||
-                prevLocation.longitude !== locationData.longitude ||
-                prevLocation.name !== locationData.name
-              ) {
-                log(
-                  "[GearRecommendation] Location changed to:",
-                  locationData.name,
-                );
-                return locationData;
-              }
-              return prevLocation;
-            });
-            return;
-          }
-        }
-      } catch (err) {
-        console.error("[GearRecommendation] Error parsing location:", err);
-      }
-
-      // Default location
-      const defaultLocation = {
-        latitude: 35.8997,
-        longitude: 14.5146,
-        name: "Malta",
-      };
-      setLocation((prevLocation) => {
-        if (
-          !prevLocation ||
-          prevLocation.latitude !== defaultLocation.latitude ||
-          prevLocation.longitude !== defaultLocation.longitude ||
-          prevLocation.name !== defaultLocation.name
-        ) {
-          log(
-            "[GearRecommendation] Using default location:",
-            defaultLocation.name,
-          );
-          return defaultLocation;
-        }
-        return prevLocation;
-      });
-    };
-
-    // Custom event listener for location changes within the same page
-    const handleLocationChange = (event: CustomEvent) => {
-      log("[GearRecommendation] Received location change event:", event.detail);
-      loadLocation();
-    };
-
-    // Polling mechanism to detect localStorage changes (fallback)
-    let locationCheckInterval: NodeJS.Timeout;
-    let lastLocationString = localStorage.getItem("userLocationFull");
-
-    const startLocationPolling = () => {
-      locationCheckInterval = setInterval(() => {
-        const currentLocationString = localStorage.getItem("userLocationFull");
-        if (currentLocationString !== lastLocationString) {
-          log("[GearRecommendation] Location change detected via polling");
-          lastLocationString = currentLocationString;
-          loadLocation();
-        }
-      }, 1000); // Check every second
-    };
-
-    // Initial load
-    loadLocation();
-
-    // Listen for storage events (cross-tab changes)
-    window.addEventListener("storage", loadLocation);
-
-    // Listen for custom location change events (same-page changes)
-    window.addEventListener(
-      "locationChanged",
-      handleLocationChange as EventListener,
-    );
-
-    // Start polling as fallback
-    startLocationPolling();
-
-    return () => {
-      window.removeEventListener("storage", loadLocation);
-      window.removeEventListener(
-        "locationChanged",
-        handleLocationChange as EventListener,
-      );
-      if (locationCheckInterval) {
-        clearInterval(locationCheckInterval);
-      }
-    };
-  }, []);
 
   // Track previous location to detect changes
   const [previousLocation, setPreviousLocation] = useState<string | null>(null);

@@ -17,6 +17,7 @@ type AuthUser = {
 
 import { ImageMetadata } from "@/lib/image-metadata";
 import { log } from "@/lib/logging";
+import { useProfile } from "@/hooks/queries";
 
 type Profile = {
   id: string;
@@ -78,6 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const {} = useProfile(user?.id);
 
   // Convert Supabase User to AuthUser
   const convertUser = (supabaseUser: User | null): AuthUser | null => {

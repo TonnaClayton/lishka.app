@@ -29,6 +29,7 @@ import { cacheApiResponse, getCachedApiResponse } from "@/lib/api-helpers";
 import LoadingDots from "./loading-dots";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
+import { useUserLocation } from "@/hooks/queries";
 
 interface FishingTip {
   title: string;
@@ -159,6 +160,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
   const [count, setCount] = useState(0);
   const [weatherSummary, setWeatherSummary] = useState<any>(null);
   const [loadingWeather, setLoadingWeather] = useState(false);
+  const { location: userLocation } = useUserLocation();
   // Removed maxCardHeight state and tipContentRefs to fix height growing issue
 
   // Get current season based on month
@@ -356,27 +358,9 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
 
     setLoadingWeather(true);
     try {
-      // Get user's location coordinates
-      const savedLocation = localStorage.getItem("userLocationFull");
-      let coordinates = { latitude: 25.7617, longitude: -80.1918 }; // Default to Miami
-
-      if (savedLocation) {
-        try {
-          const parsedLocation = JSON.parse(savedLocation);
-          if (parsedLocation.latitude && parsedLocation.longitude) {
-            coordinates = {
-              latitude: parsedLocation.latitude,
-              longitude: parsedLocation.longitude,
-            };
-          }
-        } catch (e) {
-          console.error("Error parsing location:", e);
-        }
-      }
-
       // Fetch weather and marine data from Open-Meteo
-      const weatherUrl = `https://customer-api.open-meteo.com/v1/forecast?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}&current=temperature_2m,weather_code,wind_speed_10m,is_day&hourly=temperature_2m,weather_code,wind_speed_10m&timezone=auto&apikey=1g8vJZI7DhEIFDIt`;
-      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${coordinates.latitude}&longitude=${coordinates.longitude}&current=wave_height`;
+      const weatherUrl = `https://customer-api.open-meteo.com/v1/forecast?latitude=${userLocation?.latitude}&longitude=${userLocation?.longitude}&current=temperature_2m,weather_code,wind_speed_10m,is_day&hourly=temperature_2m,weather_code,wind_speed_10m&timezone=auto&apikey=1g8vJZI7DhEIFDIt`;
+      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${userLocation?.latitude}&longitude=${userLocation?.longitude}&current=wave_height`;
 
       const [weatherResponse, marineResponse] = await Promise.all([
         fetch(weatherUrl),
