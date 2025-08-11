@@ -63,14 +63,14 @@ const AccountConfirmationEmail = (props: {
 
             {/* Alternative Link */}
             <Section className="bg-gray-50 rounded-[8px] p-[20px] mb-[32px] px-[40px]">
-              <Text className="text-[14px] text-gray-600 m-0">
+              <Text className="text-[14px] text-gray-600 m-0 mb-[4px]">
                 If the button doesn't work, you can also copy and paste this
                 link into your browser:
               </Text>
               <Text className="text-[14px] rounded-[4px] border-[4px] text-[#3b82f6] bg-[#f1f5f9] p-[10px] break-all m-0 mt-[8px]">
                 {verificationLink}
               </Text>
-              <Text className="text-[14px] text-gray-600 leading-[20px] m-0">
+              <Text className="text-[14px] text-gray-600 leading-[20px] m-0 mt-[4px]">
                 This confirmation link will expire in 24 hours for security
                 reasons.
               </Text>

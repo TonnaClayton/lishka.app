@@ -1,7 +1,6 @@
 import React, { useState, useRef, useContext } from "react";
 import { Mail, X, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthContext } from "@/contexts/auth-context";
 
 const EmailVerificationBanner: React.FC = () => {
@@ -52,7 +51,7 @@ const EmailVerificationBanner: React.FC = () => {
   // Prevent duplicate rendering by checking if this specific user's banner has already been shown
   if (typeof window !== "undefined") {
     const existingBanner = document.querySelector(
-      `[data-banner-id="${bannerId}"]`,
+      `[data-banner-id="${bannerId}"]`
     );
     if (existingBanner && !dismissed) {
       return null;
