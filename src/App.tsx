@@ -27,7 +27,7 @@ import { cn } from "./lib/utils";
 import { useProfile } from "./hooks/queries";
 
 // Lazy load heavy components for better initial loading performance
-const HomePage = lazy(() => import("./components/home-page"));
+const HomePage = lazy(() => import("./pages/home"));
 const FishDetailPage = lazy(() => import("./components/fish-detail-page"));
 const MenuPage = lazy(() => import("./components/menu-page"));
 const SearchPage = lazy(() => import("./pages/search"));

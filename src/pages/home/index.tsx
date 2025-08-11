@@ -1,28 +1,22 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { MapPin, User, Menu } from "lucide-react";
-import BottomNav from "./bottom-nav";
-import FishCard from "./fish-card";
-import { Button } from "./ui/button";
-import { Card, CardContent } from "./ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "./ui/avatar";
-import { Skeleton } from "./ui/skeleton";
+import BottomNav from "@/components/bottom-nav";
+import FishCard from "@/components/fish-card";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 
-import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
-
-import LoadingDots from "./loading-dots";
-import LocationModal from "./location-modal";
-import FishingTipsCarousel from "./fishing-tips-carousel";
-import OffshoreFishingLocations from "./offshore-fishing-locations";
-import EmailVerificationBanner from "./email-verification-banner";
+import LoadingDots from "@/components/loading-dots";
+import LocationModal from "@/components/location-modal";
+import EmailVerificationBanner from "@/components/email-verification-banner";
 import GearRecommendationWidget from "./gear-recommendation-widget";
-import HomePageSkeleton from "./skeletons/home-page-skeleton";
-import ToxicFishSkeleton from "./skeletons/toxic-fish-skeleton";
+import HomePageSkeleton from "./home-page-skeleton";
+import ToxicFishSkeleton from "./toxic-fish-skeleton";
+import FishingTipsCarousel from "./fishing-tips-carousel";
 import { log } from "@/lib/logging";
 
 // Import Dialog components from ui folder
-import { Dialog, DialogContent, DialogOverlay } from "./ui/dialog";
+import { Dialog, DialogContent, DialogOverlay } from "@/components/ui/dialog";
 import {
   useFishDataInfinite,
   useProfile,
@@ -78,7 +72,7 @@ const HomePage: React.FC<HomePageProps> = ({
   } = useToxicFishData(
     userLocation,
     (profile?.location_coordinates as any)?.latitude,
-    (profile?.location_coordinates as any)?.longitude,
+    (profile?.location_coordinates as any)?.longitude
   );
 
   // Extract fish list from infinite query data
