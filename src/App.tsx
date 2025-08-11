@@ -9,10 +9,13 @@ import {
 } from "react-router-dom";
 import routes from "tempo-routes";
 import { lazy } from "react";
-import LoginPage from "./components/auth/login-page";
-import SignupPage from "./components/auth/signup-page";
-import ForgotPasswordPage from "./components/auth/forgot-password-page";
-import EmailConfirmationPage from "./components/auth/email-confirmation-page";
+import {
+  ForgotPasswordPage,
+  ResetPasswordPage,
+  LoginPage,
+  SignupPage,
+  EmailConfirmationPage,
+} from "./pages/auth";
 import ProtectedRoute from "./components/auth/protected-route";
 import SafariScrollFix from "./components/safari-scroll-fix";
 import EmailVerificationBanner from "./components/email-verification-banner";
@@ -94,6 +97,14 @@ const router = createBrowserRouter(
           element: (
             <ProtectedRoute requireAuth={false}>
               <ForgotPasswordPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "reset-password",
+          element: (
+            <ProtectedRoute requireAuth={true}>
+              <ResetPasswordPage />
             </ProtectedRoute>
           ),
         },
@@ -323,9 +334,12 @@ function AppContent() {
   const shouldShowWeatherWidget = ["/", "/search"].includes(location.pathname);
 
   // Check if we're on auth pages (login/signup) to hide sidebar
-  const isAuthPage = ["/login", "/signup", "/forgot-password"].includes(
-    location.pathname
-  );
+  const isAuthPage = [
+    "/login",
+    "/signup",
+    "/forgot-password",
+    "/reset-password",
+  ].includes(location.pathname);
 
   // Track if we're on mobile or desktop
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
