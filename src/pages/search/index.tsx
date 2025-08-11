@@ -165,7 +165,7 @@ const SearchPage: React.FC = () => {
         userMessageContent = [
           {
             type: "text",
-            text: `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`,
+            text: `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format and do not forget to close the JSON section: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`,
           },
           {
             type: "image_url",
@@ -175,7 +175,7 @@ const SearchPage: React.FC = () => {
           },
         ];
       } else {
-        userMessageContent = `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`;
+        userMessageContent = `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format and do not forget to close the JSON section: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`;
       }
 
       const response = await fetch(
