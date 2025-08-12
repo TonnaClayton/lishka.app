@@ -11,6 +11,7 @@ import { toBlob } from "html-to-image";
 import { cn } from "@/lib/utils";
 import FishInfoOverlay from "@/components/fish-info-overlay";
 import { ImageMetadata } from "@/lib/image-metadata";
+import useIsMobile from "@/hooks/use-is-mobile";
 
 function FishImageCard({
   isSingleColumn,
@@ -35,6 +36,7 @@ function FishImageCard({
   const [imageError, setImageError] = useState<boolean>(false);
 
   // All photos should now be ImageMetadata objects - simplified parsing
+  const isMobile = useIsMobile(550);
 
   const fishInfoOverlayRef = useRef<HTMLDivElement>(null);
 
@@ -294,7 +296,7 @@ function FishImageCard({
 
         <div
           ref={fishInfoOverlayRef}
-          className="w-full h-full"
+          className="w-full h-fit"
           id="fish-info-overlay-container"
         >
           {/* Image */}
@@ -362,6 +364,7 @@ function FishImageCard({
             <FishInfoOverlay
               metadata={metadata}
               isSingleColumn={isSingleColumn}
+              isMobile={isMobile}
             />
           )}
         </div>
@@ -369,7 +372,12 @@ function FishImageCard({
 
       {/* 3-dots menu - only show in single column mode */}
       {isSingleColumn && (
-        <div className="absolute bottom-28 right-0 h-10 w-full z-20">
+        <div
+          className={cn(
+            "absolute right-0 h-10 w-full z-20",
+            isMobile == true ? "top-2" : "bottom-28"
+          )}
+        >
           <div className="flex items-center justify-end pr-5">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
