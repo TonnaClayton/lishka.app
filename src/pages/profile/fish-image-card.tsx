@@ -55,7 +55,7 @@ function FishImageCard({
       } catch (parseError) {
         console.warn(
           `[ProfilePage] Failed to parse legacy photo metadata at index:`,
-          parseError,
+          parseError
         );
         photoUrl = photo;
         // Create minimal metadata for legacy string URLs
@@ -101,6 +101,33 @@ function FishImageCard({
   const isLoading = imageLoadingState;
   const hasError = imageError;
 
+  const buildBlobWithRetry = async (
+    element: HTMLElement,
+    pixelRatio = 2,
+    minBlobSize = 500_000
+  ) => {
+    const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+    let blob: Blob | null = null;
+    let attempt = 0;
+    const maxAttempts = isSafari ? 10 : 1;
+
+    while (attempt < maxAttempts) {
+      blob = await toBlob(element, {
+        cacheBust: true,
+        pixelRatio,
+      });
+
+      if (blob && blob.size > minBlobSize) {
+        break;
+      }
+
+      attempt += 1;
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+
+    return blob;
+  };
+
   const handleSharePhoto = async () => {
     try {
       let photoUrl: string;
@@ -110,7 +137,7 @@ function FishImageCard({
       if (typeof photo === "string") {
         console.warn(
           `[ProfilePage] Legacy string photo in share function:`,
-          photo,
+          photo
         );
         const photoString = photo as string;
         if (photoString.startsWith("{") && photoString.includes('"url"')) {
@@ -151,9 +178,9 @@ function FishImageCard({
                 return;
               }
 
-              const overlayBlob = await toBlob(fishInfoOverlayRef.current, {
-                cacheBust: true,
-              });
+              const overlayBlob = await buildBlobWithRetry(
+                fishInfoOverlayRef.current
+              );
 
               file = new File([overlayBlob], "fish-catch-with-info.png", {
                 type: "image/png",
@@ -181,7 +208,7 @@ function FishImageCard({
             } catch (exportError) {
               console.error(
                 "[ProfilePage] Error exporting overlay:",
-                exportError,
+                exportError
               );
               // Fallback to original image
               const response = await fetch(photoUrl);
@@ -218,7 +245,7 @@ function FishImageCard({
         } catch (clipboardError) {
           console.error(
             "[ProfilePage] Error copying to clipboard:",
-            clipboardError,
+            clipboardError
           );
           setError("Unable to share photo. Please try again.");
         }
@@ -233,7 +260,7 @@ function FishImageCard({
     <div
       className={cn(
         `relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden bg-gray-100 dark:bg-gray-700`,
-        isSingleColumn ? "" : "aspect-square",
+        isSingleColumn ? "" : "aspect-square"
       )}
     >
       {/* Main image button */}
@@ -303,7 +330,7 @@ function FishImageCard({
                 })(),
                 urlLength: photoUrl.length,
                 hasValidExtension: /\.(jpg|jpeg|png|gif|webp)(\?|$)/i.test(
-                  photoUrl,
+                  photoUrl
                 ),
               });
 
