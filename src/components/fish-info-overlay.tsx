@@ -129,14 +129,14 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
           <div
             className={cn(
               "flex flex-col mb-4",
-              isMobile == true ? "gap-0.5" : "gap-3"
+              isMobile === true ? "gap-0.5" : "gap-3"
             )}
           >
             {hasAnyFishData ? (
               <>
                 {/* Fish Name with Confidence */}
                 {hasValidFishName ? (
-                  <div className="flex items-start gap-3 flex-wrap">
+                  <div className="flex items-start gap-3 flex-wrap justify-between sm:justify-start">
                     <div className="flex items-center gap-2 min-h-[24px]">
                       <Fish className="w-4 h-4 text-white flex-shrink-0" />
                       <span className="font-semibold text-lg text-white leading-tight">
@@ -163,7 +163,7 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
                 <div
                   className={cn(
                     "flex flex-col text-sm",
-                    isMobile == true ? "gap-0.5" : "gap-2"
+                    isMobile === true ? "gap-0.5" : "gap-2"
                   )}
                 >
                   {hasValidFishSize && (
