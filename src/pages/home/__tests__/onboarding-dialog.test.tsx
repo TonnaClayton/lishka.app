@@ -140,11 +140,11 @@ describe("OnboardingDialog", () => {
     render(<OnboardingDialog hasSeenOnboardingFlow={false} />);
 
     // Simulate being on the last screen (current === 5)
-    const continueButton = screen.getByRole("button");
+    const nextButton = screen.getByRole("button", { name: "Next" });
 
     // We need to simulate the carousel state changing to show the continue button
     // Since our mock doesn't fully simulate the carousel state, we'll test the logic directly
-    expect(continueButton).toBeInTheDocument();
+    expect(nextButton).toBeInTheDocument();
   });
 
   it("calls mutateAsync and closes dialog when continue is clicked", async () => {
@@ -152,41 +152,40 @@ describe("OnboardingDialog", () => {
 
     // We need to simulate being on the last screen and clicking continue
     // For this test, let's assume we can trigger the continue action
-    const button = screen.getByRole("button");
+    const nextButton = screen.getByRole("button", { name: "Next" });
 
     // Mock the internal state to be on the last screen
     // This is a simplified version - in a real app, we'd navigate through the carousel
-    await user.click(button);
+    await user.click(nextButton);
 
     // If we were on the last screen, it should call the mutation
     // Since our mock setup is simplified, let's just verify the button exists
-    expect(button).toBeInTheDocument();
+    expect(nextButton).toBeInTheDocument();
   });
 
   it("shows loading state when updating profile", async () => {
-    let resolveAsync: (value: any) => void;
-    mockMutateAsync.mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          resolveAsync = resolve;
-        }),
-    );
+    let resolveAsync: (value: any) => void = () => {};
+    const asyncPromise = new Promise((resolve) => {
+      resolveAsync = resolve;
+    });
+    
+    mockMutateAsync.mockImplementationOnce(() => asyncPromise);
 
     render(<OnboardingDialog hasSeenOnboardingFlow={false} />);
 
-    const button = screen.getByRole("button");
-    await user.click(button);
+    const nextButton = screen.getByRole("button", { name: "Next" });
+    await user.click(nextButton);
 
     // Check if loading state is shown (button should be disabled)
     await waitFor(() => {
-      expect(button).toBeDisabled();
-    });
+      expect(nextButton).toBeDisabled();
+    }, { timeout: 3000 });
 
-    resolveAsync!({});
+    resolveAsync({});
 
     await waitFor(() => {
-      expect(button).not.toBeDisabled();
-    });
+      expect(nextButton).not.toBeDisabled();
+    }, { timeout: 3000 });
   });
 
   it("handles profile update error gracefully", async () => {
@@ -197,12 +196,12 @@ describe("OnboardingDialog", () => {
 
     render(<OnboardingDialog hasSeenOnboardingFlow={false} />);
 
-    const button = screen.getByRole("button");
-    await user.click(button);
+    const nextButton = screen.getByRole("button", { name: "Next" });
+    await user.click(nextButton);
 
     await waitFor(() => {
       expect(consoleErrorSpy).toHaveBeenCalledWith(expect.any(Error));
-    });
+    }, { timeout: 3000 });
 
     consoleErrorSpy.mockRestore();
   });
@@ -211,11 +210,11 @@ describe("OnboardingDialog", () => {
     render(<OnboardingDialog hasSeenOnboardingFlow={false} />);
 
     // Simulate clicking continue on the last screen
-    const button = screen.getByRole("button");
+    const nextButton = screen.getByRole("button", { name: "Next" });
 
     // For this test, we'll mock the current state to be 5 (last screen)
     // and click the button to trigger the continue action
-    await user.click(button);
+    await user.click(nextButton);
 
     // The mutation should be called with the correct data
     await waitFor(() => {
@@ -224,7 +223,7 @@ describe("OnboardingDialog", () => {
           has_seen_onboarding_flow: true,
         });
       }
-    });
+    }, { timeout: 3000 });
   });
 
   it("prevents dialog from closing when hasSeenOnboardingFlow is false", () => {

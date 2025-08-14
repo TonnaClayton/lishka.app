@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { Button } from "./ui/button";
-import { CheckCircle2, MapPin } from "lucide-react";
+import React, { useState } from "react";
+import { MapPin } from "lucide-react";
 import WeatherWidget from "./weather-widget-pro";
 import BottomNav from "./bottom-nav";
 import { log } from "@/lib/logging";
@@ -18,8 +17,9 @@ const WeatherPage: React.FC = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile(user.id);
   const [location, setLocation] = useState<string>(
-    profile.location || DEFAULT_LOCATION.name,
+    profile.location || DEFAULT_LOCATION.name
   );
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dataLoaded, setDataLoaded] = useState(false);
 
   const { updateLocation } = useUserLocation();

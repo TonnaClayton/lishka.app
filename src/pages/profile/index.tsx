@@ -77,7 +77,7 @@ const profileSchema = z.object({
     .max(30, "Username must be less than 30 characters")
     .regex(
       /^[a-z0-9._]+$/,
-      "Username can only contain lowercase letters, numbers, dots (.) and underscores (_)",
+      "Username can only contain lowercase letters, numbers, dots (.) and underscores (_)"
     )
     .refine((val) => !val.includes("..") && !val.includes("__"), {
       message: "Username cannot have consecutive dots or underscores",
@@ -120,7 +120,7 @@ const MapClickHandler = ({
       // Attempt to get location name via reverse geocoding
       try {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
         );
         const data = await response.json();
 
@@ -174,7 +174,7 @@ const ProfilePage: React.FC = () => {
 
   // React Query hooks - always call them, let React Query handle the enabled state
   const { data: profile, isLoading: profileLoading } = useProfile(
-    user?.id ?? "",
+    user?.id ?? ""
   );
   const updateProfile = useUpdateProfile();
   const uploadAvatar = useUploadAvatar();
@@ -205,7 +205,7 @@ const ProfilePage: React.FC = () => {
       const isMobileScreen = window.innerWidth < 768;
       const isMobileDevice =
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent,
+          navigator.userAgent
         );
       log("[ProfilePage] Initial column detection:", {
         isMobileScreen,
@@ -217,23 +217,19 @@ const ProfilePage: React.FC = () => {
     }
     return false;
   });
-  const [imageLoadingStates, setImageLoadingStates] = useState<
-    Record<string, boolean>
-  >({});
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
   const [borderStyle, setBorderStyle] = useState({ left: 0, width: 0 });
-  const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [showEditAIDialog, setShowEditAIDialog] = useState(false);
   const [editingPhotoIndex, setEditingPhotoIndex] = useState<number | null>(
-    null,
+    null
   );
   const [editingMetadata, setEditingMetadata] = useState<ImageMetadata | null>(
-    null,
+    null
   );
   const [tempLocationData, setTempLocationData] = useState<LocationData | null>(
-    null,
+    null
   );
 
   // React Hook Form setup
@@ -388,8 +384,8 @@ const ProfilePage: React.FC = () => {
     log(
       "[ProfilePage] Is mobile:",
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent,
-      ),
+        navigator.userAgent
+      )
     );
 
     if (photoInputRef.current) {
@@ -397,7 +393,7 @@ const ProfilePage: React.FC = () => {
         // For mobile devices, use a more direct approach
         const isMobile =
           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent,
+            navigator.userAgent
           );
 
         if (isMobile) {
@@ -427,7 +423,7 @@ const ProfilePage: React.FC = () => {
 
   const getCroppedImg = (
     image: HTMLImageElement,
-    crop: PixelCrop,
+    crop: PixelCrop
   ): Promise<Blob> => {
     const canvas = document.createElement("canvas");
     const ctx = canvas.getContext("2d");
@@ -451,7 +447,7 @@ const ProfilePage: React.FC = () => {
       0,
       0,
       crop.width,
-      crop.height,
+      crop.height
     );
 
     return new Promise((resolve) => {
@@ -463,7 +459,7 @@ const ProfilePage: React.FC = () => {
           resolve(blob);
         },
         "image/jpeg",
-        0.95,
+        0.95
       );
     });
   };
@@ -483,7 +479,7 @@ const ProfilePage: React.FC = () => {
 
       const croppedImageBlob = await getCroppedImg(
         imgRef.current,
-        completedCrop,
+        completedCrop
       );
 
       log("Image cropped successfully, blob size:", croppedImageBlob.size);
@@ -528,13 +524,11 @@ const ProfilePage: React.FC = () => {
       // Handle timeout errors specifically
       if (err instanceof Error && err.message.includes("taking too long")) {
         setError(
-          "Upload is taking too long. Please check your connection and try again.",
+          "Upload is taking too long. Please check your connection and try again."
         );
       } else {
         setError(
-          err instanceof Error
-            ? err.message
-            : "Failed to crop and upload image",
+          err instanceof Error ? err.message : "Failed to crop and upload image"
         );
       }
     } finally {
@@ -628,13 +622,13 @@ const ProfilePage: React.FC = () => {
 
     window.addEventListener(
       "photoUploaded",
-      handlePhotoUploaded as EventListener,
+      handlePhotoUploaded as EventListener
     );
 
     return () => {
       window.removeEventListener(
         "photoUploaded",
-        handlePhotoUploaded as EventListener,
+        handlePhotoUploaded as EventListener
       );
     };
   }, [user?.id]);
@@ -647,7 +641,7 @@ const ProfilePage: React.FC = () => {
     if (typeof photo === "string") {
       console.warn(
         `[ProfilePage] Legacy string photo in edit function:`,
-        photo,
+        photo
       );
       const photoString = photo as string;
       if (photoString.startsWith("{") && photoString.includes('"url"')) {
@@ -689,7 +683,6 @@ const ProfilePage: React.FC = () => {
     setEditingPhotoIndex(index);
     setEditingMetadata(metadata);
     setShowEditAIDialog(true);
-    setOpenMenuIndex(null);
   };
 
   // Update border position when active tab changes
@@ -778,7 +771,7 @@ const ProfilePage: React.FC = () => {
       const isMobileScreen = window.innerWidth < 768;
       const isMobileDevice =
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-          navigator.userAgent,
+          navigator.userAgent
         );
 
       log("[ProfilePage] Window resize detected:", {
@@ -1050,7 +1043,7 @@ const ProfilePage: React.FC = () => {
               <Button
                 variant="outline"
                 className={cn(
-                  "flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-10 flex items-center justify-center gap-2",
+                  "flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-10 flex items-center justify-center gap-2"
                 )}
                 style={{ backgroundColor: "#025DFB0D" }}
                 onClick={() => navigate("/my-gear")}
@@ -1061,7 +1054,7 @@ const ProfilePage: React.FC = () => {
                   profile.gear_items.length > 0 && (
                     <Badge
                       className={cn(
-                        "bg-blue-600 hover:bg-blue-600 text-white rounded-full min-w-[24px] h-6 flex items-center justify-center text-sm font-medium",
+                        "bg-blue-600 hover:bg-blue-600 text-white rounded-full min-w-[24px] h-6 flex items-center justify-center text-sm font-medium"
                       )}
                     >
                       {profile.gear_items.length}
@@ -1071,7 +1064,7 @@ const ProfilePage: React.FC = () => {
               <Button
                 variant="outline"
                 className={cn(
-                  "flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-10 flex items-center justify-center gap-2",
+                  "flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-10 flex items-center justify-center gap-2"
                 )}
                 style={{ backgroundColor: "#025DFB0D" }}
                 onClick={() => {
@@ -1099,7 +1092,7 @@ const ProfilePage: React.FC = () => {
                   ref={fishGalleryTabRef}
                   value="fish-gallery"
                   className={cn(
-                    "flex items-center justify-center bg-transparent border-none rounded-none px-4 py-3 relative data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors",
+                    "flex items-center justify-center bg-transparent border-none rounded-none px-4 py-3 relative data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors"
                   )}
                   onClick={() => setActiveTab("fish-gallery")}
                 >
@@ -1109,7 +1102,7 @@ const ProfilePage: React.FC = () => {
                   ref={achievementsTabRef}
                   value="achievements"
                   className={cn(
-                    "flex items-center justify-center bg-transparent border-none rounded-none px-4 py-3 relative data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors",
+                    "flex items-center justify-center bg-transparent border-none rounded-none px-4 py-3 relative data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors"
                   )}
                   onClick={() => setActiveTab("achievements")}
                 >
@@ -1119,7 +1112,7 @@ const ProfilePage: React.FC = () => {
                   ref={tripsTabRef}
                   value="trips"
                   className={cn(
-                    "flex items-center justify-center bg-transparent border-none rounded-none px-4 py-3 relative data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors",
+                    "flex items-center justify-center bg-transparent border-none rounded-none px-4 py-3 relative data-[state=active]:bg-transparent data-[state=active]:shadow-none transition-colors"
                   )}
                   onClick={() => setActiveTab("trips")}
                 >
@@ -1148,7 +1141,7 @@ const ProfilePage: React.FC = () => {
                 <div
                   className={cn(
                     "grid gap-px transition-all duration-300",
-                    isSingleColumn ? "grid-cols-1" : "grid-cols-2",
+                    isSingleColumn ? "grid-cols-1" : "grid-cols-2"
                   )}
                 >
                   {/* Add Photo button - always first item in grid, smaller in single column */}
@@ -1157,7 +1150,7 @@ const ProfilePage: React.FC = () => {
                     disabled={uploadPhoto.isPending}
                     className={cn(
                       "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex-col relative transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation",
-                      isSingleColumn ? "h-20 rounded-lg mb-2" : "aspect-square",
+                      isSingleColumn ? "h-20 rounded-lg mb-2" : "aspect-square"
                     )}
                     style={{
                       WebkitTapHighlightColor: "transparent",
@@ -1171,13 +1164,13 @@ const ProfilePage: React.FC = () => {
                         <Plus
                           className={cn(
                             "mb-2 text-gray-600 dark:text-gray-300",
-                            isSingleColumn ? "w-6 h-6" : "w-8 h-8",
+                            isSingleColumn ? "w-6 h-6" : "w-8 h-8"
                           )}
                         />
                         <span
                           className={cn(
                             "text-gray-600 dark:text-gray-300 font-medium",
-                            isSingleColumn ? "text-xs" : "text-xs",
+                            isSingleColumn ? "text-xs" : "text-xs"
                           )}
                         >
                           Add Photo
@@ -1424,7 +1417,7 @@ const ProfilePage: React.FC = () => {
                                   prev.fishInfo?.estimatedWeight || "Unknown",
                               },
                             }
-                          : null,
+                          : null
                       );
                     }}
                     placeholder="Enter fish name"
@@ -1456,7 +1449,7 @@ const ProfilePage: React.FC = () => {
                                   prev.fishInfo?.estimatedWeight || "Unknown",
                               },
                             }
-                          : null,
+                          : null
                       );
                     }}
                     placeholder="e.g., 40-50 cm"
@@ -1488,7 +1481,7 @@ const ProfilePage: React.FC = () => {
                                 estimatedWeight: e.target.value,
                               },
                             }
-                          : null,
+                          : null
                       );
                     }}
                     placeholder="e.g., 2-3 kg"

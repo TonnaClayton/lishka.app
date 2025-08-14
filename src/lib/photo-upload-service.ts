@@ -1,9 +1,8 @@
 import {
-  uploadImageToSupabase,
-  isSupabaseStorageConfigured,
   getSupabaseStorageStatus,
+  uploadImageToSupabase,
 } from "./supabase-storage";
-import { processImageUpload, ImageMetadata } from "./image-metadata";
+import { ImageMetadata, processImageUpload } from "./image-metadata";
 import { log } from "./logging";
 
 export interface PhotoUploadResult {
@@ -41,9 +40,10 @@ export class PhotoUploadService {
    * Detect if the current device is mobile
    */
   private isMobileDevice(): boolean {
-    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-      navigator.userAgent,
-    );
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i
+      .test(
+        navigator.userAgent,
+      );
   }
 
   /**
@@ -58,10 +58,10 @@ export class PhotoUploadService {
       deviceMemory: (navigator as any).deviceMemory || "unknown",
       connection: (navigator as any).connection
         ? {
-            effectiveType: (navigator as any).connection.effectiveType,
-            downlink: (navigator as any).connection.downlink,
-            rtt: (navigator as any).connection.rtt,
-          }
+          effectiveType: (navigator as any).connection.effectiveType,
+          downlink: (navigator as any).connection.downlink,
+          rtt: (navigator as any).connection.rtt,
+        }
         : "unknown",
       timestamp: new Date().toISOString(),
       timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -126,7 +126,9 @@ export class PhotoUploadService {
     try {
       // Validate file size (max 15MB)
       if (file.size > 15 * 1024 * 1024) {
-        const errorMsg = `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`;
+        const errorMsg = `Photo must be less than 15MB (current: ${
+          (file.size / (1024 * 1024)).toFixed(1)
+        }MB)`;
         console.error("❌ [PHOTO UPLOAD SERVICE] File too large:", {
           isMobile,
           fileSize: file.size,
@@ -246,8 +248,8 @@ export class PhotoUploadService {
           isSlowProcessing: metadataTime > 30000,
           devicePerformance: {
             processingTime: metadataTime,
-            connectionType:
-              (navigator as any).connection?.effectiveType || "unknown",
+            connectionType: (navigator as any).connection?.effectiveType ||
+              "unknown",
           },
           source,
           // CRITICAL DEBUG: Metadata structure validation
@@ -261,13 +263,12 @@ export class PhotoUploadService {
               : [],
             fishInfoComplete: metadata.fishInfo
               ? {
-                  hasName: typeof metadata.fishInfo.name === "string",
-                  hasSize: typeof metadata.fishInfo.estimatedSize === "string",
-                  hasWeight:
-                    typeof metadata.fishInfo.estimatedWeight === "string",
-                  hasConfidence:
-                    typeof metadata.fishInfo.confidence === "number",
-                }
+                hasName: typeof metadata.fishInfo.name === "string",
+                hasSize: typeof metadata.fishInfo.estimatedSize === "string",
+                hasWeight:
+                  typeof metadata.fishInfo.estimatedWeight === "string",
+                hasConfidence: typeof metadata.fishInfo.confidence === "number",
+              }
               : null,
           },
           // Two-stage AI specific info
@@ -278,8 +279,7 @@ export class PhotoUploadService {
               "reduced costs",
               "better error handling",
             ],
-            fishDetected:
-              metadata.fishInfo?.name !== "Unknown" &&
+            fishDetected: metadata.fishInfo?.name !== "Unknown" &&
               metadata.fishInfo?.name !== "Fishing Gear Detected",
             gearDetected: metadata.fishInfo?.name === "Fishing Gear Detected",
           },
@@ -335,14 +335,12 @@ export class PhotoUploadService {
       } catch (uploadError) {
         const uploadTime = Date.now() - uploadStart;
         console.error("❌ [PHOTO UPLOAD SERVICE] Photo upload failed:", {
-          error:
-            uploadError instanceof Error
-              ? uploadError.message
-              : String(uploadError),
-          errorType:
-            uploadError instanceof Error
-              ? uploadError.constructor.name
-              : typeof uploadError,
+          error: uploadError instanceof Error
+            ? uploadError.message
+            : String(uploadError),
+          errorType: uploadError instanceof Error
+            ? uploadError.constructor.name
+            : typeof uploadError,
           uploadTime,
           isMobile,
           deviceType: isMobile ? "mobile" : "desktop",
@@ -401,13 +399,12 @@ export class PhotoUploadService {
         isMobile,
         deviceType: isMobile ? "mobile" : "desktop",
         totalProcessingTime: Date.now() - metadataStart,
-        willShowOverlay:
-          !!(
-            completeMetadata.fishInfo &&
-            (completeMetadata.fishInfo.name !== "Unknown" ||
-              completeMetadata.fishInfo.estimatedSize !== "Unknown" ||
-              completeMetadata.fishInfo.estimatedWeight !== "Unknown")
-          ) ||
+        willShowOverlay: !!(
+          completeMetadata.fishInfo &&
+          (completeMetadata.fishInfo.name !== "Unknown" ||
+            completeMetadata.fishInfo.estimatedSize !== "Unknown" ||
+            completeMetadata.fishInfo.estimatedWeight !== "Unknown")
+        ) ||
           !!(completeMetadata.location && completeMetadata.location.address),
         source,
         // CRITICAL DEBUG INFO
@@ -418,12 +415,12 @@ export class PhotoUploadService {
           hasOriginalFileName: !!completeMetadata.originalFileName,
           fishInfoStructure: completeMetadata.fishInfo
             ? {
-                hasName: !!completeMetadata.fishInfo.name,
-                hasSize: !!completeMetadata.fishInfo.estimatedSize,
-                hasWeight: !!completeMetadata.fishInfo.estimatedWeight,
-                hasConfidence:
-                  typeof completeMetadata.fishInfo.confidence === "number",
-              }
+              hasName: !!completeMetadata.fishInfo.name,
+              hasSize: !!completeMetadata.fishInfo.estimatedSize,
+              hasWeight: !!completeMetadata.fishInfo.estimatedWeight,
+              hasConfidence:
+                typeof completeMetadata.fishInfo.confidence === "number",
+            }
             : null,
         },
       });
@@ -439,7 +436,9 @@ export class PhotoUploadService {
         if (metadata.fishInfo.name !== "Unknown") {
           successMsg += ` Identified: ${metadata.fishInfo.name}`;
           if (metadata.fishInfo.confidence > 0) {
-            successMsg += ` (${Math.round(metadata.fishInfo.confidence * 100)}% confident)`;
+            successMsg += ` (${
+              Math.round(metadata.fishInfo.confidence * 100)
+            }% confident)`;
           }
         } else {
           successMsg += " Fish data detected!";

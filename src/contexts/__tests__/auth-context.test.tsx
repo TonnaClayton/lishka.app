@@ -5,36 +5,77 @@ import React from "react";
 import { AuthProvider, useAuth } from "../auth-context";
 import { BrowserRouter } from "react-router-dom";
 
-// Mock Supabase
-const mockSupabaseAuth = {
-  signInWithPassword: vi.fn(),
-  signUp: vi.fn(),
-  signOut: vi.fn(),
-  resend: vi.fn(),
-  resetPasswordForEmail: vi.fn(),
-  updateUser: vi.fn(),
-  onAuthStateChange: vi.fn(),
-  getSession: vi.fn(),
-  getUser: vi.fn(),
-};
+// Mock Supabase - avoid referencing variables in vi.mock factory
+vi.mock("@/lib/supabase", () => {
+  const mockSupabaseAuth = {
+    signInWithPassword: vi.fn(),
+    signUp: vi.fn(),
+    signOut: vi.fn(),
+    resend: vi.fn(),
+    resetPasswordForEmail: vi.fn(),
+    updateUser: vi.fn(),
+    onAuthStateChange: vi.fn(),
+    getSession: vi.fn(),
+    getUser: vi.fn(),
+  };
 
-const mockSupabaseClient = {
-  auth: mockSupabaseAuth,
-  from: vi.fn(() => ({
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    single: vi.fn(),
-    update: vi.fn().mockReturnThis(),
-    delete: vi.fn().mockReturnThis(),
-  })),
-};
+  const mockSupabaseClient = {
+    auth: mockSupabaseAuth,
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+    })),
+  };
 
-vi.mock("@/lib/supabase", () => ({
-  supabase: mockSupabaseClient,
-}));
+  const mockAuthService = {
+    signIn: vi.fn(),
+    signUp: vi.fn(),
+    signOut: vi.fn(),
+    resend: vi.fn(),
+    forgotPassword: vi.fn(),
+    updateUser: vi.fn(),
+    onAuthStateChange: vi.fn(),
+    getSession: vi.fn(),
+    getUser: vi.fn(),
+  };
+
+  const mockProfileService = {
+    getProfile: vi.fn(),
+    updateProfile: vi.fn(),
+    deleteProfile: vi.fn(),
+  };
+
+  return {
+    supabase: mockSupabaseClient,
+    authService: mockAuthService,
+    profileService: mockProfileService,
+  };
+});
 
 vi.mock("@supabase/supabase-js", () => ({
-  createClient: vi.fn(() => mockSupabaseClient),
+  createClient: vi.fn(() => ({
+    auth: {
+      signInWithPassword: vi.fn(),
+      signUp: vi.fn(),
+      signOut: vi.fn(),
+      resend: vi.fn(),
+      resetPasswordForEmail: vi.fn(),
+      updateUser: vi.fn(),
+      onAuthStateChange: vi.fn(),
+      getSession: vi.fn(),
+      getUser: vi.fn(),
+    },
+    from: vi.fn(() => ({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      single: vi.fn(),
+      update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
+    })),
+  })),
 }));
 
 // Mock react-router-dom
@@ -62,6 +103,12 @@ vi.mock("@/lib/routing", () => ({
   },
 }));
 
+// Mock blob storage
+vi.mock("@/lib/blob-storage", () => ({
+  uploadAvatar: vi.fn(),
+  getBlobStorageStatus: vi.fn().mockResolvedValue({ available: true }),
+}));
+
 // Mock profile query hook
 vi.mock("@/hooks/queries", () => ({
   useProfile: () => ({
@@ -86,6 +133,10 @@ Object.defineProperty(window, "location", {
 
 describe("AuthContext", () => {
   let queryClient: QueryClient;
+  let mockSupabaseAuth: any;
+  let mockSupabaseClient: any;
+  let mockAuthService: any;
+  let mockProfileService: any;
 
   const createWrapper = () => {
     queryClient = new QueryClient({
@@ -104,8 +155,42 @@ describe("AuthContext", () => {
     );
   };
 
-  beforeEach(() => {
+  beforeEach(async () => {
     vi.clearAllMocks();
+    
+    // Get the mocked services
+    const { supabase, authService, profileService } = await import("@/lib/supabase");
+    mockSupabaseClient = supabase as any;
+    mockSupabaseAuth = mockSupabaseClient.auth;
+    mockAuthService = authService as any;
+    mockProfileService = profileService as any;
+    
+    mockAuthService.onAuthStateChange.mockReturnValue({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    });
+    mockAuthService.getSession.mockResolvedValue({
+      data: { session: null },
+      error: null,
+    });
+    mockAuthService.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null,
+    });
+    
+    // Setup authService mocks
+    mockAuthService.onAuthStateChange.mockReturnValue({
+      data: { subscription: { unsubscribe: vi.fn() } },
+    });
+    mockAuthService.getSession.mockResolvedValue({
+      data: { session: null },
+      error: null,
+    });
+    mockAuthService.getUser.mockResolvedValue({
+      data: { user: null },
+      error: null,
+    });
+    
+    // Also setup the supabase.auth mocks since auth-context uses both
     mockSupabaseAuth.onAuthStateChange.mockReturnValue({
       data: { subscription: { unsubscribe: vi.fn() } },
     });
@@ -117,6 +202,7 @@ describe("AuthContext", () => {
       data: { user: null },
       error: null,
     });
+    
     mockLocation.href = "";
   });
 
@@ -143,7 +229,7 @@ describe("AuthContext", () => {
     const mockUser = { id: "123", email: "test@example.com" };
     const mockSession = { user: mockUser, access_token: "token" };
 
-    mockSupabaseAuth.signInWithPassword.mockResolvedValue({
+    mockAuthService.signIn.mockResolvedValue({
       data: { user: mockUser, session: mockSession },
       error: null,
     });
@@ -161,16 +247,13 @@ describe("AuthContext", () => {
       "password",
     );
 
-    expect(mockSupabaseAuth.signInWithPassword).toHaveBeenCalledWith({
-      email: "test@example.com",
-      password: "password",
-    });
+    expect(mockAuthService.signIn).toHaveBeenCalledWith("test@example.com", "password");
     expect(signInResult.error).toBeNull();
   });
 
   it("handles sign in error", async () => {
     const mockError = { message: "Invalid credentials" };
-    mockSupabaseAuth.signInWithPassword.mockResolvedValue({
+    mockAuthService.signIn.mockResolvedValue({
       data: { user: null, session: null },
       error: mockError,
     });
@@ -193,7 +276,7 @@ describe("AuthContext", () => {
 
   it("handles successful sign up", async () => {
     const mockUser = { id: "123", email: "test@example.com" };
-    mockSupabaseAuth.signUp.mockResolvedValue({
+    mockAuthService.signUp.mockResolvedValue({
       data: { user: mockUser, session: null },
       error: null,
     });
@@ -212,19 +295,13 @@ describe("AuthContext", () => {
       "John Doe",
     );
 
-    expect(mockSupabaseAuth.signUp).toHaveBeenCalledWith({
-      email: "test@example.com",
-      password: "password",
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
-      },
-    });
+    expect(mockAuthService.signUp).toHaveBeenCalledWith("test@example.com", "password", "John Doe");
     expect(signUpResult.error).toBeNull();
   });
 
   it("handles sign up error", async () => {
     const mockError = { message: "Email already exists" };
-    mockSupabaseAuth.signUp.mockResolvedValue({
+    mockAuthService.signUp.mockResolvedValue({
       data: { user: null, session: null },
       error: mockError,
     });
@@ -247,7 +324,7 @@ describe("AuthContext", () => {
   });
 
   it("handles successful sign out", async () => {
-    mockSupabaseAuth.signOut.mockResolvedValue({ error: null });
+    mockAuthService.signOut.mockResolvedValue({ error: null });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: createWrapper(),
@@ -259,14 +336,14 @@ describe("AuthContext", () => {
 
     const signOutResult = await result.current.signOut();
 
-    expect(mockSupabaseAuth.signOut).toHaveBeenCalled();
+    expect(mockAuthService.signOut).toHaveBeenCalled();
     expect(signOutResult.error).toBeNull();
     expect(mockLocation.href).toBe("/login");
   });
 
   it("handles sign out error with fallback redirect", async () => {
     const mockError = { message: "Sign out failed" };
-    mockSupabaseAuth.signOut.mockResolvedValue({ error: mockError });
+    mockAuthService.signOut.mockResolvedValue({ error: mockError });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: createWrapper(),
@@ -283,7 +360,7 @@ describe("AuthContext", () => {
   });
 
   it("handles sign out exception with fallback redirect", async () => {
-    mockSupabaseAuth.signOut.mockRejectedValue(new Error("Network error"));
+    mockAuthService.signOut.mockRejectedValue(new Error("Network error"));
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: createWrapper(),
@@ -302,7 +379,7 @@ describe("AuthContext", () => {
   });
 
   it("handles forgot password", async () => {
-    mockSupabaseAuth.resetPasswordForEmail.mockResolvedValue({ error: null });
+    mockAuthService.resetPasswordForEmail.mockResolvedValue({ error: null });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: createWrapper(),
@@ -315,7 +392,7 @@ describe("AuthContext", () => {
     const forgotResult =
       await result.current.forgotPassword("test@example.com");
 
-    expect(mockSupabaseAuth.resetPasswordForEmail).toHaveBeenCalledWith(
+    expect(mockAuthService.resetPasswordForEmail).toHaveBeenCalledWith(
       "test@example.com",
       {
         redirectTo: `${window.location.origin}/reset-password`,
@@ -325,7 +402,7 @@ describe("AuthContext", () => {
   });
 
   it("handles resend confirmation", async () => {
-    mockSupabaseAuth.resend.mockResolvedValue({ error: null });
+    mockAuthService.resend.mockResolvedValue({ error: null });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: createWrapper(),
@@ -338,7 +415,7 @@ describe("AuthContext", () => {
     const resendResult =
       await result.current.resendConfirmation("test@example.com");
 
-    expect(mockSupabaseAuth.resend).toHaveBeenCalledWith({
+    expect(mockAuthService.resend).toHaveBeenCalledWith({
       type: "signup",
       email: "test@example.com",
       options: {
@@ -389,7 +466,7 @@ describe("AuthContext", () => {
 
     let authStateCallback: (event: string, session: any) => void;
 
-    mockSupabaseAuth.onAuthStateChange.mockImplementation((callback) => {
+    mockAuthService.onAuthStateChange.mockImplementation((callback) => {
       authStateCallback = callback;
       return {
         data: { subscription: { unsubscribe: vi.fn() } },
@@ -405,14 +482,14 @@ describe("AuthContext", () => {
 
     await waitFor(() => {
       // The auth state change should be handled
-      expect(mockSupabaseAuth.onAuthStateChange).toHaveBeenCalled();
+      expect(mockAuthService.onAuthStateChange).toHaveBeenCalled();
     });
   });
 
   it("handles signed out event with navigation", async () => {
     let authStateCallback: (event: string, session: any) => void;
 
-    mockSupabaseAuth.onAuthStateChange.mockImplementation((callback) => {
+    mockAuthService.onAuthStateChange.mockImplementation((callback) => {
       authStateCallback = callback;
       return {
         data: { subscription: { unsubscribe: vi.fn() } },

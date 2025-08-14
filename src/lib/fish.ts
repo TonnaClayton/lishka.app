@@ -13,7 +13,7 @@ export const validateFishingData = (
 
   // Validate trolling distances
   if (data.fishingMethods) {
-    data.fishingMethods.forEach((method: any, index: number) => {
+    data.fishingMethods.forEach((method: any) => {
       if (method.method && method.method.toLowerCase().includes("troll")) {
         const trollingDistance = method.gear?.trollingDistance;
         if (trollingDistance) {
@@ -21,7 +21,7 @@ export const validateFishingData = (
           if (numbers) {
             const distances = numbers.map(Number);
             const maxDistance = Math.max(...distances);
-            const minDistance = Math.min(...distances);
+            // const minDistance = Math.min(...distances);
 
             // Flag suspicious trolling distances
             if (maxDistance > 300) {
@@ -166,12 +166,12 @@ export const validateAndSanitizeRegulations = (
 
       // Check for generic terms
       const hasGenericTerms = genericTerms.some((term) =>
-        sourceLower.includes(term.toLowerCase()),
+        sourceLower.includes(term.toLowerCase())
       );
 
       // Check for suspicious regulation patterns
       const hasSuspiciousPatterns = suspiciousPatterns.some((pattern) =>
-        pattern.test(source),
+        pattern.test(source)
       );
 
       // Check if source contains legitimate authority references
@@ -181,7 +181,8 @@ export const validateAndSanitizeRegulations = (
 
       if (hasGenericTerms || hasSuspiciousPatterns || !hasLegitimateAuthority) {
         // Replace with safe fallback
-        source = `Contact local fisheries authority in ${location} for current regulations`;
+        source =
+          `Contact local fisheries authority in ${location} for current regulations`;
         confidence = "Low";
         wasModified = true;
         validationFlags.suspiciousSourcesDetected = true;
@@ -252,7 +253,7 @@ export const validateAndSanitizeRegulations = (
   ) {
     validatedRegulations.additionalRules = regulations.additionalRules
       .map((rule: any, index: number) =>
-        validateRegulationEntry(rule, `additionalRule${index}`),
+        validateRegulationEntry(rule, `additionalRule${index}`)
       )
       .filter((rule: any) => rule.value !== "Check with local authorities"); // Remove generic additional rules
   } else {

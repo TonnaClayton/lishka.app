@@ -21,8 +21,7 @@ export function calculateDistance(
   const R = 3440.065; // Earth's radius in nautical miles
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLng / 2) *
@@ -401,13 +400,13 @@ export async function generateEnhancedOffshoreFishingLocations(
         actualDepth: wreck.depth,
         seabedType: "artificial reef (shipwreck)",
         structures: ["shipwreck", "artificial reef", "structure"],
-        probabilityScore:
-          wreck.fishingQuality === "excellent"
-            ? 0.95
-            : wreck.fishingQuality === "good"
-              ? 0.88
-              : 0.75,
-        description: `Historic ${wreck.type.toLowerCase()} wreck site creating excellent artificial reef habitat for diverse marine life.`,
+        probabilityScore: wreck.fishingQuality === "excellent"
+          ? 0.95
+          : wreck.fishingQuality === "good"
+          ? 0.88
+          : 0.75,
+        description:
+          `Historic ${wreck.type.toLowerCase()} wreck site creating excellent artificial reef habitat for diverse marine life.`,
         topographicFeatures: topographicFeatures.map((f) => f.description),
         isShipwreck: true,
         shipwreckInfo: {
@@ -420,6 +419,7 @@ export async function generateEnhancedOffshoreFishingLocations(
   }
 
   // Generate additional natural fishing locations
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const naturalLocationsNeeded = targetCount - locations.length;
 
   const locationNames = [
@@ -487,8 +487,7 @@ export async function generateEnhancedOffshoreFishingLocations(
     const distanceRad = distance / 60;
 
     const lat = centerLat + distanceRad * Math.cos(angleRad);
-    const lng =
-      centerLng +
+    const lng = centerLng +
       (distanceRad * Math.sin(angleRad)) /
         Math.cos((centerLat * Math.PI) / 180);
 
@@ -514,8 +513,8 @@ export async function generateEnhancedOffshoreFishingLocations(
 
     // Analyze topography
     const topographicFeatures = analyzeTopography(lat, lng, actualDepth);
-    const avgFishingPotential =
-      topographicFeatures.reduce((sum, f) => sum + f.fishingPotential, 0) /
+    const avgFishingPotential = topographicFeatures.reduce((sum, f) =>
+      sum + f.fishingPotential, 0) /
       topographicFeatures.length;
 
     // Select seabed type and structures based on depth and features
@@ -531,8 +530,9 @@ export async function generateEnhancedOffshoreFishingLocations(
     if (actualDepth >= 40 && actualDepth <= 120) probabilityScore += 0.1;
 
     // Bonus for good distance from shore
-    if (actualDistance >= radiusNM * 0.4 && actualDistance <= radiusNM * 0.8)
+    if (actualDistance >= radiusNM * 0.4 && actualDistance <= radiusNM * 0.8) {
       probabilityScore += 0.05;
+    }
 
     // Ensure score is within bounds
     probabilityScore = Math.min(0.92, Math.max(0.65, probabilityScore));
@@ -596,7 +596,9 @@ function generateLocationDescription(
   depth: number,
   topographicFeatures: TopographicFeature[],
 ): string {
-  let description = `${seabedType.charAt(0).toUpperCase() + seabedType.slice(1)} fishing area`;
+  let description = `${
+    seabedType.charAt(0).toUpperCase() + seabedType.slice(1)
+  } fishing area`;
 
   if (depth > 80) {
     description +=
@@ -611,9 +613,10 @@ function generateLocationDescription(
 
   if (topographicFeatures.length > 0) {
     const bestFeature = topographicFeatures.reduce((best, current) =>
-      current.fishingPotential > best.fishingPotential ? current : best,
+      current.fishingPotential > best.fishingPotential ? current : best
     );
-    description += `. Features ${bestFeature.description.toLowerCase()} that attracts and concentrates fish.`;
+    description +=
+      `. Features ${bestFeature.description.toLowerCase()} that attracts and concentrates fish.`;
   }
 
   return description;

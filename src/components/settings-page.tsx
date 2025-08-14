@@ -4,7 +4,6 @@ import { ChevronLeft, Ruler, LogOut, Trash2 } from "lucide-react";
 
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
-import { Switch } from "./ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,

@@ -1,11 +1,9 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 import {
   useLocation,
   createBrowserRouter,
   RouterProvider,
   Outlet,
-  useNavigate,
-  useRoutes,
 } from "react-router-dom";
 import routes from "tempo-routes";
 import { lazy } from "react";
@@ -20,12 +18,11 @@ import {
 import ProtectedRoute from "./components/auth/protected-route";
 import SafariScrollFix from "./components/safari-scroll-fix";
 import EmailVerificationBanner from "./components/email-verification-banner";
-import { AuthProvider, useAuth } from "./contexts/auth-context";
+import { AuthProvider } from "./contexts/auth-context";
 import { config } from "@/lib/config";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { cn } from "./lib/utils";
-import { useProfile } from "./hooks/queries";
 import { ROUTES } from "./lib/routing";
 
 // Lazy load heavy components for better initial loading performance
@@ -40,32 +37,32 @@ const GearCategoryPage = lazy(() => import("./components/gear-category-page"));
 const SideNav = lazy(() =>
   import("./components/bottom-nav").then((module) => ({
     default: module.SideNav,
-  })),
+  }))
 );
 const WeatherWidgetPro = lazy(() => import("./components/weather-widget-pro"));
 const SettingsPage = lazy(() => import("./components/settings-page"));
 const FaqPage = lazy(() => import("./components/faq-page"));
 const TermsPage = lazy(() => import("./components/terms-page"));
 const PrivacyPolicyPage = lazy(
-  () => import("./components/privacy-policy-page"),
+  () => import("./components/privacy-policy-page")
 );
 const BlobConnectionTest = lazy(
-  () => import("./components/blob-connection-test"),
+  () => import("./components/blob-connection-test")
 );
 const BlobImageUploader = lazy(
-  () => import("./components/blob-image-uploader"),
+  () => import("./components/blob-image-uploader")
 );
 const BlobImageTest = lazy(() => import("./components/blob-image-test"));
 const AccountStatusChecker = lazy(
-  () => import("./components/account-status-checker"),
+  () => import("./components/account-status-checker")
 );
 const StorageSetup = lazy(() => import("./components/storage-setup"));
 const DatabaseDebugger = lazy(() => import("./components/database-debugger"));
 const ImageUploadDebugger = lazy(
-  () => import("./components/image-upload-debugger"),
+  () => import("./components/image-upload-debugger")
 );
 const GearDatabaseDebugger = lazy(
-  () => import("./components/gear-database-debugger"),
+  () => import("./components/gear-database-debugger")
 );
 const WhatsNewPage = lazy(() => import("./components/whats-new-page"));
 
@@ -331,16 +328,16 @@ const router = createBrowserRouter(
     future: {
       v7_relativeSplatPath: true,
     },
-  },
+  }
 );
 
 function AppContent() {
   // Check if we're on the splash page
   const location = useLocation();
-  const { user } = useAuth();
-  const { data: profile } = useProfile(user?.id);
-  const navigate = useNavigate();
-  const isSplashPage = location.pathname === "/" && !profile?.location;
+  // const { user } = useAuth();
+  // const { data: profile } = useProfile(user?.id);
+  // const navigate = useNavigate();
+  // const isSplashPage = location.pathname === "/" && !profile?.location;
 
   // Check if current route should have the weather widget in desktop layout
   const shouldShowWeatherWidget = ["/", "/search"].includes(location.pathname);
@@ -354,22 +351,18 @@ function AppContent() {
     ROUTES.RESET_PASSWORD,
   ].includes(location.pathname);
 
-  // Track if we're on mobile or desktop
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-
   // Set initial sidebar width CSS variable and handle resize
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth >= 1024 ? "16rem" : "0";
-      document.documentElement.style.setProperty("--sidebar-width", width);
-      setIsMobile(window.innerWidth < 1024);
-    };
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     const width = window.innerWidth >= 1024 ? "16rem" : "0";
+  //     document.documentElement.style.setProperty("--sidebar-width", width);
+  //   };
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
+  //   handleResize();
+  //   window.addEventListener("resize", handleResize);
 
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, []);
 
   return (
     <div className="w-full h-full overflow-hidden">
@@ -391,7 +384,7 @@ function AppContent() {
         <div
           className={cn(
             "flex-1 max-w-full h-full flex flex-col overflow-hidden",
-            !isAuthPage ? "lg:ml-[var(--sidebar-width)]" : "",
+            !isAuthPage ? "lg:ml-[var(--sidebar-width)]" : ""
           )}
         >
           {/* Email verification banner - only show on non-auth pages */}

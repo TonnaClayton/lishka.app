@@ -14,8 +14,6 @@ import {
 } from "lucide-react";
 import { getBlobStorageStatus, uploadImage } from "@/lib/blob-storage";
 import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
-import { useAuth } from "@/contexts/auth-context";
-import { config } from "@/lib/config";
 import { log } from "@/lib/logging";
 
 interface UploadState {
@@ -27,7 +25,6 @@ interface UploadState {
 }
 
 const ImageUploadDebugger: React.FC = () => {
-  const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadState, setUploadState] = useState<UploadState>({
     loading: false,
@@ -40,7 +37,6 @@ const ImageUploadDebugger: React.FC = () => {
 
   // Check system status
   const storageStatus = getBlobStorageStatus();
-  const hasOpenAI = !!config.VITE_OPENAI_API_KEY;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -307,7 +303,7 @@ const ImageUploadDebugger: React.FC = () => {
                     </p>
                     <p className="font-medium text-green-600">
                       {uploadState.metadata.compressionInfo.compressionRatio.toFixed(
-                        1,
+                        1
                       )}
                       % saved
                     </p>
@@ -369,7 +365,7 @@ const ImageUploadDebugger: React.FC = () => {
                     <p>
                       Confidence:{" "}
                       {Math.round(
-                        uploadState.metadata.fishInfo.confidence * 100,
+                        uploadState.metadata.fishInfo.confidence * 100
                       )}
                       %
                     </p>
@@ -408,7 +404,7 @@ const ImageUploadDebugger: React.FC = () => {
                   <p>
                     Time:{" "}
                     {new Date(
-                      uploadState.metadata.timestamp,
+                      uploadState.metadata.timestamp
                     ).toLocaleTimeString()}
                   </p>
                 </div>
@@ -484,8 +480,7 @@ const ImageUploadDebugger: React.FC = () => {
                             {uploadState.metadata.fishInfo.confidence > 0 && (
                               <div className="bg-white/25 backdrop-blur-sm text-white border border-white/30 text-sm px-3 py-1 rounded-full">
                                 {Math.round(
-                                  uploadState.metadata.fishInfo.confidence *
-                                    100,
+                                  uploadState.metadata.fishInfo.confidence * 100
                                 )}
                                 % confident
                               </div>
@@ -553,7 +548,7 @@ const ImageUploadDebugger: React.FC = () => {
                       <span>
                         Image compression:{" "}
                         {uploadState.metadata.compressionInfo.compressionRatio.toFixed(
-                          1,
+                          1
                         )}
                         % size reduction
                       </span>
@@ -571,7 +566,7 @@ const ImageUploadDebugger: React.FC = () => {
                       <span>
                         AI fish identification:{" "}
                         {Math.round(
-                          uploadState.metadata.fishInfo.confidence * 100,
+                          uploadState.metadata.fishInfo.confidence * 100
                         )}
                         % confidence
                       </span>

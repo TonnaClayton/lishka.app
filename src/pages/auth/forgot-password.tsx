@@ -56,7 +56,7 @@ const ForgotPasswordPage: React.FC = () => {
         setSubmittedEmail(data.email);
         setSuccess(true);
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);

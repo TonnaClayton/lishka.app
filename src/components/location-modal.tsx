@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { MapPin, Navigation, Check } from "lucide-react";
-import LoadingDots from "./loading-dots";
+import { MapPin } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,13 +12,13 @@ import {
   MapContainer,
   TileLayer,
   Marker,
-  useMapEvents,
+  // useMapEvents,
   LayersControl,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { log } from "@/lib/logging";
-import { useUpdateProfile, useUserLocation } from "@/hooks/queries";
+import { useUserLocation } from "@/hooks/queries";
 import { DEFAULT_LOCATION } from "@/lib/const";
 
 interface LocationData {
@@ -53,7 +52,6 @@ L.Icon.Default.mergeOptions({
 
 // Map Selection Component
 const MapSelection = ({
-  onLocationSelect,
   currentLocation,
 }: {
   onLocationSelect: (location: LocationData) => void;
@@ -98,7 +96,7 @@ const MapSelection = ({
       const lat = currentLocation.latitude;
       const lng = currentLocation.longitude;
       log(
-        `Map created, centering on: ${lat}, ${lng} (${currentLocation.name})`,
+        `Map created, centering on: ${lat}, ${lng} (${currentLocation.name})`
       );
       map.setView([lat, lng], 15);
     }
@@ -106,64 +104,64 @@ const MapSelection = ({
 
   // Function to handle map click and set marker
   const MapClickHandler = () => {
-    const map = useMapEvents({
-      click: async (e) => {
-        const { lat, lng } = e.latlng;
-        setSelectedPosition([lat, lng]);
+    // const map = useMapEvents({
+    //   click: async (e) => {
+    //     const { lat, lng } = e.latlng;
+    //     setSelectedPosition([lat, lng]);
 
-        // Attempt to get location name via reverse geocoding
-        try {
-          const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
-          );
-          const data = await response.json();
+    //     // Attempt to get location name via reverse geocoding
+    //     try {
+    //       const response = await fetch(
+    //         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+    //       );
+    //       const data = await response.json();
 
-          // Extract city/town and country from address details
-          const city =
-            data.address?.city ||
-            data.address?.town ||
-            data.address?.village ||
-            data.address?.hamlet ||
-            "";
-          const country = data.address?.country || "";
+    //       // Extract city/town and country from address details
+    //       const city =
+    //         data.address?.city ||
+    //         data.address?.town ||
+    //         data.address?.village ||
+    //         data.address?.hamlet ||
+    //         "";
+    //       const country = data.address?.country || "";
 
-          // Format as "city, country"
-          const name = [city, country].filter(Boolean).join(", ");
+    //       // Format as "city, country"
+    //       const name = [city, country].filter(Boolean).join(", ");
 
-          // Check if location is on sea or water
-          const isSeaLocation =
-            !city || // No city means likely on water
-            data.address?.sea ||
-            data.address?.ocean ||
-            data.address?.water ||
-            data.address?.bay;
+    //       // Check if location is on sea or water
+    //       const isSeaLocation =
+    //         !city || // No city means likely on water
+    //         data.address?.sea ||
+    //         data.address?.ocean ||
+    //         data.address?.water ||
+    //         data.address?.bay;
 
-          log("Location data:", {
-            isSeaLocation,
-            city,
-            country,
-            address: data.address,
-            lat,
-            lng,
-          });
+    //       log("Location data:", {
+    //         isSeaLocation,
+    //         city,
+    //         country,
+    //         address: data.address,
+    //         lat,
+    //         lng,
+    //       });
 
-          if (isSeaLocation) {
-            // For sea locations, display only coordinates
-            const formattedLat = lat.toFixed(6);
-            const formattedLng = lng.toFixed(6);
-            setLocationName(`${formattedLat}, ${formattedLng}`);
-          } else {
-            setLocationName(name);
-          }
-        } catch (error) {
-          console.error("Error getting location name:", error);
-          // Display coordinates as fallback
-          const formattedLat = lat.toFixed(6);
-          const formattedLng = lng.toFixed(6);
-          setLocationName(`${formattedLat}, ${formattedLng}`);
-        }
-      },
-    });
+    //       if (isSeaLocation) {
+    //         // For sea locations, display only coordinates
+    //         const formattedLat = lat.toFixed(6);
+    //         const formattedLng = lng.toFixed(6);
+    //         setLocationName(`${formattedLat}, ${formattedLng}`);
+    //       } else {
+    //         setLocationName(name);
+    //       }
+    //     } catch (error) {
+    //       console.error("Error getting location name:", error);
+    //       // Display coordinates as fallback
+    //       const formattedLat = lat.toFixed(6);
+    //       const formattedLng = lng.toFixed(6);
+    //       setLocationName(`${formattedLat}, ${formattedLng}`);
+    //     }
+    //   },
+    // });
     return null;
   };
 
@@ -212,7 +210,6 @@ const LocationModal = ({
   trigger,
 }: LocationModalProps) => {
   const [loading, setLoading] = useState(false);
-  const [isPending, startTransition] = React.useTransition();
   const { updateLocationAsync } = useUserLocation();
 
   const handleLocationUpdate = async (newLocation: LocationData) => {
@@ -269,7 +266,7 @@ const LocationModal = ({
           // Attempt to get location name via reverse geocoding
           try {
             const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
             );
             const data = await response.json();
             log("Reverse geocoding data:", data);
@@ -336,7 +333,7 @@ const LocationModal = ({
           enableHighAccuracy: true,
           timeout: 10000,
           maximumAge: 0,
-        },
+        }
       );
     } else {
       // If geolocation is not supported, set a default location
@@ -348,7 +345,7 @@ const LocationModal = ({
 
       log(
         "Setting default location (no geolocation support):",
-        defaultLocation,
+        defaultLocation
       );
       handleLocationUpdate(defaultLocation);
       setLoading(false);
@@ -410,7 +407,7 @@ const LocationModal = ({
               onClick={handleDetectLocation}
               variant="outline"
               className="w-full h-12 border-none shadow-none bg-[#0251FB] hover:bg-[#0251FB] text-white hover:text-white rounded-full"
-              disabled={isPending || loading}
+              disabled={loading}
             >
               <MapPin className="mr-2" />
               {loading ? "Detecting..." : "Detect my location"}
@@ -418,7 +415,7 @@ const LocationModal = ({
 
             <Button
               onClick={handleMapLocationSelect}
-              disabled={isPending}
+              disabled={loading}
               variant="default"
               className="confirm-location-button w-full bg-[#025DFB1A] h-12 text-[#0251FB] hover:bg-[#025DFB33] hover:text-[#0251FB] rounded-full shadow-none border-none"
             >

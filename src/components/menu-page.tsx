@@ -1,15 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ChevronLeft,
-  Settings,
-  HelpCircle,
-  Instagram,
-  FileText,
-  Shield,
-  Info,
-  Smartphone,
-} from "lucide-react";
+import { ChevronLeft, Instagram } from "lucide-react";
 import BottomNav from "./bottom-nav";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";

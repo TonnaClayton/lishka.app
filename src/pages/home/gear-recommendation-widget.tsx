@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Package, Waves, Loader2, AlertCircle } from "lucide-react";
+import { RefreshCw, Package, Loader2, AlertCircle } from "lucide-react";
 import LoadingDots from "@/components/loading-dots";
 import { useAuth } from "@/contexts/auth-context";
 import { useNavigate } from "react-router-dom";
@@ -139,7 +139,7 @@ const GearRecommendationWidget: React.FC = () => {
   // Generate cache key for analysis results
   const getCacheKey = (
     location: { latitude: number; longitude: number; name: string },
-    gearIds: string[],
+    gearIds: string[]
   ) => {
     const locationKey = `${location.latitude.toFixed(3)}-${location.longitude.toFixed(3)}-${location.name}`;
     const gearKey = gearIds.sort().join(",");
@@ -215,7 +215,7 @@ const GearRecommendationWidget: React.FC = () => {
 
       const recommendations = await generateAIRecommendations(
         userGear,
-        weatherConditions,
+        weatherConditions
       );
 
       // Phase 3: Complete
@@ -324,7 +324,7 @@ const GearRecommendationWidget: React.FC = () => {
   // Generate AI recommendations
   const generateAIRecommendations = async (
     gear: GearItem[],
-    conditions: WeatherConditions,
+    conditions: WeatherConditions
   ): Promise<AIRecommendation[]> => {
     if (!config.VITE_OPENAI_API_KEY) {
       log("[GearRecommendation] No OpenAI API key available");
@@ -345,7 +345,7 @@ User's Gear Collection:
 ${gear
   .map(
     (item, index) =>
-      `${index + 1}. ID: ${item.id} | Name: ${item.name} | Category: ${item.category} | Type: ${item.gearType || "Unknown"} | Target: ${item.targetFish || "Various"} | Depth: ${item.depthRange || "Any"}`,
+      `${index + 1}. ID: ${item.id} | Name: ${item.name} | Category: ${item.category} | Type: ${item.gearType || "Unknown"} | Target: ${item.targetFish || "Various"} | Depth: ${item.depthRange || "Any"}`
   )
   .join("\n")}
 
@@ -378,7 +378,7 @@ Rank ALL gear items (score 1-100) based on suitability for current surface condi
             max_tokens: 2000,
             temperature: 0.3,
           }),
-        },
+        }
       );
 
       if (!response.ok) {
@@ -611,9 +611,9 @@ Rank ALL gear items (score 1-100) based on suitability for current surface condi
             {getSortedGear()
               .slice(0, 20)
               .map((gear, index) => {
-                const recommendation = getRecommendation(gear.id);
-                const score = recommendation?.score || null;
-                const isTopRecommendation = score && score >= 80;
+                //const recommendation = getRecommendation(gear.id);
+                //const score = recommendation?.score || null;
+                // const isTopRecommendation = score && score >= 80;
 
                 return (
                   <div

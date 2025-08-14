@@ -3,7 +3,6 @@ import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
 import { getBlobStorageStatus } from "@/lib/blob-storage";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Label } from "./ui/label";
 import { Separator } from "./ui/separator";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
@@ -16,8 +15,6 @@ import {
   Image as ImageIcon,
   Fish,
   MapPin,
-  Clock,
-  User,
 } from "lucide-react";
 import { config } from "@/lib/config";
 import { log } from "@/lib/logging";
@@ -43,7 +40,7 @@ interface ImageDebugResult {
 
 const ImageDebugTest = () => {
   const [workingImage, setWorkingImage] = useState<ImageDebugResult | null>(
-    null,
+    null
   );
   const [nonWorkingImage, setNonWorkingImage] =
     useState<ImageDebugResult | null>(null);
@@ -175,7 +172,7 @@ const ImageDebugTest = () => {
 
   const handleFileSelect = (
     event: React.ChangeEvent<HTMLInputElement>,
-    type: "working" | "nonWorking",
+    type: "working" | "nonWorking"
   ) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -183,10 +180,7 @@ const ImageDebugTest = () => {
     }
   };
 
-  const renderImageResult = (
-    result: ImageDebugResult | null,
-    title: string,
-  ) => {
+  const renderImageResult = (result: ImageDebugResult | null) => {
     if (!result) {
       return (
         <div className="text-center py-8 text-gray-500">
@@ -515,7 +509,7 @@ const ImageDebugTest = () => {
                     className="hidden"
                   />
                 </div>
-                {renderImageResult(workingImage, "Working Image")}
+                {renderImageResult(workingImage)}
               </div>
 
               {/* Non-Working Image */}
@@ -545,7 +539,7 @@ const ImageDebugTest = () => {
                     className="hidden"
                   />
                 </div>
-                {renderImageResult(nonWorkingImage, "Non-Working Image")}
+                {renderImageResult(nonWorkingImage)}
               </div>
             </div>
           </TabsContent>

@@ -22,6 +22,7 @@ export function OnboardingDialog({
   const [isOpen, setIsOpen] = React.useState(!hasSeenOnboardingFlow);
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [count, setCount] = React.useState(0);
   const mutation = useUpdateProfile();
   const [isLoading, setIsLoading] = React.useState(false);

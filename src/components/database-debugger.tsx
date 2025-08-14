@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -242,7 +242,7 @@ const DatabaseDebugger: React.FC = () => {
                       <p>
                         • Final Gallery Photos:{" "}
                         {JSON.stringify(
-                          results.testUpdateResult.finalGalleryPhotos,
+                          results.testUpdateResult.finalGalleryPhotos
                         )}
                       </p>
                     </div>

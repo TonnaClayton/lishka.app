@@ -77,6 +77,9 @@ export function getFishImageUrlSync(
   name?: string,
   scientificName?: string,
 ): string {
+  log(
+    `[FishImageService] Getting fish image URL sync for ${name} (${scientificName})`,
+  );
   // For sync version, just return placeholder since we can't check accessibility
   return getPlaceholderFishImage();
 }
@@ -87,6 +90,11 @@ export function handleFishImageError(
 ): void {
   const img = event.currentTarget;
   if (!img) return;
+
+  log(
+    `[FishImageService] Handling fish image error for ${fishName}`,
+    event,
+  );
 
   if (!img.src.includes("default-image.jpg")) {
     img.src = getPlaceholderFishImage();

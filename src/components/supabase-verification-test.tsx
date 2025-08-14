@@ -36,7 +36,7 @@ const SupabaseVerificationTest: React.FC = () => {
 
   const updateTest = (name: string, updates: Partial<TestResult>) => {
     setTests((prev) =>
-      prev.map((test) => (test.name === name ? { ...test, ...updates } : test)),
+      prev.map((test) => (test.name === name ? { ...test, ...updates } : test))
     );
   };
 
@@ -81,7 +81,7 @@ const SupabaseVerificationTest: React.FC = () => {
 
     try {
       // Test basic database connectivity
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("profiles")
         .select("count")
         .limit(1);

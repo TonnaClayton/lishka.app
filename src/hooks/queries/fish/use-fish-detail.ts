@@ -1,15 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
-import { generateTextWithAI } from "@/lib/ai";
 import {
   getFishImageUrl as getFishImageUrlFromService,
   getPlaceholderFishImage,
 } from "@/lib/fish-image-service";
-import { config } from "@/lib/config";
 import { log } from "@/lib/logging";
-import {
-  validateAndSanitizeRegulations,
-  validateFishingData,
-} from "@/lib/fish";
 
 // Types for fish details
 export interface FishingGear {
@@ -115,10 +109,12 @@ const fetchFishDetails = async (
   location: string,
   initialData?: any,
 ) => {
-  try {
-  } catch (err) {
-    throw err;
-  }
+  // try {
+
+  // } catch (err) {
+  //   throw err;
+  // }
+  log("fetchFishDetails", fishName, location, initialData);
 };
 
 // React Query hook for fish details

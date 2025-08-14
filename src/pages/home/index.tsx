@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { MapPin, User, Menu } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
+import { MapPin } from "lucide-react";
 import BottomNav from "@/components/bottom-nav";
 import FishCard from "@/components/fish-card";
 import { Button } from "@/components/ui/button";
@@ -41,10 +41,7 @@ interface FishData {
   probabilityScore?: number;
 }
 
-const HomePage: React.FC<HomePageProps> = ({
-  location = "Malta",
-  onLocationChange = () => {},
-}) => {
+const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: profile } = useProfile(user?.id);
@@ -87,14 +84,10 @@ const HomePage: React.FC<HomePageProps> = ({
     isFetchingNextPage,
   } = useFishDataInfinite(userLocation);
 
-  const {
-    data: toxicFishData,
-    isLoading: loadingToxicFish,
-    error: toxicFishError,
-  } = useToxicFishData(
+  const { data: toxicFishData, isLoading: loadingToxicFish } = useToxicFishData(
     userLocation,
     (profile?.location_coordinates as any)?.latitude,
-    (profile?.location_coordinates as any)?.longitude,
+    (profile?.location_coordinates as any)?.longitude
   );
 
   // Extract fish list from infinite query data
@@ -129,17 +122,17 @@ const HomePage: React.FC<HomePageProps> = ({
   };
 
   // Location validation and standardization
-  const validateLocation = (location: string) => {
-    if (!location) return "Unknown Location";
-    try {
-      // Handle JSON string locations
-      const parsed = JSON.parse(location);
-      return parsed.name || location;
-    } catch {
-      // Not JSON, use as is
-      return location;
-    }
-  };
+  // const validateLocation = (location: string) => {
+  //   if (!location) return "Unknown Location";
+  //   try {
+  //     // Handle JSON string locations
+  //     const parsed = JSON.parse(location);
+  //     return parsed.name || location;
+  //   } catch {
+  //     // Not JSON, use as is
+  //     return location;
+  //   }
+  // };
 
   const handleFishClick = (fish: FishData) => {
     // Use a sanitized version of the name for the URL
@@ -163,19 +156,19 @@ const HomePage: React.FC<HomePageProps> = ({
   };
 
   // Helper function to get user initials
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  // const getInitials = (name: string) => {
+  //   return name
+  //     .split(" ")
+  //     .map((n) => n[0])
+  //     .join("")
+  //     .toUpperCase()
+  //     .slice(0, 2);
+  // };
 
   // Handle avatar click to navigate to profile
-  const handleAvatarClick = () => {
-    navigate("/profile");
-  };
+  // const handleAvatarClick = () => {
+  //   navigate("/profile");
+  // };
 
   // Show skeleton during initial loading
   if (loadingFish && fishList.length === 0) {
