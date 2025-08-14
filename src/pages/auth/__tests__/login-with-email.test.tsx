@@ -47,7 +47,9 @@ describe("LoginWithEmailPage", () => {
       screen.getByText("Sign in to your Lishka account"),
     ).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: /email/i })).toBeInTheDocument();
-    expect(screen.getByPlaceholderText("Enter your password")).toBeInTheDocument();
+    expect(
+      screen.getByPlaceholderText("Enter your password"),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /sign in/i }),
     ).toBeInTheDocument();
@@ -257,7 +259,7 @@ describe("LoginWithEmailPage", () => {
     const signInPromise = new Promise((resolve) => {
       resolveSignIn = resolve;
     });
-    
+
     mockAuthContext.signIn.mockImplementationOnce(() => signInPromise);
 
     render(<LoginWithEmailPage />);
@@ -271,23 +273,29 @@ describe("LoginWithEmailPage", () => {
     await user.click(signInButton);
 
     // Verify loading state
-    await waitFor(() => {
-      expect(screen.getByText("Signing in...")).toBeInTheDocument();
-      expect(emailInput).toBeDisabled();
-      expect(passwordInput).toBeDisabled();
-      expect(signInButton).toBeDisabled();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText("Signing in...")).toBeInTheDocument();
+        expect(emailInput).toBeDisabled();
+        expect(passwordInput).toBeDisabled();
+        expect(signInButton).toBeDisabled();
+      },
+      { timeout: 3000 },
+    );
 
     // Resolve the promise
     resolveSignIn({ error: null });
 
     // Verify form returns to normal state
-    await waitFor(() => {
-      expect(screen.getByText("Sign In")).toBeInTheDocument();
-      expect(emailInput).not.toBeDisabled();
-      expect(passwordInput).not.toBeDisabled();
-      expect(signInButton).not.toBeDisabled();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(screen.getByText("Sign In")).toBeInTheDocument();
+        expect(emailInput).not.toBeDisabled();
+        expect(passwordInput).not.toBeDisabled();
+        expect(signInButton).not.toBeDisabled();
+      },
+      { timeout: 3000 },
+    );
   });
 
   describe("Email Verification", () => {
@@ -389,8 +397,10 @@ describe("LoginWithEmailPage", () => {
       const resendPromise = new Promise((resolve) => {
         resolveResend = resolve;
       });
-      
-      mockAuthContext.resendConfirmation.mockImplementationOnce(() => resendPromise);
+
+      mockAuthContext.resendConfirmation.mockImplementationOnce(
+        () => resendPromise,
+      );
 
       const resendButton = screen.getByRole("button", {
         name: /resend verification email/i,
@@ -398,18 +408,24 @@ describe("LoginWithEmailPage", () => {
       await user.click(resendButton);
 
       // Verify loading state
-      await waitFor(() => {
-        expect(screen.getByText("Sending...")).toBeInTheDocument();
-        expect(resendButton).toBeDisabled();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(screen.getByText("Sending...")).toBeInTheDocument();
+          expect(resendButton).toBeDisabled();
+        },
+        { timeout: 3000 },
+      );
 
       // Resolve the promise
       resolveResend({ error: null });
 
       // Verify completion
-      await waitFor(() => {
-        expect(window.alert).toHaveBeenCalled();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(window.alert).toHaveBeenCalled();
+        },
+        { timeout: 3000 },
+      );
     });
   });
 });
