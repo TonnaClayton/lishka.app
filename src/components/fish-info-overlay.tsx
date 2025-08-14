@@ -8,12 +8,14 @@ interface FishInfoOverlayProps {
   metadata: ImageMetadata;
   className?: string;
   isSingleColumn?: boolean;
+  isMobile?: boolean;
 }
 
 const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
   metadata,
   className = "",
   isSingleColumn = true,
+  isMobile = false,
 }) => {
   // Debug logging for metadata
   log("🔍 [FishInfoOverlay] Received metadata:", {
@@ -41,11 +43,15 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
               No Metadata
             </span>
           </div>
-          <div className="pt-1">
+          <div className="">
             <img
               src="/images/Logo.png"
               alt="Lishka Logo"
-              style={{ height: "32px", width: "auto", objectFit: "contain" }}
+              style={{
+                height: isMobile == true ? "24px" : "32px",
+                width: "auto",
+                objectFit: "contain",
+              }}
               onError={(e) => {
                 const parent = e.currentTarget.parentElement;
                 if (parent) {
@@ -112,7 +118,7 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
       <div
         className={cn(
           `absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none z-10 `,
-          className,
+          className
         )}
       >
         <div
@@ -120,12 +126,17 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
           style={{ textShadow: "0 2px 4px rgba(0,0,0,0.8)" }}
         >
           {/* Fish Information Section */}
-          <div className="space-y-3 mb-4">
+          <div
+            className={cn(
+              "flex flex-col mb-4",
+              isMobile === true ? "gap-0.5" : "gap-3"
+            )}
+          >
             {hasAnyFishData ? (
               <>
                 {/* Fish Name with Confidence */}
                 {hasValidFishName ? (
-                  <div className="flex items-start gap-3 flex-wrap">
+                  <div className="flex items-start gap-3 flex-wrap justify-between sm:justify-start">
                     <div className="flex items-center gap-2 min-h-[24px]">
                       <Fish className="w-4 h-4 text-white flex-shrink-0" />
                       <span className="font-semibold text-lg text-white leading-tight">
@@ -149,7 +160,12 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
                 )}
 
                 {/* Size and Weight Details */}
-                <div className="space-y-2 text-sm">
+                <div
+                  className={cn(
+                    "flex flex-col text-sm",
+                    isMobile === true ? "gap-0.5" : "gap-2"
+                  )}
+                >
                   {hasValidFishSize && (
                     <div className="flex items-center gap-2 min-h-[20px]">
                       <Ruler className="w-4 h-4 text-white flex-shrink-0" />
@@ -171,24 +187,23 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
               </>
             ) : (
               /* Show "AI Analysis Failed" when fishInfo exists but contains no valid data */
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 min-h-[24px]">
-                  <Fish className="w-4 h-4 text-white flex-shrink-0" />
-                  <span className="font-semibold text-lg text-white leading-tight">
-                    {fishInfo ? "AI Analysis Failed" : "AI Info Missing"}
-                  </span>
-                </div>
+
+              <div className="flex items-center gap-2 min-h-[24px]">
+                <Fish className="w-4 h-4 text-white flex-shrink-0" />
+                <span className="font-semibold text-lg text-white leading-tight">
+                  {fishInfo ? "AI Analysis Failed" : "AI Info Missing"}
+                </span>
               </div>
             )}
           </div>
 
           {/* Logo */}
-          <div className="pt-1 relative z-20">
+          <div className="relative z-20">
             <img
               src="/images/Logo.png"
               alt="Lishka Logo"
               style={{
-                height: "32px",
+                height: isMobile == true ? "24px" : "32px",
                 width: "auto",
                 objectFit: "contain",
               }}
