@@ -47,7 +47,7 @@ const LocationSetup = ({
           // Attempt to get location name via reverse geocoding
           try {
             const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
             );
             const data = await response.json();
 
@@ -110,14 +110,14 @@ const LocationSetup = ({
         (error) => {
           console.error("Error getting location:", error);
           alert(
-            "Unable to retrieve your location. Please try selecting on the map."
+            "Unable to retrieve your location. Please try selecting on the map.",
           );
           setIsDetecting(false);
-        }
+        },
       );
     } else {
       alert(
-        "Geolocation is not supported by your browser. Please try selecting on the map."
+        "Geolocation is not supported by your browser. Please try selecting on the map.",
       );
       setIsDetecting(false);
     }

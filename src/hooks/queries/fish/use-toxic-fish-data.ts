@@ -216,12 +216,9 @@ const fetchToxicFishData = async (
   const longitude = userLongitude || 14.5146;
 
   // Use month-year instead of exact date for better cache persistence
-  const cacheKey =
-    `toxic_fish_data_v5_${cleanLocation}_${seaOcean}_${currentMonthYear}_${
-      latitude.toFixed(
-        3,
-      )
-    }_${longitude.toFixed(3)}`;
+  const cacheKey = `toxic_fish_data_v5_${cleanLocation}_${seaOcean}_${currentMonthYear}_${latitude.toFixed(
+    3,
+  )}_${longitude.toFixed(3)}`;
 
   // Check cache first
   const cachedData = getCachedApiResponse(cacheKey);
@@ -257,8 +254,7 @@ const fetchToxicFishData = async (
       },
       {
         role: "user",
-        content:
-          `You are a marine biology expert with access to authoritative species occurrence data, habitat preferences, and geospatial information. Return a comprehensive JSON list of genuinely toxic marine organisms from the ${seaOcean} near ${cleanLocation} at coordinates ${latitude}, ${longitude}.
+        content: `You are a marine biology expert with access to authoritative species occurrence data, habitat preferences, and geospatial information. Return a comprehensive JSON list of genuinely toxic marine organisms from the ${seaOcean} near ${cleanLocation} at coordinates ${latitude}, ${longitude}.
 
 These organisms must meet one of the following strict toxicity criteria:
 
@@ -427,7 +423,8 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
       })
       .filter((fish) => {
         // Only keep fish with valid scientific names
-        const hasValidScientificName = fish.scientificName &&
+        const hasValidScientificName =
+          fish.scientificName &&
           fish.scientificName !== "Unknown" &&
           fish.scientificName !== "" &&
           fish.scientificName.includes(" ") && // Must have at least genus and species

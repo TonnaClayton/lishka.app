@@ -170,7 +170,7 @@ export const useUploadPhoto = () => {
       // Upload to Supabase storage
       const photoUrl = await uploadImageToSupabase(
         processedFile,
-        "fish-photos"
+        "fish-photos",
       );
 
       // Create complete metadata object
@@ -204,7 +204,7 @@ export const useUploadPhoto = () => {
               ...oldData,
               gallery_photos: updatedPhotos,
             };
-          }
+          },
         );
 
         if (updatedPhotos.length > 0) {
@@ -235,7 +235,7 @@ export const useDeletePhoto = () => {
     mutationFn: async (photoIndex: number) => {
       // Get current photos from cache
       const currentProfile = queryClient.getQueryData(
-        profileQueryKeys.useProfile(user?.id || "")
+        profileQueryKeys.useProfile(user?.id || ""),
       ) as any;
 
       if (!currentProfile?.gallery_photos) {
@@ -244,7 +244,7 @@ export const useDeletePhoto = () => {
 
       // Remove photo from array
       const updatedPhotos = currentProfile.gallery_photos.filter(
-        (_: any, index: number) => index !== photoIndex
+        (_: any, index: number) => index !== photoIndex,
       );
 
       // Update profile in database
@@ -272,7 +272,7 @@ export const useDeletePhoto = () => {
               ...oldData,
               gallery_photos: updatedPhotos,
             };
-          }
+          },
         );
       }
     },
@@ -293,7 +293,7 @@ export const useUpdatePhotoMetadata = () => {
     }) => {
       // Get current photos from cache
       const currentProfile = queryClient.getQueryData(
-        profileQueryKeys.useProfile(user?.id || "")
+        profileQueryKeys.useProfile(user?.id || ""),
       ) as any;
 
       if (!currentProfile?.gallery_photos) {
@@ -329,7 +329,7 @@ export const useUpdatePhotoMetadata = () => {
               ...oldData,
               gallery_photos: updatedPhotos,
             };
-          }
+          },
         );
       }
     },
@@ -361,7 +361,7 @@ export const useUploadGear = () => {
         id: `gear_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
         name: result.metadata.gearInfo?.name || "Unknown Gear",
         category: mapGearTypeToCategory(
-          result.metadata.gearInfo?.type || "other"
+          result.metadata.gearInfo?.type || "other",
         ),
         description: result.metadata.gearInfo?.type || "",
         brand: result.metadata.gearInfo?.brand || "",
@@ -404,7 +404,7 @@ export const useUploadGear = () => {
               ...oldData,
               gear_items: updatedGear,
             };
-          }
+          },
         );
       }
     },

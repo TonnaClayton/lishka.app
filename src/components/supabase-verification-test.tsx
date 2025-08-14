@@ -36,7 +36,7 @@ const SupabaseVerificationTest: React.FC = () => {
 
   const updateTest = (name: string, updates: Partial<TestResult>) => {
     setTests((prev) =>
-      prev.map((test) => (test.name === name ? { ...test, ...updates } : test))
+      prev.map((test) => (test.name === name ? { ...test, ...updates } : test)),
     );
   };
 

@@ -106,8 +106,8 @@ export const compressImage = async (
           const compressionInfo = {
             originalSize: file.size,
             compressedSize: compressedFile.size,
-            compressionRatio: ((file.size - compressedFile.size) / file.size) *
-              100,
+            compressionRatio:
+              ((file.size - compressedFile.size) / file.size) * 100,
             quality,
             originalDimensions: {
               width: originalWidth,
@@ -118,9 +118,9 @@ export const compressImage = async (
 
           log("🗜️ [IMAGE COMPRESSION] Compression completed:", {
             originalSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
-            compressedSize: `${
-              (compressedFile.size / (1024 * 1024)).toFixed(2)
-            }MB`,
+            compressedSize: `${(compressedFile.size / (1024 * 1024)).toFixed(
+              2,
+            )}MB`,
             compressionRatio: `${compressionInfo.compressionRatio.toFixed(1)}%`,
             originalDimensions: compressionInfo.originalDimensions,
             compressedDimensions: compressionInfo.compressedDimensions,
@@ -309,10 +309,10 @@ export const identifyFishFromImage = async (
       platform: navigator.platform,
       connection: (navigator as any).connection
         ? {
-          effectiveType: (navigator as any).connection.effectiveType,
-          downlink: (navigator as any).connection.downlink,
-          rtt: (navigator as any).connection.rtt,
-        }
+            effectiveType: (navigator as any).connection.effectiveType,
+            downlink: (navigator as any).connection.downlink,
+            rtt: (navigator as any).connection.rtt,
+          }
         : "unknown",
       deviceMemory: (navigator as any).deviceMemory || "unknown",
     },
@@ -407,13 +407,13 @@ export const identifyFishFromImage = async (
     const processedFile = imageFile;
     let compressionInfo:
       | {
-        originalSize: number;
-        compressedSize: number;
-        compressionRatio: number;
-        quality: number;
-        originalDimensions: { width: number; height: number };
-        compressedDimensions: { width: number; height: number };
-      }
+          originalSize: number;
+          compressedSize: number;
+          compressionRatio: number;
+          quality: number;
+          originalDimensions: { width: number; height: number };
+          compressedDimensions: { width: number; height: number };
+        }
       | undefined;
 
     log(
@@ -476,10 +476,10 @@ export const identifyFishFromImage = async (
       deviceType: isMobile ? "mobile" : "desktop",
       connectionInfo: (navigator as any).connection
         ? {
-          effectiveType: (navigator as any).connection.effectiveType,
-          downlink: (navigator as any).connection.downlink,
-          rtt: (navigator as any).connection.rtt,
-        }
+            effectiveType: (navigator as any).connection.effectiveType,
+            downlink: (navigator as any).connection.downlink,
+            rtt: (navigator as any).connection.rtt,
+          }
         : "unknown",
     });
 
@@ -503,8 +503,7 @@ export const identifyFishFromImage = async (
         messages: [
           {
             role: "system",
-            content:
-              `You are a marine biology expert specializing in fish identification and precise measurement. Your task is to provide highly accurate fish size and weight estimates with NARROW, PRECISE ranges.
+            content: `You are a marine biology expert specializing in fish identification and precise measurement. Your task is to provide highly accurate fish size and weight estimates with NARROW, PRECISE ranges.
 
 MEASUREMENT METHODOLOGY:
 1. REFERENCE POINT ANALYSIS - Use multiple reference objects for size calculation:
@@ -558,8 +557,7 @@ CRITICAL REQUIREMENTS:
             content: [
               {
                 type: "text",
-                text:
-                  "Please identify the fish in this image and estimate its size and weight.",
+                text: "Please identify the fish in this image and estimate its size and weight.",
               },
               {
                 type: "image_url",
@@ -578,8 +576,8 @@ CRITICAL REQUIREMENTS:
         messageCount: requestBody.messages.length,
         hasImageContent: Array.isArray(requestBody.messages[1].content)
           ? requestBody.messages[1].content.some(
-            (c: any) => c.type === "image_url",
-          )
+              (c: any) => c.type === "image_url",
+            )
           : false,
         maxTokens: requestBody.max_tokens,
         temperature: requestBody.temperature,
@@ -775,16 +773,18 @@ CRITICAL REQUIREMENTS:
 
       // Validate the response structure with more flexible validation
       const hasValidName = fishInfo.name && typeof fishInfo.name === "string";
-      const hasValidSize = fishInfo.estimatedSize &&
-        typeof fishInfo.estimatedSize === "string";
-      const hasValidWeight = fishInfo.estimatedWeight &&
+      const hasValidSize =
+        fishInfo.estimatedSize && typeof fishInfo.estimatedSize === "string";
+      const hasValidWeight =
+        fishInfo.estimatedWeight &&
         typeof fishInfo.estimatedWeight === "string";
-      const hasValidConfidence = typeof fishInfo.confidence === "number" &&
+      const hasValidConfidence =
+        typeof fishInfo.confidence === "number" &&
         fishInfo.confidence >= 0 &&
         fishInfo.confidence <= 1;
 
-      const isValid = hasValidName && hasValidSize && hasValidWeight &&
-        hasValidConfidence;
+      const isValid =
+        hasValidName && hasValidSize && hasValidWeight && hasValidConfidence;
 
       log("🔍 [OPENAI DEBUG] Response validation", {
         isValid,
@@ -815,9 +815,10 @@ CRITICAL REQUIREMENTS:
           ...fishInfo,
           compressionInfo,
           debugInfo,
-          openaiPrompt: typeof requestBody.messages[0].content === "string"
-            ? requestBody.messages[0].content
-            : JSON.stringify(requestBody.messages[0].content),
+          openaiPrompt:
+            typeof requestBody.messages[0].content === "string"
+              ? requestBody.messages[0].content
+              : JSON.stringify(requestBody.messages[0].content),
           rawJsonResponse: content,
         };
       } else {
@@ -850,9 +851,10 @@ CRITICAL REQUIREMENTS:
           ...fixedResponse,
           compressionInfo,
           debugInfo,
-          openaiPrompt: typeof requestBody.messages[0].content === "string"
-            ? requestBody.messages[0].content
-            : JSON.stringify(requestBody.messages[0].content),
+          openaiPrompt:
+            typeof requestBody.messages[0].content === "string"
+              ? requestBody.messages[0].content
+              : JSON.stringify(requestBody.messages[0].content),
           rawJsonResponse: content,
         };
       }
@@ -944,10 +946,10 @@ export const processImageUpload = async (
     deviceMemory: (navigator as any).deviceMemory || "unknown",
     connection: (navigator as any).connection
       ? {
-        effectiveType: (navigator as any).connection.effectiveType,
-        downlink: (navigator as any).connection.downlink,
-        rtt: (navigator as any).connection.rtt,
-      }
+          effectiveType: (navigator as any).connection.effectiveType,
+          downlink: (navigator as any).connection.downlink,
+          rtt: (navigator as any).connection.rtt,
+        }
       : "unknown",
     timestamp: new Date().toISOString(),
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -1145,8 +1147,8 @@ export const processImageUpload = async (
           isAlreadyCompressed: file.size < 2 * 1024 * 1024, // Less than 2MB suggests pre-compression
           deviceInfo: {
             userAgent: navigator.userAgent,
-            connection: (navigator as any).connection?.effectiveType ||
-              "unknown",
+            connection:
+              (navigator as any).connection?.effectiveType || "unknown",
           },
         });
         const aiProcessStart = Date.now();
@@ -1191,8 +1193,8 @@ export const processImageUpload = async (
             fishInfo = {
               name: identificationResult?.name || "Unknown",
               estimatedSize: identificationResult?.estimatedSize || "Unknown",
-              estimatedWeight: identificationResult?.estimatedWeight ||
-                "Unknown",
+              estimatedWeight:
+                identificationResult?.estimatedWeight || "Unknown",
               confidence: identificationResult?.confidence || 0,
             };
 
@@ -1215,8 +1217,8 @@ export const processImageUpload = async (
                 fishSize: fishInfo?.estimatedSize,
                 fishWeight: fishInfo?.estimatedWeight,
                 hasCompressionInfo: !!identificationResult?.compressionInfo,
-                compressionRatio: identificationResult?.compressionInfo
-                  ?.compressionRatio,
+                compressionRatio:
+                  identificationResult?.compressionInfo?.compressionRatio,
               },
             );
           } catch (detailedError) {
@@ -1269,12 +1271,14 @@ export const processImageUpload = async (
           isMobile,
           totalAiTime,
           classificationTime,
-          detailedAnalysisTime: classificationResult.type === "fish"
-            ? "included in total"
-            : "skipped",
+          detailedAnalysisTime:
+            classificationResult.type === "fish"
+              ? "included in total"
+              : "skipped",
           finalFishInfo: fishInfo,
           stage1Result: classificationResult,
-          stage2Executed: classificationResult.type === "fish" &&
+          stage2Executed:
+            classificationResult.type === "fish" &&
             classificationResult.confidence > 0.3,
           deviceType: isMobile ? "mobile" : "desktop",
         });
@@ -1286,8 +1290,8 @@ export const processImageUpload = async (
           willCreateDefaultFishInfo: true,
           deviceInfo: {
             userAgent: navigator.userAgent,
-            connection: (navigator as any).connection?.effectiveType ||
-              "unknown",
+            connection:
+              (navigator as any).connection?.effectiveType || "unknown",
             deviceMemory: (navigator as any).deviceMemory || "unknown",
           },
           fileInfo: {

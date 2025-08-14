@@ -168,7 +168,7 @@ describe("OnboardingDialog", () => {
     const asyncPromise = new Promise((resolve) => {
       resolveAsync = resolve;
     });
-    
+
     mockMutateAsync.mockImplementationOnce(() => asyncPromise);
 
     render(<OnboardingDialog hasSeenOnboardingFlow={false} />);
@@ -177,15 +177,21 @@ describe("OnboardingDialog", () => {
     await user.click(nextButton);
 
     // Check if loading state is shown (button should be disabled)
-    await waitFor(() => {
-      expect(nextButton).toBeDisabled();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(nextButton).toBeDisabled();
+      },
+      { timeout: 3000 },
+    );
 
     resolveAsync({});
 
-    await waitFor(() => {
-      expect(nextButton).not.toBeDisabled();
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(nextButton).not.toBeDisabled();
+      },
+      { timeout: 3000 },
+    );
   });
 
   it("handles profile update error gracefully", async () => {
@@ -199,9 +205,12 @@ describe("OnboardingDialog", () => {
     const nextButton = screen.getByRole("button", { name: "Next" });
     await user.click(nextButton);
 
-    await waitFor(() => {
-      expect(consoleErrorSpy).toHaveBeenCalledWith(expect.any(Error));
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        expect(consoleErrorSpy).toHaveBeenCalledWith(expect.any(Error));
+      },
+      { timeout: 3000 },
+    );
 
     consoleErrorSpy.mockRestore();
   });
@@ -217,13 +226,16 @@ describe("OnboardingDialog", () => {
     await user.click(nextButton);
 
     // The mutation should be called with the correct data
-    await waitFor(() => {
-      if (mockMutateAsync.mock.calls.length > 0) {
-        expect(mockMutateAsync).toHaveBeenCalledWith({
-          has_seen_onboarding_flow: true,
-        });
-      }
-    }, { timeout: 3000 });
+    await waitFor(
+      () => {
+        if (mockMutateAsync.mock.calls.length > 0) {
+          expect(mockMutateAsync).toHaveBeenCalledWith({
+            has_seen_onboarding_flow: true,
+          });
+        }
+      },
+      { timeout: 3000 },
+    );
   });
 
   it("prevents dialog from closing when hasSeenOnboardingFlow is false", () => {

@@ -157,14 +157,16 @@ describe("AuthContext", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    
+
     // Get the mocked services
-    const { supabase, authService, profileService } = await import("@/lib/supabase");
+    const { supabase, authService, profileService } = await import(
+      "@/lib/supabase"
+    );
     mockSupabaseClient = supabase as any;
     mockSupabaseAuth = mockSupabaseClient.auth;
     mockAuthService = authService as any;
     mockProfileService = profileService as any;
-    
+
     mockAuthService.onAuthStateChange.mockReturnValue({
       data: { subscription: { unsubscribe: vi.fn() } },
     });
@@ -176,7 +178,7 @@ describe("AuthContext", () => {
       data: { user: null },
       error: null,
     });
-    
+
     // Setup authService mocks
     mockAuthService.onAuthStateChange.mockReturnValue({
       data: { subscription: { unsubscribe: vi.fn() } },
@@ -189,7 +191,7 @@ describe("AuthContext", () => {
       data: { user: null },
       error: null,
     });
-    
+
     // Also setup the supabase.auth mocks since auth-context uses both
     mockSupabaseAuth.onAuthStateChange.mockReturnValue({
       data: { subscription: { unsubscribe: vi.fn() } },
@@ -202,7 +204,7 @@ describe("AuthContext", () => {
       data: { user: null },
       error: null,
     });
-    
+
     mockLocation.href = "";
   });
 
@@ -247,7 +249,10 @@ describe("AuthContext", () => {
       "password",
     );
 
-    expect(mockAuthService.signIn).toHaveBeenCalledWith("test@example.com", "password");
+    expect(mockAuthService.signIn).toHaveBeenCalledWith(
+      "test@example.com",
+      "password",
+    );
     expect(signInResult.error).toBeNull();
   });
 
@@ -295,7 +300,11 @@ describe("AuthContext", () => {
       "John Doe",
     );
 
-    expect(mockAuthService.signUp).toHaveBeenCalledWith("test@example.com", "password", "John Doe");
+    expect(mockAuthService.signUp).toHaveBeenCalledWith(
+      "test@example.com",
+      "password",
+      "John Doe",
+    );
     expect(signUpResult.error).toBeNull();
   });
 

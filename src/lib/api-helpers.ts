@@ -21,7 +21,8 @@ export function calculateDistance(
   const R = 3440.065; // Earth's radius in nautical miles
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
   const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
     Math.cos((lat1 * Math.PI) / 180) *
       Math.cos((lat2 * Math.PI) / 180) *
       Math.sin(dLng / 2) *
@@ -400,13 +401,13 @@ export async function generateEnhancedOffshoreFishingLocations(
         actualDepth: wreck.depth,
         seabedType: "artificial reef (shipwreck)",
         structures: ["shipwreck", "artificial reef", "structure"],
-        probabilityScore: wreck.fishingQuality === "excellent"
-          ? 0.95
-          : wreck.fishingQuality === "good"
-          ? 0.88
-          : 0.75,
-        description:
-          `Historic ${wreck.type.toLowerCase()} wreck site creating excellent artificial reef habitat for diverse marine life.`,
+        probabilityScore:
+          wreck.fishingQuality === "excellent"
+            ? 0.95
+            : wreck.fishingQuality === "good"
+              ? 0.88
+              : 0.75,
+        description: `Historic ${wreck.type.toLowerCase()} wreck site creating excellent artificial reef habitat for diverse marine life.`,
         topographicFeatures: topographicFeatures.map((f) => f.description),
         isShipwreck: true,
         shipwreckInfo: {
@@ -487,7 +488,8 @@ export async function generateEnhancedOffshoreFishingLocations(
     const distanceRad = distance / 60;
 
     const lat = centerLat + distanceRad * Math.cos(angleRad);
-    const lng = centerLng +
+    const lng =
+      centerLng +
       (distanceRad * Math.sin(angleRad)) /
         Math.cos((centerLat * Math.PI) / 180);
 
@@ -513,8 +515,8 @@ export async function generateEnhancedOffshoreFishingLocations(
 
     // Analyze topography
     const topographicFeatures = analyzeTopography(lat, lng, actualDepth);
-    const avgFishingPotential = topographicFeatures.reduce((sum, f) =>
-      sum + f.fishingPotential, 0) /
+    const avgFishingPotential =
+      topographicFeatures.reduce((sum, f) => sum + f.fishingPotential, 0) /
       topographicFeatures.length;
 
     // Select seabed type and structures based on depth and features
@@ -613,10 +615,9 @@ function generateLocationDescription(
 
   if (topographicFeatures.length > 0) {
     const bestFeature = topographicFeatures.reduce((best, current) =>
-      current.fishingPotential > best.fishingPotential ? current : best
+      current.fishingPotential > best.fishingPotential ? current : best,
     );
-    description +=
-      `. Features ${bestFeature.description.toLowerCase()} that attracts and concentrates fish.`;
+    description += `. Features ${bestFeature.description.toLowerCase()} that attracts and concentrates fish.`;
   }
 
   return description;

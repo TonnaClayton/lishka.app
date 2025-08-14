@@ -3,7 +3,7 @@ import useDebounce from "./use-debounce";
 
 const useIsMobile = (
   threshold: number = 768,
-  debounceDelay: number = 300
+  debounceDelay: number = 300,
 ): boolean => {
   const [isMobile, setIsMobile] = useState<boolean>(false);
 

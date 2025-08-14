@@ -87,7 +87,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const { data: toxicFishData, isLoading: loadingToxicFish } = useToxicFishData(
     userLocation,
     (profile?.location_coordinates as any)?.latitude,
-    (profile?.location_coordinates as any)?.longitude
+    (profile?.location_coordinates as any)?.longitude,
   );
 
   // Extract fish list from infinite query data

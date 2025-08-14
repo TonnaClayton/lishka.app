@@ -21,7 +21,6 @@ const useDeviceSize = (debounceDelay: number = 300) => {
         window.removeEventListener("resize", handleResize);
       };
     }
-     
   }, [debounceDelay]);
 
   return deviceSize;

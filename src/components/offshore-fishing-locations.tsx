@@ -98,7 +98,7 @@ const OffshoreFishingLocations: React.FC<
         const cacheKey = `offshore_fishing_v3_${currentParams.lat.toFixed(4)}_${currentParams.lng.toFixed(4)}_${selectedRadius}NM_${currentYear}_${currentMonth}`;
 
         log(
-          `🎣 Fetching fishing locations for ${currentParams.lat.toFixed(4)}, ${currentParams.lng.toFixed(4)} within ${selectedRadius}NM`
+          `🎣 Fetching fishing locations for ${currentParams.lat.toFixed(4)}, ${currentParams.lng.toFixed(4)} within ${selectedRadius}NM`,
         );
 
         // Check cache first (unless forcing refresh)
@@ -123,12 +123,12 @@ const OffshoreFishingLocations: React.FC<
           currentParams.lat,
           currentParams.lng,
           selectedRadius,
-          18 // Target 18 locations
+          18, // Target 18 locations
         );
 
         if (!result.locations || result.locations.length === 0) {
           throw new Error(
-            `No suitable offshore fishing locations found within ${selectedRadius} nautical miles. Try increasing the search radius or check if you're in a coastal area with limited offshore access.`
+            `No suitable offshore fishing locations found within ${selectedRadius} nautical miles. Try increasing the search radius or check if you're in a coastal area with limited offshore access.`,
           );
         }
 
@@ -139,12 +139,12 @@ const OffshoreFishingLocations: React.FC<
 
         if (validLocations.length === 0) {
           throw new Error(
-            `All generated locations were outside the ${selectedRadius}NM radius. This may indicate a technical issue.`
+            `All generated locations were outside the ${selectedRadius}NM radius. This may indicate a technical issue.`,
           );
         }
 
         log(
-          `✅ Successfully generated ${validLocations.length} fishing locations`
+          `✅ Successfully generated ${validLocations.length} fishing locations`,
         );
         log(`📊 Debug info:`, result.debugInfo);
 
@@ -163,7 +163,7 @@ const OffshoreFishingLocations: React.FC<
         setError(
           err instanceof Error
             ? err.message
-            : "Failed to generate offshore fishing locations. Please try again."
+            : "Failed to generate offshore fishing locations. Please try again.",
         );
         setLocations([]);
         setDebugInfo(null);
@@ -171,7 +171,7 @@ const OffshoreFishingLocations: React.FC<
         setLoading(false);
       }
     },
-    [userLocation, selectedRadius, lastFetchParams]
+    [userLocation, selectedRadius, lastFetchParams],
   );
 
   // Effect to load locations when component mounts or dependencies change
@@ -209,7 +209,7 @@ const OffshoreFishingLocations: React.FC<
       log("🎣 Selected offshore fishing location:", location);
       // Add any additional click handling here
     },
-    []
+    [],
   );
 
   // Handle retry

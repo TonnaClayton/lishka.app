@@ -17,9 +17,7 @@ export function executeWithRateLimit<T>(
   requestFn: () => Promise<T>,
   priority: number = 1, // Parameter kept for compatibility but ignored
 ): Promise<T> {
-  log(
-    `[API Rate Limiter] Executing request with priority ${priority}`,
-  );
+  log(`[API Rate Limiter] Executing request with priority ${priority}`);
   // Execute the request immediately without any rate limiting
   return requestFn();
 }

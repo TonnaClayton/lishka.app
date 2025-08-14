@@ -117,7 +117,7 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
       <div
         className={cn(
           `absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent pointer-events-none z-10 `,
-          className
+          className,
         )}
       >
         <div
@@ -128,7 +128,7 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
           <div
             className={cn(
               "flex flex-col mb-4",
-              isMobile === true ? "gap-0.5" : "gap-3"
+              isMobile === true ? "gap-0.5" : "gap-3",
             )}
           >
             {hasAnyFishData ? (
@@ -162,7 +162,7 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
                 <div
                   className={cn(
                     "flex flex-col text-sm",
-                    isMobile === true ? "gap-0.5" : "gap-2"
+                    isMobile === true ? "gap-0.5" : "gap-2",
                   )}
                 >
                   {hasValidFishSize && (

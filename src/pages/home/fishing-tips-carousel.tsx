@@ -254,7 +254,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
             temperature: 0.7,
             max_tokens: 1500,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -331,7 +331,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
     } catch (err) {
       console.error("Error fetching fishing tips:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to fetch fishing tips"
+        err instanceof Error ? err.message : "Failed to fetch fishing tips",
       );
     } finally {
       setLoading(false);
@@ -541,7 +541,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
                   <CloudSnow className="w-8 h-8 text-blue-300" />
                 )}
                 {!["Clear", "Partly cloudy", "Rainy", "Snowy"].includes(
-                  weatherSummary.condition
+                  weatherSummary.condition,
                 ) && <Cloud className="w-8 h-8 text-blue-400" />}
                 <span className="text-foreground text-2xl font-normal">
                   {weatherSummary.temperature !== null

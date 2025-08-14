@@ -166,12 +166,12 @@ export const validateAndSanitizeRegulations = (
 
       // Check for generic terms
       const hasGenericTerms = genericTerms.some((term) =>
-        sourceLower.includes(term.toLowerCase())
+        sourceLower.includes(term.toLowerCase()),
       );
 
       // Check for suspicious regulation patterns
       const hasSuspiciousPatterns = suspiciousPatterns.some((pattern) =>
-        pattern.test(source)
+        pattern.test(source),
       );
 
       // Check if source contains legitimate authority references
@@ -181,8 +181,7 @@ export const validateAndSanitizeRegulations = (
 
       if (hasGenericTerms || hasSuspiciousPatterns || !hasLegitimateAuthority) {
         // Replace with safe fallback
-        source =
-          `Contact local fisheries authority in ${location} for current regulations`;
+        source = `Contact local fisheries authority in ${location} for current regulations`;
         confidence = "Low";
         wasModified = true;
         validationFlags.suspiciousSourcesDetected = true;
@@ -253,7 +252,7 @@ export const validateAndSanitizeRegulations = (
   ) {
     validatedRegulations.additionalRules = regulations.additionalRules
       .map((rule: any, index: number) =>
-        validateRegulationEntry(rule, `additionalRule${index}`)
+        validateRegulationEntry(rule, `additionalRule${index}`),
       )
       .filter((rule: any) => rule.value !== "Check with local authorities"); // Remove generic additional rules
   } else {

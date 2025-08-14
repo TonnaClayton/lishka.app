@@ -37,8 +37,8 @@ export const setupAvatarStorage = async () => {
       // List all buckets to see what exists
       let buckets = null;
       try {
-        const { data: bucketData, error: listError } = await supabase.storage
-          .listBuckets();
+        const { data: bucketData, error: listError } =
+          await supabase.storage.listBuckets();
 
         if (listError) {
           console.error("Error listing buckets:", listError);

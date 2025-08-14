@@ -40,7 +40,7 @@ interface ImageDebugResult {
 
 const ImageDebugTest = () => {
   const [workingImage, setWorkingImage] = useState<ImageDebugResult | null>(
-    null
+    null,
   );
   const [nonWorkingImage, setNonWorkingImage] =
     useState<ImageDebugResult | null>(null);
@@ -172,7 +172,7 @@ const ImageDebugTest = () => {
 
   const handleFileSelect = (
     event: React.ChangeEvent<HTMLInputElement>,
-    type: "working" | "nonWorking"
+    type: "working" | "nonWorking",
   ) => {
     const file = event.target.files?.[0];
     if (file) {

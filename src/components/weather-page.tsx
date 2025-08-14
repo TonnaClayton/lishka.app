@@ -17,7 +17,7 @@ const WeatherPage: React.FC = () => {
   const { user } = useAuth();
   const { data: profile } = useProfile(user.id);
   const [location, setLocation] = useState<string>(
-    profile.location || DEFAULT_LOCATION.name
+    profile.location || DEFAULT_LOCATION.name,
   );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dataLoaded, setDataLoaded] = useState(false);

@@ -144,7 +144,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
                 migratedPhotos.push(migratedPhoto);
                 migratedCount++;
                 errors.push(
-                  `Photo ${i + 1}: Failed to parse JSON, created minimal metadata`
+                  `Photo ${i + 1}: Failed to parse JSON, created minimal metadata`,
                 );
               }
             } else {
@@ -185,7 +185,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
           }
         } catch (photoError) {
           errors.push(
-            `Photo ${i + 1}: ${photoError instanceof Error ? photoError.message : String(photoError)}`
+            `Photo ${i + 1}: ${photoError instanceof Error ? photoError.message : String(photoError)}`,
           );
         }
       }

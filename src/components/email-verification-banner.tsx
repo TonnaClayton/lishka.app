@@ -53,7 +53,7 @@ const EmailVerificationBanner: React.FC = () => {
   // Prevent duplicate rendering by checking if this specific user's banner has already been shown
   if (typeof window !== "undefined") {
     const existingBanner = document.querySelector(
-      `[data-banner-id="${bannerId}"]`
+      `[data-banner-id="${bannerId}"]`,
     );
     if (existingBanner && !dismissed) {
       return null;

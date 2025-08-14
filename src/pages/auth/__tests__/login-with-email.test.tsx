@@ -77,7 +77,7 @@ describe("LoginWithEmailPage", () => {
       signInCalled = true;
       return Promise.resolve({ error: null });
     });
-    
+
     render(<LoginWithEmailPage />);
 
     const emailInput = screen.getByRole("textbox", { name: /email/i });
@@ -90,8 +90,8 @@ describe("LoginWithEmailPage", () => {
     await user.click(signInButton);
 
     // Wait a bit to let any form submission attempts happen
-    await new Promise(resolve => setTimeout(resolve, 100));
-    
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
     // Since the email is invalid, signIn should not have been called
     // (React Hook Form should prevent submission)
     expect(signInCalled).toBe(false);
@@ -369,7 +369,7 @@ describe("LoginWithEmailPage", () => {
     it("requires email before resending verification", async () => {
       // The beforeEach already renders the component and sets up email verification state
       // So we can directly interact with the existing rendered component
-      
+
       const emailInput = screen.getByRole("textbox", { name: /email/i });
       const resendButton = screen.getByRole("button", {
         name: /resend verification email/i,
@@ -377,15 +377,18 @@ describe("LoginWithEmailPage", () => {
 
       // Clear the email field that was filled in beforeEach
       await user.clear(emailInput);
-      
+
       // Try to resend verification without an email
       await user.click(resendButton);
 
-      await waitFor(() => {
-        expect(
-          screen.getByText("Please enter your email address first."),
-        ).toBeInTheDocument();
-      }, { timeout: 3000 });
+      await waitFor(
+        () => {
+          expect(
+            screen.getByText("Please enter your email address first."),
+          ).toBeInTheDocument();
+        },
+        { timeout: 3000 },
+      );
     });
 
     it("shows loading state during email resend", async () => {

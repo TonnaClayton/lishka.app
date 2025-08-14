@@ -303,7 +303,7 @@ const ImageUploadDebugger: React.FC = () => {
                     </p>
                     <p className="font-medium text-green-600">
                       {uploadState.metadata.compressionInfo.compressionRatio.toFixed(
-                        1
+                        1,
                       )}
                       % saved
                     </p>
@@ -365,7 +365,7 @@ const ImageUploadDebugger: React.FC = () => {
                     <p>
                       Confidence:{" "}
                       {Math.round(
-                        uploadState.metadata.fishInfo.confidence * 100
+                        uploadState.metadata.fishInfo.confidence * 100,
                       )}
                       %
                     </p>
@@ -404,7 +404,7 @@ const ImageUploadDebugger: React.FC = () => {
                   <p>
                     Time:{" "}
                     {new Date(
-                      uploadState.metadata.timestamp
+                      uploadState.metadata.timestamp,
                     ).toLocaleTimeString()}
                   </p>
                 </div>
@@ -480,7 +480,8 @@ const ImageUploadDebugger: React.FC = () => {
                             {uploadState.metadata.fishInfo.confidence > 0 && (
                               <div className="bg-white/25 backdrop-blur-sm text-white border border-white/30 text-sm px-3 py-1 rounded-full">
                                 {Math.round(
-                                  uploadState.metadata.fishInfo.confidence * 100
+                                  uploadState.metadata.fishInfo.confidence *
+                                    100,
                                 )}
                                 % confident
                               </div>
@@ -548,7 +549,7 @@ const ImageUploadDebugger: React.FC = () => {
                       <span>
                         Image compression:{" "}
                         {uploadState.metadata.compressionInfo.compressionRatio.toFixed(
-                          1
+                          1,
                         )}
                         % size reduction
                       </span>
@@ -566,7 +567,7 @@ const ImageUploadDebugger: React.FC = () => {
                       <span>
                         AI fish identification:{" "}
                         {Math.round(
-                          uploadState.metadata.fishInfo.confidence * 100
+                          uploadState.metadata.fishInfo.confidence * 100,
                         )}
                         % confidence
                       </span>

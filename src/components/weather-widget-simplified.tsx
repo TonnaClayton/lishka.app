@@ -140,7 +140,7 @@ const WeatherWidgetSimplified: React.FC = () => {
   const windDirections = marineAvailable
     ? marineData.hourly.wind_direction_10m.slice(
         currentIndex,
-        currentIndex + 24
+        currentIndex + 24,
       )
     : [];
   const marineTemperatures = marineAvailable
@@ -154,7 +154,7 @@ const WeatherWidgetSimplified: React.FC = () => {
   const precipProbabilities = weatherAvailable
     ? weatherData.hourly.precipitation_probability.slice(
         currentIndex,
-        currentIndex + 24
+        currentIndex + 24,
       )
     : [];
   const weatherCodes = weatherAvailable
@@ -222,7 +222,7 @@ const WeatherWidgetSimplified: React.FC = () => {
     waveHeight: number = 0,
     windSpeed: number = 0,
     precipProbability: number = 0,
-    weatherCode: number = 0
+    weatherCode: number = 0,
   ) => {
     let score = 5; // Start with excellent
 
@@ -287,7 +287,7 @@ const WeatherWidgetSimplified: React.FC = () => {
       marineAvailable ? waveHeights[0] : undefined,
       marineAvailable ? windSpeeds[0] : undefined,
       weatherAvailable ? precipProbabilities[0] : undefined,
-      weatherAvailable ? weatherCodes[0] : undefined
+      weatherAvailable ? weatherCodes[0] : undefined,
     ),
   };
 

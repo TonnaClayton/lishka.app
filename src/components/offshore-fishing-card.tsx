@@ -101,7 +101,7 @@ const OffshoreFishingCard = ({
     }
 
     const offshoreFishingDebugPreference = localStorage.getItem(
-      "showOffshoreFishingDebug"
+      "showOffshoreFishingDebug",
     );
     if (offshoreFishingDebugPreference !== null) {
       setShowOffshoreFishingDebug(offshoreFishingDebugPreference === "true");
@@ -117,11 +117,11 @@ const OffshoreFishingCard = ({
 
     const handleOffshoreFishingDebugChange = () => {
       const newOffshoreFishingDebugPreference = localStorage.getItem(
-        "showOffshoreFishingDebug"
+        "showOffshoreFishingDebug",
       );
       if (newOffshoreFishingDebugPreference !== null) {
         setShowOffshoreFishingDebug(
-          newOffshoreFishingDebugPreference === "true"
+          newOffshoreFishingDebugPreference === "true",
         );
       }
     };
@@ -129,14 +129,14 @@ const OffshoreFishingCard = ({
     window.addEventListener("locationDebugChanged", handleDebugChange);
     window.addEventListener(
       "offshoreFishingDebugChanged",
-      handleOffshoreFishingDebugChange
+      handleOffshoreFishingDebugChange,
     );
 
     return () => {
       window.removeEventListener("locationDebugChanged", handleDebugChange);
       window.removeEventListener(
         "offshoreFishingDebugChanged",
-        handleOffshoreFishingDebugChange
+        handleOffshoreFishingDebugChange,
       );
     };
   }, []);

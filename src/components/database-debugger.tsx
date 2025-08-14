@@ -242,7 +242,7 @@ const DatabaseDebugger: React.FC = () => {
                       <p>
                         • Final Gallery Photos:{" "}
                         {JSON.stringify(
-                          results.testUpdateResult.finalGalleryPhotos
+                          results.testUpdateResult.finalGalleryPhotos,
                         )}
                       </p>
                     </div>

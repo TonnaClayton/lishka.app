@@ -96,7 +96,7 @@ const MapSelection = ({
       const lat = currentLocation.latitude;
       const lng = currentLocation.longitude;
       log(
-        `Map created, centering on: ${lat}, ${lng} (${currentLocation.name})`
+        `Map created, centering on: ${lat}, ${lng} (${currentLocation.name})`,
       );
       map.setView([lat, lng], 15);
     }
@@ -266,7 +266,7 @@ const LocationModal = ({
           // Attempt to get location name via reverse geocoding
           try {
             const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
             );
             const data = await response.json();
             log("Reverse geocoding data:", data);
@@ -333,7 +333,7 @@ const LocationModal = ({
           enableHighAccuracy: true,
           timeout: 10000,
           maximumAge: 0,
-        }
+        },
       );
     } else {
       // If geolocation is not supported, set a default location
@@ -345,7 +345,7 @@ const LocationModal = ({
 
       log(
         "Setting default location (no geolocation support):",
-        defaultLocation
+        defaultLocation,
       );
       handleLocationUpdate(defaultLocation);
       setLoading(false);

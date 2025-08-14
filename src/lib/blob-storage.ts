@@ -290,8 +290,7 @@ export async function uploadImage(file: File): Promise<string> {
         error.message.includes("fetch") ||
         error.message.includes("network")
       ) {
-        const networkError =
-          `Network error during upload: ${error.message}. Please check your internet connection.`;
+        const networkError = `Network error during upload: ${error.message}. Please check your internet connection.`;
         console.error("[BlobStorage] 🌐 Network error detected:", {
           networkError,
           isMobile,
@@ -305,8 +304,7 @@ export async function uploadImage(file: File): Promise<string> {
         error.message.includes("403") ||
         error.message.includes("Unauthorized")
       ) {
-        const authError =
-          `Authentication error: ${error.message}. Please check your Vercel Blob token configuration.`;
+        const authError = `Authentication error: ${error.message}. Please check your Vercel Blob token configuration.`;
         console.error("[BlobStorage] 🔐 Authentication error detected:", {
           authError,
           isMobile,
@@ -330,8 +328,7 @@ export async function uploadImage(file: File): Promise<string> {
 
       // Token-related errors
       if (error.message.includes("token") || error.message.includes("Token")) {
-        const tokenError =
-          `Token error: ${error.message}. Please check your VITE_BLOB_READ_WRITE_TOKEN environment variable.`;
+        const tokenError = `Token error: ${error.message}. Please check your VITE_BLOB_READ_WRITE_TOKEN environment variable.`;
         console.error("[BlobStorage] 🔑 Token error detected:", {
           tokenError,
           isMobile,
@@ -464,9 +461,8 @@ export function getBlobStorageStatus(): {
     return {
       configured: false,
       hasToken: false,
-      error: error instanceof Error
-        ? error.message
-        : "Unknown configuration error",
+      error:
+        error instanceof Error ? error.message : "Unknown configuration error",
     };
   }
 }

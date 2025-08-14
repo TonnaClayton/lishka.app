@@ -90,11 +90,9 @@ const fetchOpenMeteoData = async (
   log(`Fetching weather data for coordinates: ${lat}, ${lng}`);
 
   // Construct the API URLs with customer API endpoint and API key
-  const weatherUrl =
-    `https://customer-api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code,precipitation,precipitation_probability,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&current=temperature_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&timezone=auto&apikey=1g8vJZI7DhEIFDIt`;
+  const weatherUrl = `https://customer-api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code,precipitation,precipitation_probability,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&current=temperature_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&timezone=auto&apikey=1g8vJZI7DhEIFDIt`;
 
-  const marineUrl =
-    `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=wave_height,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period&current=wave_height,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period`;
+  const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=wave_height,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period&current=wave_height,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period`;
 
   try {
     // Fetch both weather and marine data in parallel
@@ -270,25 +268,31 @@ export const useWeatherData = (location: LocationData | null) => {
 
       // Save current weather conditions to localStorage for other components
       const currentConditions = {
-        temperature: newWeatherData?.current?.temperature_2m ||
+        temperature:
+          newWeatherData?.current?.temperature_2m ||
           (newWeatherData.hourly?.temperature_2m?.length > 0
             ? newWeatherData.hourly.temperature_2m[0]
             : null),
-        windSpeed: newWeatherData.hourly?.wind_speed_10m?.length > 0
-          ? newWeatherData.hourly.wind_speed_10m[0]
-          : null,
-        windDirection: newWeatherData.hourly?.wind_direction_10m?.length > 0
-          ? newWeatherData.hourly.wind_direction_10m[0]
-          : null,
-        waveHeight: newWeatherData?.current?.wave_height ||
+        windSpeed:
+          newWeatherData.hourly?.wind_speed_10m?.length > 0
+            ? newWeatherData.hourly.wind_speed_10m[0]
+            : null,
+        windDirection:
+          newWeatherData.hourly?.wind_direction_10m?.length > 0
+            ? newWeatherData.hourly.wind_direction_10m[0]
+            : null,
+        waveHeight:
+          newWeatherData?.current?.wave_height ||
           (newWeatherData.hourly?.wave_height?.length > 0
             ? newWeatherData.hourly.wave_height[0]
             : null),
-        swellWaveHeight: newWeatherData?.current?.swell_wave_height ||
+        swellWaveHeight:
+          newWeatherData?.current?.swell_wave_height ||
           (newWeatherData.hourly?.swell_wave_height?.length > 0
             ? newWeatherData.hourly.swell_wave_height[0]
             : null),
-        swellWavePeriod: newWeatherData?.current?.swell_wave_period ||
+        swellWavePeriod:
+          newWeatherData?.current?.swell_wave_period ||
           (newWeatherData.hourly?.swell_wave_period?.length > 0
             ? newWeatherData.hourly.swell_wave_period[0]
             : null),
@@ -306,9 +310,10 @@ export const useWeatherData = (location: LocationData | null) => {
     if (!weatherData) return "-";
 
     // Use current weather code if available, otherwise use the first hourly code
-    const weatherCode = weatherData.current?.weather_code ??
+    const weatherCode =
+      weatherData.current?.weather_code ??
       (weatherData.hourly.weather_code &&
-          weatherData.hourly.weather_code.length > 0
+      weatherData.hourly.weather_code.length > 0
         ? weatherData.hourly.weather_code[0]
         : null);
 

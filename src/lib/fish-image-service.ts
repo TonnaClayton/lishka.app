@@ -91,10 +91,7 @@ export function handleFishImageError(
   const img = event.currentTarget;
   if (!img) return;
 
-  log(
-    `[FishImageService] Handling fish image error for ${fishName}`,
-    event,
-  );
+  log(`[FishImageService] Handling fish image error for ${fishName}`, event);
 
   if (!img.src.includes("default-image.jpg")) {
     img.src = getPlaceholderFishImage();
