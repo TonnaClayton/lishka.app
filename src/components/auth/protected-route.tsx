@@ -3,6 +3,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
 import LoadingDots from "@/components/loading-dots";
 import { log } from "@/lib/logging";
+import { ROUTES } from "@/lib/routing";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -42,11 +43,11 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       from: location.pathname,
     });
     // Clear any stale data from localStorage on logout redirect
-    if (location.pathname !== "/login") {
+    if (location.pathname !== ROUTES.LOGIN) {
       log("[ProtectedRoute] Clearing potential stale auth data");
     }
     // Redirect to login page with return url
-    return <Navigate to="/login" state={{ from: location }} replace />;
+    return <Navigate to={ROUTES.LOGIN} state={{ from: location }} replace />;
   }
 
   if (!requireAuth && user) {

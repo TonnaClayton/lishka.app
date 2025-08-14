@@ -108,10 +108,10 @@ Deno.serve(async (req) => {
 
     if (!user?.email) {
       console.error("Missing user email in webhook payload");
-      return new Response(
-        JSON.stringify({ error: "Missing user email" }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
-      );
+      return new Response(JSON.stringify({ error: "Missing user email" }), {
+        status: 400,
+        headers: { "Content-Type": "application/json" },
+      });
     }
 
     // Determine which email template to use based on the action type
@@ -143,11 +143,7 @@ Deno.serve(async (req) => {
     }
 
     // Extract required data for email templates
-    const {
-      token = "",
-      token_hash = "",
-      redirect_to = "",
-    } = email_data || {};
+    const { token = "", token_hash = "", redirect_to = "" } = email_data || {};
 
     // Render the email template
     const html = await renderAsync(

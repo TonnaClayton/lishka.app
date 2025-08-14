@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React from "react";
 
 const SafariScrollFix: React.FC = () => {
   // No longer using the scroll fix as it causes layout issues

@@ -1,20 +1,5 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-} from "react";
-import {
-  Fish,
-  Thermometer,
-  Wind,
-  Waves,
-  Cloud,
-  Sun,
-  CloudRain,
-  CloudSnow,
-} from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { Fish, Cloud, Sun, CloudRain, CloudSnow } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
@@ -28,6 +13,7 @@ import LoadingDots from "@/components/loading-dots";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
 import { useUserLocation } from "@/hooks/queries";
+import { useAuth } from "@/contexts/auth-context";
 
 interface FishingTip {
   title: string;
@@ -150,11 +136,13 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
   location = "Miami Coast",
   weatherData,
 }) => {
+  const { profile } = useAuth();
   const [tips, setTips] = useState<FishingTip[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [api, setApi] = useState<CarouselApi | undefined>(undefined);
   const [current, setCurrent] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [count, setCount] = useState(0);
   const [weatherSummary, setWeatherSummary] = useState<any>(null);
   const [loadingWeather, setLoadingWeather] = useState(false);
@@ -266,7 +254,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
             temperature: 0.7,
             max_tokens: 1500,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -343,7 +331,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
     } catch (err) {
       console.error("Error fetching fishing tips:", err);
       setError(
-        err instanceof Error ? err.message : "Failed to fetch fishing tips"
+        err instanceof Error ? err.message : "Failed to fetch fishing tips",
       );
     } finally {
       setLoading(false);
@@ -517,12 +505,17 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="mb-2">
-        <div className="flex items-center gap-2">
-          <h2 className="text-foreground text-3xl font-bold">Today</h2>
+      <div className="mb-2 flex flex-col gap-y-3">
+        <div className="flex gap-2 flex-col items-start justify-start gap-y-2">
+          <h2 className="text-foreground font-bold text-2xl">
+            {profile?.full_name
+              ? `Welcome back, ${profile.full_name}`
+              : "Today"}
+          </h2>
+          <p className="text-sm text-muted-foreground">{getCurrentDate()}</p>
         </div>
-        <p className="text-sm text-muted-foreground pt-2">{getCurrentDate()}</p>
         {/* Weather summary - only visible on mobile */}
+
         <div className="lg:hidden mt-2">
           {loadingWeather ? (
             <div className="flex items-center gap-1">
@@ -532,7 +525,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
               </p>
             </div>
           ) : weatherSummary && typeof weatherSummary === "object" ? (
-            <div className="flex items-center gap-3 py-2 px-1 gap-x-[16px]">
+            <div className="flex items-center gap-3 px-1 gap-x-[16px]">
               {/* Weather icon based on condition */}
               <div className="flex items-center gap-x-[4px]">
                 {weatherSummary.condition === "Clear" && (
@@ -548,7 +541,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
                   <CloudSnow className="w-8 h-8 text-blue-300" />
                 )}
                 {!["Clear", "Partly cloudy", "Rainy", "Snowy"].includes(
-                  weatherSummary.condition
+                  weatherSummary.condition,
                 ) && <Cloud className="w-8 h-8 text-blue-400" />}
                 <span className="text-foreground text-2xl font-normal">
                   {weatherSummary.temperature !== null
@@ -625,7 +618,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
         <CarouselContent>
           {tips.map((tip, index) => (
             <CarouselItem key={index}>
-              <Card className="overflow-hidden border border-border bg-background shadow-sm rounded-xl">
+              <Card className="overflow-hidden border bg-background shadow-sm rounded-xl border-[#e8e8e9] h-full">
                 <CardContent className="p-4 pb-4 flex flex-col h-full">
                   <p
                     className="text-2xl text-black leading-relaxed mb-4 flex-grow"

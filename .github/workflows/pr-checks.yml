@@ -1,0 +1,75 @@
+name: PR Quality Checks
+
+on:
+  pull_request:
+    branches: [main, develop]
+    types: [opened, synchronize, reopened]
+
+jobs:
+  pr-validation:
+    name: PR Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Need full history for diff
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check for test files in changed code
+        id: check-tests
+        run: |
+          # Get list of changed TypeScript/React files
+          CHANGED_FILES=$(git diff --name-only origin/main...HEAD | grep -E '\.(ts|tsx)$' | grep -v test | grep -v spec || true)
+
+          # Check if any changed files are missing corresponding test files
+          MISSING_TESTS=""
+          for file in $CHANGED_FILES; do
+            if [[ $file == src/pages/* ]] || [[ $file == src/components/* ]] || [[ $file == src/hooks/* ]] || [[ $file == src/contexts/* ]]; then
+              # Look for corresponding test file
+              TEST_FILE1="${file%.*}.test.${file##*.}"
+              TEST_FILE2="$(dirname $file)/__tests__/$(basename $file)"
+              TEST_FILE3="$(dirname $file)/__tests__/$(basename ${file%.*}).test.${file##*.}"
+              
+              if [[ ! -f "$TEST_FILE1" ]] && [[ ! -f "$TEST_FILE2" ]] && [[ ! -f "$TEST_FILE3" ]]; then
+                MISSING_TESTS="$MISSING_TESTS\n- $file"
+              fi
+            fi
+          done
+
+          if [[ -n "$MISSING_TESTS" ]]; then
+            echo "::warning::The following files may need test coverage:$MISSING_TESTS"
+          fi
+
+      - name: Run focused tests on changed files
+        run: |
+          # Run tests related to changed files
+          CHANGED_TEST_FILES=$(git diff --name-only origin/main...HEAD | grep -E '\.test\.(ts|tsx)$' || true)
+          if [[ -n "$CHANGED_TEST_FILES" ]]; then
+            echo "Running tests for changed files..."
+            npm run test:run -- $CHANGED_TEST_FILES
+          else
+            echo "No test files changed, running all tests..."
+            npm run test:run
+          fi
+
+      - name: Generate test summary
+        run: |
+          echo "## 🧪 Test Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "✅ All tests passed successfully!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Test Coverage" >> $GITHUB_STEP_SUMMARY
+          npm run test:coverage --reporter=json > coverage-summary.json || true
+          if [[ -f coverage-summary.json ]]; then
+            echo "Test coverage report generated." >> $GITHUB_STEP_SUMMARY
+          fi

@@ -49,9 +49,9 @@ interface OffshoreFishingLocationsProps {
   userCoordinates?: Coordinates;
 }
 
-const OffshoreFishingLocations: React.FC<OffshoreFishingLocationsProps> = ({
-  userCoordinates,
-}) => {
+const OffshoreFishingLocations: React.FC<
+  OffshoreFishingLocationsProps
+> = () => {
   const { location: userLocation } = useUserLocation();
   const [locations, setLocations] = useState<OffshoreFishingLocation[]>([]);
   const [loading, setLoading] = useState(false);

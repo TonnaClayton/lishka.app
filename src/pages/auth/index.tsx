@@ -3,6 +3,7 @@ import ForgotPasswordPage from "./forgot-password";
 import LoginPage from "./login";
 import SignupPage from "./signup";
 import EmailConfirmationPage from "./email-confirmation";
+import LoginWithEmailPage from "./login-with-email";
 
 export {
   ResetPasswordPage,
@@ -10,4 +11,5 @@ export {
   LoginPage,
   SignupPage,
   EmailConfirmationPage,
+  LoginWithEmailPage,
 };

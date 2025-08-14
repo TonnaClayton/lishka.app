@@ -20,7 +20,7 @@ export const setupAvatarStorage = async () => {
     const setupPromise = async () => {
       // First, try to check if bucket exists by attempting to list files
       try {
-        const { data: testFiles, error: testError } = await supabase.storage
+        const { error: testError } = await supabase.storage
           .from("avatars")
           .list("", { limit: 1 });
 
@@ -101,7 +101,7 @@ export const setupAvatarStorage = async () => {
 
       // Final verification - try to access the bucket
       try {
-        const { data: verifyFiles, error: verifyError } = await supabase.storage
+        const { error: verifyError } = await supabase.storage
           .from("avatars")
           .list("", { limit: 1 });
 

@@ -4,27 +4,20 @@ import {
   Home,
   Search,
   Cloud,
-  Menu,
   Settings,
   HelpCircle,
   ChevronLeft,
-  ChevronRight,
   User,
   LogOut,
   Camera,
-  Image,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { uploadImage, getBlobStorageStatus } from "@/lib/blob-storage";
-import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
-import {
-  classifyImage,
-  ClassificationResult,
-} from "@/lib/image-classification-service";
+import { classifyImage } from "@/lib/image-classification-service";
 import { uploadGearImage } from "@/lib/gear-upload-service";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
+import { ROUTES } from "@/lib/routing";
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
@@ -219,7 +212,7 @@ const BottomNav: React.FC = () => {
 
           try {
             // Get the AuthContext to access updateProfile function
-            const authContextModule = await import("@/contexts/auth-context");
+            //const authContextModule = await import("@/contexts/auth-context");
 
             // Get current user from localStorage
             const currentUser = JSON.parse(
@@ -531,7 +524,6 @@ export const SideNav: React.FC = () => {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   // Handle cases where component is rendered outside proper context (like in storyboards)
-  let location = null;
   let currentPath = "/";
   let user = null;
   let profile = null;
@@ -539,12 +531,12 @@ export const SideNav: React.FC = () => {
   let signOut = null;
   let hasAuthContext = false;
   let hasRouterContext = false;
+  const location = useLocation();
 
   try {
-    location = useLocation();
     currentPath = location.pathname;
     hasRouterContext = true;
-  } catch (error) {
+  } catch {
     // Component is rendered outside Router context
     console.warn("SideNav rendered outside Router context");
     hasRouterContext = false;
@@ -557,7 +549,7 @@ export const SideNav: React.FC = () => {
     loading = authContext.loading;
     signOut = authContext.signOut;
     hasAuthContext = true;
-  } catch (error) {
+  } catch {
     // Component is rendered outside AuthProvider, use default values
     console.warn("SideNav rendered outside AuthProvider context");
     hasAuthContext = false;
@@ -712,7 +704,7 @@ export const SideNav: React.FC = () => {
                     log("[SideNav] No signOut function, using fallback");
                     localStorage.clear();
                     sessionStorage.clear();
-                    window.location.href = "/login";
+                    window.location.href = ROUTES.LOGIN;
                   }
                   log("[SideNav] Sign out completed");
                 } catch (err) {
@@ -720,7 +712,7 @@ export const SideNav: React.FC = () => {
                   // Fallback on error: clear everything and redirect
                   localStorage.clear();
                   sessionStorage.clear();
-                  window.location.href = "/login";
+                  window.location.href = ROUTES.LOGIN;
                 }
               }}
               className={`flex items-center py-3 rounded-lg ${isCollapsed ? "justify-center" : "px-4"} text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800`}

@@ -26,7 +26,7 @@ const EmailConfirmationPage: React.FC = () => {
       // Handle direct Supabase confirmation URLs
       if (type === "signup" && token) {
         try {
-          const { data, error } = await supabase.auth.verifyOtp({
+          const { error } = await supabase.auth.verifyOtp({
             token_hash: token,
             type: "signup",
           });
@@ -114,7 +114,7 @@ const EmailConfirmationPage: React.FC = () => {
         // Show success message
         alert("Confirmation email sent! Please check your inbox.");
       }
-    } catch (err) {
+    } catch {
       setError("Failed to resend confirmation email. Please try again.");
     } finally {
       setResending(false);

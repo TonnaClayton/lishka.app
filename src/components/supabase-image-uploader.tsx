@@ -75,7 +75,7 @@ const SupabaseImageUploader: React.FC<SupabaseImageUploaderProps> = ({
       const fileName = `${normalizedName}.${fileExt}`;
 
       // Upload file to Supabase Storage
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from(bucketName)
         .upload(fileName, file, {
           cacheControl: "3600",

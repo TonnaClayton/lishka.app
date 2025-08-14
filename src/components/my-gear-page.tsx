@@ -1,16 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  ArrowLeft,
+  ChevronLeft,
   Plus,
   Package,
-  Upload,
-  Camera,
-  Image as ImageIcon,
-  Trash2,
-  Edit3,
-  MoreVertical,
   Check,
   X,
   Loader2,
@@ -19,8 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
@@ -30,18 +21,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import GearDetailModal from "./gear-detail-modal";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/auth-context";
-import {
-  uploadGearImage,
-  GearUploadResult,
-  GearMetadata,
-} from "@/lib/gear-upload-service";
 import BottomNav from "./bottom-nav";
 import { log } from "@/lib/logging";
 
@@ -56,6 +36,7 @@ const GEAR_CATEGORIES = [
 ];
 
 // Gear item interface
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 interface GearItem {
   id: string;
   name: string;
@@ -86,16 +67,17 @@ interface GearItem {
 const MyGearPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, updateProfile } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  // const fileInputRef = useRef<HTMLInputElement>(null);
+  // const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [uploadingGear, setUploadingGear] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [gearLoaded, setGearLoaded] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingGearIndex, setEditingGearIndex] = useState<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
   const [selectedGearId, setSelectedGearId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
@@ -169,9 +151,9 @@ const MyGearPage: React.FC = () => {
   };
 
   // Handle gear click to show detail modal - store only the ID to ensure we always get fresh data
-  const handleGearClick = (gear: GearItem) => {
-    setSelectedGearId(gear.id);
-  };
+  // const handleGearClick = (gear: GearItem) => {
+  //   setSelectedGearId(gear.id);
+  // };
 
   // Close gear modal
   const closeGearModal = () => {
@@ -184,6 +166,7 @@ const MyGearPage: React.FC = () => {
     : null;
 
   // Handle gear editing
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleEditGear = (index: number) => {
     const gear = gearItems[index];
     setEditFormData({
@@ -233,6 +216,7 @@ const MyGearPage: React.FC = () => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDeleteGear = async (index: number) => {
     try {
       setLoading(true);
@@ -284,7 +268,7 @@ const MyGearPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-6 w-6" />
+              <ChevronLeft className="h-6 w-6" />
             </Button>
             <h1 className="text-xl font-bold ml-2 dark:text-white">My Gear</h1>
           </div>
@@ -352,7 +336,7 @@ const MyGearPage: React.FC = () => {
                           {categoryGear.length}
                         </span>
                       )}
-                      <ChevronRight className="w-5 h-5 text-blue-600" />
+                      <ChevronRight className="w-5 h-5 text-[#191B1F]" />
                     </div>
                   </div>
                 </div>
@@ -365,7 +349,6 @@ const MyGearPage: React.FC = () => {
       <div className="lg:hidden">
         <BottomNav />
       </div>
-
       {/* Edit Gear Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="w-[calc(100vw-2rem)] max-w-md px-6 py-6">
@@ -503,7 +486,6 @@ const MyGearPage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Gear Detail Modal */}
       <GearDetailModal
         isOpen={!!selectedGearId}

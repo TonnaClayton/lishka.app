@@ -20,7 +20,6 @@ import {
   Wind,
   Droplets,
   Thermometer,
-  Calendar,
   Ship,
   CloudRain,
   Sun,
@@ -31,7 +30,6 @@ import {
   Navigation,
   Layers,
   Moon,
-  CloudMoon,
   Cloud,
   CloudFog,
   CloudDrizzle,
@@ -60,9 +58,11 @@ const WeatherWidget: React.FC<{
   userLocation?: LocationData;
   onLocationUpdate?: (location: LocationData) => void;
   className?: string;
-}> = ({ userLocation, onLocationUpdate, className }) => {
+}> = ({ onLocationUpdate, className }) => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showLocationModal, setShowLocationModal] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoadingRecommendation, setIsLoadingRecommendation] = useState(false);
   const [activeTab, setActiveTab] = useState("inshore");
   const { user } = useAuth();
@@ -72,22 +72,19 @@ const WeatherWidget: React.FC<{
   const {
     location,
     isLoading: isLoadingLocation,
-    error: locationError,
-    updateLocation,
+
     updateLocationAsync,
-    refreshLocation,
+
     refreshLocationAsync,
-    isUpdating,
-    isRefreshing,
   } = useUserLocation();
 
   // Use React Query weather data hook
   const {
     weatherData,
     isLoading: isLoadingWeather,
-    error: weatherError,
+
     isError: isWeatherError,
-    refreshWeather,
+
     refreshWeatherAsync,
     isRefreshing: isRefreshingWeather,
     getWeatherCondition,
@@ -129,11 +126,11 @@ const WeatherWidget: React.FC<{
         currentHourIndex,
         currentHourIndex + 1,
       ) || [];
-    const waveDirections =
-      weatherData.hourly.wave_direction?.slice(
-        currentHourIndex,
-        currentHourIndex + 1,
-      ) || [];
+    // const waveDirections =
+    //   weatherData.hourly.wave_direction?.slice(
+    //     currentHourIndex,
+    //     currentHourIndex + 1
+    //   ) || [];
     const swellWaveHeights =
       weatherData.hourly.swell_wave_height?.slice(
         currentHourIndex,
@@ -175,11 +172,7 @@ const WeatherWidget: React.FC<{
   const {
     fishingAdvice,
     isLoading: isLoadingFishingAdvice,
-    error: fishingAdviceError,
-    isError: isFishingAdviceError,
-    refreshFishingAdvice,
     refreshFishingAdviceAsync,
-    isRefreshing: isRefreshingFishingAdvice,
   } = useFishingAdvice(location, currentConditions);
 
   // Removed chart refs as we're using card-based display instead
@@ -371,7 +364,7 @@ const WeatherWidget: React.FC<{
 
     const waveHeight = currentConditions.waveHeight;
     const windSpeed = currentConditions.windSpeed;
-    const swellPeriod = currentConditions.swellWavePeriod;
+    //const swellPeriod = currentConditions.swellWavePeriod;
 
     let advice = "";
 

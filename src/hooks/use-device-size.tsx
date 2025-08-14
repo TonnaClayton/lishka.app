@@ -21,7 +21,6 @@ const useDeviceSize = (debounceDelay: number = 300) => {
         window.removeEventListener("resize", handleResize);
       };
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debounceDelay]);
 
   return deviceSize;

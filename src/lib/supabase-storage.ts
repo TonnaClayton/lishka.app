@@ -107,9 +107,9 @@ export async function uploadAvatarToSupabase(
     }
 
     // Generate avatar filename
-    const timestamp = Date.now();
-    const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    const fileName = `${userId}-${timestamp}.${fileExt}`;
+    // const timestamp = Date.now();
+    // const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    // const fileName = `${userId}-${timestamp}.${fileExt}`;
 
     return await uploadImageToSupabase(file, "avatars");
   } catch (error) {

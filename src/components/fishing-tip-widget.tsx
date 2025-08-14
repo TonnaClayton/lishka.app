@@ -9,7 +9,6 @@ interface FishingTipWidgetProps {
 }
 
 const FishingTipWidget: React.FC<FishingTipWidgetProps> = ({
-  location = "your area",
   tip = "Try using brightly colored lures to attract fish in clear waters.",
   model = "gpt-3.5-turbo",
 }) => {

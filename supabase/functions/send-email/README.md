@@ -63,6 +63,7 @@ Use the `test.html` file to test the function locally:
 **URL**: `POST /functions/v1/send-email`
 
 **Request Body**:
+
 ```json
 {
   "user": {
@@ -80,6 +81,7 @@ Use the `test.html` file to test the function locally:
 ```
 
 **Response**:
+
 ```json
 {
   "success": true,
