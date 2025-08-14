@@ -21,6 +21,7 @@ import {
   useToxicFishData,
 } from "@/hooks/queries";
 import { DEFAULT_LOCATION } from "@/lib/const";
+import { OnboardingDialog } from "./onboarding-dialog";
 
 interface HomePageProps {
   location?: string;
@@ -59,13 +60,21 @@ const HomePage: React.FC<HomePageProps> = ({
     }
 
     if (
-      profile?.location == "" ||
-      profile?.location == null ||
+      (profile?.location == "" || profile?.location == null) &&
+      profile?.has_seen_onboarding_flow !== true &&
       isLocationModalOpen
     ) {
       return true;
     }
     return false;
+  }, [profile]);
+
+  const hasSeenOnboardingFlow = useMemo(() => {
+    if (profile == undefined) {
+      return true;
+    }
+
+    return profile.has_seen_onboarding_flow == true;
   }, [profile]);
 
   // React Query hooks
@@ -85,7 +94,7 @@ const HomePage: React.FC<HomePageProps> = ({
   } = useToxicFishData(
     userLocation,
     (profile?.location_coordinates as any)?.latitude,
-    (profile?.location_coordinates as any)?.longitude
+    (profile?.location_coordinates as any)?.longitude,
   );
 
   // Extract fish list from infinite query data
@@ -405,6 +414,7 @@ const HomePage: React.FC<HomePageProps> = ({
         })()}
         title="Set Your Location"
       />
+      <OnboardingDialog hasSeenOnboardingFlow={hasSeenOnboardingFlow} />
     </div>
   );
 };

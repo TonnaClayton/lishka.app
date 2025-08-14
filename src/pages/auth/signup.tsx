@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
+import { ROUTES } from "@/lib/routing";
 
 const signupSchema = z
   .object({
@@ -70,14 +71,14 @@ const SignupPage: React.FC = () => {
       const { error, needsConfirmation } = await signUp(
         data.email.trim().toLowerCase(),
         data.password,
-        data.fullName.trim()
+        data.fullName.trim(),
       );
 
       if (error) {
         // Handle specific error types
         if (error.message?.includes("User already registered")) {
           setError(
-            "An account with this email already exists. Try logging in instead."
+            "An account with this email already exists. Try logging in instead.",
           );
         } else if (error.message?.includes("Invalid email")) {
           setError("Please enter a valid email address.");
@@ -85,7 +86,7 @@ const SignupPage: React.FC = () => {
           setError("Password must be at least 6 characters long.");
         } else {
           setError(
-            error.message || "Failed to create account. Please try again."
+            error.message || "Failed to create account. Please try again.",
           );
         }
       } else {
@@ -193,7 +194,7 @@ const SignupPage: React.FC = () => {
                   {error.includes("already exists") && (
                     <div className="mt-3">
                       <Link
-                        to="/login"
+                        to={ROUTES.LOGIN}
                         state={{ from: location.state?.from }}
                         className="inline-flex items-center text-sm font-medium text-red-700 hover:text-red-600 dark:text-red-300 dark:hover:text-red-200"
                       >
@@ -344,7 +345,7 @@ const SignupPage: React.FC = () => {
           <p className="text-base text-gray-600 dark:text-gray-300">
             Already have an account?{" "}
             <Link
-              to="/login"
+              to={ROUTES.LOGIN}
               state={{ from: location.state?.from }}
               className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"
             >

@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
+import { ROUTES } from "@/lib/routing";
 
 const resetPasswordSchema = z.object({
   password: z
@@ -56,7 +57,7 @@ export default function ResetPasswordPage() {
       if (error) {
         setError(error.message);
       } else {
-        navigate("/login");
+        navigate(ROUTES.LOGIN);
       }
     } catch (err) {
       setError("An unexpected error occurred");
@@ -164,7 +165,7 @@ export default function ResetPasswordPage() {
           <p className="text-base text-gray-600 dark:text-gray-300">
             {/* Remember your password?{" "}
             <Link
-              to="/login"
+              to={ROUTES.LOGIN}
               className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"
             >
               Sign in

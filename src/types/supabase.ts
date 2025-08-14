@@ -66,6 +66,7 @@ export type Database = {
           gallery_photos: string[] | null;
           gear_items: Json | null;
           id: string;
+          has_seen_onboarding_flow: boolean;
           location: string | null;
           location_coordinates: Json | null;
           preferred_language: string | null;
@@ -83,6 +84,7 @@ export type Database = {
           gallery_photos?: string[] | null;
           gear_items?: Json | null;
           id: string;
+          has_seen_onboarding_flow?: boolean;
           location?: string | null;
           location_coordinates?: Json | null;
           preferred_language?: string | null;
@@ -100,6 +102,7 @@ export type Database = {
           gallery_photos?: string[] | null;
           gear_items?: Json | null;
           id?: string;
+          has_seen_onboarding_flow?: boolean;
           location?: string | null;
           location_coordinates?: Json | null;
           preferred_language?: string | null;

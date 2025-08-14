@@ -62,6 +62,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import FishImageCard from "./fish-image-card";
+import { ROUTES } from "@/lib/routing";
 
 // Zod schema for profile form validation
 const profileSchema = z.object({
@@ -801,7 +802,7 @@ const ProfilePage: React.FC = () => {
   // Redirect to login if no user
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/onboarding", { replace: true });
+      navigate(ROUTES.LOGIN, { replace: true });
     }
   }, [user, authLoading, navigate]);
 

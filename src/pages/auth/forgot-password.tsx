@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
+import { ROUTES } from "@/lib/routing";
 
 const forgotPasswordSchema = z.object({
   email: z
@@ -78,7 +79,7 @@ const ForgotPasswordPage: React.FC = () => {
           </p>
           <div className="space-y-3">
             <Button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate(ROUTES.LOGIN)}
               className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl"
             >
               Back to Sign In
@@ -178,7 +179,7 @@ const ForgotPasswordPage: React.FC = () => {
           <p className="text-base text-gray-600 dark:text-gray-300">
             Remember your password?{" "}
             <Link
-              to="/login"
+              to={ROUTES.LOGIN}
               className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"
             >
               Sign in

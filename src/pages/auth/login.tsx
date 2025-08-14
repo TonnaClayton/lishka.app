@@ -1,311 +1,171 @@
-import React, { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { Eye, EyeOff, Mail, RefreshCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useAuth } from "@/contexts/auth-context";
-import { log } from "@/lib/logging";
+import React from "react";
 
-// Zod schema for form validation
-const loginSchema = z.object({
-  email: z
-    .string()
-    .min(1, "Email is required")
-    .email("Please enter a valid email address")
-    .transform((email) => email.trim().toLowerCase()),
-  password: z.string().min(1, "Password is required"),
-});
+import useIsMobile from "@/hooks/use-is-mobile";
+import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import { MailIcon } from "lucide-react";
+import { ROUTES } from "@/lib/routing";
 
-type LoginFormData = z.infer<typeof loginSchema>;
-
-const LoginPage: React.FC = () => {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { signIn, resendConfirmation } = useAuth();
-
-  const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [showEmailVerification, setShowEmailVerification] = useState(false);
-  const [resendingEmail, setResendingEmail] = useState(false);
-
-  // Get the intended destination from location state
-  const from = location.state?.from?.pathname || "/";
-
-  // Initialize React Hook Form
-  const form = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  const onSubmit = async (data: LoginFormData) => {
-    // Clear any existing errors
-    setError(null);
-    setShowEmailVerification(false);
-
-    setLoading(true);
-
-    try {
-      log("[LoginPage] Starting login for:", data.email);
-
-      const result = await signIn(data.email, data.password);
-
-      log("[LoginPage] Login result:", {
-        hasError: !!result.error,
-        errorMessage: result.error?.message,
-      });
-
-      if (result.error) {
-        // Handle specific error types
-        const errorMsg = result.error.message || "Login failed";
-
-        if (errorMsg.includes("Email not confirmed")) {
-          setError(
-            "Your email address hasn't been verified yet. Please check your inbox for a verification email."
-          );
-          setShowEmailVerification(true);
-        } else if (errorMsg.includes("Invalid login credentials")) {
-          setError(
-            "Invalid email or password. Please check your credentials and try again."
-          );
-        } else if (errorMsg.includes("Too many requests")) {
-          setError(
-            "Too many login attempts. Please wait a few minutes before trying again."
-          );
-        } else if (errorMsg.includes("Network") || errorMsg.includes("fetch")) {
-          setError(
-            "Network connection error. Please check your internet connection and try again."
-          );
-        } else {
-          setError(errorMsg);
-        }
-      } else {
-        // Success - navigate to intended destination
-        log("[LoginPage] Login successful, navigating to:", from);
-        navigate(from, { replace: true });
-      }
-    } catch (err) {
-      console.error("[LoginPage] Login exception:", err);
-      setError("An unexpected error occurred. Please try again.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleResendVerification = async () => {
-    const email = form.getValues("email");
-    if (!email) {
-      setError("Please enter your email address first.");
-      return;
-    }
-
-    setResendingEmail(true);
-    setError(null);
-
-    try {
-      const { error } = await resendConfirmation(email);
-
-      if (error) {
-        setError(error.message || "Failed to resend verification email.");
-      } else {
-        setError(null);
-        alert(
-          "Verification email sent! Please check your inbox and spam folder."
-        );
-        setShowEmailVerification(false);
-      }
-    } catch (err) {
-      console.error("Resend verification error:", err);
-      setError("Failed to resend verification email. Please try again.");
-    } finally {
-      setResendingEmail(false);
-    }
-  };
+export default function LoginPage() {
+  const isMobile = useIsMobile();
 
   return (
-    <div className="bg-white dark:bg-gray-900 h-full flex flex-col p-6">
-      <div className="w-full max-w-sm h-full mx-auto flex-1 flex flex-col">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-12 mt-4">
-          <div className="flex items-center gap-2">
-            <img
-              src="/logo.svg"
-              alt="Lishka Logo"
-              className="h-8 w-auto dark:hidden"
-            />
-            <img
-              src="/logo-night.svg"
-              alt="Lishka Logo"
-              className="h-8 w-auto hidden dark:block"
-            />
-          </div>
-        </div>
-
-        {/* Title */}
-        <div className="mb-8">
-          <h1 className="font-bold text-gray-900 dark:text-white mb-2 text-4xl">
-            Welcome Back
-          </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
-            Sign in to your Lishka account
-          </p>
-        </div>
-
-        <div className="flex-1">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {error && (
-                <Alert
-                  variant="destructive"
-                  className="mb-4 border-red-500 dark:border-red-400"
-                >
-                  <AlertDescription className="text-sm leading-relaxed">
-                    <div className="font-medium mb-1 text-red-600 dark:text-red-400">
-                      {showEmailVerification
-                        ? "Email Verification Required"
-                        : "Login Error"}
-                    </div>
-                    <div className="text-red-600 dark:text-red-400">
-                      {error}
-                    </div>
-                    {showEmailVerification && (
-                      <div className="mt-3">
-                        <Button
-                          onClick={handleResendVerification}
-                          disabled={resendingEmail}
-                          size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
-                        >
-                          {resendingEmail ? (
-                            <>
-                              <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
-                              Sending...
-                            </>
-                          ) : (
-                            <>
-                              <Mail className="w-4 h-4 mr-2" />
-                              Resend Verification Email
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    )}
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <FormField
-                control={form.control}
-                name="email"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
-                      Email
-                    </FormLabel>
-                    <FormControl className="px-3 rounded-lg py-4 h-[56px]">
-                      <Input
-                        type="email"
-                        placeholder="Enter your email"
-                        className="text-base border-gray-200 rounded-xl bg-gray-50 focus:bg-white"
-                        disabled={loading}
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
-                      Password
-                    </FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Input
-                          type={showPassword ? "text" : "password"}
-                          placeholder="Enter your password"
-                          className="px-3 h-[56px] py-4 text-base border-gray-200 rounded-xl bg-gray-50 focus:bg-white"
-                          disabled={loading}
-                          {...field}
-                        />
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="icon"
-                          className="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 hover:bg-transparent"
-                          onClick={() => setShowPassword(!showPassword)}
-                          disabled={loading}
-                        >
-                          {showPassword ? (
-                            <EyeOff className="h-5 w-5 text-gray-400" />
-                          ) : (
-                            <Eye className="h-5 w-5 text-gray-400" />
-                          )}
-                        </Button>
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <div className="flex items-center justify-end">
-                <Link
-                  to="/forgot-password"
-                  className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400"
-                >
-                  Forgot password?
-                </Link>
-              </div>
-
-              <div className="space-y-3 mt-0">
-                <Button
-                  type="submit"
-                  className="w-full h-[56px] bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading}
-                >
-                  {loading ? "Signing in..." : "Sign In"}
-                </Button>
-              </div>
-            </form>
-          </Form>
-        </div>
-
-        <div className="mt-auto pb-8 text-center">
-          <p className="text-base text-gray-600 dark:text-gray-300">
-            Don't have an account?{" "}
-            <Link
-              to="/signup"
-              state={{ from: location.state?.from }}
-              className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"
+    <div className="bg-white dark:bg-gray-900 h-full w-full">
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_560px] h-full">
+        <div
+          className={cn(
+            "w-full h-full flex flex-col bg-[#2E8EB1]",
+            !isMobile && "justify-center items-center bg-white",
+          )}
+        >
+          {isMobile && (
+            <div className="z-10 w-full h-[50%] bg-transparent"></div>
+          )}
+          <div
+            className={cn(
+              "w-full flex flex-col items-center",
+              isMobile
+                ? "h-[50%] z-10 justify-end bg-transparent"
+                : "justify-center max-w-md mx-auto w-full h-full",
+            )}
+          >
+            <div
+              className={
+                "size-full flex flex-col items-center justify-center text-center px-4 h-fit py-4 gap-4"
+              }
             >
-              Create account
-            </Link>
-          </p>
+              <div className="flex items-center flex-col gap-3">
+                {isMobile ? (
+                  <img
+                    src={"/images/tempo-image-20250804T201257275Z.png"}
+                    alt={"Pasted Image"}
+                    width={840}
+                    height={160}
+                    className={"w-[210px] h-[48px]"}
+                  />
+                ) : (
+                  <>
+                    <img
+                      src="/logo.svg"
+                      alt="Lishka Logo"
+                      className="h-8 w-auto dark:hidden"
+                    />
+                    <img
+                      src="/logo-night.svg"
+                      alt="Lishka Logo"
+                      className="h-8 w-auto hidden dark:block"
+                    />
+                  </>
+                )}
+                <p
+                  className={cn(
+                    "leading-relaxed max-w-md font-light text-base",
+                    isMobile && "text-white",
+                  )}
+                >
+                  Your AI Fishing Companion
+                </p>
+              </div>
+
+              <button
+                className={
+                  "flex-1 px-6 rounded-full font-medium size-full text-sm py-4 border bg-white border-gray-200 text-[#243041] flex justify-center items-center"
+                }
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  fill="#000000"
+                  viewBox="0 0 256 256"
+                  className="w-4 h-4 mr-2"
+                >
+                  <path d="M228,128a100,100,0,1,1-22.86-63.64,12,12,0,0,1-18.51,15.28A76,76,0,1,0,203.05,140H128a12,12,0,0,1,0-24h88A12,12,0,0,1,228,128Z"></path>
+                </svg>
+                Continue with Google
+              </button>
+              <button
+                className={
+                  "flex-1 px-6 rounded-full font-medium transition-colors size-full text-sm py-4 h-[48px] border bg-[#ffffff] border-[#d8dadc] text-[#243041] flex justify-center items-center"
+                }
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-4 h-4 mr-2"
+                >
+                  <path d="M12 20.94c1.5 0 2.75 1.06 4 1.06 3 0 6-8 6-12.22A4.91 4.91 0 0 0 17 5c-2.22 0-4 1.44-5 2-1-.56-2.78-2-5-2a4.9 4.9 0 0 0-5 4.78C2 14 5 22 8 22c1.25 0 2.5-1.06 4-1.06Z" />
+                  <path d="M10 2c1 .5 2 2 2 5" />
+                </svg>
+                Continue with Apple
+              </button>
+              <Link
+                to={"/signup"}
+                className={
+                  "flex-1 px-6 rounded-full font-medium transition-colors size-full text-sm py-4 h-[48px] border bg-[#ffffff] border-[#d8dadc] text-[#243041] flex justify-center items-center"
+                }
+              >
+                <MailIcon className="w-4 h-4 mr-2" />
+                Continue with Email
+              </Link>
+            </div>
+            <div
+              className={cn(
+                "flex items-center justify-center px-6 gap-4 gap-x-1 py-6",
+                isMobile && "text-white",
+              )}
+            >
+              <p
+                className={
+                  "leading-relaxed max-w-md text-base h-[fit] font-normal"
+                }
+              >
+                Already have an account? 
+              </p>
+              <Link
+                to={ROUTES.LOGIN_EMAIL}
+                className={
+                  "leading-relaxed max-w-md text-base h-[fit] font-medium"
+                }
+              >
+                Sign in
+              </Link>
+            </div>
+          </div>
+          {isMobile && (
+            <img
+              src={"/images/tempo-image-20250804T193633617Z.png"}
+              alt={"Pasted Image"}
+              width={1572}
+              height={3408}
+              className={"w-full h-full absolute z-1"}
+            />
+          )}
+        </div>
+
+        <div
+          className={cn(
+            "w-full h-full relative overflow-hidden",
+            isMobile && "hidden",
+          )}
+        >
+          <div className="z-10 absolute top-0 w-full h-[50%] bg-transparent"></div>
+          <img
+            src={"/images/tempo-image-20250804T193633617Z.png"}
+            alt={"Pasted Image"}
+            width={1572}
+            height={3408}
+            className={"w-full h-full object-fill"}
+          />
         </div>
       </div>
     </div>
   );
-};
-
-export default LoginPage;
+}

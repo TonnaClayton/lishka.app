@@ -18,6 +18,7 @@ type AuthUser = {
 import { ImageMetadata } from "@/lib/image-metadata";
 import { log } from "@/lib/logging";
 import { useProfile } from "@/hooks/queries";
+import { ROUTES } from "@/lib/routing";
 
 type Profile = {
   id: string;
@@ -30,6 +31,7 @@ type Profile = {
   preferred_language?: string;
   fishing_experience?: string;
   favorite_fish_species?: string[];
+  has_seen_onboarding_flow?: boolean;
   bio?: string;
   gallery_photos?: ImageMetadata[]; // Standardize to always be ImageMetadata objects
   gear_items?: any[]; // Add gear_items field
@@ -45,7 +47,7 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    fullName: string
+    fullName: string,
   ) => Promise<{ error: any; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
@@ -60,7 +62,7 @@ interface AuthContextType {
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const useAuth = () => {
@@ -101,7 +103,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         "[AuthContext] Loading profile for user:",
         userId,
         "with full name:",
-        userFullName
+        userFullName,
       );
 
       const { data, error } = await profileService.getProfile(userId);
@@ -134,7 +136,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           "[AuthContext] Creating new profile for user:",
           userId,
           "with full name:",
-          userFullName
+          userFullName,
         );
         const profileData = {
           full_name:
@@ -178,7 +180,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         } as Profile;
         log(
           "[AuthContext] Setting fallback profile due to error:",
-          fallbackProfile
+          fallbackProfile,
         );
         setProfile(fallbackProfile);
       }
@@ -196,7 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       } as Profile;
       log(
         "[AuthContext] Setting fallback profile due to exception:",
-        fallbackProfile
+        fallbackProfile,
       );
       setProfile(fallbackProfile);
     }
@@ -214,13 +216,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
     window.addEventListener(
       "profileUpdated",
-      handleProfileUpdate as EventListener
+      handleProfileUpdate as EventListener,
     );
 
     return () => {
       window.removeEventListener(
         "profileUpdated",
-        handleProfileUpdate as EventListener
+        handleProfileUpdate as EventListener,
       );
     };
   }, []);
@@ -234,7 +236,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     timeoutId = setTimeout(() => {
       if (mounted) {
         console.warn(
-          "[AuthContext] Auth initialization timeout, forcing loading to false"
+          "[AuthContext] Auth initialization timeout, forcing loading to false",
         );
         setLoading(false);
       }
@@ -269,11 +271,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             if (authUser) {
               loadProfile(
                 authUser.id,
-                session.user.user_metadata?.full_name
+                session.user.user_metadata?.full_name,
               ).catch((err) => {
                 console.warn(
                   "[AuthContext] Background profile load failed:",
-                  err
+                  err,
                 );
               });
             }
@@ -310,7 +312,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         hasUser: !!session?.user,
         isMobile:
           /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent
+            navigator.userAgent,
           ),
       });
 
@@ -326,9 +328,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             (err) => {
               console.warn(
                 "[AuthContext] Background profile load failed:",
-                err
+                err,
               );
-            }
+            },
           );
         }
       } else {
@@ -342,7 +344,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           log("[AuthContext] User signed out, redirecting to login");
           // Small delay to ensure state is cleared
           setTimeout(() => {
-            navigate("/onboarding", { replace: true });
+            navigate(ROUTES.LOGIN, { replace: true });
           }, 100);
         }
       }
@@ -364,7 +366,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const { data, error } = await authService.signUp(
         email,
         password,
-        fullName
+        fullName,
       );
 
       if (error) {
@@ -442,7 +444,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (error) {
         console.warn(
           "[AuthContext] SignOut API error (but continuing):",
-          error
+          error,
         );
       }
 
@@ -450,7 +452,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       log("[AuthContext] Redirecting to login after signOut");
 
       // Use window.location for more reliable redirect
-      window.location.href = "/onboarding";
+      window.location.href = ROUTES.LOGIN;
 
       return { error };
     } catch (err) {
@@ -464,7 +466,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Force redirect to login page even on error
       log("[AuthContext] Redirecting to login after signOut error");
-      window.location.href = "/onboarding";
+      window.location.href = ROUTES.LOGIN;
 
       return {
         error: { message: "An unexpected error occurred during signout" },
@@ -563,7 +565,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               item.id &&
               item.name &&
               item.category &&
-              item.imageUrl
+              item.imageUrl,
           )
           .map((item) => ({
             // Core required fields
@@ -615,7 +617,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               original: updates.gear_items.length,
               valid: validGearItems.length,
               filtered: updates.gear_items.length - validGearItems.length,
-            }
+            },
           );
         }
 
@@ -625,7 +627,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Check if gear_items column exists before attempting update
       if (updates.gear_items && !profile?.hasOwnProperty("gear_items")) {
         console.warn(
-          "[AuthContext] ⚠️ gear_items column may not exist in database schema"
+          "[AuthContext] ⚠️ gear_items column may not exist in database schema",
         );
         // Try to save without gear_items to avoid schema errors
         const { gear_items, ...otherUpdates } = updates;
@@ -665,11 +667,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             });
             reject(
               new Error(
-                `Database timeout after ${elapsedTime}ms - operation took too long. This suggests a database connection or performance issue.`
-              )
+                `Database timeout after ${elapsedTime}ms - operation took too long. This suggests a database connection or performance issue.`,
+              ),
             );
           }, 20000); // Increased to 20 seconds to better differentiate from network timeouts
-        }
+        },
       );
 
       const { data, error } = await Promise.race([
@@ -710,7 +712,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             match: expectedCount === actualCount,
             gearWithAI:
               data.gear_items?.filter(
-                (item: any) => item.gearType && item.gearType !== "unknown"
+                (item: any) => item.gearType && item.gearType !== "unknown",
               ).length || 0,
           });
         }
@@ -910,7 +912,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           storageStatus.error || "Blob storage is not properly configured";
         console.error(
           "[AuthContext] Blob storage not configured:",
-          errorMessage
+          errorMessage,
         );
         return { error: { message: errorMessage } };
       }
@@ -985,7 +987,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Delete the user's auth account
       const { error: authError } = await supabase.auth.admin.deleteUser(
-        user.id
+        user.id,
       );
 
       if (authError) {
@@ -1002,7 +1004,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       log("[AuthContext] Account deleted successfully");
 
       // Redirect to login page
-      window.location.href = "/onboarding";
+      window.location.href = ROUTES.LOGIN;
 
       return { error: null };
     } catch (err) {

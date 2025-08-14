@@ -70,7 +70,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
     // Convert all season entries to lowercase for comparison
     const seasonEntries = fishingSeasons.inSeason
       .map((season) =>
-        typeof season === "string" ? season.toLowerCase().trim() : ""
+        typeof season === "string" ? season.toLowerCase().trim() : "",
       )
       .filter((season) => season.length > 0);
 
@@ -104,7 +104,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
         season.includes(monthData.short.toLowerCase())
       ) {
         log(
-          `✓ Contains match: ${season} contains ${monthData.full.toLowerCase()}`
+          `✓ Contains match: ${season} contains ${monthData.full.toLowerCase()}`,
         );
         return true;
       }
@@ -140,7 +140,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
             m.full.toLowerCase() === startSeason ||
             m.short.toLowerCase() === startSeason ||
             m.full.toLowerCase().startsWith(startSeason) ||
-            m.short.toLowerCase().startsWith(startSeason)
+            m.short.toLowerCase().startsWith(startSeason),
         );
 
         const endMonth = months.find(
@@ -148,7 +148,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
             m.full.toLowerCase() === endSeason ||
             m.short.toLowerCase() === endSeason ||
             m.full.toLowerCase().startsWith(endSeason) ||
-            m.short.toLowerCase().startsWith(endSeason)
+            m.short.toLowerCase().startsWith(endSeason),
         );
 
         if (startMonth && endMonth) {
@@ -157,7 +157,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
           const currentIdx = monthData.index;
 
           log(
-            `Range indices: start=${startIdx}, end=${endIdx}, current=${currentIdx}`
+            `Range indices: start=${startIdx}, end=${endIdx}, current=${currentIdx}`,
           );
 
           // Handle range that wraps around the year (e.g., Nov-Feb)
@@ -172,13 +172,13 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
 
           if (inRange) {
             log(
-              `✓ Range match: ${monthData.full} is in range ${startSeason}-${endSeason}`
+              `✓ Range match: ${monthData.full} is in range ${startSeason}-${endSeason}`,
             );
             return true;
           }
         } else {
           log(
-            `Could not find months for range: ${startSeason} to ${endSeason}`
+            `Could not find months for range: ${startSeason} to ${endSeason}`,
           );
         }
       }
@@ -194,7 +194,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
             monthData.short.toLowerCase().startsWith(monthName)
           ) {
             log(
-              `✓ List match: ${monthData.full} found in comma-separated list`
+              `✓ List match: ${monthData.full} found in comma-separated list`,
             );
             return true;
           }
@@ -238,7 +238,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
         const isInSeason = isMonthInSeason(monthData);
 
         log(
-          `Month ${monthData.full}: in-season=${isInSeason}, styling=${styling}`
+          `Month ${monthData.full}: in-season=${isInSeason}, styling=${styling}`,
         );
 
         return (
@@ -272,7 +272,7 @@ const FishDetailPage = () => {
     type: string,
     fishName: string,
     location: string,
-    scientificName?: string
+    scientificName?: string,
   ) => {
     const key = `${type}_${fishName}_${location}_${scientificName || "unknown"}`
       .toLowerCase()
@@ -360,7 +360,7 @@ const FishDetailPage = () => {
           "fishinfo",
           initialData.name,
           userLocation,
-          initialData.scientificName
+          initialData.scientificName,
         );
         const cachedFishInfo = getCachedData(fishInfoCacheKey);
 
@@ -554,7 +554,7 @@ rodType`,
             const validation = validateFishingData(
               result,
               result.name,
-              userLocation
+              userLocation,
             );
 
             // Add validation metadata to the result
@@ -566,7 +566,7 @@ rodType`,
             } else {
               console.error(
                 "🚫 Not caching data due to validation errors:",
-                validation.errors
+                validation.errors,
               );
             }
           } catch (parseError) {
@@ -599,7 +599,7 @@ rodType`,
           "regulations",
           result.name,
           userLocation,
-          result.scientificName
+          result.scientificName,
         );
         const cachedRegulations = getCachedData(regulationsCacheKey);
 
@@ -693,7 +693,7 @@ Return only valid JSON in the following format:
             // Validate and sanitize the regulations result
             regulationsResult = validateAndSanitizeRegulations(
               regulationsResult,
-              userLocation
+              userLocation,
             );
 
             // Cache the successful result
@@ -752,7 +752,7 @@ Return only valid JSON in the following format:
         ) {
           log(
             "🔄 Retrying regulations with updated scientific name:",
-            result.scientificName
+            result.scientificName,
           );
 
           const updatedFishIdentifier = `${result.name} (${result.scientificName})`;
@@ -829,7 +829,7 @@ Return only valid JSON in the following format:
               .replace(/```json\n?|```\n?/g, "")
               .trim();
             const retryRegulationsResult = JSON.parse(
-              cleanRetryRegulationsContent
+              cleanRetryRegulationsContent,
             );
 
             log("✅ Retry regulations parsed successfully:", {
@@ -846,7 +846,7 @@ Return only valid JSON in the following format:
           } catch (retryError) {
             console.warn(
               "Retry regulations call failed, using original result:",
-              retryError
+              retryError,
             );
           }
         }
@@ -882,11 +882,11 @@ Return only valid JSON in the following format:
         // Load the fish image from Vercel Blob storage
         try {
           log(
-            `Loading image for ${fishDetailsData.name} (${fishDetailsData.scientificName})`
+            `Loading image for ${fishDetailsData.name} (${fishDetailsData.scientificName})`,
           );
           const blobImageUrl = await getFishImageUrlFromService(
             fishDetailsData.name,
-            fishDetailsData.scientificName
+            fishDetailsData.scientificName,
           );
           log(`Got blob image URL: ${blobImageUrl}`);
           setFishImageUrl(blobImageUrl);
@@ -899,7 +899,7 @@ Return only valid JSON in the following format:
       } catch (err) {
         console.error("Error fetching fish details:", err);
         setError(
-          err instanceof Error ? err.message : "Failed to fetch fish details"
+          err instanceof Error ? err.message : "Failed to fetch fish details",
         );
       } finally {
         setLoading(false);
@@ -1340,7 +1340,7 @@ Return only valid JSON in the following format:
                           b &&
                           typeof b === "string" &&
                           b.trim() !== "" &&
-                          b.trim().toLowerCase() !== "n/a"
+                          b.trim().toLowerCase() !== "n/a",
                       );
                     const hasLures =
                       method.gear?.lures &&
@@ -1351,7 +1351,7 @@ Return only valid JSON in the following format:
                           l &&
                           typeof l === "string" &&
                           l.trim() !== "" &&
-                          l.trim().toLowerCase() !== "n/a"
+                          l.trim().toLowerCase() !== "n/a",
                       );
                     const hasJigInfo =
                       (method.gear?.jig_weight &&
@@ -1501,7 +1501,7 @@ Return only valid JSON in the following format:
                                 b &&
                                 typeof b === "string" &&
                                 b.trim() !== "" &&
-                                b.trim().toLowerCase() !== "n/a"
+                                b.trim().toLowerCase() !== "n/a",
                             )
                             .join(", "),
                           color: "emerald",
@@ -1517,7 +1517,7 @@ Return only valid JSON in the following format:
                                 l &&
                                 typeof l === "string" &&
                                 l.trim() !== "" &&
-                                l.trim().toLowerCase() !== "n/a"
+                                l.trim().toLowerCase() !== "n/a",
                             )
                             .join(", "),
                           color: "violet",
@@ -1748,7 +1748,7 @@ Return only valid JSON in the following format:
                     onClick={() =>
                       window.open(
                         "https://www.instagram.com/lishka.app/",
-                        "_blank"
+                        "_blank",
                       )
                     }
                     className="underline hover:no-underline font-medium text-gray-500 dark:text-gray-500"
