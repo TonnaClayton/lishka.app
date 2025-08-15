@@ -262,7 +262,7 @@ const HomePage: React.FC<HomePageProps> = ({
           {loadingToxicFish ? (
             <ToxicFishSkeleton />
           ) : toxicFishList.length === 0 ? (
-            <div className="bg-yellow-50 px-4 lg:px-6 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+            <div className="bg-yellow-50 px-4 lg:px-6 mx-4 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
               <p className="text-yellow-700 dark:text-yellow-400 text-sm">
                 Unable to load toxic fish data at the moment. Please check your
                 connection and try refreshing the page.
@@ -327,13 +327,13 @@ const HomePage: React.FC<HomePageProps> = ({
         </div>
 
         {fishError ? (
-          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 mb-6">
-            <p className="text-red-700 dark:text-red-400">
+          <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mx-4 rounded-lg p-4 mb-6 flex flex-col">
+            <p className="text-red-700 dark:text-red-400 break-words whitespace-normal">
               {fishError.message}
             </p>
             <Button
               variant="outline"
-              className="mt-2"
+              className="mt-2 w-fit"
               onClick={() => window.location.reload()}
             >
               Try Again
