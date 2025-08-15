@@ -296,7 +296,7 @@ function FishImageCard({
 
         <div
           ref={fishInfoOverlayRef}
-          className="w-full h-fit"
+          className={cn("w-full", isSingleColumn ? "h-fit" : "h-full")}
           id="fish-info-overlay-container"
         >
           {/* Image */}
@@ -306,7 +306,7 @@ function FishImageCard({
             className={`w-full transition-opacity duration-200 ${
               isLoading ? "opacity-0" : "opacity-100"
             } ${hasError ? "hidden" : ""} ${
-              isSingleColumn ? "h-auto object-contain" : "h-full"
+              isSingleColumn ? "h-auto object-contain" : "h-full object-cover"
             }`}
             onLoadStart={() => {
               log(`[ProfilePage] Image started loading:`, photoUrl);
