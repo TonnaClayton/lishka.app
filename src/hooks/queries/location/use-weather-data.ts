@@ -393,23 +393,23 @@ export const useGetWeatherSummary = (location?: {
     queryFn: async () => {
       let path = "weather/summary";
 
-      // let query = "";
+      let query = "";
 
-      // if (location.name) {
-      //   query = `name=${location.name}`;
-      // }
+      if (location.name) {
+        query = `name=${location.name}`;
+      }
 
-      // if (location.latitude) {
-      //   query = `latitude=${location.latitude}`;
-      // }
+      if (location.latitude) {
+        query = `latitude=${location.latitude}`;
+      }
 
-      // if (location.longitude) {
-      //   query = `longitude=${location.longitude}`;
-      // }
+      if (location.longitude) {
+        query = `longitude=${location.longitude}`;
+      }
 
-      // if (query) {
-      //   path = `${path}?${query}`;
-      // }
+      if (query) {
+        path = `${path}?${query}`;
+      }
 
       const data = await api<{
         data: {
@@ -417,12 +417,16 @@ export const useGetWeatherSummary = (location?: {
           condition: string;
           wind_speed: number;
           wave_height: number | null;
+          is_sea_location?: boolean;
+          wind_direction?: number | null;
+          swell_wave_height?: number | null;
+          swell_wave_period?: number | null;
+          is_day?: boolean;
+          is_night?: boolean;
         };
       }>(path, {
         method: "GET",
       });
-
-      console.log("🌤️ [WEATHER SUMMARY] Full response from OpenMeteo:", data);
 
       return data.data;
     },

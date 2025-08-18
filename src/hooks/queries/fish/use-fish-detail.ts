@@ -10,6 +10,9 @@ import {
     validateAndSanitizeRegulations,
     validateFishingData,
 } from "@/lib/fish";
+import { api } from "../api";
+import z from "zod";
+import { fishSchema } from "./type";
 
 // Types for fish details
 export interface FishingGear {
@@ -122,16 +125,23 @@ const fetchFishDetails = async (
 };
 
 // React Query hook for fish details
-export const useFishDetails = (
-    fishName: string,
-    location: string,
-    initialData?: any,
-    enabled: boolean = true,
-) => {
+export const useFishDetails = (slug: string) => {
     return useQuery({
-        queryKey: ["fishDetails", fishName, location],
-        queryFn: () => fetchFishDetails(fishName, location, initialData),
-        enabled: enabled && !!fishName && !!location,
+        queryKey: ["fishDetails", slug],
+        queryFn: async () => {
+            //   fetchFishDetails(fishName, location, initialData)
+
+            const data = await api<{
+                data: z.infer<typeof fishSchema>;
+            }>("fish/" + slug, {
+                method: "GET",
+            });
+
+            console.log("[FISHING TIPS]", data);
+
+            return data.data;
+        },
+        enabled: !!slug,
         staleTime: 24 * 60 * 60 * 1000, // 24 hours
         gcTime: 7 * 24 * 60 * 60 * 1000, // 7 days
         retry: 2,

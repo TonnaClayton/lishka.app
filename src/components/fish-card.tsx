@@ -17,7 +17,7 @@ interface FishCardProps {
   localName?: string;
 
   habitat?: string;
-  difficulty?: "Easy" | "Intermediate" | "Hard" | "Advanced" | "Expert";
+  difficulty?: string;
   isToxic?: boolean;
   dangerType?: string;
   className?: string;
@@ -30,7 +30,6 @@ const FishCard = ({
   name = "Atlantic Salmon",
   scientificName = "Salmo salar",
   localName,
-
   habitat = "Freshwater, Coastal",
   difficulty = "Intermediate",
   isToxic = false,

@@ -6,6 +6,9 @@ import { getFishImageUrl } from "@/lib/fish-image-service";
 import { OPENAI_DISABLED_MESSAGE, OPENAI_ENABLED } from "@/lib/openai-toggle";
 import { config } from "@/lib/config";
 import { log } from "@/lib/logging";
+import { api } from "../api";
+import { fishSchema } from "./type";
+import z from "zod";
 
 export interface FishData {
   name: string;
@@ -204,7 +207,8 @@ const fetchFishData = async (location: string, page: number = 1) => {
   const cleanLocation = getCleanLocationName(location);
 
   // Create cache key
-  const cacheKey = `fish_data_v3_${cleanLocation}_${currentMonthYear}_page_${page}`;
+  const cacheKey =
+    `fish_data_v3_${cleanLocation}_${currentMonthYear}_page_${page}`;
 
   // Check cache first
   const cachedData = getCachedApiResponse(cacheKey);
@@ -223,9 +227,12 @@ const fetchFishData = async (location: string, page: number = 1) => {
       },
       {
         role: "user",
-        content: `Generate a JSON array with exactly ${pageSize} fish species that are NATIVE and commonly found in the ${getLocationToSeaMapping(
-          location,
-        )} near ${cleanLocation} during ${currentMonth}. 
+        content:
+          `Generate a JSON array with exactly ${pageSize} fish species that are NATIVE and commonly found in the ${
+            getLocationToSeaMapping(
+              location,
+            )
+          } near ${cleanLocation} during ${currentMonth}. 
 
 CRITICAL REQUIREMENTS:
 1. SCIENTIFIC NAME FIRST: Every fish MUST have a valid, complete binomial scientific name (Genus species). NO exceptions.
@@ -234,9 +241,11 @@ CRITICAL REQUIREMENTS:
 4. Examples: "Thunnus thynnus" NOT "Thunnus spp." or "Thunnus sp." or "Unknown".
 5. If you cannot provide a valid scientific name for a fish, DO NOT include it in the response.
 
-GEOGRAPHIC REQUIREMENT: Only include fish species that are naturally occurring and indigenous to the ${getLocationToSeaMapping(
-          location,
-        )} region. DO NOT include tropical, exotic, or non-native species that would not naturally be found in these waters. For example, if the location is Malta (Mediterranean Sea), do NOT include clownfish, angelfish, or other tropical species. Focus on temperate and regional species appropriate for the specific sea/ocean.
+GEOGRAPHIC REQUIREMENT: Only include fish species that are naturally occurring and indigenous to the ${
+            getLocationToSeaMapping(
+              location,
+            )
+          } region. DO NOT include tropical, exotic, or non-native species that would not naturally be found in these waters. For example, if the location is Malta (Mediterranean Sea), do NOT include clownfish, angelfish, or other tropical species. Focus on temperate and regional species appropriate for the specific sea/ocean.
 
 Format: [{\"name\":\"Fish Name\",\"scientificName\":\"Genus species\",\"habitat\":\"Habitat Description\",\"difficulty\":\"Easy\",\"season\":\"Season Info\",\"isToxic\":false}]. Mix of difficulty levels (Easy/Intermediate/Hard/Advanced/Expert). 
 
@@ -354,6 +363,12 @@ export const fishQueryKeys = {
     userLatitude?: number,
     userLongitude?: number,
   ) => ["toxicFishData", location, userLatitude, userLongitude] as const,
+  fishingTips: (query: {
+    temperature?: number;
+    windSpeed?: number;
+    waveHeight?: number;
+    weatherCondition?: string;
+  }) => ["fishingTips", query] as const,
 };
 
 export const useFishData = (location: string, page: number = 1) => {
@@ -369,7 +384,17 @@ export const useFishData = (location: string, page: number = 1) => {
 export const useFishDataInfinite = (location: string) => {
   return useInfiniteQuery({
     queryKey: fishQueryKeys.fishDataInfinite(location),
-    queryFn: ({ pageParam = 1 }) => fetchFishData(location, pageParam),
+    queryFn: async ({ pageParam = 1 }) => {
+      // return fetchFishData(location, pageParam);
+
+      const data = await api<{
+        data: z.infer<typeof fishSchema>[];
+      }>(`fish?page=${pageParam}&pageSize=20`, {
+        method: "GET",
+      });
+
+      return data.data;
+    },
     getNextPageParam: (lastPage, allPages) => {
       // Return next page number if we have data
       return lastPage.length > 0 ? allPages.length + 1 : undefined;
@@ -378,5 +403,38 @@ export const useFishDataInfinite = (location: string) => {
     enabled: !!location,
     staleTime: 12 * 60 * 60 * 1000, // 12 hours
     gcTime: 24 * 60 * 60 * 1000, // 24 hours
+  });
+};
+
+export const useFishingTips = (
+  query: {
+    temperature?: number;
+    windSpeed?: number;
+    waveHeight?: number;
+    weatherCondition?: string;
+  },
+) => {
+  return useQuery({
+    queryKey: fishQueryKeys.fishingTips(query),
+    queryFn: async () => {
+      const data = await api<{
+        data: {
+          title: string;
+          content: string;
+          category: string;
+        }[];
+      }>("fish/tips", {
+        method: "GET",
+      });
+
+      console.log("[FISHING TIPS]", data);
+
+      return data.data;
+      //return fetchToxicFishData(location, userLatitude, userLongitude);
+    },
+    // enabled: !!query.temperature && !!query.windSpeed && !!query.waveHeight &&
+    //   !!query.weatherCondition,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 48 * 60 * 60 * 1000, // 48 hours
   });
 };

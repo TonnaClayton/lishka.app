@@ -27,7 +27,12 @@ import { cacheApiResponse, getCachedApiResponse } from "@/lib/api-helpers";
 import LoadingDots from "@/components/loading-dots";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
-import { useGetWeatherSummary, useUserLocation } from "@/hooks/queries";
+import {
+  useFishingTips,
+  useGetWeatherSummary,
+  useUserLocation,
+} from "@/hooks/queries";
+import FishingTipsSkeleton from "./fishing-tips-skeleton";
 
 interface FishingTip {
   title: string;
@@ -150,13 +155,24 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
   location = "Miami Coast",
   weatherData,
 }) => {
-  const [tips, setTips] = useState<FishingTip[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // const [tips, setTips] = useState<FishingTip[]>([]);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState<string | null>(null);
   const [api, setApi] = useState<CarouselApi | undefined>(undefined);
   const [current, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
   const { location: userLocation } = useUserLocation();
+  const {
+    data: fishingTips,
+    isLoading: loadingFishingTips,
+    isError: errorFishingTips,
+    error: errorFishingTipsError,
+  } = useFishingTips({
+    // temperature: weatherData?.current?.temperature_2m,
+    // windSpeed: weatherData?.current?.wind_speed_10m,
+    // waveHeight: weatherData?.current?.wave_height,
+    // weatherCondition: weatherData?.current?.weather_code,
+  });
   const {
     data: weatherSummary,
     isLoading: loadingWeather,
@@ -166,205 +182,217 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
     longitude: userLocation?.longitude,
     name: userLocation?.name,
   });
+
+  const tips = useMemo(() => {
+    if (!fishingTips) {
+      return [];
+    }
+
+    return fishingTips.map((tip) => ({
+      ...tip,
+      content: highlightKeywords(tip.content),
+    }));
+  }, [fishingTips]);
+
   // const [weatherSummary, setWeatherSummary] = useState<any>(null);
   // const [loadingWeather, setLoadingWeather] = useState(false);
 
   // Removed maxCardHeight state and tipContentRefs to fix height growing issue
 
   // Get current season based on month
-  const getCurrentSeason = () => {
-    const month = new Date().getMonth() + 1;
-    if (month >= 3 && month <= 5) return "spring";
-    if (month >= 6 && month <= 8) return "summer";
-    if (month >= 9 && month <= 11) return "autumn";
-    return "winter";
-  };
+  // const getCurrentSeason = () => {
+  //   const month = new Date().getMonth() + 1;
+  //   if (month >= 3 && month <= 5) return "spring";
+  //   if (month >= 6 && month <= 8) return "summer";
+  //   if (month >= 9 && month <= 11) return "autumn";
+  //   return "winter";
+  // };
 
   // Get current month name
-  const getCurrentMonth = () => {
-    const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    return months[new Date().getMonth()];
-  };
+  // const getCurrentMonth = () => {
+  //   const months = [
+  //     "January",
+  //     "February",
+  //     "March",
+  //     "April",
+  //     "May",
+  //     "June",
+  //     "July",
+  //     "August",
+  //     "September",
+  //     "October",
+  //     "November",
+  //     "December",
+  //   ];
+  //   return months[new Date().getMonth()];
+  // };
 
-  const fetchFishingTips = async () => {
-    setLoading(true);
-    setError(null);
+  // const fetchFishingTips = async () => {
+  //   setLoading(true);
+  //   setError(null);
 
-    try {
-      if (!OPENAI_ENABLED) {
-        throw new Error(OPENAI_DISABLED_MESSAGE);
-      }
+  //   try {
+  //     if (!OPENAI_ENABLED) {
+  //       throw new Error(OPENAI_DISABLED_MESSAGE);
+  //     }
 
-      const apiKey = config.VITE_OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error("OpenAI API key is missing");
-      }
+  //     const apiKey = config.VITE_OPENAI_API_KEY;
+  //     if (!apiKey) {
+  //       throw new Error("OpenAI API key is missing");
+  //     }
 
-      const currentSeason = getCurrentSeason();
-      const currentMonth = getCurrentMonth();
-      const cacheKey = `fishing_tips_${location}_${currentMonth}_${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`;
+  //     const currentSeason = getCurrentSeason();
+  //     const currentMonth = getCurrentMonth();
+  //     const cacheKey = `fishing_tips_${location}_${currentMonth}_${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`;
 
-      // Check cache first
-      const cachedData = getCachedApiResponse(cacheKey);
-      if (cachedData) {
-        log("Using cached fishing tips for", location, currentMonth);
-        setTips(cachedData);
-        setLoading(false);
-        return;
-      }
+  //     // Check cache first
+  //     const cachedData = getCachedApiResponse(cacheKey);
+  //     if (cachedData) {
+  //       log("Using cached fishing tips for", location, currentMonth);
+  //       setTips(cachedData);
+  //       setLoading(false);
+  //       return;
+  //     }
 
-      // Get weather context if available
-      const weatherContext = weatherData
-        ? `Current Weather: Temperature - ${weatherData.current?.temperature_2m || "Unknown"}°C, Wind Speed - ${weatherData.current?.wind_speed_10m || "Unknown"} km/h, Weather Code - ${weatherData.current?.weather_code || "Unknown"} m.`
-        : "";
+  //     // Get weather context if available
+  //     const weatherContext = weatherData
+  //       ? `Current Weather: Temperature - ${weatherData.current?.temperature_2m || "Unknown"}°C, Wind Speed - ${weatherData.current?.wind_speed_10m || "Unknown"} km/h, Weather Code - ${weatherData.current?.weather_code || "Unknown"} m.`
+  //       : "";
 
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey.trim()}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are an expert fishing instructor. Create educational, actionable fishing guidance that teaches anglers WHY and HOW to fish effectively. Be direct, specific, and instructional. Each tip should guide the angler's decision-making with clear reasoning. You must respond with ONLY a valid JSON array. No explanations, markdown, or extra text.",
-              },
-              {
-                role: "user",
-                content: `Generate exactly 5 educational fishing tips for ${location} in ${currentSeason} (${currentMonth}). ${weatherContext}
-              
-              Make each tip educational and guiding - teach the angler something specific they can apply immediately. Focus on:
-              - WHY certain techniques work in current conditions
-              - HOW to adjust methods for weather/season
-              - WHAT specific actions to take
-              
-              Examples of educational style:
-              - "Target 5-8m depths - fish move deeper when water warms above 24°C."
-              - "Use bright lures in murky water - visibility drops to 0.6m after rain."
-              - "Fish dawn/dusk in summer - metabolism peaks at 20-22°C water temps."
-              
-              Requirements:
-              - Maximum 150 characters per tip
-              - Include specific numbers/measurements
-              - ALWAYS use metric units (meters, degrees Celsius) for all measurements
-              - Explain the reasoning behind the advice
-              - Focus on current weather/seasonal conditions
-              
-              Format: [{"title":"Educational Tip","content":"Instructional guidance (max 100 chars)","category":"Weather|Technique|Bait|Timing|Location"}]
-              
-              Return only the JSON array.`,
-              },
-            ],
-            temperature: 0.7,
-            max_tokens: 1500,
-          }),
-        }
-      );
+  //     const response = await fetch(
+  //       "https://api.openai.com/v1/chat/completions",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${apiKey.trim()}`,
+  //         },
+  //         body: JSON.stringify({
+  //           model: "gpt-4o",
+  //           messages: [
+  //             {
+  //               role: "system",
+  //               content:
+  //                 "You are an expert fishing instructor. Create educational, actionable fishing guidance that teaches anglers WHY and HOW to fish effectively. Be direct, specific, and instructional. Each tip should guide the angler's decision-making with clear reasoning. You must respond with ONLY a valid JSON array. No explanations, markdown, or extra text.",
+  //             },
+  //             {
+  //               role: "user",
+  //               content: `Generate exactly 5 educational fishing tips for ${location} in ${currentSeason} (${currentMonth}). ${weatherContext}
 
-      if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
-      }
+  //             Make each tip educational and guiding - teach the angler something specific they can apply immediately. Focus on:
+  //             - WHY certain techniques work in current conditions
+  //             - HOW to adjust methods for weather/season
+  //             - WHAT specific actions to take
 
-      const data = await response.json();
-      const content = data.choices[0].message.content;
+  //             Examples of educational style:
+  //             - "Target 5-8m depths - fish move deeper when water warms above 24°C."
+  //             - "Use bright lures in murky water - visibility drops to 0.6m after rain."
+  //             - "Fish dawn/dusk in summer - metabolism peaks at 20-22°C water temps."
 
-      let fishingTips: FishingTip[] = [];
-      try {
-        // Clean the response
-        let jsonStr = content.trim();
-        jsonStr = jsonStr.replace(/```json\s*|```\s*|```/g, "");
-        jsonStr = jsonStr.replace(/^[^\[\{]*/, "");
-        jsonStr = jsonStr.replace(/[^\]\}]*$/, "");
+  //             Requirements:
+  //             - Maximum 150 characters per tip
+  //             - Include specific numbers/measurements
+  //             - ALWAYS use metric units (meters, degrees Celsius) for all measurements
+  //             - Explain the reasoning behind the advice
+  //             - Focus on current weather/seasonal conditions
 
-        const arrayStart = jsonStr.indexOf("[");
-        const arrayEnd = jsonStr.lastIndexOf("]");
+  //             Format: [{"title":"Educational Tip","content":"Instructional guidance (max 100 chars)","category":"Weather|Technique|Bait|Timing|Location"}]
 
-        if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
-          jsonStr = jsonStr.substring(arrayStart, arrayEnd + 1);
-        }
+  //             Return only the JSON array.`,
+  //             },
+  //           ],
+  //           temperature: 0.7,
+  //           max_tokens: 1500,
+  //         }),
+  //       }
+  //     );
 
-        log("Cleaned fishing tips JSON:", jsonStr);
-        const parsedTips = JSON.parse(jsonStr);
-        fishingTips = Array.isArray(parsedTips) ? parsedTips : [];
-      } catch (e) {
-        console.error("Error parsing fishing tips:", e);
-        console.error("Raw response:", content);
+  //     if (!response.ok) {
+  //       throw new Error(`OpenAI API error: ${response.status}`);
+  //     }
 
-        // Fallback tips
-        fishingTips = [
-          {
-            title: "Early Morning Success",
-            content:
-              "Fish are most active during dawn and dusk when water temperatures are cooler. Plan your fishing trips around these golden hours for better results.",
-            category: "Timing",
-          },
-          {
-            title: "Weather Awareness",
-            content:
-              "Overcast days often provide excellent fishing conditions as fish feel more secure and venture into shallower waters to feed.",
-            category: "Weather",
-          },
-          {
-            title: "Bait Selection",
-            content:
-              "Match your bait to local prey species. Live bait typically outperforms artificial lures, especially when fish are being selective.",
-            category: "Bait",
-          },
-          {
-            title: "Structure Fishing",
-            content:
-              "Focus on underwater structures like reefs, drop-offs, and weed beds where fish congregate for shelter and feeding opportunities.",
-            category: "Location",
-          },
-          {
-            title: "Patience and Persistence",
-            content:
-              "Stay quiet and patient. Fish can be easily spooked by noise and sudden movements, especially in shallow or clear water.",
-            category: "Technique",
-          },
-        ];
-      }
+  //     const data = await response.json();
+  //     const content = data.choices[0].message.content;
 
-      if (!Array.isArray(fishingTips) || fishingTips.length === 0) {
-        throw new Error("Response is not a valid array or is empty");
-      }
+  //     let fishingTips: FishingTip[] = [];
+  //     try {
+  //       // Clean the response
+  //       let jsonStr = content.trim();
+  //       jsonStr = jsonStr.replace(/```json\s*|```\s*|```/g, "");
+  //       jsonStr = jsonStr.replace(/^[^\[\{]*/, "");
+  //       jsonStr = jsonStr.replace(/[^\]\}]*$/, "");
 
-      setTips(fishingTips);
-      // Cache for 6 hours
-      cacheApiResponse(cacheKey, fishingTips, 6 * 60 * 60 * 1000);
-    } catch (err) {
-      console.error("Error fetching fishing tips:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch fishing tips"
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  //       const arrayStart = jsonStr.indexOf("[");
+  //       const arrayEnd = jsonStr.lastIndexOf("]");
+
+  //       if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
+  //         jsonStr = jsonStr.substring(arrayStart, arrayEnd + 1);
+  //       }
+
+  //       log("Cleaned fishing tips JSON:", jsonStr);
+  //       const parsedTips = JSON.parse(jsonStr);
+  //       fishingTips = Array.isArray(parsedTips) ? parsedTips : [];
+  //     } catch (e) {
+  //       console.error("Error parsing fishing tips:", e);
+  //       console.error("Raw response:", content);
+
+  //       // Fallback tips
+  //       fishingTips = [
+  //         {
+  //           title: "Early Morning Success",
+  //           content:
+  //             "Fish are most active during dawn and dusk when water temperatures are cooler. Plan your fishing trips around these golden hours for better results.",
+  //           category: "Timing",
+  //         },
+  //         {
+  //           title: "Weather Awareness",
+  //           content:
+  //             "Overcast days often provide excellent fishing conditions as fish feel more secure and venture into shallower waters to feed.",
+  //           category: "Weather",
+  //         },
+  //         {
+  //           title: "Bait Selection",
+  //           content:
+  //             "Match your bait to local prey species. Live bait typically outperforms artificial lures, especially when fish are being selective.",
+  //           category: "Bait",
+  //         },
+  //         {
+  //           title: "Structure Fishing",
+  //           content:
+  //             "Focus on underwater structures like reefs, drop-offs, and weed beds where fish congregate for shelter and feeding opportunities.",
+  //           category: "Location",
+  //         },
+  //         {
+  //           title: "Patience and Persistence",
+  //           content:
+  //             "Stay quiet and patient. Fish can be easily spooked by noise and sudden movements, especially in shallow or clear water.",
+  //           category: "Technique",
+  //         },
+  //       ];
+  //     }
+
+  //     if (!Array.isArray(fishingTips) || fishingTips.length === 0) {
+  //       throw new Error("Response is not a valid array or is empty");
+  //     }
+
+  //     setTips(fishingTips);
+  //     // Cache for 6 hours
+  //     cacheApiResponse(cacheKey, fishingTips, 6 * 60 * 60 * 1000);
+  //   } catch (err) {
+  //     console.error("Error fetching fishing tips:", err);
+  //     setError(
+  //       err instanceof Error ? err.message : "Failed to fetch fishing tips"
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // Fetch weather data for summary
 
-  useEffect(() => {
-    fetchFishingTips();
-  }, [location]);
+  // useEffect(() => {
+  //   fetchFishingTips();
+  // }, [location]);
 
   // Removed height calculation logic that was causing cards to grow on touch
 
@@ -394,26 +422,19 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
     return () => clearInterval(interval);
   }, [api, tips.length]);
 
-  if (loading) {
-    return (
-      <Card className="p-6 border border-border bg-background shadow-sm">
-        <div className="flex flex-col items-center justify-center py-8">
-          <LoadingDots />
-          <p className="text-sm text-muted-foreground mt-2">
-            Generating fishing tips...
-          </p>
-        </div>
-      </Card>
-    );
+  if (loadingFishingTips) {
+    return <FishingTipsSkeleton />;
   }
 
-  if (error || tips.length === 0) {
+  if (errorFishingTips || tips.length === 0) {
     return (
       <Card className="p-6 border border-border bg-background shadow-sm">
         <div className="flex items-center justify-center py-4">
           <Fish className="h-5 w-5 text-destructive mr-2" />
           <p className="text-sm text-destructive">
-            {error || "Unable to load fishing tips"}
+            {errorFishingTipsError instanceof Error
+              ? errorFishingTipsError.message
+              : "Unable to load fishing tips"}
           </p>
         </div>
       </Card>
