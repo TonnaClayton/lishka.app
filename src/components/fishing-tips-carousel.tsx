@@ -595,7 +595,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-blue-500 rotate-45 text-[20px]"
+                  className="rotate-45 text-[20px] text-[#0251FB]"
                 >
                   <path d="M5 12h14"></path>
                   <path d="m12 5 7 7-7 7"></path>

@@ -122,37 +122,37 @@ const WeatherWidget: React.FC<{
     const waveHeights =
       weatherData.hourly.wave_height?.slice(
         currentHourIndex,
-        currentHourIndex + 1
+        currentHourIndex + 1,
       ) || [];
     const waveDirections =
       weatherData.hourly.wave_direction?.slice(
         currentHourIndex,
-        currentHourIndex + 1
+        currentHourIndex + 1,
       ) || [];
     const swellWaveHeights =
       weatherData.hourly.swell_wave_height?.slice(
         currentHourIndex,
-        currentHourIndex + 1
+        currentHourIndex + 1,
       ) || [];
     const swellWavePeriods =
       weatherData.hourly.swell_wave_period?.slice(
         currentHourIndex,
-        currentHourIndex + 1
+        currentHourIndex + 1,
       ) || [];
     const windSpeeds =
       weatherData.hourly.wind_speed_10m.slice(
         currentHourIndex,
-        currentHourIndex + 1
+        currentHourIndex + 1,
       ) || [];
     const windDirections =
       weatherData.hourly.wind_direction_10m.slice(
         currentHourIndex,
-        currentHourIndex + 1
+        currentHourIndex + 1,
       ) || [];
     const temperatures =
       weatherData.hourly.temperature_2m.slice(
         currentHourIndex,
-        currentHourIndex + 1
+        currentHourIndex + 1,
       ) || [];
 
     return {
@@ -232,7 +232,7 @@ const WeatherWidget: React.FC<{
     return (
       <div className="inline-flex items-center justify-center">
         <div
-          className="text-blue-400 transform"
+          className="transform text-[#0251FB]"
           style={{ transform: `rotate(${degrees}deg)` }}
         >
           ↑
@@ -245,7 +245,7 @@ const WeatherWidget: React.FC<{
   const getFishingConditionsRating = (
     waveHeight: number | null,
     windSpeed: number | null,
-    swellWavePeriod: number | null
+    swellWavePeriod: number | null,
   ) => {
     // If any of the required data is missing, return "Unknown"
     if (waveHeight === null || windSpeed === null) {
@@ -459,44 +459,44 @@ const WeatherWidget: React.FC<{
   const waveHeights =
     weatherData?.hourly?.wave_height?.slice(
       currentHourIndex,
-      currentHourIndex + 24
+      currentHourIndex + 24,
     ) || Array(24).fill(null);
   const waveDirections =
     weatherData?.hourly?.wave_direction?.slice(
       currentHourIndex,
-      currentHourIndex + 24
+      currentHourIndex + 24,
     ) || Array(24).fill(null);
   const swellWaveHeights =
     weatherData?.hourly?.swell_wave_height?.slice(
       currentHourIndex,
-      currentHourIndex + 24
+      currentHourIndex + 24,
     ) || Array(24).fill(null);
   const swellWaveDirections =
     weatherData?.hourly?.swell_wave_direction?.slice(
       currentHourIndex,
-      currentHourIndex + 24
+      currentHourIndex + 24,
     ) || Array(24).fill(null);
   const swellWavePeriods =
     weatherData?.hourly?.swell_wave_period?.slice(
       currentHourIndex,
-      currentHourIndex + 24
+      currentHourIndex + 24,
     ) || Array(24).fill(null);
   // Define wavePeriods as swellWavePeriods for backward compatibility
   const wavePeriods = swellWavePeriods;
   const windSpeeds =
     weatherData?.hourly?.wind_speed_10m?.slice(
       currentHourIndex,
-      currentHourIndex + 24
+      currentHourIndex + 24,
     ) || [];
   const windDirections =
     weatherData?.hourly?.wind_direction_10m?.slice(
       currentHourIndex,
-      currentHourIndex + 24
+      currentHourIndex + 24,
     ) || [];
   const temperatures =
     weatherData?.hourly?.temperature_2m?.slice(
       currentHourIndex,
-      currentHourIndex + 24
+      currentHourIndex + 24,
     ) || [];
 
   // Calculate precipitation forecast for the next 6 hours and 24 hours
@@ -520,12 +520,12 @@ const WeatherWidget: React.FC<{
     const probabilities =
       weatherData?.hourly?.precipitation_probability?.slice(
         currentHourIndex,
-        currentHourIndex + 6
+        currentHourIndex + 6,
       ) || [];
     const amounts =
       weatherData?.hourly?.precipitation?.slice(
         currentHourIndex,
-        currentHourIndex + 6
+        currentHourIndex + 6,
       ) || [];
 
     // If no valid data, return empty forecast
@@ -607,7 +607,7 @@ const WeatherWidget: React.FC<{
         (waveHeights.length > 0 ? waveHeights[0] : null),
       windSpeeds.length > 0 ? windSpeeds[0] : null,
       weatherData?.current?.swell_wave_period ||
-        (swellWavePeriods.length > 0 ? swellWavePeriods[0] : null)
+        (swellWavePeriods.length > 0 ? swellWavePeriods[0] : null),
     ),
   };
 
@@ -659,46 +659,12 @@ const WeatherWidget: React.FC<{
   }
 
   return (
-    <div className="space-y-4 max-w-full overflow-x-hidden w-full py-4 lg:px-4">
+    <div className="space-y-4 max-w-full overflow-x-hidden w-full lg:px-4">
       {/* Location Button */}
-      <div className="flex justify-between items-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowLocationModal(true)}
-          className="flex items-center text-[#0251FB] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-        >
-          <MapPin className="h-5 w-5 mr-1" />
-          <span className="font-medium">
-            {typeof location?.name === "string"
-              ? location.name.replace(/^"|"$/g, "")
-              : "Unknown Location"}
-          </span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={disableRefreshBtn}
-          onClick={handleRefresh}
-          className={cn(
-            "text-[#0251FB] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20",
-            disableRefreshBtn && "opacity-50 cursor-not-allowe animate-spin"
-          )}
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-      </div>
-
       {/* Location Modal */}
-      <LocationModal
-        isOpen={showLocationModal}
-        onClose={() => setShowLocationModal(false)}
-        onLocationSelect={handleLocationUpdate}
-        currentLocation={location}
-        title="Update Your Location"
-      />
+
       {/* Weather Card - Enhanced Weather Data */}
-      <Card className="p-6 bg-gradient-to-br from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
+      <Card className="p-6 bg-gradient-to-br from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl border-0">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-medium opacity-90">
@@ -719,11 +685,11 @@ const WeatherWidget: React.FC<{
               {weatherData?.current?.temperature_2m !== undefined &&
               weatherData.current.temperature_2m !== null
                 ? formatTemperature(weatherData.current.temperature_2m).split(
-                    " "
+                    " ",
                   )[0]
                 : currentConditions.temperature !== null
                   ? formatTemperature(currentConditions.temperature).split(
-                      " "
+                      " ",
                     )[0]
                   : "-"}
             </span>
@@ -733,7 +699,7 @@ const WeatherWidget: React.FC<{
             {weatherData?.current?.apparent_temperature !== undefined &&
             weatherData.current.apparent_temperature !== null
               ? formatTemperature(
-                  weatherData.current.apparent_temperature
+                  weatherData.current.apparent_temperature,
                 ).split(" ")[0]
               : currentConditions.temperature !== null
                 ? formatTemperature(currentConditions.temperature).split(" ")[0]
@@ -814,7 +780,7 @@ const WeatherWidget: React.FC<{
                   ? "-"
                   : new Date(weatherData.daily.sunrise[0]).toLocaleTimeString(
                       [],
-                      { hour: "2-digit", minute: "2-digit" }
+                      { hour: "2-digit", minute: "2-digit" },
                     )}
               </p>
             </div>
@@ -828,7 +794,7 @@ const WeatherWidget: React.FC<{
                   ? "-"
                   : new Date(weatherData.daily.sunset[0]).toLocaleTimeString(
                       [],
-                      { hour: "2-digit", minute: "2-digit" }
+                      { hour: "2-digit", minute: "2-digit" },
                     )}
               </p>
             </div>
@@ -836,7 +802,7 @@ const WeatherWidget: React.FC<{
         </div>
       </Card>
       {/* Marine Card - Fishing Conditions */}
-      <Card className="p-6 bg-[#1E40AF] text-white overflow-hidden relative shadow-md mt-4 rounded-xl">
+      <Card className="p-6 bg-[#1E40AF] text-white overflow-hidden relative shadow-md mt-4 rounded-xl border border-[] border-0">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-medium opacity-90">
@@ -960,9 +926,7 @@ const WeatherWidget: React.FC<{
               AI-Generated Advice
             </p>
           </div>
-          <div>
-            <Fish className="h-8 w-8 text-[#0251FB] dark:text-blue-400" />
-          </div>
+          <div></div>
         </div>
 
         <div className="mt-4">
@@ -1010,7 +974,6 @@ const WeatherWidget: React.FC<{
           </Tabs>
         </div>
       </Card>
-
       {/* Marine Data Hourly Cards */}
       <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
         <div className="flex justify-between items-center mb-4">
@@ -1038,7 +1001,7 @@ const WeatherWidget: React.FC<{
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {time ? formatTime(time) : "--:--"}
                   </p>
-                  <p className="text-lg font-bold text-blue-600 dark:text-blue-300">
+                  <p className="text-lg font-bold dark:text-blue-300 text-[#0251FB]">
                     {waveHeights[index] !== null &&
                     waveHeights[index] !== undefined
                       ? waveHeights[index].toFixed(1)
@@ -1193,14 +1156,12 @@ const WeatherWidget: React.FC<{
           </div>
         </div>
       </Card>
-
       {/* Hourly Precipitation Card */}
       <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold dark:text-white">
             Hourly Precipitation (mm)
           </h2>
-          <Droplets className="h-5 w-5 text-[#0251FB] dark:text-blue-400" />
         </div>
         <div className="overflow-x-auto">
           <div className="flex space-x-3 pb-2 min-w-[800px]">
@@ -1223,7 +1184,7 @@ const WeatherWidget: React.FC<{
                   </p>
                   <div className="flex items-center mb-1">
                     <Droplets className="h-3 w-3 mr-1 text-blue-500" />
-                    <p className="text-sm font-bold text-blue-600 dark:text-blue-300">
+                    <p className="text-sm font-bold dark:text-blue-300 text-[#0251FB]">
                       {precipitation !== null && precipitation !== undefined
                         ? precipitation.toFixed(1)
                         : "0.0"}
@@ -1243,7 +1204,6 @@ const WeatherWidget: React.FC<{
           </div>
         </div>
       </Card>
-
       {/* Precipitation Forecast Card */}
       {precipitationForecast && precipitationForecast.chance > 0 && (
         <Card className="p-4 bg-white dark:bg-card shadow-sm">
@@ -1404,8 +1364,8 @@ const WeatherWidget: React.FC<{
                         </p>
                       </div>
                       <div className="flex items-center">
-                        <Thermometer className="h-3 w-3 mr-1 text-blue-500" />
-                        <p className="text-xs dark:text-gray-300">
+                        <Thermometer className="h-3 w-3 mr-1 text-[#0251FB]" />
+                        <p className="text-xs dark:text-gray-300 text-[#0251FB]">
                           {weatherData.daily.temperature_2m_min &&
                           weatherData.daily.temperature_2m_min[index] !== null
                             ? `${Math.round(weatherData.daily.temperature_2m_min[index])}°`
@@ -1421,7 +1381,7 @@ const WeatherWidget: React.FC<{
                       Wind
                     </p>
                     <div className="flex items-center justify-center">
-                      <Wind className="h-3 w-3 mr-1 text-blue-400" />
+                      <Wind className="h-3 w-3 mr-1 text-[#0251FB]" />
                       <p className="text-xs dark:text-gray-300 mr-1">
                         {(() => {
                           // Calculate the day's start and end indices in hourly data
@@ -1431,19 +1391,19 @@ const WeatherWidget: React.FC<{
                           const dayWindSpeeds =
                             weatherData?.hourly?.wind_speed_10m?.slice(
                               dayStart,
-                              dayEnd
+                              dayEnd,
                             );
                           if (dayWindSpeeds && dayWindSpeeds.length > 0) {
                             // Filter out null values
                             const validSpeeds = dayWindSpeeds.filter(
-                              (s) => s !== null
+                              (s) => s !== null,
                             );
                             if (validSpeeds.length > 0) {
                               // Calculate average wind speed
                               const avgWindSpeed =
                                 validSpeeds.reduce(
                                   (sum, speed) => sum + speed,
-                                  0
+                                  0,
                                 ) / validSpeeds.length;
                               return formatSpeed(avgWindSpeed).split(" ")[0];
                             }
@@ -1460,7 +1420,7 @@ const WeatherWidget: React.FC<{
                           const dayWindDirections =
                             weatherData?.hourly?.wind_direction_10m?.slice(
                               dayStart,
-                              dayEnd
+                              dayEnd,
                             );
                           if (
                             dayWindDirections &&
@@ -1468,14 +1428,14 @@ const WeatherWidget: React.FC<{
                           ) {
                             // Filter out null values
                             const validDirections = dayWindDirections.filter(
-                              (d) => d !== null
+                              (d) => d !== null,
                             );
                             if (validDirections.length > 0) {
                               // Calculate average wind direction
                               const avgWindDirection =
                                 validDirections.reduce(
                                   (sum, direction) => sum + direction,
-                                  0
+                                  0,
                                 ) / validDirections.length;
                               return getWindDirection(avgWindDirection);
                             }
@@ -1491,19 +1451,19 @@ const WeatherWidget: React.FC<{
                         const dayWindDirections =
                           weatherData.hourly?.wind_direction_10m?.slice(
                             dayStart,
-                            dayEnd
+                            dayEnd,
                           );
                         if (dayWindDirections && dayWindDirections.length > 0) {
                           // Filter out null values
                           const validDirections = dayWindDirections.filter(
-                            (d) => d !== null
+                            (d) => d !== null,
                           );
                           if (validDirections.length > 0) {
                             // Calculate average wind direction
                             const avgWindDirection =
                               validDirections.reduce(
                                 (sum, direction) => sum + direction,
-                                0
+                                0,
                               ) / validDirections.length;
                             return (
                               <span className="text-xs">
@@ -1523,7 +1483,7 @@ const WeatherWidget: React.FC<{
                       Waves
                     </p>
                     <div className="flex items-center justify-center">
-                      <Waves className="h-3 w-3 mr-1 text-blue-500" />
+                      <Waves className="h-3 w-3 mr-1 text-[#0251FB]" />
                       <p className="text-xs dark:text-gray-300 mr-1">
                         {/* Use average wave height from hourly data for this day */}
                         {(() => {
@@ -1534,12 +1494,12 @@ const WeatherWidget: React.FC<{
                           const dayWaveHeights =
                             weatherData?.hourly?.wave_height?.slice(
                               dayStart,
-                              dayEnd
+                              dayEnd,
                             );
                           if (dayWaveHeights && dayWaveHeights.length > 0) {
                             // Filter out null values
                             const validHeights = dayWaveHeights.filter(
-                              (h) => h !== null
+                              (h) => h !== null,
                             );
                             if (validHeights.length > 0) {
                               // Calculate average wave height
@@ -1568,7 +1528,7 @@ const WeatherWidget: React.FC<{
                           const dayWaveDirections =
                             weatherData?.hourly?.wave_direction?.slice(
                               dayStart,
-                              dayEnd
+                              dayEnd,
                             );
                           if (
                             dayWaveDirections &&
@@ -1576,14 +1536,14 @@ const WeatherWidget: React.FC<{
                           ) {
                             // Filter out null values
                             const validDirections = dayWaveDirections.filter(
-                              (d) => d !== null
+                              (d) => d !== null,
                             );
                             if (validDirections.length > 0) {
                               // Calculate average wave direction
                               const avgWaveDirection =
                                 validDirections.reduce(
                                   (sum, direction) => sum + direction,
-                                  0
+                                  0,
                                 ) / validDirections.length;
                               return getWindDirection(avgWaveDirection);
                             }
@@ -1599,19 +1559,19 @@ const WeatherWidget: React.FC<{
                         const dayWaveDirections =
                           weatherData.hourly?.wave_direction?.slice(
                             dayStart,
-                            dayEnd
+                            dayEnd,
                           );
                         if (dayWaveDirections && dayWaveDirections.length > 0) {
                           // Filter out null values
                           const validDirections = dayWaveDirections.filter(
-                            (d) => d !== null
+                            (d) => d !== null,
                           );
                           if (validDirections.length > 0) {
                             // Calculate average wave direction
                             const avgWaveDirection =
                               validDirections.reduce(
                                 (sum, direction) => sum + direction,
-                                0
+                                0,
                               ) / validDirections.length;
                             return (
                               <span className="text-xs">
@@ -1645,7 +1605,6 @@ const WeatherWidget: React.FC<{
           </div>
         </Card>
       )}
-
       {/* Data Source Information */}
       <div className="flex flex-col space-y-2 text-xs text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm">
         <div className="flex items-center justify-between">

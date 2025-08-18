@@ -164,16 +164,36 @@ const WeatherPage: React.FC = () => {
           <div className="hidden lg:block">
             <h1 className="text-xl font-semibold dark:text-white">Weather</h1>
           </div>
+          <div className={"flex items-center gap-2"}>
+            <Button
+              className={
+                "justify-center whitespace-nowrap font-medium transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 hover:bg-accent dark:hover:bg-secondary rounded-md text-xs flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1 h-auto bg-transparent"
+              }
+              onClick={() => console.log("onClick")}
+            >
+              <span className={"text-sm truncate"}>Malta</span>
+              <MapPin
+                xmlns={"http://www.w3.org/2000/svg"}
+                width={24}
+                height={24}
+                viewBox={"0 0 24 24"}
+                fill={"none"}
+                stroke={"currentColor"}
+                strokeWidth={2}
+                strokeLinecap={"round"}
+                strokeLinejoin={"round"}
+                className={"lucide lucide-map-pin h-4 w-4"}
+              ></MapPin>
+            </Button>
+          </div>
         </div>
       </header>
-
       <div className="flex-1 overflow-y-auto p-4 lg:p-6 lg:max-w-3xl lg:mx-auto pb-20 w-full">
         <div className="mb-4">
           <h1 className="text-2xl font-bold mb-1 dark:text-white lg:text-3xl">
             {location} Weather
           </h1>
           <div className="flex items-center">
-            <MapPin className="h-4 w-4 text-blue-500 mr-1" />
             <p className="text-sm text-muted-foreground dark:text-gray-300 lg:text-base">
               Marine conditions for fishing
             </p>
@@ -185,7 +205,6 @@ const WeatherPage: React.FC = () => {
           onLocationUpdate={handleLocationUpdate}
         />
       </div>
-
       <BottomNav />
     </div>
   );

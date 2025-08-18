@@ -30,6 +30,8 @@ import {
   Menu,
   Share,
   Pencil,
+  CheckIcon,
+  LoaderIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -1785,6 +1787,23 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       </header>
+      <div className="size-full bg-[#0251FB] py-3 px-4 flex flex-col gap-y-2 h-fit z-20 fixed top-[69px]">
+        <div className="h-[26px] w-full flex items-center justify-between">
+          <p className="leading-snug text-white text-base">
+            AI Analyzing Photo
+          </p>
+          <CheckIcon className="w-5 h-5 text-white" />
+        </div>
+        <div className="h-[26px] w-full flex items-center justify-between opacity-50">
+          <p className="leading-snug text-white text-base">Photo Uploading</p>
+
+          <LoaderIcon className="w-5 h-5 text-white" />
+        </div>
+        <div className="h-[26px] w-full flex items-center justify-between opacity-50">
+          <p className="leading-snug text-white text-base">Photo Saved</p>
+          <LoaderIcon className="w-5 h-5 text-white" />
+        </div>
+      </div>
       {/* Main Content */}
       <main className="flex-1 p-4  w-full pb-20 lg:pb-4 h-full overflow-y-auto">
         <div className="max-w-2xl mx-auto w-full">
@@ -2504,7 +2523,6 @@ const ProfilePage: React.FC = () => {
         <DialogContent className="sm:max-w-[425px] w-[95%] mx-auto rounded-lg max-h-[90vh] overflow-y-auto [&>button]:hidden">
           <DialogHeader className="pb-2">
             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-              <Fish className="w-5 h-5" />
               Edit Fish Information
             </DialogTitle>
           </DialogHeader>
