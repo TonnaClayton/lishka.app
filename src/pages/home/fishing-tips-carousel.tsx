@@ -27,7 +27,7 @@ import { cacheApiResponse, getCachedApiResponse } from "@/lib/api-helpers";
 import LoadingDots from "@/components/loading-dots";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
-import { useUserLocation } from "@/hooks/queries";
+import { useGetWeatherSummary, useUserLocation } from "@/hooks/queries";
 
 interface FishingTip {
   title: string;
@@ -156,9 +156,19 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
   const [api, setApi] = useState<CarouselApi | undefined>(undefined);
   const [current, setCurrent] = useState(0);
   const [count, setCount] = useState(0);
-  const [weatherSummary, setWeatherSummary] = useState<any>(null);
-  const [loadingWeather, setLoadingWeather] = useState(false);
   const { location: userLocation } = useUserLocation();
+  const {
+    data: weatherSummary,
+    isLoading: loadingWeather,
+    isError: errorWeather,
+  } = useGetWeatherSummary({
+    latitude: userLocation?.latitude,
+    longitude: userLocation?.longitude,
+    name: userLocation?.name,
+  });
+  // const [weatherSummary, setWeatherSummary] = useState<any>(null);
+  // const [loadingWeather, setLoadingWeather] = useState(false);
+
   // Removed maxCardHeight state and tipContentRefs to fix height growing issue
 
   // Get current season based on month
@@ -351,65 +361,9 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
   };
 
   // Fetch weather data for summary
-  const fetchWeatherSummary = async () => {
-    if (!location) return;
-
-    setLoadingWeather(true);
-    try {
-      // Fetch weather and marine data from Open-Meteo
-      const weatherUrl = `https://customer-api.open-meteo.com/v1/forecast?latitude=${userLocation?.latitude}&longitude=${userLocation?.longitude}&current=temperature_2m,weather_code,wind_speed_10m,is_day&hourly=temperature_2m,weather_code,wind_speed_10m&timezone=auto&apikey=1g8vJZI7DhEIFDIt`;
-      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${userLocation?.latitude}&longitude=${userLocation?.longitude}&current=wave_height`;
-
-      const [weatherResponse, marineResponse] = await Promise.all([
-        fetch(weatherUrl),
-        fetch(marineUrl),
-      ]);
-
-      if (weatherResponse.ok) {
-        const weatherData = await weatherResponse.json();
-        let marineData = null;
-
-        if (marineResponse.ok) {
-          marineData = await marineResponse.json();
-        }
-
-        // Create weather summary object
-        const temp = weatherData.current?.temperature_2m;
-        const windSpeed = weatherData.current?.wind_speed_10m;
-        const weatherCode = weatherData.current?.weather_code;
-        const waveHeight = marineData?.current?.wave_height;
-
-        let condition = "Clear";
-        if (weatherCode !== undefined) {
-          if (weatherCode === 0) condition = "Clear";
-          else if (weatherCode <= 3) condition = "Partly cloudy";
-          else if (weatherCode <= 49) condition = "Foggy";
-          else if (weatherCode <= 69) condition = "Rainy";
-          else if (weatherCode <= 79) condition = "Snowy";
-          else if (weatherCode >= 95) condition = "Stormy";
-          else condition = "Cloudy";
-        }
-
-        const summaryData = {
-          temperature: temp ? Math.round(temp) : null,
-          condition,
-          windSpeed: windSpeed ? Math.round(windSpeed) : null,
-          waveHeight: waveHeight ? parseFloat(waveHeight.toFixed(1)) : null,
-        };
-
-        setWeatherSummary(summaryData);
-      }
-    } catch (error) {
-      console.error("Error fetching weather summary:", error);
-      setWeatherSummary("Weather unavailable");
-    } finally {
-      setLoadingWeather(false);
-    }
-  };
 
   useEffect(() => {
     fetchFishingTips();
-    fetchWeatherSummary();
   }, [location]);
 
   // Removed height calculation logic that was causing cards to grow on touch
@@ -576,13 +530,13 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
                   <path d="m12 5 7 7-7 7"></path>
                 </svg>
                 <span className="text-foreground text-2xl">
-                  {weatherSummary.windSpeed !== null
-                    ? `${weatherSummary.windSpeed} km/h`
+                  {weatherSummary.wind_speed !== null
+                    ? `${weatherSummary.wind_speed} km/h`
                     : "--"}
                 </span>
               </div>
               {/* Wave height with wave icon */}
-              {weatherSummary.waveHeight !== null && (
+              {weatherSummary.wave_height !== null && (
                 <div className="flex items-center gap-1 ml-0">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -601,12 +555,12 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
                     <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
                   </svg>
                   <span className="text-foreground text-2xl">
-                    {weatherSummary.waveHeight}m
+                    {weatherSummary.wave_height}m
                   </span>
                 </div>
               )}
             </div>
-          ) : weatherSummary === "Weather unavailable" ? (
+          ) : errorWeather === true ? (
             <p className="text-xs text-muted-foreground italic">
               Weather unavailable
             </p>
