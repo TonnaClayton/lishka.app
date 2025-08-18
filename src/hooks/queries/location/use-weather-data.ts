@@ -393,25 +393,32 @@ export const useGetWeatherSummary = (location?: {
     queryFn: async () => {
       let path = "weather/summary";
 
-      let query = "";
+      // let query = "";
 
-      if (location.name) {
-        query = `name=${location.name}`;
-      }
+      // if (location.name) {
+      //   query = `name=${location.name}`;
+      // }
 
-      if (location.latitude) {
-        query = `latitude=${location.latitude}`;
-      }
+      // if (location.latitude) {
+      //   query = `latitude=${location.latitude}`;
+      // }
 
-      if (location.longitude) {
-        query = `longitude=${location.longitude}`;
-      }
+      // if (location.longitude) {
+      //   query = `longitude=${location.longitude}`;
+      // }
 
-      if (query) {
-        path = `${path}?${query}`;
-      }
+      // if (query) {
+      //   path = `${path}?${query}`;
+      // }
 
-      const data = await api<any>(path, {
+      const data = await api<{
+        data: {
+          temperature: number;
+          condition: string;
+          wind_speed: number;
+          wave_height: number | null;
+        };
+      }>(path, {
         method: "GET",
       });
 

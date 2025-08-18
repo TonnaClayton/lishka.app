@@ -30,6 +30,7 @@ export async function api<T = any>(
     }
 
     const defaultHeaders: Record<string, string> = {
+        "Accept": "*/*",
         "Content-Type": "application/json",
     };
 
