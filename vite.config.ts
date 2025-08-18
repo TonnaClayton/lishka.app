@@ -18,7 +18,7 @@ export default defineConfig({
     tempo(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'masked-icon.svg'],
+      includeAssets: ['favicon.ico', 'favicon-16x16.png', 'favicon-32x32.png', 'apple-touch-icon.png', 'android-chrome-192x192.png', 'android-chrome-512x512.png'],
       manifest: {
         name: 'Lishka - Fishing Companion',
         short_name: 'Lishka',
@@ -30,19 +30,29 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: 'logo.svg',
-            sizes: 'any',
-            type: 'image/svg+xml'
+            src: 'favicon-16x16.png',
+            sizes: '16x16',
+            type: 'image/png'
           },
           {
-            src: 'logo.svg',
+            src: 'favicon-32x32.png',
+            sizes: '32x32',
+            type: 'image/png'
+          },
+          {
+            src: 'android-chrome-192x192.png',
             sizes: '192x192',
-            type: 'image/svg+xml'
+            type: 'image/png'
           },
           {
-            src: 'logo.svg',
+            src: 'android-chrome-512x512.png',
             sizes: '512x512',
-            type: 'image/svg+xml'
+            type: 'image/png'
+          },
+          {
+            src: 'apple-touch-icon.png',
+            sizes: '180x180',
+            type: 'image/png'
           }
         ],
         categories: ['sports', 'lifestyle', 'utilities'],
