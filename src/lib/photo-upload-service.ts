@@ -1,9 +1,8 @@
 import {
-  uploadImageToSupabase,
-  isSupabaseStorageConfigured,
   getSupabaseStorageStatus,
+  uploadImageToSupabase,
 } from "./supabase-storage";
-import { processImageUpload, ImageMetadata } from "./image-metadata";
+import { ImageMetadata, processImageUpload } from "./image-metadata";
 import { log } from "./logging";
 
 export interface PhotoUploadResult {
@@ -126,7 +125,10 @@ export class PhotoUploadService {
     try {
       // Validate file size (max 15MB)
       if (file.size > 15 * 1024 * 1024) {
-        const errorMsg = `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`;
+        const errorMsg = `Photo must be less than 15MB (current: ${(
+          file.size /
+          (1024 * 1024)
+        ).toFixed(1)}MB)`;
         console.error("❌ [PHOTO UPLOAD SERVICE] File too large:", {
           isMobile,
           fileSize: file.size,
@@ -439,7 +441,9 @@ export class PhotoUploadService {
         if (metadata.fishInfo.name !== "Unknown") {
           successMsg += ` Identified: ${metadata.fishInfo.name}`;
           if (metadata.fishInfo.confidence > 0) {
-            successMsg += ` (${Math.round(metadata.fishInfo.confidence * 100)}% confident)`;
+            successMsg += ` (${Math.round(
+              metadata.fishInfo.confidence * 100,
+            )}% confident)`;
           }
         } else {
           successMsg += " Fish data detected!";

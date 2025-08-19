@@ -1,13 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
   ChevronLeft,
   Plus,
   Package,
-  Upload,
-  Camera,
-  Image as ImageIcon,
   Trash2,
   Edit3,
   MoreVertical,
@@ -18,8 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
@@ -34,13 +28,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { useAuth } from "@/contexts/auth-context";
-import {
-  uploadGearImage,
-  GearUploadResult,
-  GearMetadata,
-} from "@/lib/gear-upload-service";
 import BottomNav from "./bottom-nav";
 import { log } from "@/lib/logging";
 
@@ -135,14 +123,15 @@ const GearCategoryPage: React.FC = () => {
   const { categoryId } = useParams<{ categoryId: string }>();
   const [searchParams] = useSearchParams();
   const { user, profile, loading: authLoading, updateProfile } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  // const fileInputRef = useRef<HTMLInputElement>(null);
+  // const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [uploadingGear, setUploadingGear] = useState(false);
+  // const [uploadingGear, setUploadingGear] = useState(false);
   const [gearItems, setGearItems] = useState<GearItem[]>([]);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [gearLoaded, setGearLoaded] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingGearIndex, setEditingGearIndex] = useState<number | null>(null);

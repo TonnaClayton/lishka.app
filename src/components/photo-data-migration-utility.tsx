@@ -37,7 +37,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
     let invalidMetadata = 0;
     let photosWithFishInfo = 0;
 
-    profile.gallery_photos.forEach((photo, index) => {
+    profile.gallery_photos.forEach((photo) => {
       if (typeof photo === "string") {
         stringPhotos++;
         // Try to parse if it's a JSON string
@@ -129,7 +129,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
                 };
                 migratedPhotos.push(migratedPhoto);
                 migratedCount++;
-              } catch (parseError) {
+              } catch {
                 // Create minimal metadata for unparseable JSON
                 const migratedPhoto: ImageMetadata = {
                   url: photo,

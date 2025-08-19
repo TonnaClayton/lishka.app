@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { MapPin, Navigation, Map, Check } from "lucide-react";
+import { MapPin, Navigation, Check } from "lucide-react";
 import LoadingDots from "./loading-dots";
 import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
@@ -9,6 +9,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { motion, AnimatePresence } from "framer-motion";
 import { log } from "@/lib/logging";
+import { useUpdateProfile } from "@/hooks/queries";
 
 interface LocationSetupProps {
   onLocationSet: (location: { lat: number; lng: number; name: string }) => void;
@@ -29,7 +30,9 @@ const LocationSetup = ({
     lng: number;
     name: string;
   } | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [countdown, setCountdown] = useState<number | null>(null);
+  const updateProfile = useUpdateProfile();
 
   const handleDetectLocation = () => {
     setIsDetecting(true);
@@ -150,9 +153,6 @@ const LocationSetup = ({
 
   const handleContinue = () => {
     if (location) {
-      // Save location to localStorage for other components to use
-      localStorage.setItem("userLocation", location.name);
-
       // Also save the full location object for components that need coordinates
       const fullLocationData = {
         latitude: location.lat,
@@ -163,13 +163,10 @@ const LocationSetup = ({
             : location.name,
       };
 
-      localStorage.setItem(
-        "userLocationFull",
-        JSON.stringify(fullLocationData),
-      );
-
-      // Force a storage event to notify other components
-      window.dispatchEvent(new Event("storage"));
+      updateProfile.mutate({
+        location_coordinates: fullLocationData,
+        location: location.name,
+      });
 
       // Call the onLocationSet callback with the location data
       onLocationSet(location);
@@ -320,7 +317,7 @@ const LocationSetup = ({
 };
 
 // Fix Leaflet icon issue
-// @ts-ignore
+// @ts-expect-error - Leaflet types are not compatible with TypeScript
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -364,10 +361,8 @@ const MapSelection: React.FC<MapSelectionProps> = ({
 
   // Function to handle map click and set marker
   const MapClickHandler = () => {
-    let map: any = null;
-
     try {
-      map = useMapEvents({
+      useMapEvents({
         click: async (e) => {
           try {
             const { lat, lng } = e.latlng;

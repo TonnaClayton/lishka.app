@@ -17,6 +17,8 @@ type AuthUser = {
 
 import { ImageMetadata } from "@/lib/image-metadata";
 import { log } from "@/lib/logging";
+import { useProfile } from "@/hooks/queries";
+import { ROUTES } from "@/lib/routing";
 
 type Profile = {
   id: string;
@@ -29,6 +31,7 @@ type Profile = {
   preferred_language?: string;
   fishing_experience?: string;
   favorite_fish_species?: string[];
+  has_seen_onboarding_flow?: boolean;
   bio?: string;
   gallery_photos?: ImageMetadata[]; // Standardize to always be ImageMetadata objects
   gear_items?: any[]; // Add gear_items field
@@ -48,7 +51,8 @@ interface AuthContextType {
   ) => Promise<{ error: any; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
-  resetPassword: (email: string) => Promise<{ error: any }>;
+  forgotPassword: (email: string) => Promise<{ error: any }>;
+  resetPassword: (password: string) => Promise<{ error: any }>;
   confirmEmail: (token: string) => Promise<{ error: any }>;
   resendConfirmation: (email: string) => Promise<{ error: any }>;
   updateProfile: (updates: Partial<Profile>) => Promise<{ error: any }>;
@@ -77,6 +81,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const {} = useProfile(user?.id);
 
   // Convert Supabase User to AuthUser
   const convertUser = (supabaseUser: User | null): AuthUser | null => {
@@ -225,10 +230,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Initialize auth state
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
 
     // Set a timeout to prevent infinite loading
-    timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       if (mounted) {
         console.warn(
           "[AuthContext] Auth initialization timeout, forcing loading to false",
@@ -339,7 +343,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           log("[AuthContext] User signed out, redirecting to login");
           // Small delay to ensure state is cleared
           setTimeout(() => {
-            navigate("/login", { replace: true });
+            navigate(ROUTES.LOGIN, { replace: true });
           }, 100);
         }
       }
@@ -447,7 +451,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       log("[AuthContext] Redirecting to login after signOut");
 
       // Use window.location for more reliable redirect
-      window.location.href = "/login";
+      window.location.href = ROUTES.LOGIN;
 
       return { error };
     } catch (err) {
@@ -461,7 +465,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Force redirect to login page even on error
       log("[AuthContext] Redirecting to login after signOut error");
-      window.location.href = "/login";
+      window.location.href = ROUTES.LOGIN;
 
       return {
         error: { message: "An unexpected error occurred during signout" },
@@ -469,9 +473,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const resetPassword = async (email: string) => {
+  const forgotPassword = async (email: string) => {
     try {
-      const { data, error } = await authService.resetPassword(email);
+      const { error } = await authService.forgotPassword(email);
+      return { error };
+    } catch (err) {
+      console.error("ForgotPassword error:", err);
+      return { error: { message: "An unexpected error occurred" } };
+    }
+  };
+
+  const resetPassword = async (password: string) => {
+    try {
+      const { error } = await authService.resetPassword(password);
       return { error };
     } catch (err) {
       console.error("ResetPassword error:", err);
@@ -500,7 +514,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const resendConfirmation = async (email: string) => {
     try {
-      const { data, error } = await authService.resendConfirmation(email);
+      const { error } = await authService.resendConfirmation(email);
       return { error };
     } catch (err) {
       console.error("ResendConfirmation error:", err);
@@ -610,11 +624,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       // Check if gear_items column exists before attempting update
+
       if (updates.gear_items && !profile?.hasOwnProperty("gear_items")) {
         console.warn(
           "[AuthContext] ⚠️ gear_items column may not exist in database schema",
         );
         // Try to save without gear_items to avoid schema errors
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { gear_items, ...otherUpdates } = updates;
         if (Object.keys(otherUpdates).length > 0) {
           updates = otherUpdates;
@@ -989,7 +1005,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       log("[AuthContext] Account deleted successfully");
 
       // Redirect to login page
-      window.location.href = "/login";
+      window.location.href = ROUTES.LOGIN;
 
       return { error: null };
     } catch (err) {
@@ -1012,6 +1028,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     signIn,
     signOut,
     resetPassword,
+    forgotPassword,
     confirmEmail,
     resendConfirmation,
     updateProfile,

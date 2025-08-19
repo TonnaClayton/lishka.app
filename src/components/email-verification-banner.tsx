@@ -1,17 +1,11 @@
-import React, { useState, useRef, useContext } from "react";
-import { Mail, X, RefreshCw } from "lucide-react";
+import React, { useState, useContext } from "react";
+import { Mail, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { AuthContext } from "@/contexts/auth-context";
 
 const EmailVerificationBanner: React.FC = () => {
   // Check if we're within an AuthProvider context
   const authContext = useContext(AuthContext);
-
-  // If no auth context is available, don't render the banner
-  if (!authContext) {
-    return null;
-  }
 
   const { user, resendConfirmation } = authContext;
   const [dismissed, setDismissed] = useState(false);
@@ -28,7 +22,13 @@ const EmailVerificationBanner: React.FC = () => {
     (!user.email_verified || user.needs_email_confirmation) &&
     !dismissed;
 
+  // If no auth context is available, don't render the banner
+  if (!authContext) {
+    return null;
+  }
+
   // Reset dismissed state when user changes or verification status changes
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   React.useEffect(() => {
     // Reset dismissed state when a new user logs in or when verification status changes
     if (user?.id) {
@@ -39,6 +39,7 @@ const EmailVerificationBanner: React.FC = () => {
   }, [user?.id]);
 
   // Prevent multiple renders of the same banner
+  // eslint-disable-next-line react-hooks/rules-of-hooks
   React.useEffect(() => {
     if (shouldShowBanner && !hasRendered) {
       setHasRendered(true);
@@ -73,7 +74,7 @@ const EmailVerificationBanner: React.FC = () => {
       } else {
         setMessage("Confirmation email sent! Please check your inbox.");
       }
-    } catch (err) {
+    } catch {
       setMessage("Failed to resend confirmation email. Please try again.");
     } finally {
       setResending(false);

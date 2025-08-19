@@ -1,18 +1,20 @@
-import { Suspense, useEffect, useState } from "react";
+import { Suspense } from "react";
 import {
   useLocation,
   createBrowserRouter,
   RouterProvider,
   Outlet,
-  useNavigate,
-  useRoutes,
 } from "react-router-dom";
 import routes from "tempo-routes";
 import { lazy } from "react";
-import LoginPage from "./components/auth/login-page";
-import SignupPage from "./components/auth/signup-page";
-import ForgotPasswordPage from "./components/auth/forgot-password-page";
-import EmailConfirmationPage from "./components/auth/email-confirmation-page";
+import {
+  ForgotPasswordPage,
+  ResetPasswordPage,
+  LoginPage,
+  SignupPage,
+  EmailConfirmationPage,
+  LoginWithEmailPage,
+} from "./pages/auth";
 import ProtectedRoute from "./components/auth/protected-route";
 import SafariScrollFix from "./components/safari-scroll-fix";
 import EmailVerificationBanner from "./components/email-verification-banner";
@@ -21,14 +23,15 @@ import { config } from "@/lib/config";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { cn } from "./lib/utils";
+import { ROUTES } from "./lib/routing";
 
 // Lazy load heavy components for better initial loading performance
-const HomePage = lazy(() => import("./components/home-page"));
-const FishDetailPage = lazy(() => import("./components/fish-detail-page"));
+const HomePage = lazy(() => import("./pages/home"));
+const FishDetailPage = lazy(() => import("./pages/fish-detail"));
 const MenuPage = lazy(() => import("./components/menu-page"));
-const SearchPage = lazy(() => import("./components/search-page"));
+const SearchPage = lazy(() => import("./pages/search"));
 const WeatherPage = lazy(() => import("./components/weather-page"));
-const ProfilePage = lazy(() => import("./components/profile-page"));
+const ProfilePage = lazy(() => import("./pages/profile"));
 const MyGearPage = lazy(() => import("./components/my-gear-page"));
 const GearCategoryPage = lazy(() => import("./components/gear-category-page"));
 const SideNav = lazy(() =>
@@ -69,12 +72,12 @@ const router = createBrowserRouter(
     // Add tempo routes first if VITE_TEMPO is enabled
     ...(config.VITE_TEMPO ? routes : []),
     {
-      path: "/",
+      path: ROUTES.HOME,
       element: <AppWithAuth />,
       children: [
         // Public routes
         {
-          path: "login",
+          path: ROUTES.LOGIN,
           element: (
             <ProtectedRoute requireAuth={false}>
               <LoginPage />
@@ -82,7 +85,15 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "signup",
+          path: ROUTES.LOGIN_EMAIL,
+          element: (
+            <ProtectedRoute requireAuth={false}>
+              <LoginWithEmailPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: ROUTES.SIGNUP,
           element: (
             <ProtectedRoute requireAuth={false}>
               <SignupPage />
@@ -90,7 +101,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "forgot-password",
+          path: ROUTES.FORGOT_PASSWORD,
           element: (
             <ProtectedRoute requireAuth={false}>
               <ForgotPasswordPage />
@@ -98,7 +109,15 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "confirm-email",
+          path: ROUTES.RESET_PASSWORD,
+          element: (
+            <ProtectedRoute requireAuth={true}>
+              <ResetPasswordPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: ROUTES.EMAIL_CONFIRMATION,
           element: (
             <ProtectedRoute requireAuth={false}>
               <EmailConfirmationPage />
@@ -106,7 +125,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "auth/confirm",
+          path: ROUTES.AUTH_CONFIRMATION,
           element: (
             <ProtectedRoute requireAuth={false}>
               <EmailConfirmationPage />
@@ -123,7 +142,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "fish/:fishName",
+          path: ROUTES.FISH_DETAIL,
           element: (
             <ProtectedRoute>
               <FishDetailPage />
@@ -131,7 +150,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "fish/*",
+          path: ROUTES.FISH_DETAIL_WITH_ID,
           element: (
             <ProtectedRoute>
               <FishDetailPage />
@@ -139,7 +158,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "menu",
+          path: ROUTES.MENU,
           element: (
             <ProtectedRoute>
               <MenuPage />
@@ -147,7 +166,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "search",
+          path: ROUTES.SEARCH,
           element: (
             <ProtectedRoute>
               <SearchPage />
@@ -155,7 +174,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "profile",
+          path: ROUTES.PROFILE,
           element: (
             <ProtectedRoute>
               <ProfilePage />
@@ -163,7 +182,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "weather",
+          path: ROUTES.WEATHER,
           element: (
             <ProtectedRoute>
               <WeatherPage />
@@ -171,7 +190,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "settings",
+          path: ROUTES.SETTINGS,
           element: (
             <ProtectedRoute>
               <SettingsPage />
@@ -179,7 +198,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "faq",
+          path: ROUTES.FAQ,
           element: (
             <ProtectedRoute>
               <FaqPage />
@@ -187,7 +206,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "terms",
+          path: ROUTES.TERMS,
           element: (
             <ProtectedRoute>
               <TermsPage />
@@ -195,7 +214,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "privacy-policy",
+          path: ROUTES.PRIVACY_POLICY,
           element: (
             <ProtectedRoute>
               <PrivacyPolicyPage />
@@ -203,7 +222,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "my-gear",
+          path: ROUTES.MY_GEAR,
           element: (
             <ProtectedRoute>
               <MyGearPage />
@@ -211,7 +230,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "gear-category/:categoryId",
+          path: ROUTES.SINGLE_GEAR_CATEGORY,
           element: (
             <ProtectedRoute>
               <GearCategoryPage />
@@ -219,7 +238,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "blob-test",
+          path: ROUTES.BLOB_TEST,
           element: (
             <ProtectedRoute>
               <BlobConnectionTest />
@@ -227,7 +246,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "blob-upload",
+          path: ROUTES.BLOB_UPLOAD,
           element: (
             <ProtectedRoute>
               <BlobImageUploader />
@@ -235,7 +254,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "account-status",
+          path: ROUTES.ACCOUNT_STATUS,
           element: (
             <ProtectedRoute requireAuth={false}>
               <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
@@ -245,7 +264,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "storage-setup",
+          path: ROUTES.STORAGE_SETUP,
           element: (
             <ProtectedRoute>
               <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center p-4">
@@ -255,7 +274,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "blob-image-test",
+          path: ROUTES.BLOB_IMAGE_TEST,
           element: (
             <ProtectedRoute>
               <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
@@ -265,7 +284,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "database-debug",
+          path: ROUTES.DATABASE_DEBUG,
           element: (
             <ProtectedRoute>
               <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
@@ -275,7 +294,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "image-upload-debug",
+          path: ROUTES.IMAGE_UPLOAD_DEBUG,
           element: (
             <ProtectedRoute>
               <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
@@ -285,7 +304,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "gear-database-debug",
+          path: ROUTES.GEAR_DATABASE_DEBUG,
           element: (
             <ProtectedRoute>
               <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
@@ -295,7 +314,7 @@ const router = createBrowserRouter(
           ),
         },
         {
-          path: "whats-new",
+          path: ROUTES.WHATS_NEW,
           element: (
             <ProtectedRoute>
               <WhatsNewPage />
@@ -315,34 +334,35 @@ const router = createBrowserRouter(
 function AppContent() {
   // Check if we're on the splash page
   const location = useLocation();
-  const navigate = useNavigate();
-  const isSplashPage =
-    location.pathname === "/" && !localStorage.getItem("userLocation");
+  // const { user } = useAuth();
+  // const { data: profile } = useProfile(user?.id);
+  // const navigate = useNavigate();
+  // const isSplashPage = location.pathname === "/" && !profile?.location;
 
   // Check if current route should have the weather widget in desktop layout
   const shouldShowWeatherWidget = ["/", "/search"].includes(location.pathname);
 
   // Check if we're on auth pages (login/signup) to hide sidebar
-  const isAuthPage = ["/login", "/signup", "/forgot-password"].includes(
-    location.pathname,
-  );
-
-  // Track if we're on mobile or desktop
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const isAuthPage = [
+    ROUTES.LOGIN,
+    ROUTES.SIGNUP,
+    ROUTES.FORGOT_PASSWORD,
+    ROUTES.LOGIN_EMAIL,
+    ROUTES.RESET_PASSWORD,
+  ].includes(location.pathname);
 
   // Set initial sidebar width CSS variable and handle resize
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth >= 1024 ? "16rem" : "0";
-      document.documentElement.style.setProperty("--sidebar-width", width);
-      setIsMobile(window.innerWidth < 1024);
-    };
+  // useEffect(() => {
+  //   const handleResize = () => {
+  //     const width = window.innerWidth >= 1024 ? "16rem" : "0";
+  //     document.documentElement.style.setProperty("--sidebar-width", width);
+  //   };
 
-    handleResize();
-    window.addEventListener("resize", handleResize);
+  //   handleResize();
+  //   window.addEventListener("resize", handleResize);
 
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  //   return () => window.removeEventListener("resize", handleResize);
+  // }, []);
 
   return (
     <div className="w-full h-full overflow-hidden">

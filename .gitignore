@@ -32,3 +32,6 @@ core
 
 .env
 
+.vscode
+
+coverage

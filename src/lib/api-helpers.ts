@@ -420,6 +420,7 @@ export async function generateEnhancedOffshoreFishingLocations(
   }
 
   // Generate additional natural fishing locations
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const naturalLocationsNeeded = targetCount - locations.length;
 
   const locationNames = [
@@ -531,8 +532,9 @@ export async function generateEnhancedOffshoreFishingLocations(
     if (actualDepth >= 40 && actualDepth <= 120) probabilityScore += 0.1;
 
     // Bonus for good distance from shore
-    if (actualDistance >= radiusNM * 0.4 && actualDistance <= radiusNM * 0.8)
+    if (actualDistance >= radiusNM * 0.4 && actualDistance <= radiusNM * 0.8) {
       probabilityScore += 0.05;
+    }
 
     // Ensure score is within bounds
     probabilityScore = Math.min(0.92, Math.max(0.65, probabilityScore));
@@ -596,7 +598,9 @@ function generateLocationDescription(
   depth: number,
   topographicFeatures: TopographicFeature[],
 ): string {
-  let description = `${seabedType.charAt(0).toUpperCase() + seabedType.slice(1)} fishing area`;
+  let description = `${
+    seabedType.charAt(0).toUpperCase() + seabedType.slice(1)
+  } fishing area`;
 
   if (depth > 80) {
     description +=

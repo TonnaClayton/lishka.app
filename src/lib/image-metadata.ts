@@ -22,6 +22,7 @@ export interface ImageMetadata {
   timestamp: string;
   originalFileName?: string;
   userConfirmed?: boolean;
+  cacheBuster?: number;
   compressionInfo?: {
     originalSize: number;
     compressedSize: number;
@@ -117,7 +118,9 @@ export const compressImage = async (
 
           log("🗜️ [IMAGE COMPRESSION] Compression completed:", {
             originalSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
-            compressedSize: `${(compressedFile.size / (1024 * 1024)).toFixed(2)}MB`,
+            compressedSize: `${(compressedFile.size / (1024 * 1024)).toFixed(
+              2,
+            )}MB`,
             compressionRatio: `${compressionInfo.compressionRatio.toFixed(1)}%`,
             originalDimensions: compressionInfo.originalDimensions,
             compressedDimensions: compressionInfo.compressedDimensions,
@@ -143,7 +146,7 @@ export const compressImage = async (
  * Extract EXIF data from an image file
  */
 export const extractImageMetadata = (file: File): Promise<any> => {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     EXIF.getData(file as any, function () {
       const exifData = EXIF.getAllTags(this);
       log("[ImageMetadata] Extracted EXIF data:", exifData);
@@ -401,7 +404,7 @@ export const identifyFishFromImage = async (
 
     // Skip compression here since it should already be done in ProfilePage
     // This prevents double-compression and ensures consistent behavior
-    let processedFile = imageFile;
+    const processedFile = imageFile;
     let compressionInfo:
       | {
           originalSize: number;

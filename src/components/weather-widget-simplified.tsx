@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Card } from "./ui/card";
 import {
   Loader2,
@@ -10,111 +10,60 @@ import {
   Umbrella,
   Sun,
 } from "lucide-react";
-import { log } from "@/lib/logging";
+import { useWeatherData } from "@/hooks/queries";
+import { useUserLocation } from "@/hooks/queries";
 
-interface MarineData {
-  hourly: {
-    time: string[];
-    wave_height: number[];
-    wave_direction: number[];
-    wave_period: number[];
-    wind_speed_10m: number[];
-    wind_direction_10m: number[];
-    temperature_2m: number[];
-  };
-  hourly_units: {
-    wave_height: string;
-    wind_speed_10m: string;
-    temperature_2m: string;
-  };
-}
-
-interface WeatherData {
-  hourly: {
-    time: string[];
-    temperature_2m: number[];
-    precipitation_probability: number[];
-    weathercode: number[];
-    cloudcover: number[];
-    visibility: number[];
-  };
-  hourly_units: {
-    temperature_2m: string;
-    precipitation_probability: string;
-    visibility: string;
-  };
-}
+// The component now uses the WeatherData interface from the useWeatherData hook
+// which includes both weather and marine data combined
 
 const WeatherWidgetSimplified: React.FC = () => {
-  const [marineData, setMarineData] = useState<MarineData | null>(null);
-  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // Fetch data from Open-Meteo API
-  useEffect(() => {
-    // Try to get user's location from localStorage
-    const savedLocation = localStorage.getItem("userLocation");
-    let latitude = 52.52;
-    let longitude = 13.41;
+  // Use the location hook to get the current location
+  const { location, isLoading: locationLoading } = useUserLocation();
 
-    if (savedLocation) {
-      try {
-        const parsedLocation = JSON.parse(savedLocation);
-        latitude = parsedLocation.latitude || parsedLocation.lat || latitude;
-        longitude = parsedLocation.longitude || parsedLocation.lng || longitude;
-        log(`Using user location: ${latitude}, ${longitude}`);
-      } catch (err) {
-        console.error("Error parsing user location:", err);
+  // Use the weather data hook with React Query
+  const {
+    weatherData,
+    isLoading: weatherLoading,
+    error: weatherError,
+    refreshWeather,
+    isRefreshing,
+  } = useWeatherData(location);
+
+  // Combined loading state
+  const loading = locationLoading || weatherLoading;
+
+  // Extract marine data from the combined weather response
+  const marineData = weatherData
+    ? {
+        hourly: {
+          time: weatherData.hourly?.time || [],
+          wave_height: weatherData.hourly?.wave_height || [],
+          wave_direction: weatherData.hourly?.wave_direction || [],
+          wave_period: weatherData.hourly?.swell_wave_period || [],
+          wind_speed_10m: weatherData.hourly?.wind_speed_10m || [],
+          wind_direction_10m: weatherData.hourly?.wind_direction_10m || [],
+          temperature_2m: weatherData.hourly?.temperature_2m || [],
+        },
+        hourly_units: {
+          wave_height: weatherData.hourly_units?.wave_height || "",
+          wind_speed_10m: weatherData.hourly_units?.wind_speed_10m || "",
+          temperature_2m: weatherData.hourly_units?.temperature_2m || "",
+        },
       }
-    }
+    : null;
 
-    const fetchWeatherData = async () => {
-      try {
-        setLoading(true);
-        log(`Fetching data for coordinates: ${latitude}, ${longitude}`);
+  // Note: We're now using weatherData directly instead of weatherDataFormatted
+  // The component has been updated to work with the new data structure
 
-        // Fetch marine data from Open-Meteo API
-        const marineUrl = `https://customer-api.open-meteo.com/v1/marine?latitude=${latitude}&longitude=${longitude}&hourly=wave_height,wave_direction,wave_period,wind_speed_10m,wind_direction_10m,temperature_2m&apikey=1g8vJZI7DhEIFDIt`;
-
-        // Fetch weather data from Open-Meteo API
-        const weatherUrl = `https://customer-api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&hourly=temperature_2m,precipitation_probability,weathercode,cloudcover,visibility&apikey=1g8vJZI7DhEIFDIt`;
-
-        const [marineResponse, weatherResponse] = await Promise.all([
-          fetch(marineUrl),
-          fetch(weatherUrl),
-        ]);
-
-        // Continue even if marine API fails
-        if (!marineResponse.ok) {
-          console.error(`Marine API error: ${marineResponse.status}`);
-        }
-
-        if (!weatherResponse.ok) {
-          throw new Error(`Weather API error: ${weatherResponse.status}`);
-        }
-
-        const marineData = await marineResponse.json();
-        const weatherData = await weatherResponse.json();
-
-        log("Marine data:", marineData);
-        log("Weather data:", weatherData);
-
-        setMarineData(marineData);
-        setWeatherData(weatherData);
-      } catch (err) {
-        console.error("API fetch error:", err);
-        setError(
-          err instanceof Error ? err.message : "An unknown error occurred",
-        );
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWeatherData();
-  }, []);
+  // Error handling
+  const error = weatherError
+    ? weatherError instanceof Error
+      ? weatherError.message
+      : "An unknown error occurred"
+    : null;
 
   if (loading) {
     return (
@@ -124,6 +73,19 @@ const WeatherWidgetSimplified: React.FC = () => {
           Loading weather data...
         </p>
       </div>
+    );
+  }
+
+  if (!location) {
+    return (
+      <Card className="p-4 bg-white night-mode:bg-nightMode-background">
+        <div className="text-center">
+          <p className="text-gray-500 mb-2">Location not available</p>
+          <p className="text-sm text-gray-400">
+            Please set your location in your profile to view weather data.
+          </p>
+        </div>
+      </Card>
     );
   }
 
@@ -196,10 +158,11 @@ const WeatherWidgetSimplified: React.FC = () => {
       )
     : [];
   const weatherCodes = weatherAvailable
-    ? weatherData.hourly.weathercode.slice(currentIndex, currentIndex + 24)
+    ? weatherData.hourly.weather_code?.slice(currentIndex, currentIndex + 24) ||
+      []
     : [];
   const cloudCover = weatherAvailable
-    ? weatherData.hourly.cloudcover.slice(currentIndex, currentIndex + 24)
+    ? [] // cloudcover not available in current API response
     : [];
   const visibility = weatherAvailable
     ? weatherData.hourly.visibility.slice(currentIndex, currentIndex + 24)
@@ -315,7 +278,8 @@ const WeatherWidgetSimplified: React.FC = () => {
     weatherDescription: weatherAvailable
       ? getWeatherDescription(weatherCodes[0])
       : undefined,
-    cloudCover: weatherAvailable ? cloudCover[0] : undefined,
+    cloudCover:
+      weatherAvailable && cloudCover.length > 0 ? cloudCover[0] : "N/A",
     visibility: weatherAvailable ? visibility[0] : undefined,
 
     // Combined rating
@@ -330,9 +294,27 @@ const WeatherWidgetSimplified: React.FC = () => {
   return (
     <div className="space-y-4">
       <Card className="p-4 bg-white night-mode:bg-nightMode-background">
-        <h2 className="text-xl font-semibold mb-4">
-          Current Weather Conditions
-        </h2>
+        <div className="flex justify-between items-center mb-4">
+          <div>
+            <h2 className="text-xl font-semibold">
+              Current Weather Conditions
+            </h2>
+            {location && (
+              <p className="text-sm text-gray-500 mt-1">📍 {location.name}</p>
+            )}
+          </div>
+          <button
+            onClick={() => refreshWeather()}
+            disabled={isRefreshing}
+            className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isRefreshing ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "Refresh"
+            )}
+          </button>
+        </div>
 
         <div className="grid grid-cols-2 gap-4">
           {/* Weather data */}
@@ -374,7 +356,7 @@ const WeatherWidgetSimplified: React.FC = () => {
                 </p>
                 <p className="font-medium">
                   {currentConditions.precipProbability}
-                  {weatherData.hourly_units.precipitation_probability}
+                  {/* precipitation_probability units not available in current API response */}
                 </p>
               </div>
             </div>
@@ -387,7 +369,11 @@ const WeatherWidgetSimplified: React.FC = () => {
                 <p className="text-sm text-gray-500 night-mode:text-red-400">
                   Cloud Cover
                 </p>
-                <p className="font-medium">{currentConditions.cloudCover}%</p>
+                <p className="font-medium">
+                  {currentConditions.cloudCover === "N/A"
+                    ? "N/A"
+                    : `${currentConditions.cloudCover}%`}
+                </p>
               </div>
             </div>
           )}

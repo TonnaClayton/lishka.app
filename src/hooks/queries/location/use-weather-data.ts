@@ -1,7 +1,6 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { log } from "@/lib/logging";
-import { config } from "@/lib/config";
-import { LocationData, locationQueryKeys } from "./use-location-storage";
+import { LocationData } from "./use-location-storage";
 
 interface WeatherData {
   hourly: {
@@ -82,7 +81,7 @@ export const weatherQueryKeys = {
 // Function to fetch weather data from Open-Meteo API
 const fetchOpenMeteoData = async (
   lat: number,
-  lng: number
+  lng: number,
 ): Promise<WeatherData> => {
   if (!lat || !lng) {
     throw new Error("Latitude and longitude are required");
@@ -263,7 +262,7 @@ export const useWeatherData = (location: LocationData | null) => {
       if (location) {
         queryClient.setQueryData(
           weatherQueryKeys.weatherData(location),
-          newWeatherData
+          newWeatherData,
         );
       }
 
@@ -301,7 +300,7 @@ export const useWeatherData = (location: LocationData | null) => {
       };
       localStorage.setItem(
         "currentWeatherData",
-        JSON.stringify(currentConditions)
+        JSON.stringify(currentConditions),
       );
     },
   });

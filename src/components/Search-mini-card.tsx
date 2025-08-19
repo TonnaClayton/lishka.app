@@ -31,4 +31,6 @@ const SearchMiniCard = ({
   );
 };
 
+export default SearchMiniCard;
+
 // This file is deprecated - use search-mini-card.tsx instead

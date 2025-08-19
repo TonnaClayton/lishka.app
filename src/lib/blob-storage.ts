@@ -183,7 +183,9 @@ export async function uploadImage(file: File): Promise<string> {
         });
         reject(
           new Error(
-            `Upload timeout after ${uploadTimeout / 1000} seconds. Please try again with a smaller image or better connection.`,
+            `Upload timeout after ${
+              uploadTimeout / 1000
+            } seconds. Please try again with a smaller image or better connection.`,
           ),
         );
       }, uploadTimeout);
@@ -204,7 +206,7 @@ export async function uploadImage(file: File): Promise<string> {
       pathname: blob.pathname,
       contentType: blob.contentType,
       contentDisposition: blob.contentDisposition,
-      // @ts-ignore
+      // @ts-expect-error - blob.size is not typed
       size: blob.size,
       downloadUrl: blob.downloadUrl,
       isMobile,
@@ -260,7 +262,6 @@ export async function uploadImage(file: File): Promise<string> {
     });
     return blob.url;
   } catch (error) {
-    const uploadTime = Date.now();
     console.error("[BlobStorage] 💥 Upload failed:", {
       error: error instanceof Error ? error.message : String(error),
       errorType: error instanceof Error ? error.constructor.name : typeof error,
@@ -313,7 +314,11 @@ export async function uploadImage(file: File): Promise<string> {
 
       // Timeout errors
       if (error.message.includes("timeout")) {
-        const timeoutError = `Upload timeout: ${error.message}. ${isMobile ? "Mobile uploads may take longer due to slower connections." : "Please try again."}`;
+        const timeoutError = `Upload timeout: ${error.message}. ${
+          isMobile
+            ? "Mobile uploads may take longer due to slower connections."
+            : "Please try again."
+        }`;
         console.error("[BlobStorage] ⏰ Timeout error detected:", {
           timeoutError,
           isMobile,
@@ -346,7 +351,13 @@ export async function uploadImage(file: File): Promise<string> {
     }
 
     // Generic error with enhanced context
-    const genericError = `Failed to upload image: ${error instanceof Error ? error.message : "Unknown error"}. ${isMobile ? "If you're on mobile, try switching to a stronger WiFi connection." : "Please try again."}`;
+    const genericError = `Failed to upload image: ${
+      error instanceof Error ? error.message : "Unknown error"
+    }. ${
+      isMobile
+        ? "If you're on mobile, try switching to a stronger WiFi connection."
+        : "Please try again."
+    }`;
     console.error("[BlobStorage] ❓ Generic error:", {
       genericError,
       isMobile,
