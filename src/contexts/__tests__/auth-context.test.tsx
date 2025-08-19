@@ -118,17 +118,15 @@ vi.mock("@/hooks/queries", () => ({
   }),
 }));
 
-// Mock window.location
-const mockLocation = {
-  href: "",
-  assign: vi.fn(),
-  replace: vi.fn(),
-  reload: vi.fn(),
-};
-
+// Mock window.location methods
 Object.defineProperty(window, "location", {
-  value: mockLocation,
+  value: {
+    assign: vi.fn(),
+    replace: vi.fn(),
+    reload: vi.fn(),
+  },
   writable: true,
+  configurable: true,
 });
 
 describe("AuthContext", () => {
@@ -157,6 +155,13 @@ describe("AuthContext", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+    
+    // Reset window location href to empty string for each test
+    Object.defineProperty(window.location, "href", {
+      value: "",
+      writable: true,
+      configurable: true,
+    });
 
     // Get the mocked services
     const { supabase, authService, profileService } = await import(
@@ -204,8 +209,6 @@ describe("AuthContext", () => {
       data: { user: null },
       error: null,
     });
-
-    mockLocation.href = "";
   });
 
   afterEach(() => {
@@ -347,7 +350,7 @@ describe("AuthContext", () => {
 
     expect(mockAuthService.signOut).toHaveBeenCalled();
     expect(signOutResult.error).toBeNull();
-    expect(mockLocation.href).toBe("/login");
+    expect(window.location.href).toBe("/login");
   });
 
   it("handles sign out error with fallback redirect", async () => {
@@ -365,7 +368,7 @@ describe("AuthContext", () => {
     const signOutResult = await result.current.signOut();
 
     expect(signOutResult.error).toEqual(mockError);
-    expect(mockLocation.href).toBe("/login");
+    expect(window.location.href).toBe("/login");
   });
 
   it("handles sign out exception with fallback redirect", async () => {
@@ -384,11 +387,11 @@ describe("AuthContext", () => {
     expect(signOutResult.error?.message).toBe(
       "An unexpected error occurred during signout",
     );
-    expect(mockLocation.href).toBe("/login");
+    expect(window.location.href).toBe("/login");
   });
 
   it("handles forgot password", async () => {
-    mockAuthService.resetPasswordForEmail.mockResolvedValue({ error: null });
+    mockAuthService.forgotPassword.mockResolvedValue({ error: null });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: createWrapper(),
@@ -401,11 +404,8 @@ describe("AuthContext", () => {
     const forgotResult =
       await result.current.forgotPassword("test@example.com");
 
-    expect(mockAuthService.resetPasswordForEmail).toHaveBeenCalledWith(
-      "test@example.com",
-      {
-        redirectTo: `${window.location.origin}/reset-password`,
-      },
+    expect(mockAuthService.forgotPassword).toHaveBeenCalledWith(
+      "test@example.com"
     );
     expect(forgotResult.error).toBeNull();
   });
@@ -449,7 +449,7 @@ describe("AuthContext", () => {
     const deleteResult = await result.current.deleteAccount();
 
     expect(deleteResult.error).toBeNull();
-    expect(mockLocation.href).toBe("/login");
+    expect(window.location.href).toBe("/login");
   });
 
   it("handles account deletion error", async () => {
