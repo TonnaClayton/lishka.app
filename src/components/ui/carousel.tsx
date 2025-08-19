@@ -289,8 +289,6 @@ const CarouselDot = React.forwardRef<
   ) => {
     const { scrollTo, selectedIndex } = useCarousel();
 
-    console.log(scrollToIndex, selectedIndex);
-
     return (
       <Button
         ref={ref}
