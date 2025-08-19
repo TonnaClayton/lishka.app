@@ -360,12 +360,14 @@ describe("LoginWithEmailPage", () => {
       const resendButton = screen.getByRole("button", {
         name: /resend verification email/i,
       });
-      
+
       await user.click(resendButton);
 
       // Verify the function was called with the correct email
       await waitFor(() => {
-        expect(mockAuthContext.resendConfirmation).toHaveBeenCalledWith("test@example.com");
+        expect(mockAuthContext.resendConfirmation).toHaveBeenCalledWith(
+          "test@example.com",
+        );
       });
 
       // For now, just verify the mock was called - the error display might be working differently

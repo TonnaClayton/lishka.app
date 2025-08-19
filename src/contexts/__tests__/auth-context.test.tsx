@@ -155,7 +155,7 @@ describe("AuthContext", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
-    
+
     // Reset window location href to empty string for each test
     Object.defineProperty(window.location, "href", {
       value: "",
@@ -405,7 +405,7 @@ describe("AuthContext", () => {
       await result.current.forgotPassword("test@example.com");
 
     expect(mockAuthService.forgotPassword).toHaveBeenCalledWith(
-      "test@example.com"
+      "test@example.com",
     );
     expect(forgotResult.error).toBeNull();
   });
