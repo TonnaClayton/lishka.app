@@ -29,7 +29,9 @@ export default function ScreenTwo() {
         <div className="h-[100px]"></div>
       </div>
       <img
-        src={"/images/tempo-image-20250804T180431871Z.png"}
+        src={
+          "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T180431871Z.png"
+        }
         alt={"Pasted Image"}
         width={1572}
         height={3408}

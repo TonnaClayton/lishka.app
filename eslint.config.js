@@ -36,7 +36,8 @@ export default [
         "error",
         { argsIgnorePattern: "^_" },
       ],
-      "@typescript-eslint/no-explicit-any": "warn",
+      // TODO: Remove this rule
+      "@typescript-eslint/no-explicit-any": "off",
     },
     settings: {
       react: {

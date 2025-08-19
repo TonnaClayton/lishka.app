@@ -17,6 +17,9 @@ vi.mock("@/lib/supabase", () => {
     onAuthStateChange: vi.fn(),
     getSession: vi.fn(),
     getUser: vi.fn(),
+    admin: {
+      deleteUser: vi.fn(),
+    },
   };
 
   const mockSupabaseClient = {
@@ -35,6 +38,7 @@ vi.mock("@/lib/supabase", () => {
     signUp: vi.fn(),
     signOut: vi.fn(),
     resend: vi.fn(),
+    resendConfirmation: vi.fn(),
     forgotPassword: vi.fn(),
     updateUser: vi.fn(),
     onAuthStateChange: vi.fn(),
@@ -67,6 +71,9 @@ vi.mock("@supabase/supabase-js", () => ({
       onAuthStateChange: vi.fn(),
       getSession: vi.fn(),
       getUser: vi.fn(),
+      admin: {
+        deleteUser: vi.fn(),
+      },
     },
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
@@ -118,17 +125,15 @@ vi.mock("@/hooks/queries", () => ({
   }),
 }));
 
-// Mock window.location
-const mockLocation = {
-  href: "",
-  assign: vi.fn(),
-  replace: vi.fn(),
-  reload: vi.fn(),
-};
-
+// Mock window.location methods
 Object.defineProperty(window, "location", {
-  value: mockLocation,
+  value: {
+    assign: vi.fn(),
+    replace: vi.fn(),
+    reload: vi.fn(),
+  },
   writable: true,
+  configurable: true,
 });
 
 describe("AuthContext", () => {
@@ -157,6 +162,13 @@ describe("AuthContext", () => {
 
   beforeEach(async () => {
     vi.clearAllMocks();
+
+    // Reset window location href to empty string for each test
+    Object.defineProperty(window.location, "href", {
+      value: "",
+      writable: true,
+      configurable: true,
+    });
 
     // Get the mocked services
     const { supabase, authService, profileService } = await import(
@@ -204,8 +216,6 @@ describe("AuthContext", () => {
       data: { user: null },
       error: null,
     });
-
-    mockLocation.href = "";
   });
 
   afterEach(() => {
@@ -347,7 +357,7 @@ describe("AuthContext", () => {
 
     expect(mockAuthService.signOut).toHaveBeenCalled();
     expect(signOutResult.error).toBeNull();
-    expect(mockLocation.href).toBe("/login");
+    expect(window.location.href).toBe("/login");
   });
 
   it("handles sign out error with fallback redirect", async () => {
@@ -365,7 +375,7 @@ describe("AuthContext", () => {
     const signOutResult = await result.current.signOut();
 
     expect(signOutResult.error).toEqual(mockError);
-    expect(mockLocation.href).toBe("/login");
+    expect(window.location.href).toBe("/login");
   });
 
   it("handles sign out exception with fallback redirect", async () => {
@@ -384,11 +394,11 @@ describe("AuthContext", () => {
     expect(signOutResult.error?.message).toBe(
       "An unexpected error occurred during signout",
     );
-    expect(mockLocation.href).toBe("/login");
+    expect(window.location.href).toBe("/login");
   });
 
   it("handles forgot password", async () => {
-    mockAuthService.resetPasswordForEmail.mockResolvedValue({ error: null });
+    mockAuthService.forgotPassword.mockResolvedValue({ error: null });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: createWrapper(),
@@ -401,17 +411,14 @@ describe("AuthContext", () => {
     const forgotResult =
       await result.current.forgotPassword("test@example.com");
 
-    expect(mockAuthService.resetPasswordForEmail).toHaveBeenCalledWith(
+    expect(mockAuthService.forgotPassword).toHaveBeenCalledWith(
       "test@example.com",
-      {
-        redirectTo: `${window.location.origin}/reset-password`,
-      },
     );
     expect(forgotResult.error).toBeNull();
   });
 
   it("handles resend confirmation", async () => {
-    mockAuthService.resend.mockResolvedValue({ error: null });
+    mockAuthService.resendConfirmation.mockResolvedValue({ error: null });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: createWrapper(),
@@ -424,19 +431,40 @@ describe("AuthContext", () => {
     const resendResult =
       await result.current.resendConfirmation("test@example.com");
 
-    expect(mockAuthService.resend).toHaveBeenCalledWith({
-      type: "signup",
-      email: "test@example.com",
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/confirm`,
-      },
-    });
+    expect(mockAuthService.resendConfirmation).toHaveBeenCalledWith(
+      "test@example.com",
+    );
     expect(resendResult.error).toBeNull();
   });
 
   it("handles account deletion", async () => {
+    const mockUser = { id: "123", email: "test@example.com" };
+    const mockSession = { user: mockUser, access_token: "token" };
     const mockDeleteResponse = { error: null };
+
+    // Set up user session before rendering
+    mockAuthService.getSession.mockResolvedValueOnce({
+      data: { session: mockSession },
+      error: null,
+    });
+    mockAuthService.getUser.mockResolvedValueOnce({
+      data: { user: mockUser },
+      error: null,
+    });
+
+    // Also set up the Supabase auth mocks to return the user
+    mockSupabaseAuth.getSession.mockResolvedValueOnce({
+      data: { session: mockSession },
+      error: null,
+    });
+    mockSupabaseAuth.getUser.mockResolvedValueOnce({
+      data: { user: mockUser },
+      error: null,
+    });
+
     mockSupabaseClient.from().delete.mockResolvedValue(mockDeleteResponse);
+    mockSupabaseAuth.admin.deleteUser.mockResolvedValue({ error: null });
+    mockAuthService.signOut.mockResolvedValue({ error: null });
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: createWrapper(),
@@ -446,15 +474,40 @@ describe("AuthContext", () => {
       expect(result.current.loading).toBe(false);
     });
 
+    // Ensure user is set by calling deleteAccount directly
     const deleteResult = await result.current.deleteAccount();
 
     expect(deleteResult.error).toBeNull();
-    expect(mockLocation.href).toBe("/login");
+    expect(window.location.href).toBe("/login");
   });
 
   it("handles account deletion error", async () => {
+    const mockUser = { id: "123", email: "test@example.com" };
+    const mockSession = { user: mockUser, access_token: "token" };
     const mockError = new Error("Deletion failed");
-    mockSupabaseClient.from().delete.mockRejectedValue(mockError);
+
+    // Set up user session before rendering
+    mockAuthService.getSession.mockResolvedValueOnce({
+      data: { session: mockSession },
+      error: null,
+    });
+    mockAuthService.getUser.mockResolvedValueOnce({
+      data: { user: mockUser },
+      error: null,
+    });
+
+    // Also set up the Supabase auth mocks to return the user
+    mockSupabaseAuth.getSession.mockResolvedValueOnce({
+      data: { session: mockSession },
+      error: null,
+    });
+    mockSupabaseAuth.getUser.mockResolvedValueOnce({
+      data: { user: mockUser },
+      error: null,
+    });
+
+    mockSupabaseClient.from().delete.mockResolvedValue({ error: null });
+    mockSupabaseAuth.admin.deleteUser.mockRejectedValue(mockError);
 
     const { result } = renderHook(() => useAuth(), {
       wrapper: createWrapper(),
@@ -475,7 +528,8 @@ describe("AuthContext", () => {
 
     let authStateCallback: (event: string, session: any) => void;
 
-    mockAuthService.onAuthStateChange.mockImplementation((callback) => {
+    // Override the supabase auth mock (which is what AuthContext actually uses)
+    mockSupabaseAuth.onAuthStateChange.mockImplementation((callback) => {
       authStateCallback = callback;
       return {
         data: { subscription: { unsubscribe: vi.fn() } },
@@ -484,6 +538,11 @@ describe("AuthContext", () => {
 
     renderHook(() => useAuth(), {
       wrapper: createWrapper(),
+    });
+
+    // Wait for the callback to be set
+    await waitFor(() => {
+      expect(mockSupabaseAuth.onAuthStateChange).toHaveBeenCalled();
     });
 
     // Simulate signed in event
@@ -491,14 +550,15 @@ describe("AuthContext", () => {
 
     await waitFor(() => {
       // The auth state change should be handled
-      expect(mockAuthService.onAuthStateChange).toHaveBeenCalled();
+      expect(authStateCallback).toBeDefined();
     });
   });
 
   it("handles signed out event with navigation", async () => {
     let authStateCallback: (event: string, session: any) => void;
 
-    mockAuthService.onAuthStateChange.mockImplementation((callback) => {
+    // Override the supabase auth mock (which is what AuthContext actually uses)
+    mockSupabaseAuth.onAuthStateChange.mockImplementation((callback) => {
       authStateCallback = callback;
       return {
         data: { subscription: { unsubscribe: vi.fn() } },
@@ -507,6 +567,11 @@ describe("AuthContext", () => {
 
     renderHook(() => useAuth(), {
       wrapper: createWrapper(),
+    });
+
+    // Wait for the callback to be set
+    await waitFor(() => {
+      expect(mockSupabaseAuth.onAuthStateChange).toHaveBeenCalled();
     });
 
     // Simulate signed out event
