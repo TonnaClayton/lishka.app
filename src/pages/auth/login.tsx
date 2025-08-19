@@ -141,7 +141,9 @@ export default function LoginPage() {
           </div>
           {isMobile && (
             <img
-              src={"/images/tempo-image-20250804T193633617Z.png"}
+              src={
+                "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T193646745Z.png"
+              }
               alt={"Pasted Image"}
               width={1572}
               height={3408}
@@ -158,7 +160,9 @@ export default function LoginPage() {
         >
           <div className="z-10 absolute top-0 w-full h-[50%] bg-transparent"></div>
           <img
-            src={"/images/tempo-image-20250804T193633617Z.png"}
+            src={
+              "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T193646745Z.png"
+            }
             alt={"Pasted Image"}
             width={1572}
             height={3408}
