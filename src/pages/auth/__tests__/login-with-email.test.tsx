@@ -406,7 +406,8 @@ describe("LoginWithEmailPage", () => {
         resolveResend = resolve;
       });
 
-      mockAuthContext.resendConfirmation.mockImplementationOnce(
+      // Replace the mock completely for this test, not just once
+      mockAuthContext.resendConfirmation.mockImplementation(
         () => resendPromise,
       );
 
@@ -415,11 +416,15 @@ describe("LoginWithEmailPage", () => {
       });
       await user.click(resendButton);
 
-      // Verify loading state
+      // Verify loading state - button should now show "Sending..." and be disabled
       await waitFor(
         () => {
           expect(screen.getByText("Sending...")).toBeInTheDocument();
-          expect(resendButton).toBeDisabled();
+          // Find the button by its current text since it changed
+          const loadingButton = screen.getByRole("button", {
+            name: /sending/i,
+          });
+          expect(loadingButton).toBeDisabled();
         },
         { timeout: 3000 },
       );
@@ -427,7 +432,7 @@ describe("LoginWithEmailPage", () => {
       // Resolve the promise
       resolveResend({ error: null });
 
-      // Verify completion
+      // Verify completion - the alert should be called and loading state cleared
       await waitFor(
         () => {
           expect(window.alert).toHaveBeenCalled();
