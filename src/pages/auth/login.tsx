@@ -12,7 +12,7 @@ export default function LoginPage() {
         <div
           className={cn(
             "w-full h-full flex flex-col bg-[#2E8EB1]",
-            !isMobile && "justify-center items-center bg-white"
+            !isMobile && "justify-center items-center bg-white",
           )}
         >
           {isMobile && (
@@ -23,7 +23,7 @@ export default function LoginPage() {
               "w-full flex flex-col items-center",
               isMobile
                 ? "h-[50%] z-10 justify-end bg-transparent"
-                : "justify-center max-w-md mx-auto w-full h-full"
+                : "justify-center max-w-md mx-auto w-full h-full",
             )}
           >
             <div
@@ -55,7 +55,7 @@ export default function LoginPage() {
                 <p
                   className={cn(
                     "leading-relaxed max-w-md font-light text-base",
-                    isMobile && "text-white"
+                    isMobile && "text-white",
                   )}
                 >
                   Your AI Fishing Companion
@@ -154,7 +154,7 @@ export default function LoginPage() {
             <div
               className={cn(
                 "flex items-center justify-center px-6 gap-4 gap-x-1 py-6",
-                isMobile && "text-white"
+                isMobile && "text-white",
               )}
             >
               <p
@@ -190,7 +190,7 @@ export default function LoginPage() {
         <div
           className={cn(
             "w-full h-full relative overflow-hidden",
-            isMobile && "hidden"
+            isMobile && "hidden",
           )}
         >
           <div className="z-10 absolute top-0 w-full h-[50%] bg-transparent"></div>
