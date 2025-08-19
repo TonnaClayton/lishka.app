@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Send, MapPin, ArrowLeft, Loader2, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -25,7 +25,11 @@ import {
   TooltipContent,
   TooltipProvider,
 } from "@/components/ui/tooltip";
-import { useUserLocation } from "@/hooks/queries";
+import {
+  useCreateSearchSession,
+  useGetSearchSessionFollowQuestions,
+  useUserLocation,
+} from "@/hooks/queries";
 
 interface Message {
   id: string;
@@ -57,6 +61,7 @@ const DEFAULT_SUGGESTIONS = [
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
   const { location } = useUserLocation();
+  const { id } = useParams<{ id?: string }>();
 
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -71,8 +76,15 @@ const SearchPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
-  const [followUpLoading, setFollowUpLoading] = useState(false);
+  const {
+    data: followUpQuestions,
+    isLoading: followUpLoading,
+    refetch: refetchFollowUpQuestions,
+    isRefetching: isRefetchingFollowUpQuestions,
+  } = useGetSearchSessionFollowQuestions(id);
+  const mutation = useCreateSearchSession();
+  // const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
+  // const [followUpLoading, setFollowUpLoading] = useState(false);
 
   const deviceSize = useDeviceSize();
   const isMobile = useIsMobile();
@@ -333,70 +345,70 @@ const SearchPage: React.FC = () => {
   };
 
   // AI follow-up generation
-  const fetchFollowUpQuestions = async (contextMessages: Message[]) => {
-    setFollowUpLoading(true);
-    try {
-      // Only use the last 4 messages for context
-      const context = contextMessages.slice(-4).map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-      }));
-      const systemPrompt =
-        "You are a fishing assistant AI. Given the conversation so far, suggest 3 contextually relevant follow-up questions the user might want to ask next. Respond ONLY with a JSON array of questions, e.g. ['Question 1', 'Question 2', 'Question 3']. Do not include any other text.";
-      const aiResponse = await generateTextWithAI({
-        messages: context,
-        system: systemPrompt,
-        model: "gpt-3.5-turbo",
-        maxTokens: 100,
-        temperature: 0.7,
-      });
-      let questions: string[] = [];
-      try {
-        // First try to parse as regular JSON
-        questions = JSON.parse(aiResponse.text);
-        if (!Array.isArray(questions)) throw new Error("Not an array");
-      } catch (err) {
-        // Try to extract array from quoted string
-        try {
-          const trimmedText = aiResponse.text.trim();
-          // Remove outer quotes if present
-          const cleanText =
-            trimmedText.startsWith('"') && trimmedText.endsWith('"')
-              ? trimmedText.slice(1, -1)
-              : trimmedText;
+  // const fetchFollowUpQuestions = async (contextMessages: Message[]) => {
+  //   setFollowUpLoading(true);
+  //   try {
+  //     // Only use the last 4 messages for context
+  //     const context = contextMessages.slice(-4).map((msg) => ({
+  //       role: msg.role,
+  //       content: msg.content,
+  //     }));
+  //     const systemPrompt =
+  //       "You are a fishing assistant AI. Given the conversation so far, suggest 3 contextually relevant follow-up questions the user might want to ask next. Respond ONLY with a JSON array of questions, e.g. ['Question 1', 'Question 2', 'Question 3']. Do not include any other text.";
+  //     const aiResponse = await generateTextWithAI({
+  //       messages: context,
+  //       system: systemPrompt,
+  //       model: "gpt-3.5-turbo",
+  //       maxTokens: 100,
+  //       temperature: 0.7,
+  //     });
+  //     let questions: string[] = [];
+  //     try {
+  //       // First try to parse as regular JSON
+  //       questions = JSON.parse(aiResponse.text);
+  //       if (!Array.isArray(questions)) throw new Error("Not an array");
+  //     } catch (err) {
+  //       // Try to extract array from quoted string
+  //       try {
+  //         const trimmedText = aiResponse.text.trim();
+  //         // Remove outer quotes if present
+  //         const cleanText =
+  //           trimmedText.startsWith('"') && trimmedText.endsWith('"')
+  //             ? trimmedText.slice(1, -1)
+  //             : trimmedText;
 
-          // Parse the cleaned text
-          questions = JSON.parse(cleanText);
-          if (!Array.isArray(questions)) throw new Error("Still not an array");
-        } catch (secondErr) {
-          // Final fallback: try to extract array using regex
-          try {
-            const match = aiResponse.text.match(/\[(.*?)\]/s);
-            if (match) {
-              const arrayContent = match[1];
-              // Split by comma and clean up quotes
-              questions = arrayContent
-                .split(",")
-                .map((item) => item.trim().replace(/^["']|["']$/g, ""))
-                .filter((item) => item.length > 0);
-            }
-          } catch (thirdErr) {
-            questions = [];
-          }
-        }
-      }
+  //         // Parse the cleaned text
+  //         questions = JSON.parse(cleanText);
+  //         if (!Array.isArray(questions)) throw new Error("Still not an array");
+  //       } catch (secondErr) {
+  //         // Final fallback: try to extract array using regex
+  //         try {
+  //           const match = aiResponse.text.match(/\[(.*?)\]/s);
+  //           if (match) {
+  //             const arrayContent = match[1];
+  //             // Split by comma and clean up quotes
+  //             questions = arrayContent
+  //               .split(",")
+  //               .map((item) => item.trim().replace(/^["']|["']$/g, ""))
+  //               .filter((item) => item.length > 0);
+  //           }
+  //         } catch (thirdErr) {
+  //           questions = [];
+  //         }
+  //       }
+  //     }
 
-      setFollowUpQuestions(
-        Array.isArray(questions)
-          ? questions.filter((q) => typeof q === "string" && q.length > 0)
-          : []
-      );
-    } catch (err) {
-      setFollowUpQuestions([]);
-    } finally {
-      setFollowUpLoading(false);
-    }
-  };
+  //     setFollowUpQuestions(
+  //       Array.isArray(questions)
+  //         ? questions.filter((q) => typeof q === "string" && q.length > 0)
+  //         : []
+  //     );
+  //   } catch (err) {
+  //     setFollowUpQuestions([]);
+  //   } finally {
+  //     setFollowUpLoading(false);
+  //   }
+  // };
 
   // Update follow-up questions after each assistant message
   useEffect(() => {
@@ -404,9 +416,10 @@ const SearchPage: React.FC = () => {
       messages.length > 0 &&
       messages[messages.length - 1].role === "assistant"
     ) {
-      fetchFollowUpQuestions(messages);
+      //fetchFollowUpQuestions(messages);
+      refetchFollowUpQuestions();
     } else if (messages.length === 0) {
-      setFollowUpQuestions([]);
+      //setFollowUpQuestions([]);
     }
   }, [messages]);
 

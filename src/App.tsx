@@ -167,6 +167,14 @@ const router = createBrowserRouter(
           ),
         },
         {
+          path: "search/:id",
+          element: (
+            <ProtectedRoute>
+              <SearchPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: "profile",
           element: (
             <ProtectedRoute>
