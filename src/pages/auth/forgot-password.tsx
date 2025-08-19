@@ -152,7 +152,7 @@ const ForgotPasswordPage: React.FC = () => {
                       <Input
                         type="email"
                         placeholder="Enter your email address"
-                        className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-lg py-4 h-[56px]"
+                        className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />
@@ -165,7 +165,7 @@ const ForgotPasswordPage: React.FC = () => {
               <div className="pt-4">
                 <Button
                   type="submit"
-                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-[46px] bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? "Sending..." : "Send Reset Link"}

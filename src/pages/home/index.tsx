@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { MapPin } from "lucide-react";
 import BottomNav from "@/components/bottom-nav";
 import FishCard from "@/components/fish-card";
@@ -43,6 +43,7 @@ interface FishData {
 
 const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { data: profile } = useProfile(user?.id);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
@@ -67,6 +68,12 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   }, [profile]);
 
   const hasSeenOnboardingFlow = useMemo(() => {
+    const hasSeenOnboardingFlow = location.state?.hasSeenOnboardingFlow;
+
+    if (hasSeenOnboardingFlow === true) {
+      return false;
+    }
+
     if (profile == undefined) {
       return true;
     }

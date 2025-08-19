@@ -17,7 +17,6 @@ import {
 } from "./pages/auth";
 import ProtectedRoute from "./components/auth/protected-route";
 import SafariScrollFix from "./components/safari-scroll-fix";
-import EmailVerificationBanner from "./components/email-verification-banner";
 import { AuthProvider } from "./contexts/auth-context";
 import { config } from "@/lib/config";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
@@ -388,7 +387,7 @@ function AppContent() {
           )}
         >
           {/* Email verification banner - only show on non-auth pages */}
-          {!isAuthPage && <EmailVerificationBanner />}
+          {/* {!isAuthPage && <EmailVerificationBanner />} */}
 
           <div className="w-full h-full flex-1">
             {/* Outlet for nested routes with suspense boundary */}

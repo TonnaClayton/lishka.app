@@ -143,6 +143,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             userFullName && userFullName.trim() ? userFullName.trim() : null,
           preferred_units: "metric",
           preferred_language: "en",
+          has_seen_onboarding_flow: false,
           favorite_fish_species: [],
         };
         log("[AuthContext] Profile data to create:", profileData);
@@ -159,6 +160,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             full_name: userFullName || null,
             preferred_units: "metric",
             preferred_language: "en",
+            has_seen_onboarding_flow: false,
             favorite_fish_species: [],
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -174,6 +176,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           full_name: userFullName || null,
           preferred_units: "metric",
           preferred_language: "en",
+          has_seen_onboarding_flow: false,
           favorite_fish_species: [],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -191,6 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         id: userId,
         full_name: userFullName || null,
         preferred_units: "metric",
+        has_seen_onboarding_flow: false,
         preferred_language: "en",
         favorite_fish_species: [],
         created_at: new Date().toISOString(),
@@ -361,7 +365,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Auth methods
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      setLoading(true);
       const { data, error } = await authService.signUp(
         email,
         password,
@@ -369,32 +372,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       );
 
       if (error) {
-        return { error };
+        return { error, needsConfirmation: false };
       }
 
       // If user is created but needs email confirmation
-      if (data?.user && !data.session) {
+      if (data?.user && data.session == null) {
         // Set user data for email verification banner
-        const authUser = convertUser(data.user);
-        setUser(authUser);
+        // const authUser = convertUser(data.user);
+        // setUser(authUser);
 
         // Create profile even for unconfirmed users so the full name is stored
-        if (authUser) {
-          await loadProfile(authUser.id, fullName);
-        }
+        // if (authUser) {
+        //   await loadProfile(authUser.id, fullName);
+        // }
 
         return { error: null, needsConfirmation: true };
       }
 
       // User will be automatically set via onAuthStateChange if session exists
-      return { error: null };
+      return { error: null, needsConfirmation: false };
     } catch (err) {
-      console.error("SignUp error:", err);
       return {
-        error: { message: "An unexpected error occurred during signup" },
+        error: { message: "An unexpected error occurred during signup", err },
+        needsConfirmation: false,
       };
-    } finally {
-      setLoading(false);
     }
   };
 

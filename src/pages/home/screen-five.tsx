@@ -1,4 +1,12 @@
-export default function ScreenFive() {
+import { cn } from "@/lib/utils";
+
+export default function ScreenFive({
+  titleClassName,
+  descriptionClassName,
+}: {
+  titleClassName?: string;
+  descriptionClassName?: string;
+}) {
   return (
     <div className="w-full h-full flex flex-col bg-[#2E8EB1] relative overflow-hidden">
       <div className="z-10 w-full h-[50%] bg-transparent"></div>
@@ -9,16 +17,18 @@ export default function ScreenFive() {
           }
         >
           <h1
-            className={
-              "md:text-4xl font-bold leading-tight w-[100%] text-4xl text-white"
-            }
+            className={cn(
+              "md:text-4xl font-bold leading-tight w-[100%] text-3xl text-white",
+              titleClassName,
+            )}
           >
             Stay Ahead with Sneak Peeks
           </h1>
           <p
-            className={
-              "leading-relaxed max-w-md mb-4 h-20 text-white font-light text-base"
-            }
+            className={cn(
+              "leading-relaxed max-w-md mb-4 h-20 text-white font-light text-base",
+              descriptionClassName,
+            )}
           >
             Get a glimpse of upcoming features, know when they’ll arrive, and
             never miss an update.

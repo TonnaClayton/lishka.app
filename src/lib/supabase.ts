@@ -529,6 +529,7 @@ export const profileService = {
         .insert({
           id: userId,
           ...profileData,
+          has_seen_onboarding_flow: false,
         })
         .select()
         .single();

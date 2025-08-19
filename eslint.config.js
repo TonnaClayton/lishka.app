@@ -79,6 +79,8 @@ export default [
       "supabase/**",
       "src/stories/**",
       "src/components/ui/**",
+      "dist-ssr/**",
+      "dev-dist/**",
     ],
   },
 ];

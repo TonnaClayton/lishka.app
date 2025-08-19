@@ -13,6 +13,9 @@ import ScreenFour from "./screen-four";
 import ScreenThree from "./screen-three";
 import ScreenFive from "./screen-five";
 import { useUpdateProfile } from "@/hooks/queries";
+import useIsMobile from "@/hooks/use-is-mobile";
+import useDeviceSize from "@/hooks/use-device-size";
+import { cn } from "@/lib/utils";
 
 export function OnboardingDialog({
   hasSeenOnboardingFlow,
@@ -26,6 +29,8 @@ export function OnboardingDialog({
   const [count, setCount] = React.useState(0);
   const mutation = useUpdateProfile();
   const [isLoading, setIsLoading] = React.useState(false);
+  const isMobile = useIsMobile(550);
+  const deviceSize = useDeviceSize();
 
   React.useEffect(() => {
     if (!api) {
@@ -64,7 +69,13 @@ export function OnboardingDialog({
       }}
     >
       <DialogContent
-        className="h-full max-h-[852px] w-full max-w-[393px] p-0 overflow-hidden rounded-[24px] border-none"
+        className={cn(
+          "h-full w-full p-0 overflow-hidden rounded-[24px] border-none",
+          isMobile ? "rounded-none" : "max-w-[393px]  max-h-[852px]",
+        )}
+        style={{
+          maxWidth: isMobile ? `${deviceSize.width}px` : undefined,
+        }}
         hideCloseButton={true}
       >
         <Carousel
@@ -74,26 +85,74 @@ export function OnboardingDialog({
             dragFree: false,
           }}
           setApi={setApi}
-          className="h-full max-w-[393px] max-h-[852px] w-full rounded-[24px]"
+          className={cn(
+            "h-full w-full",
+            isMobile
+              ? "rounded-none"
+              : "max-w-[393px]  max-h-[852px] rounded-[24px]",
+          )}
+          style={{
+            maxWidth: isMobile ? `${deviceSize.width}px` : undefined,
+          }}
         >
           <CarouselContent
             containerClassName="h-full w-full"
             className="h-full w-full ml-0"
           >
-            <CarouselItem className="h-full rounded-[24px] w-full p-0">
-              <ScreenOne />
+            <CarouselItem
+              className={cn(
+                "h-full rounded-[24px] w-full p-0",
+                isMobile && "rounded-none",
+              )}
+            >
+              <ScreenOne
+                titleClassName={cn(deviceSize.height <= 700 && "text-xl")}
+                descriptionClassName={cn(deviceSize.height <= 700 && "text-sm")}
+              />
             </CarouselItem>
-            <CarouselItem className="h-full rounded-[24px] w-full p-0">
-              <ScreenTwo />
+            <CarouselItem
+              className={cn(
+                "h-full rounded-[24px] w-full p-0",
+                isMobile && "rounded-none",
+              )}
+            >
+              <ScreenTwo
+                titleClassName={cn(deviceSize.height <= 700 && "text-xl")}
+                descriptionClassName={cn(deviceSize.height <= 700 && "text-sm")}
+              />
             </CarouselItem>
-            <CarouselItem className="h-full rounded-[24px] w-full p-0">
-              <ScreenThree />
+            <CarouselItem
+              className={cn(
+                "h-full rounded-[24px] w-full p-0",
+                isMobile && "rounded-none",
+              )}
+            >
+              <ScreenThree
+                titleClassName={cn(deviceSize.height <= 700 && "text-xl")}
+                descriptionClassName={cn(deviceSize.height <= 700 && "text-sm")}
+              />
             </CarouselItem>
-            <CarouselItem className="h-full rounded-[24px] w-full p-0">
-              <ScreenFour />
+            <CarouselItem
+              className={cn(
+                "h-full rounded-[24px] w-full p-0",
+                isMobile && "rounded-none",
+              )}
+            >
+              <ScreenFour
+                titleClassName={cn(deviceSize.height <= 700 && "text-xl")}
+                descriptionClassName={cn(deviceSize.height <= 700 && "text-sm")}
+              />
             </CarouselItem>
-            <CarouselItem className="h-full rounded-[24px] w-full p-0">
-              <ScreenFive />
+            <CarouselItem
+              className={cn(
+                "h-full rounded-[24px] w-full p-0",
+                isMobile && "rounded-none",
+              )}
+            >
+              <ScreenFive
+                titleClassName={cn(deviceSize.height <= 700 && "text-xl")}
+                descriptionClassName={cn(deviceSize.height <= 700 && "text-sm")}
+              />
             </CarouselItem>
           </CarouselContent>
           <div className="absolute bottom-0 flex w-full flex-col items-center justify-center">

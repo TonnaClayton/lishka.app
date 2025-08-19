@@ -1,6 +1,13 @@
+import { cn } from "@/lib/utils";
 import React from "react";
 
-export default function ScreenOne() {
+export default function ScreenOne({
+  titleClassName,
+  descriptionClassName,
+}: {
+  titleClassName?: string;
+  descriptionClassName?: string;
+}) {
   return (
     <div className="h-full w-full flex flex-col">
       <div className="z-10 w-full h-[50%] bg-transparent"></div>
@@ -11,16 +18,18 @@ export default function ScreenOne() {
           }
         >
           <h1
-            className={
-              "md:text-4xl font-bold leading-tight w-[100%] text-4xl text-white"
-            }
+            className={cn(
+              "md:text-4xl font-bold leading-tight w-[100%] text-3xl text-white",
+              titleClassName,
+            )}
           >
             Your AI Fishing Companion
           </h1>
           <p
-            className={
-              "leading-relaxed max-w-md mb-4 h-20 text-white font-light text-base"
-            }
+            className={cn(
+              "leading-relaxed max-w-md mb-4 h-20 text-white font-light text-base",
+              descriptionClassName,
+            )}
           >
             AI gear picks, active fish insights, how-to guides, and sonar
             decoding, all in one place.
