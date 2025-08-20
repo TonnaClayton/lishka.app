@@ -1,42 +1,44 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { log } from "@/lib/logging";
-import { config } from "@/lib/config";
 import { api } from "../api";
-import { LocationData } from "../location/use-location-storage";
 
 export const searchQueryKeys = {
     sessions: () => ["search", "sessions"] as const,
     search: (id: string) => ["search", id] as const,
-    sessionFollowQuestions: (id: string) =>
+    sessionFollowQuestions: (id?: string | null) =>
         ["search", id, "follow-questions"] as const,
 };
 
-export const useGetSearchSessions = useQuery({
-    queryKey: searchQueryKeys.sessions(),
-    queryFn: async () => {
-        const data = await api<{
-            data: {
-                created_at: string;
-                id: string;
-                title: string;
-                updated_at: string | null;
-                user_id: string;
-            }[];
-        }>("search-agent/sessions", {
-            method: "GET",
-        });
+export const useGetSearchSessions = () =>
+    useQuery({
+        queryKey: searchQueryKeys.sessions(),
+        queryFn: async () => {
+            const data = await api<{
+                data: {
+                    created_at: string;
+                    id: string;
+                    title: string;
+                    updated_at: string | null;
+                    user_id: string;
+                }[];
+            }>("search-agent/sessions", {
+                method: "GET",
+            });
 
-        return data.data;
-    },
-    // enabled: !!id, // Only run when saved location is loaded
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000, // 10 minutes
-});
+            return data.data;
+        },
+        // enabled: !!id, // Only run when saved location is loaded
+        staleTime: 5 * 60 * 1000, // 5 minutes
+        gcTime: 10 * 60 * 1000, // 10 minutes
+    });
 
 export const useGetSearchSession = (id: string) =>
     useQuery({
         queryKey: searchQueryKeys.search(id),
         queryFn: async () => {
+            if (!id || id == undefined || id == null) {
+                return null;
+            }
+
             const data = await api<{
                 data: {
                     created_at: string;
@@ -66,17 +68,17 @@ export const useGetSearchSession = (id: string) =>
         gcTime: 10 * 60 * 1000, // 10 minutes
     });
 
-export const useGetSearchSessionFollowQuestions = (id: string) =>
+export const useGetSearchSessionFollowQuestions = (id?: string | null) =>
     useQuery({
         queryKey: searchQueryKeys.sessionFollowQuestions(id),
         queryFn: async () => {
-            if (!id) {
+            if (!id || id == undefined || id == null) {
                 return [];
             }
 
             const data = await api<{
                 data: string[];
-            }>("search-agent/sessions/" + id + "/follow-questions", {
+            }>("search-agent/sessions/" + id + "/follow-up-questions", {
                 method: "GET",
             });
 
@@ -96,19 +98,20 @@ export const useCreateSearchSession = () =>
             attachment?: File;
             session_id?: string;
         }) => {
-            const formData = new FormData();
-            formData.append(
-                "use_location_context",
-                payload.use_location_context?.toString() || "false",
-            );
-            formData.append(
-                "use_imperial_units",
-                payload.use_imperial_units?.toString() || "false",
-            );
-            formData.append("message", payload.message);
-            if (payload.attachment) {
-                formData.append("attachment", payload.attachment);
-            }
+            // const formData = new FormData();
+            // formData.append(
+            //     "use_location_context",
+            //     payload.use_location_context?.toString() || "false",
+            // );
+            // formData.append(
+            //     "use_imperial_units",
+            //     payload.use_imperial_units?.toString() || "false",
+            // );
+            // formData.append("message", payload.message);
+
+            // if (payload.attachment) {
+            //     formData.append("attachment", payload.attachment);
+            // }
 
             let path = "search-agent/sessions";
             if (payload.session_id) {
@@ -128,10 +131,15 @@ export const useCreateSearchSession = () =>
                 };
             }>(path, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "multipart/form-data",
-                },
-                body: formData,
+                // headers: {
+                //     "Content-Type": "multipart/form-data",
+                // },
+                body: JSON.stringify({
+                    use_location_context: payload.use_location_context,
+                    use_imperial_units: payload.use_imperial_units,
+                    message: payload.message,
+                    attachment: payload.attachment,
+                }),
             });
 
             return data.data;

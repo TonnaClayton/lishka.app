@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import React, { useState, useRef, useEffect, useMemo } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { Send, MapPin, ArrowLeft, Loader2, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -8,17 +8,11 @@ import { Textarea } from "@/components/ui/textarea";
 import FishCard from "@/components/fish-card";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { log } from "@/lib/logging";
-import { config } from "@/lib/config";
-
-import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
 import { useImperialUnits } from "@/lib/unit-conversion";
 import BottomNav from "@/components/bottom-nav";
-import TextareaAutosize from "react-textarea-autosize";
 import useDeviceSize from "@/hooks/use-device-size";
 import useIsMobile from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
-import { generateTextWithAI } from "@/lib/ai";
 import {
   Tooltip,
   TooltipTrigger,
@@ -27,16 +21,18 @@ import {
 } from "@/components/ui/tooltip";
 import {
   useCreateSearchSession,
+  useGetSearchSession,
   useGetSearchSessionFollowQuestions,
   useUserLocation,
 } from "@/hooks/queries";
+import SearchPageSkeleton from "@/hooks/queries/search/skeleton";
 
 interface Message {
   id: string;
-  role: "user" | "assistant";
+  user_role: "user" | "assistant";
   content: string;
   timestamp: Date;
-  fishResults?: Fish[];
+  fish_results?: Fish[];
   image?: string;
 }
 
@@ -60,11 +56,14 @@ const DEFAULT_SUGGESTIONS = [
 
 const SearchPage: React.FC = () => {
   const navigate = useNavigate();
+  const routerLocation = useLocation();
   const { location } = useUserLocation();
   const { id } = useParams<{ id?: string }>();
 
   const [query, setQuery] = useState("");
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(
+    (routerLocation.state?.messages as Message[]) || []
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useLocationContext, setUseLocationContext] = useState(true);
@@ -76,6 +75,9 @@ const SearchPage: React.FC = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
+  const { data: session, isLoading: isLoadingSession } = useGetSearchSession(
+    id || ""
+  );
   const {
     data: followUpQuestions,
     isLoading: followUpLoading,
@@ -89,19 +91,38 @@ const SearchPage: React.FC = () => {
   const deviceSize = useDeviceSize();
   const isMobile = useIsMobile();
 
+  const messagesMemo = useMemo(() => {
+    if (id == undefined || id == null) {
+      return messages;
+    }
+
+    if (id && session && messages.length == 0) {
+      return (
+        session?.messages.map((message) => ({
+          id: message.id,
+          user_role: message.user_role,
+          content: message.content,
+          timestamp: new Date(message.created_at),
+          fish_results: message.metadata?.fish_results || [],
+        })) || []
+      );
+    }
+
+    return messages;
+  }, [session, messages, id]);
+
   // Scroll to bottom of messages when new messages are added
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, followUpQuestions, followUpLoading]);
+  }, [messagesMemo]);
 
   // Listen for units changes from settings
   useEffect(() => {
-    const handleUnitsChange = () => {
-      setImperialUnits(useImperialUnits());
-    };
-
-    window.addEventListener("unitsChanged", handleUnitsChange);
-    return () => window.removeEventListener("unitsChanged", handleUnitsChange);
+    // const handleUnitsChange = () => {
+    //   setImperialUnits(useImperialUnits());
+    // };
+    // window.addEventListener("unitsChanged", handleUnitsChange);
+    // return () => window.removeEventListener("unitsChanged", handleUnitsChange);
   }, []);
 
   // Convert image to base64
@@ -121,151 +142,43 @@ const SearchPage: React.FC = () => {
     imageFile?: File
   ) => {
     try {
-      // Check if OpenAI is disabled
-      if (!OPENAI_ENABLED) {
-        log(OPENAI_DISABLED_MESSAGE);
-        throw new Error(OPENAI_DISABLED_MESSAGE);
-      }
+      const response = await mutation.mutateAsync({
+        message: queryText,
+        attachment: imageFile,
+        use_location_context: useLocationContext,
+        use_imperial_units: imperialUnits,
+        session_id: id,
+      });
 
-      // Check if API key is available
-      const apiKey = config.VITE_OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error(
-          "OpenAI API key is missing. Please add it in project settings."
-        );
-      }
-
-      // Prepare messages for the API call
-      const unitsInstruction = imperialUnits
-        ? "Always provide measurements in imperial units (inches, feet, pounds, ounces, Fahrenheit, miles) as the primary unit, with metric equivalents in parentheses when helpful."
-        : "Always provide measurements in metric units (centimeters, meters, grams, kilograms, Celsius, kilometers) as the primary unit, with imperial equivalents in parentheses when helpful.";
-
-      const systemMessage = {
-        role: "system",
-        content: `You are a fishing expert AI that provides helpful information about fishing techniques, fish species, and fishing locations. ${unitsInstruction} If you mention specific fish species, provide detailed information about them including name, scientific name, habitat, difficulty level, and season availability. ${useLocationContext ? "Focus on fish species and fishing techniques relevant to the user's location." : "Provide global information without focusing on any specific location."}. Make sure to close every open [FISH_DATA] tag.`,
-      };
-
-      const previousMessages = messages
-        .filter((msg) => msg.id !== userMessage.id)
-        .map((msg) => {
-          if (msg.image) {
-            return {
-              role: msg.role,
-              content: [
-                {
-                  type: "text",
-                  text: msg.content,
-                },
-                {
-                  type: "image_url",
-                  image_url: {
-                    url: msg.image,
-                  },
-                },
-              ],
-            };
-          }
-          return {
-            role: msg.role,
-            content: msg.content,
-          };
-        });
-
-      let userMessageContent;
-      if (imageFile) {
-        const base64Image = await convertImageToBase64(imageFile);
-        userMessageContent = [
-          {
-            type: "text",
-            text: `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format and do not forget to close the JSON section: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`,
-          },
-          {
-            type: "image_url",
-            image_url: {
-              url: base64Image,
-            },
-          },
-        ];
-      } else {
-        userMessageContent = `${queryText}\n\nIf your response includes specific fish species, please also include a JSON section at the end of your response in this format and do not forget to close the JSON section: [FISH_DATA]{\"fish\":[{\"name\":\"Fish Name\",\"scientificName\":\"Scientific Name\",\"habitat\":\"Habitat info\",\"difficulty\":\"Difficulty level\",\"season\":\"Season info\",\"toxic\":false}]}[/FISH_DATA]`;
-      }
-
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey}`,
-          },
-          body: JSON.stringify({
-            model: imageFile ? "gpt-4o" : "gpt-3.5-turbo",
-            messages: [
-              systemMessage,
-              ...previousMessages,
-              {
-                role: "user",
-                content: userMessageContent,
-              },
-            ],
-            max_tokens: imageFile ? 1000 : undefined,
-          }),
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
-      }
-
-      const data = await response.json();
-      const assistantResponse = data.choices[0].message.content;
-
-      console.log("assistantResponse", assistantResponse);
-
-      // Extract fish data if present
-      let fishData: Fish[] = [];
-      const fishDataMatch = assistantResponse.match(
-        /\[FISH_DATA\](.+?)\[\/?FISH_DATA\]/s
-      );
-
-      let cleanedResponse = assistantResponse;
-
-      if (fishDataMatch && fishDataMatch[1]) {
-        try {
-          const parsedData = JSON.parse(fishDataMatch[1]);
-          if (parsedData.fish && Array.isArray(parsedData.fish)) {
-            fishData = parsedData.fish.map((fish: any, index: number) => ({
-              id: `search-${Date.now()}-${index}`,
-              name: fish.name,
-              scientificName: fish.scientificName,
-              // Don't provide image - let FishCard handle image loading
-              image: undefined,
-              habitat: fish.habitat,
-              difficulty: fish.difficulty,
-              season: fish.season,
-              toxic: fish.toxic === true,
-            }));
-          }
-
-          // Remove the fish data section from the displayed response
-          cleanedResponse = assistantResponse.replace(
-            /\[FISH_DATA\].+?\[\/?FISH_DATA\]/s,
-            ""
-          );
-        } catch (err) {
-          console.error("Error parsing fish data:", err);
-        }
-      }
-
-      const assistantMessage: Message = {
-        id: Date.now().toString(),
-        role: "assistant",
-        content: cleanedResponse.trim(),
+      const content: Message = {
+        id: response.id,
+        user_role: "assistant",
+        content: response.content,
         timestamp: new Date(),
-        fishResults: fishData.length > 0 ? fishData : undefined,
+        fish_results: response.metadata?.fish_results || [],
       };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      if (
+        id == undefined ||
+        id == null ||
+        id == "" ||
+        id != response.session_id
+      ) {
+        navigate(`/search/${response.session_id}`, {
+          replace: true,
+          state: {
+            messages: [userMessage, content],
+          },
+        });
+      } else {
+        setMessages((prev) => {
+          if (prev.length == 0) {
+            return [...messagesMemo, content];
+          }
+
+          return [...prev, content];
+        });
+      }
     } catch (err) {
       console.error("Error fetching response:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
@@ -273,7 +186,7 @@ const SearchPage: React.FC = () => {
       // Add a fallback message when an error occurs
       const errorMessage: Message = {
         id: Date.now().toString(),
-        role: "assistant",
+        user_role: "assistant",
         content:
           "I'm sorry, I encountered an error processing your request. Please try again or ask a different question.",
         timestamp: new Date(),
@@ -291,7 +204,7 @@ const SearchPage: React.FC = () => {
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      role: "user",
+      user_role: "user",
       content: query || "[Image uploaded]",
       timestamp: new Date(),
       image: selectedImage || undefined,
@@ -324,13 +237,20 @@ const SearchPage: React.FC = () => {
     // Create a user message for the clicked suggestion
     const userMessage: Message = {
       id: Date.now().toString(),
-      role: "user",
+      user_role: "user",
       content: suggestion,
       timestamp: new Date(),
     };
 
     // Add the message to the chat
-    setMessages((prev) => [...prev, userMessage]);
+    //setMessages((prev) => [...prev, userMessage]);
+    setMessages((prev) => {
+      if (prev.length == 0) {
+        return [...messagesMemo, userMessage];
+      }
+
+      return [...prev, userMessage];
+    });
     setLoading(true);
     setError(null);
 
@@ -344,84 +264,23 @@ const SearchPage: React.FC = () => {
     }
   };
 
-  // AI follow-up generation
-  // const fetchFollowUpQuestions = async (contextMessages: Message[]) => {
-  //   setFollowUpLoading(true);
-  //   try {
-  //     // Only use the last 4 messages for context
-  //     const context = contextMessages.slice(-4).map((msg) => ({
-  //       role: msg.role,
-  //       content: msg.content,
-  //     }));
-  //     const systemPrompt =
-  //       "You are a fishing assistant AI. Given the conversation so far, suggest 3 contextually relevant follow-up questions the user might want to ask next. Respond ONLY with a JSON array of questions, e.g. ['Question 1', 'Question 2', 'Question 3']. Do not include any other text.";
-  //     const aiResponse = await generateTextWithAI({
-  //       messages: context,
-  //       system: systemPrompt,
-  //       model: "gpt-3.5-turbo",
-  //       maxTokens: 100,
-  //       temperature: 0.7,
-  //     });
-  //     let questions: string[] = [];
-  //     try {
-  //       // First try to parse as regular JSON
-  //       questions = JSON.parse(aiResponse.text);
-  //       if (!Array.isArray(questions)) throw new Error("Not an array");
-  //     } catch (err) {
-  //       // Try to extract array from quoted string
-  //       try {
-  //         const trimmedText = aiResponse.text.trim();
-  //         // Remove outer quotes if present
-  //         const cleanText =
-  //           trimmedText.startsWith('"') && trimmedText.endsWith('"')
-  //             ? trimmedText.slice(1, -1)
-  //             : trimmedText;
-
-  //         // Parse the cleaned text
-  //         questions = JSON.parse(cleanText);
-  //         if (!Array.isArray(questions)) throw new Error("Still not an array");
-  //       } catch (secondErr) {
-  //         // Final fallback: try to extract array using regex
-  //         try {
-  //           const match = aiResponse.text.match(/\[(.*?)\]/s);
-  //           if (match) {
-  //             const arrayContent = match[1];
-  //             // Split by comma and clean up quotes
-  //             questions = arrayContent
-  //               .split(",")
-  //               .map((item) => item.trim().replace(/^["']|["']$/g, ""))
-  //               .filter((item) => item.length > 0);
-  //           }
-  //         } catch (thirdErr) {
-  //           questions = [];
-  //         }
-  //       }
-  //     }
-
-  //     setFollowUpQuestions(
-  //       Array.isArray(questions)
-  //         ? questions.filter((q) => typeof q === "string" && q.length > 0)
-  //         : []
-  //     );
-  //   } catch (err) {
-  //     setFollowUpQuestions([]);
-  //   } finally {
-  //     setFollowUpLoading(false);
-  //   }
-  // };
-
   // Update follow-up questions after each assistant message
   useEffect(() => {
     if (
-      messages.length > 0 &&
-      messages[messages.length - 1].role === "assistant"
+      messagesMemo.length > 0 &&
+      messagesMemo[messagesMemo.length - 1].user_role === "assistant"
     ) {
       //fetchFollowUpQuestions(messages);
       refetchFollowUpQuestions();
-    } else if (messages.length === 0) {
+    } else if (messagesMemo.length === 0) {
       //setFollowUpQuestions([]);
     }
-  }, [messages]);
+  }, []);
+
+  // Show skeleton while loading session only if we don't have messages from router state
+  if (isLoadingSession && messages.length === 0) {
+    return <SearchPageSkeleton />;
+  }
 
   return (
     <div
@@ -431,7 +290,7 @@ const SearchPage: React.FC = () => {
       {/* Header - Fixed at top */}
       <header className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black px-4 py-3 lg:static">
         <div className="flex items-center gap-2">
-          {messages.length > 0 && (
+          {messagesMemo.length > 0 && (
             <Button
               variant="ghost"
               size="icon"
@@ -467,7 +326,7 @@ const SearchPage: React.FC = () => {
       </header>
       {/* Scrollable Content Area - With padding for header and input form */}
 
-      {messages.length === 0 ? (
+      {messagesMemo.length === 0 ? (
         <div
           className={cn(
             "flex-1 h-full",
@@ -512,18 +371,21 @@ const SearchPage: React.FC = () => {
           <div className="p-4">
             <div className="max-w-2xl mx-auto space-y-6">
               <div className="h-[20px] md:hidden"></div>
-              {messages.map((message) => (
+              {messagesMemo.map((message) => (
                 <div
                   key={message.id}
                   className={cn(
                     "flex",
-                    message.role === "user" ? "justify-end" : "justify-start"
+                    message.user_role === "user"
+                      ? "justify-end"
+                      : "justify-start"
                   )}
                 >
                   <div
                     className={cn(
                       "rounded-lg pt-3 w-fit max-w-[85%]",
-                      message.role === "user"
+                      isMobile && "max-w-[95%]",
+                      message.user_role === "user"
                         ? "bg-blue-500 text-white"
                         : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
                     )}
@@ -538,85 +400,53 @@ const SearchPage: React.FC = () => {
                       </div>
                     )}
                     <div className="px-4">
-                      <ReactMarkdown
-                        components={{
-                          ol: ({ children }) => (
-                            <ol className="list-decimal">{children}</ol>
-                          ),
-                          ul: ({ children }) => (
-                            <ul className="list-disc">{children}</ul>
-                          ),
-                          li: ({ children }) => (
-                            <li className="ml-4">{children}</li>
-                          ),
-                          p: ({ children }) => (
-                            <p className="mb-3 text-sm text-text">{children}</p>
-                          ),
-                          h1: ({ children }) => (
-                            <h1 className="text-2xl font-bold mb-1 dark:text-white lg:text-3xl">
-                              {children}
-                            </h1>
-                          ),
-                          h2: ({ children }) => (
-                            <h2 className="text-xl font-bold mb-1 dark:text-white lg:text-2xl">
-                              {children}
-                            </h2>
-                          ),
-                          h3: ({ children }) => (
-                            <h3 className="text-lg font-bold mb-1 dark:text-white lg:text-xl">
-                              {children}
-                            </h3>
-                          ),
-                        }}
-                        remarkPlugins={[remarkGfm]}
-                      >
-                        {message.content}
-                      </ReactMarkdown>
+                      <MemoizedContent content={message.content} />
                     </div>
 
                     {/* Display fish cards if available */}
-                    {message.fishResults && message.fishResults.length > 0 && (
-                      <div className="mt-4 space-y-4 w-full">
-                        <h3 className="font-medium text-sm px-4">
-                          Fish Species:
-                        </h3>
-                        <div className="flex w-full overflow-x-auto gap-4 px-4 pb-3">
-                          {message.fishResults
-                            .filter((fish) => {
-                              // Filter out generic fish names
-                              const genericNames = [
-                                "generic fish",
-                                "unknown fish",
-                                "fish",
-                                "generic",
-                                "unknown",
-                              ];
-                              const fishName = fish.name?.toLowerCase() || "";
-                              return (
-                                !genericNames.includes(fishName) &&
-                                fishName.trim() !== ""
-                              );
-                            })
-                            .map((fish) => (
-                              <FishCard
-                                key={fish.id}
-                                name={fish.name}
-                                scientificName={fish.scientificName}
-                                habitat={fish.habitat}
-                                difficulty={fish.difficulty}
-                                isToxic={fish.toxic}
-                                className="w-[200px] min-h-[250px] flex-shrink-0"
-                                onClick={() => {
-                                  navigate(
-                                    `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
-                                    { state: { fish } }
-                                  );
-                                }}
-                              />
-                            ))}
+                    {message.fish_results &&
+                      message.fish_results.length > 0 && (
+                        <div className="mt-4 space-y-4 w-full">
+                          <h3 className="font-medium text-sm px-4">
+                            Fish Species:
+                          </h3>
+                          <div className="flex w-full overflow-x-auto gap-4 px-4 pb-3">
+                            {message.fish_results
+                              .filter((fish) => {
+                                // Filter out generic fish names
+                                const genericNames = [
+                                  "generic fish",
+                                  "unknown fish",
+                                  "fish",
+                                  "generic",
+                                  "unknown",
+                                ];
+                                const fishName = fish.name?.toLowerCase() || "";
+                                return (
+                                  !genericNames.includes(fishName) &&
+                                  fishName.trim() !== ""
+                                );
+                              })
+                              .map((fish) => (
+                                <FishCard
+                                  key={fish.id}
+                                  name={fish.name}
+                                  scientificName={fish.scientificName}
+                                  habitat={fish.habitat}
+                                  difficulty={fish.difficulty}
+                                  isToxic={fish.toxic}
+                                  className="w-[200px] min-h-[250px] flex-shrink-0"
+                                  onClick={() => {
+                                    navigate(
+                                      `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
+                                      { state: { fish } }
+                                    );
+                                  }}
+                                />
+                              ))}
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
                     <div className="pb-3 px-4"></div>
                   </div>
                 </div>
@@ -624,14 +454,16 @@ const SearchPage: React.FC = () => {
 
               {isMobile && (
                 <div className="flex flex-col gap-2">
-                  {followUpQuestions.length > 0 && (
+                  {followUpQuestions?.length > 0 && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Follow-up questions
                     </p>
                   )}
                   <FollowUpQuestions
                     followUpQuestions={followUpQuestions}
-                    followUpLoading={followUpLoading}
+                    followUpLoading={
+                      followUpLoading || isRefetchingFollowUpQuestions
+                    }
                     loading={loading}
                     handleSuggestionClick={handleSuggestionClick}
                   />
@@ -674,8 +506,8 @@ const SearchPage: React.FC = () => {
 
         {!isMobile && (
           <FollowUpQuestions
-            followUpQuestions={followUpQuestions}
-            followUpLoading={followUpLoading}
+            followUpQuestions={followUpQuestions || []}
+            followUpLoading={followUpLoading || isRefetchingFollowUpQuestions}
             loading={loading}
             handleSuggestionClick={handleSuggestionClick}
           />
@@ -782,17 +614,54 @@ const SearchPage: React.FC = () => {
   );
 };
 
+const MemoizedContent = React.memo(({ content }: { content: string }) => {
+  return (
+    <ReactMarkdown
+      components={{
+        ol: ({ children }) => <ol className="list-decimal">{children}</ol>,
+        ul: ({ children }) => <ul className="list-disc">{children}</ul>,
+        li: ({ children }) => <li className="ml-4">{children}</li>,
+        p: ({ children }) => (
+          <p className="mb-3 text-sm text-text">{children}</p>
+        ),
+        h1: ({ children }) => (
+          <h1 className="text-2xl font-bold mb-1 dark:text-white lg:text-3xl">
+            {children}
+          </h1>
+        ),
+        h2: ({ children }) => (
+          <h2 className="text-xl font-bold mb-1 dark:text-white lg:text-2xl">
+            {children}
+          </h2>
+        ),
+        h3: ({ children }) => (
+          <h3 className="text-lg font-bold mb-1 dark:text-white lg:text-xl">
+            {children}
+          </h3>
+        ),
+      }}
+      remarkPlugins={[remarkGfm]}
+    >
+      {content}
+    </ReactMarkdown>
+  );
+});
+
 const FollowUpQuestions = ({
   followUpQuestions,
   followUpLoading,
   loading,
   handleSuggestionClick,
 }: {
-  followUpQuestions: string[];
+  followUpQuestions?: string[];
   followUpLoading: boolean;
   loading: boolean;
   handleSuggestionClick: (suggestion: string) => void;
 }) => {
+  if (followUpQuestions == undefined || followUpQuestions == null) {
+    return null;
+  }
+
   return (
     <TooltipProvider>
       {followUpLoading ? (
