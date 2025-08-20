@@ -36,3 +36,5 @@ core
 
 coverage
 dev-dist
+
+/supabase/.temp
