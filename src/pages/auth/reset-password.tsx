@@ -115,7 +115,7 @@ export default function ResetPasswordPage() {
                       <Input
                         type="password"
                         placeholder="Enter your password"
-                        className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
+                        className="h-[48px] text-base border-gray-200 dark:border-gray-700 rounded-[12px] bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
                         disabled={loading}
                         {...field}
                       />
@@ -137,7 +137,7 @@ export default function ResetPasswordPage() {
                       <Input
                         type="password"
                         placeholder="Confirm your password"
-                        className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
+                        className="h-[48px] text-base border-gray-200 dark:border-gray-700 rounded-[12px] bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
                         disabled={loading}
                         {...field}
                       />
@@ -150,7 +150,7 @@ export default function ResetPasswordPage() {
               <div className="pt-4">
                 <Button
                   type="submit"
-                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed "
+                  className="w-full h-[46px] bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed "
                   disabled={loading}
                 >
                   {loading ? "Resetting..." : "Reset Password"}

@@ -218,11 +218,11 @@ const LoginWithEmailPage: React.FC = () => {
                     <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
                       Email
                     </FormLabel>
-                    <FormControl className="px-3 rounded-lg py-4 h-[56px]">
+                    <FormControl className="px-3 rounded-[12px] py-4 h-[48px]">
                       <Input
                         type="email"
                         placeholder="Enter your email"
-                        className="text-base border-gray-200 rounded-xl bg-gray-50 focus:bg-white"
+                        className="text-base border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white"
                         disabled={loading}
                         {...field}
                       />
@@ -245,7 +245,7 @@ const LoginWithEmailPage: React.FC = () => {
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter your password"
-                          className="px-3 h-[56px] py-4 text-base border-gray-200 rounded-xl bg-gray-50 focus:bg-white"
+                          className="px-3 h-[48px] py-4 text-base border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white"
                           disabled={loading}
                           {...field}
                         />
@@ -282,7 +282,7 @@ const LoginWithEmailPage: React.FC = () => {
               <div className="space-y-3 mt-0">
                 <Button
                   type="submit"
-                  className="w-full h-[56px] bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-[46px] bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? "Signing in..." : "Sign In"}

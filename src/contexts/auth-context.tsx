@@ -91,7 +91,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       id: supabaseUser.id,
       email: supabaseUser.email || "",
       full_name: supabaseUser.user_metadata?.full_name || null,
-      email_verified: !!supabaseUser.email_confirmed_at,
+      email_verified: supabaseUser.user_metadata.email_verified,
       needs_email_confirmation: !supabaseUser.email_confirmed_at,
     };
   };
@@ -99,13 +99,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Load user profile
   const loadProfile = async (userId: string, userFullName?: string) => {
     try {
-      log(
-        "[AuthContext] Loading profile for user:",
-        userId,
-        "with full name:",
-        userFullName,
-      );
-
       const { data, error } = await profileService.getProfile(userId);
 
       log("[AuthContext] Profile fetch result:", {
@@ -116,14 +109,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       if (data && !error) {
-        log("[AuthContext] Profile loaded successfully:", {
-          id: data.id,
-          full_name: data.full_name,
-          hasAvatar: !!data.avatar_url,
-          avatarLength: data.avatar_url?.length || 0,
-          galleryPhotosCount: data.gallery_photos?.length || 0,
-          galleryPhotosPreview: data.gallery_photos?.slice(0, 2) || [],
-        });
         setProfile(data);
       } else if (
         error &&
@@ -143,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             userFullName && userFullName.trim() ? userFullName.trim() : null,
           preferred_units: "metric",
           preferred_language: "en",
+          has_seen_onboarding_flow: false,
           favorite_fish_species: [],
         };
         log("[AuthContext] Profile data to create:", profileData);
@@ -159,6 +145,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             full_name: userFullName || null,
             preferred_units: "metric",
             preferred_language: "en",
+            has_seen_onboarding_flow: false,
             favorite_fish_species: [],
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString(),
@@ -174,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           full_name: userFullName || null,
           preferred_units: "metric",
           preferred_language: "en",
+          has_seen_onboarding_flow: false,
           favorite_fish_species: [],
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -191,6 +179,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         id: userId,
         full_name: userFullName || null,
         preferred_units: "metric",
+        has_seen_onboarding_flow: false,
         preferred_language: "en",
         favorite_fish_species: [],
         created_at: new Date().toISOString(),
@@ -304,48 +293,55 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
-      log("[AuthContext] Auth state changed:", {
-        event,
-        userEmail: session?.user?.email,
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        isMobile:
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent,
-          ),
-      });
+      try {
+        log("[AuthContext] Auth state changed:", {
+          event,
+          userEmail: session?.user?.email,
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          isMobile:
+            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+              navigator.userAgent,
+            ),
+        });
 
-      if (session?.user) {
-        const authUser = convertUser(session.user);
-        log("[AuthContext] Setting user from session:", authUser);
-        setUser(authUser);
-        setSession(session);
+        if (session?.user) {
+          const authUser = convertUser(session.user);
+          log("[AuthContext] Setting user from session:", authUser);
+          setUser(authUser);
+          setSession(session);
 
-        // Load profile in background for faster auth state resolution
-        if (authUser) {
-          loadProfile(authUser.id, session.user.user_metadata?.full_name).catch(
-            (err) => {
-              console.warn(
-                "[AuthContext] Background profile load failed:",
-                err,
-              );
-            },
-          );
+          // Load profile in background for faster auth state resolution
+          if (authUser) {
+            await loadProfile(
+              authUser.id,
+              session.user.user_metadata?.full_name,
+            );
+
+            // .catch((err) => {
+            //   console.warn(
+            //     "[AuthContext] Background profile load failed:",
+            //     err
+            //   );
+            // });
+          }
+        } else {
+          log("[AuthContext] Clearing user session");
+          setUser(null);
+          setSession(null);
+          setProfile(null);
+
+          // Handle logout events - redirect to login if user was previously authenticated
+          if (event === "SIGNED_OUT") {
+            log("[AuthContext] User signed out, redirecting to login");
+            // Small delay to ensure state is cleared
+            setTimeout(() => {
+              navigate(ROUTES.LOGIN, { replace: true });
+            }, 100);
+          }
         }
-      } else {
-        log("[AuthContext] Clearing user session");
-        setUser(null);
-        setSession(null);
-        setProfile(null);
-
-        // Handle logout events - redirect to login if user was previously authenticated
-        if (event === "SIGNED_OUT") {
-          log("[AuthContext] User signed out, redirecting to login");
-          // Small delay to ensure state is cleared
-          setTimeout(() => {
-            navigate(ROUTES.LOGIN, { replace: true });
-          }, 100);
-        }
+      } catch (e) {
+        console.error("[AuthContext] Error in auth state change:", e);
       }
 
       setLoading(false);
@@ -361,7 +357,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Auth methods
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      setLoading(true);
       const { data, error } = await authService.signUp(
         email,
         password,
@@ -369,32 +364,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       );
 
       if (error) {
-        return { error };
+        return { error, needsConfirmation: false };
       }
 
-      // If user is created but needs email confirmation
-      if (data?.user && !data.session) {
+      if (data?.user && data.session) {
         // Set user data for email verification banner
         const authUser = convertUser(data.user);
         setUser(authUser);
-
-        // Create profile even for unconfirmed users so the full name is stored
+        //Create profile even for unconfirmed users so the full name is stored
         if (authUser) {
           await loadProfile(authUser.id, fullName);
         }
+      }
 
+      // If user is created but needs email confirmation
+      if (data?.user && data.session == null) {
         return { error: null, needsConfirmation: true };
       }
 
       // User will be automatically set via onAuthStateChange if session exists
-      return { error: null };
+      return { error: null, needsConfirmation: false };
     } catch (err) {
-      console.error("SignUp error:", err);
       return {
-        error: { message: "An unexpected error occurred during signup" },
+        error: { message: "An unexpected error occurred during signup", err },
+        needsConfirmation: false,
       };
-    } finally {
-      setLoading(false);
     }
   };
 

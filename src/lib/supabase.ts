@@ -43,7 +43,7 @@ export const authService = {
   // Sign up new user
   async signUp(email: string, password: string, fullName: string) {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const response = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -54,8 +54,7 @@ export const authService = {
         },
       });
 
-      log("SignUp response:", { data, error });
-      return { data, error };
+      return response;
     } catch (err) {
       console.error("SignUp error:", err);
       return {
@@ -524,11 +523,16 @@ export const profileService = {
 
   async createProfile(userId: string, profileData: any) {
     try {
+      console.log("[ProfileService] Creating profile with data:", {
+        userId,
+        profileData,
+      });
       const { data, error } = await supabase
         .from("profiles")
         .insert({
           id: userId,
           ...profileData,
+          has_seen_onboarding_flow: false,
         })
         .select()
         .single();

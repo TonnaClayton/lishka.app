@@ -95,11 +95,21 @@ const SignupPage: React.FC = () => {
           setSuccess(true);
           // Redirect to homepage with email verification banner
           setTimeout(() => {
-            navigate("/", { replace: true });
-          }, 2000);
+            navigate("/login/email", {
+              replace: true,
+              state: {
+                hasSeenOnboardingFlow: false,
+              },
+            });
+          }, 5000);
         } else {
           // User is already logged in, redirect immediately
-          navigate("/", { replace: true });
+          navigate("/", {
+            replace: true,
+            state: {
+              hasSeenOnboardingFlow: false,
+            },
+          });
         }
       }
     } catch (err) {
@@ -112,8 +122,8 @@ const SignupPage: React.FC = () => {
 
   if (success) {
     return (
-      <div className="h-full bg-white dark:bg-gray-900 flex items-center justify-center p-6">
-        <div className="w-full max-w-sm mx-auto h-full text-center">
+      <div className="h-full bg-white dark:bg-gray-900 p-6">
+        <div className="w-full max-w-sm flex flex-col justify-center items-center mx-auto h-full text-center">
           <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg
               className="w-8 h-8 text-green-600 dark:text-green-400"
@@ -135,7 +145,7 @@ const SignupPage: React.FC = () => {
           <p className="text-gray-600 dark:text-gray-300 mb-4">
             Your account has been created successfully.
           </p>
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-[12px] p-4 mb-6">
             <div className="flex items-center justify-center mb-2">
               <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
               <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
@@ -217,7 +227,7 @@ const SignupPage: React.FC = () => {
                       <Input
                         type="text"
                         placeholder="Enter your full name"
-                        className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-lg py-4 h-[56px]"
+                        className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />
@@ -239,7 +249,7 @@ const SignupPage: React.FC = () => {
                       <Input
                         type="email"
                         placeholder="Enter your email"
-                        className="text-base border-gray-200  bg-gray-50 focus:bg-white px-3 rounded-lg py-4 h-[56px]"
+                        className="text-base border-gray-200  bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />
@@ -262,7 +272,7 @@ const SignupPage: React.FC = () => {
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Create a password (min. 6 characters)"
-                          className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-lg py-4 h-[56px]"
+                          className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                           disabled={loading}
                           minLength={6}
                           {...field}
@@ -301,7 +311,7 @@ const SignupPage: React.FC = () => {
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
                           placeholder="Confirm your password"
-                          className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-lg py-4 h-[56px]"
+                          className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                           disabled={loading}
                           {...field}
                         />
@@ -331,7 +341,7 @@ const SignupPage: React.FC = () => {
               <div className="pt-4">
                 <Button
                   type="submit"
-                  className="w-full h-[56px] bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-[46px] bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? "Creating Account..." : "Create Account"}

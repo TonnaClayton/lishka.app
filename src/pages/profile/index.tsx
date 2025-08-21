@@ -35,6 +35,7 @@ import {
   Check,
   CheckIcon,
   LoaderIcon,
+  Menu,
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -834,13 +835,22 @@ const ProfilePage: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             {!isEditing ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsEditing(true)}
-              >
-                <Edit3 className="h-5 w-5" />
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Edit3 className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/menu")}
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </>
             ) : (
               <div className="flex gap-2">
                 <Button

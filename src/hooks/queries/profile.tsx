@@ -30,7 +30,7 @@ export const useProfile = (userId: string) => {
 
       return data;
     },
-    enabled: !!userId && userId.length > 0,
+    enabled: !!userId,
   });
 };
 

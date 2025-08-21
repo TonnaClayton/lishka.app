@@ -1,6 +1,13 @@
+import { cn } from "@/lib/utils";
 import React from "react";
 
-export default function ScreenTwo() {
+export default function ScreenTwo({
+  titleClassName,
+  descriptionClassName,
+}: {
+  titleClassName?: string;
+  descriptionClassName?: string;
+}) {
   return (
     <div className="w-full h-full bg-white flex flex-col">
       <div className="z-10 w-full h-[50%] bg-transparent"></div>
@@ -11,16 +18,18 @@ export default function ScreenTwo() {
           }
         >
           <h1
-            className={
-              "md:text-4xl font-bold leading-tight w-[100%] text-4xl text-white"
-            }
+            className={cn(
+              "md:text-4xl font-bold leading-tight w-[100%] text-3xl text-white",
+              titleClassName,
+            )}
           >
             Gear Up with AI Precision
           </h1>
           <p
-            className={
-              "leading-relaxed max-w-md mb-4 h-20 text-white font-light text-base"
-            }
+            className={cn(
+              "leading-relaxed max-w-md mb-4 h-20 text-white font-light text-base",
+              descriptionClassName,
+            )}
           >
             Let AI match you with the ideal fishing setup, optimised for current
             weather, water, and season.
@@ -30,7 +39,7 @@ export default function ScreenTwo() {
       </div>
       <img
         src={
-          "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T180431871Z.png"
+          "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T180431871Z.webp"
         }
         alt={"Pasted Image"}
         width={1572}
