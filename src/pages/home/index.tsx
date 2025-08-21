@@ -214,7 +214,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1 h-auto"
+              className="flex items-center gap-1 text-[#0251FB] dark:text-[#0251FB] hover:text-[#0251FB] dark:hover:text-[#0251FB] p-1 h-auto"
               onClick={() => setIsLocationModalOpen(true)}
             >
               <span className="text-sm truncate">{userLocation}</span>

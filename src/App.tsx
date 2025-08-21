@@ -29,7 +29,7 @@ const HomePage = lazy(() => import("./pages/home"));
 const FishDetailPage = lazy(() => import("./pages/fish-detail"));
 const MenuPage = lazy(() => import("./components/menu-page"));
 const SearchPage = lazy(() => import("./pages/search"));
-const WeatherPage = lazy(() => import("./components/weather-page"));
+const WeatherPage = lazy(() => import("./pages/weather/weather"));
 const ProfilePage = lazy(() => import("./pages/profile"));
 const MyGearPage = lazy(() => import("./components/my-gear-page"));
 const GearCategoryPage = lazy(() => import("./components/gear-category-page"));

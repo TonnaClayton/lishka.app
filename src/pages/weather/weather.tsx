@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from "react";
 import { MapPin } from "lucide-react";
-import WeatherWidget from "./weather-widget-pro";
-import BottomNav from "./bottom-nav";
+import WeatherWidget from "@/components/weather-widget-pro";
+import BottomNav from "@/components/bottom-nav";
 import { log } from "@/lib/logging";
 import { useAuth } from "@/contexts/auth-context";
 import { useProfile, useUserLocation } from "@/hooks/queries";
 import { DEFAULT_LOCATION } from "@/lib/const";
-import { Button } from "./ui/button";
-import LocationModal from "./location-modal";
+import { Button } from "@/components/ui/button";
+import LocationModal from "@/components/location-modal";
 
 interface LocationData {
   latitude: number;
@@ -88,7 +88,7 @@ const WeatherPage: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1 h-auto"
+              className="flex items-center gap-1 text-[#0251FB] dark:text-[#0251FB] hover:text-[#0251FB] dark:hover:text-[#0251FB] p-1 h-auto"
               onClick={() => setIsLocationModalOpen(true)}
             >
               <span className="text-sm truncate">{location}</span>
