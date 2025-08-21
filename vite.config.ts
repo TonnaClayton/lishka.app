@@ -121,71 +121,67 @@ export default defineConfig({
       output: {
         manualChunks: {
           // React and core libraries
-          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
-          
+          "react-vendor": ["react", "react-dom", "react-router-dom"],
+
           // UI libraries
-          'ui-vendor': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-toast',
-            '@radix-ui/react-select',
-            '@radix-ui/react-accordion',
-            '@radix-ui/react-collapsible',
-            '@radix-ui/react-popover',
-            '@radix-ui/react-checkbox',
-            '@radix-ui/react-switch',
-            '@radix-ui/react-slider',
-            '@radix-ui/react-progress',
-            '@radix-ui/react-radio-group',
-            '@radix-ui/react-scroll-area',
-            '@radix-ui/react-separator',
-            '@radix-ui/react-tooltip',
-            'framer-motion',
-            'vaul'
+          "ui-vendor": [
+            "@radix-ui/react-dialog",
+            "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-tabs",
+            "@radix-ui/react-toast",
+            "@radix-ui/react-select",
+            "@radix-ui/react-accordion",
+            "@radix-ui/react-collapsible",
+            "@radix-ui/react-popover",
+            "@radix-ui/react-checkbox",
+            "@radix-ui/react-switch",
+            "@radix-ui/react-slider",
+            "@radix-ui/react-progress",
+            "@radix-ui/react-radio-group",
+            "@radix-ui/react-scroll-area",
+            "@radix-ui/react-separator",
+            "@radix-ui/react-tooltip",
+            "framer-motion",
+            "vaul",
           ],
-          
-          // Data/API libraries  
-          'data-vendor': [
-            '@supabase/supabase-js',
-            '@tanstack/react-query',
-            'axios'
+
+          // Data/API libraries
+          "data-vendor": [
+            "@supabase/supabase-js",
+            "@tanstack/react-query",
+            "axios",
           ],
-          
+
           // Map libraries
-          'map-vendor': ['leaflet', 'react-leaflet'],
-          
+          "map-vendor": ["leaflet", "react-leaflet"],
+
           // Image/media libraries
-          'media-vendor': [
-            'html2canvas',
-            'html-to-image', 
-            'react-image-crop',
-            'exif-js'
+          "media-vendor": [
+            "html2canvas",
+            "html-to-image",
+            "react-image-crop",
+            "exif-js",
           ],
-          
+
           // AI/ML libraries
-          'ai-vendor': ['@ai-sdk/openai', 'ai'],
-          
+          "ai-vendor": ["@ai-sdk/openai", "ai"],
+
           // Form libraries
-          'form-vendor': [
-            'react-hook-form',
-            '@hookform/resolvers',
-            'zod'
-          ],
-          
+          "form-vendor": ["react-hook-form", "@hookform/resolvers", "zod"],
+
           // Utility libraries
-          'utils-vendor': [
-            'date-fns',
-            'clsx',
-            'class-variance-authority',
-            'tailwind-merge',
-            'lucide-react',
-            '@radix-ui/react-icons'
-          ]
-        }
-      }
+          "utils-vendor": [
+            "date-fns",
+            "clsx",
+            "class-variance-authority",
+            "tailwind-merge",
+            "lucide-react",
+            "@radix-ui/react-icons",
+          ],
+        },
+      },
     },
-    chunkSizeWarningLimit: 600
+    chunkSizeWarningLimit: 600,
   },
   resolve: {
     preserveSymlinks: true,
