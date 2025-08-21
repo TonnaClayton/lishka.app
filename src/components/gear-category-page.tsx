@@ -7,8 +7,6 @@ import {
   Trash2,
   Edit3,
   MoreVertical,
-  Check,
-  X,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
