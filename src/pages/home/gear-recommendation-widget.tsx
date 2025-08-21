@@ -1,12 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Package, Loader2, AlertCircle } from "lucide-react";
 import LoadingDots from "@/components/loading-dots";
 import { useAuth } from "@/contexts/auth-context";
 import { useNavigate } from "react-router-dom";
-import { log } from "@/lib/logging";
-import { config } from "@/lib/config";
-import { useGetWeatherSummary, useUserLocation } from "@/hooks/queries";
+import { useGetWeatherSummary } from "@/hooks/queries";
 import GearRecommendationSkeleton from "./gear-recommendation-skeleton";
 import { useGetGearRecommendation } from "@/hooks/queries/gear/use-gear-recommendation";
 
@@ -38,16 +36,16 @@ interface GearItem {
   compatibleGear?: string;
 }
 
-interface WeatherConditions {
-  temperature: number;
-  windSpeed: number;
-  windDirection: number;
-  waveHeight: number;
-  swellHeight: number;
-  swellPeriod: number;
-  weatherCondition: string;
-  isSeaLocation: boolean;
-}
+// interface WeatherConditions {
+//   temperature: number;
+//   windSpeed: number;
+//   windDirection: number;
+//   waveHeight: number;
+//   swellHeight: number;
+//   swellPeriod: number;
+//   weatherCondition: string;
+//   isSeaLocation: boolean;
+// }
 
 interface AIRecommendation {
   gear_id: string;
@@ -56,23 +54,23 @@ interface AIRecommendation {
   suitability_for_conditions: string;
 }
 
-interface AnalysisState {
-  phase: "idle" | "loading-weather" | "analyzing-gear" | "complete" | "error";
-  weatherConditions: WeatherConditions | null;
-  recommendations: AIRecommendation[];
-  error: string | null;
-}
+// interface AnalysisState {
+//   phase: "idle" | "loading-weather" | "analyzing-gear" | "complete" | "error";
+//   weatherConditions: WeatherConditions | null;
+//   recommendations: AIRecommendation[];
+//   error: string | null;
+// }
 
 const GearRecommendationWidget: React.FC = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
-  const { location } = useUserLocation();
   // const [analysis, setAnalysis] = useState<AnalysisState>({
   //   phase: "idle",
   //   weatherConditions: null,
   //   recommendations: [],
   //   error: null,
   // });
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoading, setIsLoading] = useState(false);
 
   const { data: weatherData } = useGetWeatherSummary();
@@ -93,7 +91,7 @@ const GearRecommendationWidget: React.FC = () => {
           swell_wave_period: weatherData.swell_wave_period,
           weather_condition: weatherData.condition,
         }
-      : undefined
+      : undefined,
   );
 
   // Get user gear directly from profile (no local state)

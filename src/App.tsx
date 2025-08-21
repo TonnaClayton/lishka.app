@@ -36,32 +36,32 @@ const GearCategoryPage = lazy(() => import("./components/gear-category-page"));
 const SideNav = lazy(() =>
   import("./components/bottom-nav").then((module) => ({
     default: module.SideNav,
-  }))
+  })),
 );
 const WeatherWidgetPro = lazy(() => import("./components/weather-widget-pro"));
 const SettingsPage = lazy(() => import("./components/settings-page"));
 const FaqPage = lazy(() => import("./components/faq-page"));
 const TermsPage = lazy(() => import("./components/terms-page"));
 const PrivacyPolicyPage = lazy(
-  () => import("./components/privacy-policy-page")
+  () => import("./components/privacy-policy-page"),
 );
 const BlobConnectionTest = lazy(
-  () => import("./components/blob-connection-test")
+  () => import("./components/blob-connection-test"),
 );
 const BlobImageUploader = lazy(
-  () => import("./components/blob-image-uploader")
+  () => import("./components/blob-image-uploader"),
 );
 const BlobImageTest = lazy(() => import("./components/blob-image-test"));
 const AccountStatusChecker = lazy(
-  () => import("./components/account-status-checker")
+  () => import("./components/account-status-checker"),
 );
 const StorageSetup = lazy(() => import("./components/storage-setup"));
 const DatabaseDebugger = lazy(() => import("./components/database-debugger"));
 const ImageUploadDebugger = lazy(
-  () => import("./components/image-upload-debugger")
+  () => import("./components/image-upload-debugger"),
 );
 const GearDatabaseDebugger = lazy(
-  () => import("./components/gear-database-debugger")
+  () => import("./components/gear-database-debugger"),
 );
 const WhatsNewPage = lazy(() => import("./components/whats-new-page"));
 
@@ -335,7 +335,7 @@ const router = createBrowserRouter(
     future: {
       v7_relativeSplatPath: true,
     },
-  }
+  },
 );
 
 function AppContent() {
@@ -391,7 +391,7 @@ function AppContent() {
         <div
           className={cn(
             "flex-1 max-w-full h-full flex flex-col overflow-hidden",
-            !isAuthPage ? "lg:ml-[var(--sidebar-width)]" : ""
+            !isAuthPage ? "lg:ml-[var(--sidebar-width)]" : "",
           )}
         >
           {/* Email verification banner - only show on non-auth pages */}

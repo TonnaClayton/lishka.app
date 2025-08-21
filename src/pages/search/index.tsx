@@ -1,13 +1,6 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import {
-  Send,
-  MapPin,
-  ArrowLeft,
-  Loader2,
-  Image,
-  ChevronLeft,
-} from "lucide-react";
+import { Send, MapPin, Loader2, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
@@ -15,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import FishCard from "@/components/fish-card";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { useImperialUnits } from "@/lib/unit-conversion";
+import { getImperialUnits } from "@/lib/unit-conversion";
 import BottomNav from "@/components/bottom-nav";
 import useDeviceSize from "@/hooks/use-device-size";
 import useIsMobile from "@/hooks/use-is-mobile";
@@ -69,7 +62,7 @@ const SearchPage: React.FC = () => {
 
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>(
-    (routerLocation.state?.messages as Message[]) || []
+    (routerLocation.state?.messages as Message[]) || [],
   );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,13 +70,14 @@ const SearchPage: React.FC = () => {
   const [suggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [imperialUnits, setImperialUnits] =
-    useState<boolean>(useImperialUnits());
+    useState<boolean>(getImperialUnits());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const { data: session, isLoading: isLoadingSession } = useGetSearchSession(
-    id || ""
+    id || "",
   );
   const {
     data: followUpQuestions,
@@ -97,7 +91,6 @@ const SearchPage: React.FC = () => {
 
   const deviceSize = useDeviceSize();
   const isMobile = useIsMobile();
-  const units = useImperialUnits();
 
   const messagesMemo = useMemo(() => {
     if (id == undefined || id == null) {
@@ -127,27 +120,27 @@ const SearchPage: React.FC = () => {
   // Listen for units changes from settings
   useEffect(() => {
     // const handleUnitsChange = () => {
-    //   setImperialUnits(useImperialUnits());
+    //   setImperialUnits(getImperialUnits());
     // };
     // window.addEventListener("unitsChanged", handleUnitsChange);
     // return () => window.removeEventListener("unitsChanged", handleUnitsChange);
   }, []);
 
   // Convert image to base64
-  const convertImageToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result as string);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
+  // const convertImageToBase64 = (file: File): Promise<string> => {
+  //   return new Promise((resolve, reject) => {
+  //     const reader = new FileReader();
+  //     reader.onload = () => resolve(reader.result as string);
+  //     reader.onerror = reject;
+  //     reader.readAsDataURL(file);
+  //   });
+  // };
 
   // Extract the API call logic to a separate function
   const processQuery = async (
     queryText: string,
     userMessage: Message,
-    imageFile?: File
+    imageFile?: File,
   ) => {
     try {
       const response = await mutation.mutateAsync({
@@ -232,7 +225,7 @@ const SearchPage: React.FC = () => {
       await processQuery(
         currentQuery || "What can you tell me about this image?",
         userMessage,
-        currentImageFile || undefined
+        currentImageFile || undefined,
       );
     } catch (err) {
       console.error("Error in handleSubmit:", err);
@@ -338,13 +331,13 @@ const SearchPage: React.FC = () => {
         <div
           className={cn(
             "flex-1 h-full",
-            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-16"
+            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-16",
           )}
         >
           <div
             className={cn(
               "flex flex-col items-center justify-center px-4 max-w-2xl mx-auto text-center space-y-6",
-              !(isMobile && deviceSize.height < 850) && "h-full"
+              !(isMobile && deviceSize.height < 850) && "h-full",
             )}
           >
             <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
@@ -386,7 +379,7 @@ const SearchPage: React.FC = () => {
                     "flex",
                     message.user_role === "user"
                       ? "justify-end"
-                      : "justify-start"
+                      : "justify-start",
                   )}
                 >
                   <div
@@ -395,7 +388,7 @@ const SearchPage: React.FC = () => {
                       isMobile && "max-w-[95%]",
                       message.user_role === "user"
                         ? "bg-blue-500 text-white"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100",
                     )}
                   >
                     {message.image && (
@@ -447,7 +440,7 @@ const SearchPage: React.FC = () => {
                                   onClick={() => {
                                     navigate(
                                       `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
-                                      { state: { fish } }
+                                      { state: { fish } },
                                     );
                                   }}
                                 />

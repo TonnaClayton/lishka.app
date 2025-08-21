@@ -29,20 +29,6 @@ interface HomePageProps {
   onLocationChange?: (location: string) => void;
 }
 
-interface FishData {
-  slug: string;
-  name: string;
-  scientificName: string;
-  localName?: string;
-  habitat: string;
-  difficulty: "Easy" | "Intermediate" | "Hard" | "Advanced" | "Expert";
-  season: string;
-  isToxic: boolean;
-  dangerType?: string;
-  image?: string;
-  probabilityScore?: number;
-}
-
 const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -96,7 +82,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const { data: toxicFishData, isLoading: loadingToxicFish } = useToxicFishData(
     userLocation,
     (profile?.location_coordinates as any)?.latitude,
-    (profile?.location_coordinates as any)?.longitude
+    (profile?.location_coordinates as any)?.longitude,
   );
 
   // Extract fish list from infinite query data

@@ -107,19 +107,6 @@ export interface FishDetails {
   dangerType?: string;
 }
 
-const fetchFishDetails = async (
-  fishName: string,
-  location: string,
-  initialData?: any,
-) => {
-  // try {
-
-  // } catch (err) {
-  //   throw err;
-  // }
-  log("fetchFishDetails", fishName, location, initialData);
-};
-
 // React Query hook for fish details
 export const useFishDetails = (slug: string) => {
   return useQuery({
@@ -161,7 +148,7 @@ export const useFishImage = (
         );
         return imageUrl;
       } catch (error) {
-        console.error(`Error loading fish image:`, error);
+        log(`Error loading fish image:`, error);
         return getPlaceholderFishImage();
       }
     },

@@ -1,8 +1,5 @@
 import React from "react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
-import GearRecommendationSkeleton from "./gear-recommendation-skeleton";
-import ToxicFishSkeleton from "./toxic-fish-skeleton";
 
 const HomePageSkeleton: React.FC = () => {
   return (

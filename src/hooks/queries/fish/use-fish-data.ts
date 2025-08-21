@@ -208,8 +208,7 @@ const fetchFishData = async (location: string, page: number = 1) => {
   const cleanLocation = getCleanLocationName(location);
 
   // Create cache key
-  const cacheKey =
-    `fish_data_v3_${cleanLocation}_${currentMonthYear}_page_${page}`;
+  const cacheKey = `fish_data_v3_${cleanLocation}_${currentMonthYear}_page_${page}`;
 
   // Check cache first
   const cachedData = getCachedApiResponse(cacheKey);
@@ -228,12 +227,9 @@ const fetchFishData = async (location: string, page: number = 1) => {
       },
       {
         role: "user",
-        content:
-          `Generate a JSON array with exactly ${pageSize} fish species that are NATIVE and commonly found in the ${
-            getLocationToSeaMapping(
-              location,
-            )
-          } near ${cleanLocation} during ${currentMonth}. 
+        content: `Generate a JSON array with exactly ${pageSize} fish species that are NATIVE and commonly found in the ${getLocationToSeaMapping(
+          location,
+        )} near ${cleanLocation} during ${currentMonth}. 
 
 CRITICAL REQUIREMENTS:
 1. SCIENTIFIC NAME FIRST: Every fish MUST have a valid, complete binomial scientific name (Genus species). NO exceptions.
@@ -242,11 +238,9 @@ CRITICAL REQUIREMENTS:
 4. Examples: "Thunnus thynnus" NOT "Thunnus spp." or "Thunnus sp." or "Unknown".
 5. If you cannot provide a valid scientific name for a fish, DO NOT include it in the response.
 
-GEOGRAPHIC REQUIREMENT: Only include fish species that are naturally occurring and indigenous to the ${
-            getLocationToSeaMapping(
-              location,
-            )
-          } region. DO NOT include tropical, exotic, or non-native species that would not naturally be found in these waters. For example, if the location is Malta (Mediterranean Sea), do NOT include clownfish, angelfish, or other tropical species. Focus on temperate and regional species appropriate for the specific sea/ocean.
+GEOGRAPHIC REQUIREMENT: Only include fish species that are naturally occurring and indigenous to the ${getLocationToSeaMapping(
+          location,
+        )} region. DO NOT include tropical, exotic, or non-native species that would not naturally be found in these waters. For example, if the location is Malta (Mediterranean Sea), do NOT include clownfish, angelfish, or other tropical species. Focus on temperate and regional species appropriate for the specific sea/ocean.
 
 Format: [{\"name\":\"Fish Name\",\"scientificName\":\"Genus species\",\"habitat\":\"Habitat Description\",\"difficulty\":\"Easy\",\"season\":\"Season Info\",\"isToxic\":false}]. Mix of difficulty levels (Easy/Intermediate/Hard/Advanced/Expert). 
 
@@ -407,14 +401,12 @@ export const useFishDataInfinite = (location: string) => {
   });
 };
 
-export const useFishingTips = (
-  query: {
-    temperature?: number;
-    windSpeed?: number;
-    waveHeight?: number;
-    weatherCondition?: string;
-  },
-) => {
+export const useFishingTips = (query: {
+  temperature?: number;
+  windSpeed?: number;
+  waveHeight?: number;
+  weatherCondition?: string;
+}) => {
   return useQuery({
     queryKey: fishQueryKeys.fishingTips(query),
     queryFn: async () => {

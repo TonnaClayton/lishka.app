@@ -8,6 +8,11 @@ export const useImperialUnits = (): boolean => {
   return preference === "true";
 };
 
+export const getImperialUnits = (): boolean => {
+  const preference = localStorage.getItem("useImperialUnits");
+  return preference === "true";
+};
+
 // Convert cm to inches
 export const cmToInches = (cm: number): number => {
   return cm * 0.393701;

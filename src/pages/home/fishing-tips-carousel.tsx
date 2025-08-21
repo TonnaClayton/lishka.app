@@ -126,10 +126,7 @@ const highlightKeywords = (text: string): string => {
   return result;
 };
 
-const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
-  location = "Miami Coast",
-  weatherData,
-}) => {
+const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
   // const [tips, setTips] = useState<FishingTip[]>([]);
   // const [loading, setLoading] = useState(true);
   // const [error, setError] = useState<string | null>(null);
@@ -505,7 +502,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
                   <CloudSnow className="w-8 h-8 text-blue-300" />
                 )}
                 {!["Clear", "Partly cloudy", "Rainy", "Snowy"].includes(
-                  weatherSummary.condition
+                  weatherSummary.condition,
                 ) && <Cloud className="w-8 h-8 text-blue-400" />}
                 <span className="text-foreground text-2xl font-normal">
                   {weatherSummary.temperature !== null

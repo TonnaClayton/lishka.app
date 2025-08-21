@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from "react";
-import { useNavigate, useParams, useLocation } from "react-router-dom";
-import { ChevronLeft, AlertCircle, ArrowLeft } from "lucide-react";
+import React, { useState } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ChevronLeft, AlertCircle } from "lucide-react";
 import BottomNav, { SideNav } from "@/components/bottom-nav";
 import WeatherWidgetPro from "@/components/weather-widget-pro";
 import { FishingGear, FishingSeasons, useFishDetails } from "@/hooks/queries";
@@ -59,7 +59,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
     // Convert all season entries to lowercase for comparison
     const seasonEntries = fishingSeasons.inSeason
       .map((season) =>
-        typeof season === "string" ? season.toLowerCase().trim() : ""
+        typeof season === "string" ? season.toLowerCase().trim() : "",
       )
       .filter((season) => season.length > 0);
 
@@ -93,7 +93,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
         season.includes(monthData.short.toLowerCase())
       ) {
         log(
-          `✓ Contains match: ${season} contains ${monthData.full.toLowerCase()}`
+          `✓ Contains match: ${season} contains ${monthData.full.toLowerCase()}`,
         );
         return true;
       }
@@ -129,7 +129,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
             m.full.toLowerCase() === startSeason ||
             m.short.toLowerCase() === startSeason ||
             m.full.toLowerCase().startsWith(startSeason) ||
-            m.short.toLowerCase().startsWith(startSeason)
+            m.short.toLowerCase().startsWith(startSeason),
         );
 
         const endMonth = months.find(
@@ -137,7 +137,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
             m.full.toLowerCase() === endSeason ||
             m.short.toLowerCase() === endSeason ||
             m.full.toLowerCase().startsWith(endSeason) ||
-            m.short.toLowerCase().startsWith(endSeason)
+            m.short.toLowerCase().startsWith(endSeason),
         );
 
         if (startMonth && endMonth) {
@@ -146,7 +146,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
           const currentIdx = monthData.index;
 
           log(
-            `Range indices: start=${startIdx}, end=${endIdx}, current=${currentIdx}`
+            `Range indices: start=${startIdx}, end=${endIdx}, current=${currentIdx}`,
           );
 
           // Handle range that wraps around the year (e.g., Nov-Feb)
@@ -161,13 +161,13 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
 
           if (inRange) {
             log(
-              `✓ Range match: ${monthData.full} is in range ${startSeason}-${endSeason}`
+              `✓ Range match: ${monthData.full} is in range ${startSeason}-${endSeason}`,
             );
             return true;
           }
         } else {
           log(
-            `Could not find months for range: ${startSeason} to ${endSeason}`
+            `Could not find months for range: ${startSeason} to ${endSeason}`,
           );
         }
       }
@@ -183,7 +183,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
             monthData.short.toLowerCase().startsWith(monthName)
           ) {
             log(
-              `✓ List match: ${monthData.full} found in comma-separated list`
+              `✓ List match: ${monthData.full} found in comma-separated list`,
             );
             return true;
           }
@@ -227,7 +227,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
         const isInSeason = isMonthInSeason(monthData);
 
         log(
-          `Month ${monthData.full}: in-season=${isInSeason}, styling=${styling}`
+          `Month ${monthData.full}: in-season=${isInSeason}, styling=${styling}`,
         );
 
         return (
@@ -245,7 +245,6 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
 
 const FishDetailPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { user } = useAuth();
   const { data: profile, isLoading: isProfileLoading } = useProfile(user.id);
   const { fishName } = useParams<{ fishName: string }>();
@@ -253,8 +252,8 @@ const FishDetailPage = () => {
   // const [error, setError] = useState<string | null>(null);
   // const [fishDetails, setFishDetails] = useState<FishDetails | null>(null);
 
-  const [fishImageUrl, setFishImageUrl] = useState<string>("");
-  const [imageLoading, setImageLoading] = useState(true);
+  const [fishImageUrl] = useState<string>("");
+  const [imageLoading] = useState(true);
 
   const {
     data: fishDetailsData,
@@ -264,17 +263,17 @@ const FishDetailPage = () => {
   } = useFishDetails(fishName);
 
   // Cache keys for consistent data
-  const getCacheKey = (
-    type: string,
-    fishName: string,
-    location: string,
-    scientificName?: string
-  ) => {
-    const key = `${type}_${fishName}_${location}_${scientificName || "unknown"}`
-      .toLowerCase()
-      .replace(/[^a-z0-9_]/g, "_");
-    return key;
-  };
+  // const getCacheKey = (
+  //   type: string,
+  //   fishName: string,
+  //   location: string,
+  //   scientificName?: string
+  // ) => {
+  //   const key = `${type}_${fishName}_${location}_${scientificName || "unknown"}`
+  //     .toLowerCase()
+  //     .replace(/[^a-z0-9_]/g, "_");
+  //   return key;
+  // };
 
   //   // Cache duration: 7 days for regulations, 1 day for general info
   //   const CACHE_DURATION = {
@@ -1068,7 +1067,7 @@ const FishDetailPage = () => {
                       className="w-full h-full object-cover absolute top-0 left-0"
                       onError={(e) => {
                         log(
-                          `Fish detail image error for ${fishDetailsData.name}`
+                          `Fish detail image error for ${fishDetailsData.name}`,
                         );
                         handleFishImageError(e, fishDetailsData.name);
                       }}
@@ -1340,7 +1339,7 @@ const FishDetailPage = () => {
                           b &&
                           typeof b === "string" &&
                           b.trim() !== "" &&
-                          b.trim().toLowerCase() !== "n/a"
+                          b.trim().toLowerCase() !== "n/a",
                       );
                     const hasLures =
                       method.gear?.lures &&
@@ -1351,7 +1350,7 @@ const FishDetailPage = () => {
                           l &&
                           typeof l === "string" &&
                           l.trim() !== "" &&
-                          l.trim().toLowerCase() !== "n/a"
+                          l.trim().toLowerCase() !== "n/a",
                       );
                     // const hasJigInfo =
                     //   (method.gear?.jig_weight &&
@@ -1501,7 +1500,7 @@ const FishDetailPage = () => {
                                 b &&
                                 typeof b === "string" &&
                                 b.trim() !== "" &&
-                                b.trim().toLowerCase() !== "n/a"
+                                b.trim().toLowerCase() !== "n/a",
                             )
                             .join(", "),
                           color: "emerald",
@@ -1517,7 +1516,7 @@ const FishDetailPage = () => {
                                 l &&
                                 typeof l === "string" &&
                                 l.trim() !== "" &&
-                                l.trim().toLowerCase() !== "n/a"
+                                l.trim().toLowerCase() !== "n/a",
                             )
                             .join(", "),
                           color: "violet",
@@ -1758,7 +1757,7 @@ const FishDetailPage = () => {
                     onClick={() =>
                       window.open(
                         "https://www.instagram.com/lishka.app/",
-                        "_blank"
+                        "_blank",
                       )
                     }
                     className="underline hover:no-underline font-medium text-gray-500 dark:text-gray-500"

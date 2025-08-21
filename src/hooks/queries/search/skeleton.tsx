@@ -13,7 +13,7 @@ const SearchPageSkeleton: React.FC<SearchPageSkeletonProps> = ({
     <div
       className={cn(
         "flex flex-col bg-white h-full relative dark:bg-black w-full",
-        className
+        className,
       )}
     >
       {/* Header Skeleton */}
