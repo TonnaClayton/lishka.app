@@ -38,7 +38,7 @@ export default function ScreenFour({
       </div>
       <img
         src={
-          "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T180827109Z.png"
+          "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T180827109Z.webp"
         }
         alt={"Pasted Image"}
         width={1572}
