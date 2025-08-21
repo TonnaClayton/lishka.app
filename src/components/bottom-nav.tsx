@@ -18,6 +18,7 @@ import { uploadGearImage } from "@/lib/gear-upload-service";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
 import { ROUTES } from "@/lib/routing";
+import { cn } from "@/lib/utils";
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
@@ -458,13 +459,23 @@ const BottomNav: React.FC = () => {
         <div className="flex justify-around items-center h-16">
           <Link
             to="/"
-            className={`flex items-center ${currentPath === "/" ? "text-[#0251FB] dark:text-blue-400" : "text-gray-500 hover:text-[#0251FB] dark:text-gray-400 dark:hover:text-blue-400"}`}
+            className={cn(
+              `flex items-center`,
+              currentPath === "/"
+                ? "text-[#0251FB] "
+                : "text-[#191B1F] hover:text-[#0251FB]",
+            )}
           >
             <Home size={24} />
           </Link>
           <Link
             to="/search"
-            className={`flex items-center ${currentPath === "/search" ? "text-[#0251FB] dark:text-blue-400" : "text-gray-500 hover:text-[#0251FB] dark:text-gray-400 dark:hover:text-blue-400"}`}
+            className={cn(
+              `flex items-center`,
+              currentPath === "/search"
+                ? "text-[#0251FB] "
+                : "text-[#191B1F] hover:text-[#0251FB]",
+            )}
           >
             <Search size={24} />
           </Link>
@@ -472,7 +483,7 @@ const BottomNav: React.FC = () => {
           <button
             onClick={handleCameraClick}
             disabled={uploadingPhoto || classifyingImage}
-            className="flex items-center text-gray-500 hover:text-[#0251FB] dark:text-gray-400 dark:hover:text-blue-400 disabled:opacity-50 relative"
+            className="flex items-center text-[#191B1F] hover:text-[#0251FB] disabled:opacity-50 relative"
           >
             {classifyingImage ? (
               <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#0251FB] border-t-transparent" />
@@ -484,14 +495,24 @@ const BottomNav: React.FC = () => {
           {isMobile && (
             <Link
               to="/weather"
-              className={`flex items-center ${currentPath === "/weather" ? "text-[#0251FB] dark:text-blue-400" : "text-gray-500 hover:text-[#0251FB] dark:text-gray-400 dark:hover:text-blue-400"}`}
+              className={cn(
+                `flex items-center`,
+                currentPath === "/weather"
+                  ? "text-[#0251FB] "
+                  : "text-[#191B1F] hover:text-[#0251FB]",
+              )}
             >
               <Cloud size={24} />
             </Link>
           )}
           <Link
             to="/profile"
-            className={`flex items-center ${currentPath === "/profile" ? "text-[#0251FB] dark:text-blue-400" : "text-gray-500 hover:text-[#0251FB] dark:text-gray-400 dark:hover:text-blue-400"}`}
+            className={cn(
+              `flex items-center`,
+              currentPath === "/profile"
+                ? "text-[#0251FB] "
+                : "text-[#191B1F] hover:text-[#0251FB]",
+            )}
           >
             <User size={24} />
           </Link>
@@ -636,14 +657,26 @@ export const SideNav: React.FC = () => {
             <>
               <Link
                 to="/"
-                className={`flex items-center py-3 rounded-lg ${isCollapsed ? "justify-center" : "px-4"} ${currentPath === "/" ? "bg-blue-50 text-[#0251FB] dark:bg-blue-900/30 dark:text-blue-400" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"}`}
+                className={cn(
+                  `flex items-center py-3 rounded-lg`,
+                  isCollapsed ? "justify-center" : "px-4",
+                  currentPath === "/"
+                    ? "bg-[#E6EFFF] text-[#0251FB]  "
+                    : "text-[#191B1F] hover:bg-gray-100 ",
+                )}
               >
                 <Home className={isCollapsed ? "" : "mr-3"} size={20} />
                 {!isCollapsed && <span>Home</span>}
               </Link>
               <Link
                 to="/search"
-                className={`flex items-center py-3 rounded-lg ${isCollapsed ? "justify-center" : "px-4"} ${currentPath === "/search" ? "bg-blue-50 text-[#0251FB] dark:bg-blue-900/30 dark:text-blue-400" : "text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"}`}
+                className={cn(
+                  `flex items-center py-3 rounded-lg`,
+                  isCollapsed ? "justify-center" : "px-4",
+                  currentPath === "/search"
+                    ? "bg-[#E6EFFF] text-[#0251FB] "
+                    : "text-[#191B1F] hover:bg-gray-100 ",
+                )}
               >
                 <Search className={isCollapsed ? "" : "mr-3"} size={20} />
                 {!isCollapsed && <span>Search</span>}
@@ -652,13 +685,19 @@ export const SideNav: React.FC = () => {
           ) : (
             <>
               <div
-                className={`flex items-center py-3 rounded-lg ${isCollapsed ? "justify-center" : "px-4"} text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800`}
+                className={cn(
+                  `flex items-center py-3 rounded-lg text-[#191B1F] hover:bg-gray-100 `,
+                  isCollapsed ? "justify-center" : "px-4",
+                )}
               >
                 <Home className={isCollapsed ? "" : "mr-3"} size={20} />
                 {!isCollapsed && <span>Home</span>}
               </div>
               <div
-                className={`flex items-center py-3 rounded-lg ${isCollapsed ? "justify-center" : "px-4"} text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800`}
+                className={cn(
+                  `flex items-center py-3 rounded-lg text-[#191B1F] hover:bg-gray-100 `,
+                  isCollapsed ? "justify-center" : "px-4",
+                )}
               >
                 <Search className={isCollapsed ? "" : "mr-3"} size={20} />
                 {!isCollapsed && <span>Search</span>}
@@ -673,21 +712,39 @@ export const SideNav: React.FC = () => {
           {hasRouterContext ? (
             <Link
               to="/settings"
-              className={`flex items-center py-3 rounded-lg ${isCollapsed ? "justify-center" : "px-4"} text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800`}
+              className={cn(
+                `flex items-center py-3 rounded-lg`,
+                isCollapsed ? "justify-center" : "px-4",
+                currentPath === "/settings"
+                  ? "bg-[#E6EFFF] text-[#0251FB]  "
+                  : "text-[#191B1F] hover:bg-gray-100 ",
+              )}
             >
               <Settings className={isCollapsed ? "" : "mr-3"} size={20} />
               {!isCollapsed && <span>Settings</span>}
             </Link>
           ) : (
             <div
-              className={`flex items-center py-3 rounded-lg ${isCollapsed ? "justify-center" : "px-4"} text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800`}
+              className={cn(
+                `flex items-center py-3 rounded-lg`,
+                isCollapsed ? "justify-center" : "px-4",
+                currentPath === "/settings"
+                  ? "bg-[#E6EFFF] text-[#0251FB]  "
+                  : "text-[#191B1F] hover:bg-gray-100 ",
+              )}
             >
               <Settings className={isCollapsed ? "" : "mr-3"} size={20} />
               {!isCollapsed && <span>Settings</span>}
             </div>
           )}
           <div
-            className={`flex items-center py-3 rounded-lg ${isCollapsed ? "justify-center" : "px-4"} text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800`}
+            className={cn(
+              `flex items-center py-3 rounded-lg`,
+              isCollapsed ? "justify-center" : "px-4",
+              currentPath === "/help"
+                ? "bg-[#E6EFFF] text-[#0251FB]  "
+                : "text-[#191B1F] hover:bg-gray-100 ",
+            )}
           >
             <HelpCircle className={isCollapsed ? "" : "mr-3"} size={20} />
             {!isCollapsed && <span>Help</span>}
@@ -715,7 +772,10 @@ export const SideNav: React.FC = () => {
                   window.location.href = ROUTES.LOGIN;
                 }
               }}
-              className={`flex items-center py-3 rounded-lg ${isCollapsed ? "justify-center" : "px-4"} text-gray-700 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800`}
+              className={cn(
+                `flex items-center py-3 rounded-lg text-[#191B1F] hover:bg-gray-100 `,
+                isCollapsed ? "justify-center" : "px-4",
+              )}
             >
               <LogOut className={isCollapsed ? "" : "mr-3"} size={20} />
               {!isCollapsed && <span>Sign Out</span>}

@@ -417,7 +417,7 @@ const LocationModal = ({
               onClick={handleMapLocationSelect}
               disabled={loading}
               variant="default"
-              className="confirm-location-button w-full bg-[#025DFB1A] h-12 text-[#0251FB] hover:bg-[#025DFB33] hover:text-[#0251FB] rounded-full shadow-none border-none"
+              className="confirm-location-button w-full bg-[#0251FB1A] h-12 text-[#0251FB] hover:bg-[#0251FB33] hover:text-[#0251FB] rounded-full shadow-none border-none"
             >
               Set this location
             </Button>

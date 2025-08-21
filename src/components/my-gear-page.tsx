@@ -303,7 +303,7 @@ const MyGearPage: React.FC = () => {
               <Button
                 onClick={() => navigate("/profile")}
                 className="mt-4 border-none shadow-none text-gray-800 font-medium py-3 px-6"
-                style={{ backgroundColor: "#025DFB0D" }}
+                style={{ backgroundColor: "#0251FB0D" }}
               >
                 Add Your First Gear
                 <Plus className="w-4 h-4 ml-2" />
