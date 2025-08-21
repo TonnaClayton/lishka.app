@@ -14,6 +14,7 @@ import {
 } from "@/hooks/queries";
 import FishingTipsSkeleton from "./fishing-tips-skeleton";
 import { useAuth } from "@/contexts/auth-context";
+import { cn } from "@/lib/utils";
 
 interface WeatherData {
   current?: {
@@ -493,17 +494,17 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
                   <Sun className="w-8 h-8 text-yellow-500" />
                 )}
                 {weatherSummary.condition === "Partly cloudy" && (
-                  <Cloud className="w-8 h-8 text-blue-400" />
+                  <Cloud className="w-8 h-8 text-[#0251FB]" />
                 )}
                 {weatherSummary.condition === "Rainy" && (
-                  <CloudRain className="w-8 h-8 text-blue-500" />
+                  <CloudRain className="w-8 h-8 text-[#0251FB]" />
                 )}
                 {weatherSummary.condition === "Snowy" && (
                   <CloudSnow className="w-8 h-8 text-blue-300" />
                 )}
                 {!["Clear", "Partly cloudy", "Rainy", "Snowy"].includes(
                   weatherSummary.condition,
-                ) && <Cloud className="w-8 h-8 text-blue-400" />}
+                ) && <Cloud className="w-8 h-8 text-[#0251FB]" />}
                 <span className="text-foreground text-2xl font-normal">
                   {weatherSummary.temperature !== null
                     ? `${weatherSummary.temperature}°`
@@ -524,7 +525,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-blue-500 rotate-45 text-[20px]"
+                  className="text-[#A855F7] rotate-45 text-[20px]"
                 >
                   <path d="M5 12h14"></path>
                   <path d="m12 5 7 7-7 7"></path>
@@ -548,7 +549,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-purple-500"
+                    className="text-[#0251FB]"
                   >
                     <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
                     <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
@@ -579,7 +580,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
         <CarouselContent>
           {tips.map((tip, index) => (
             <CarouselItem key={index}>
-              <Card className="overflow-hidden border bg-background shadow-sm rounded-xl border-[#e8e8e9] h-full">
+              <Card className="overflow-hidden border bg-background rounded-[12px] border-[#191B1F1A] h-full shadow-[0_1px_2px_#0000000D]">
                 <CardContent className="p-4 pb-4 flex flex-col h-full">
                   <p
                     className="text-2xl text-black leading-relaxed mb-4 flex-grow"
@@ -610,9 +611,10 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
             <button
               key={index}
               onClick={() => api?.scrollTo(index)}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === current - 1 ? "bg-foreground" : "bg-muted"
-              }`}
+              className={cn(
+                "w-2 h-2 rounded-full transition-colors",
+                index === current - 1 ? "bg-[#191B1F]" : "bg-[#191B1F0D]",
+              )}
             />
           ))}
         </div>
