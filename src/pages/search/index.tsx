@@ -26,6 +26,7 @@ import {
   useUserLocation,
 } from "@/hooks/queries";
 import SearchPageSkeleton from "@/hooks/queries/search/skeleton";
+import { SearchHistorySheet } from "./search-history-sheet";
 
 interface Message {
   id: string;
@@ -61,9 +62,25 @@ const SearchPage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
 
   const [query, setQuery] = useState("");
-  const [messages, setMessages] = useState<Message[]>(
-    (routerLocation.state?.messages as Message[]) || [],
-  );
+  const [messages, setMessages] = useState<Message[]>(() => {
+    const stateMessages = (routerLocation.state?.messages as Message[]) || null;
+    if (stateMessages && stateMessages.length > 0) {
+      return stateMessages;
+    }
+    if (id) {
+      try {
+        const cached = sessionStorage.getItem(`search_messages_${id}`);
+        if (cached) {
+          return JSON.parse(cached) as Message[];
+        }
+      } catch {
+        // do nothing
+      }
+
+      sessionStorage.removeItem(`search_messages_${id}`);
+    }
+    return [];
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [useLocationContext, setUseLocationContext] = useState(true);
@@ -165,11 +182,21 @@ const SearchPage: React.FC = () => {
         id == "" ||
         id != response.session_id
       ) {
+        // Cache the initial two messages so they persist across navigation
+        try {
+          sessionStorage.setItem(
+            `search_messages_${response.session_id}`,
+            JSON.stringify([userMessage, content]),
+          );
+        } catch {
+          //
+        }
+
+        // Update local state so both messages render immediately before navigation
+        setMessages([userMessage, content]);
+        // Navigate to the canonical session URL without relying on router state
         navigate(`/search/${response.session_id}`, {
           replace: true,
-          state: {
-            messages: [userMessage, content],
-          },
         });
       } else {
         setMessages((prev) => {
@@ -291,19 +318,23 @@ const SearchPage: React.FC = () => {
       {/* Header - Fixed at top */}
       <header className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black px-4 lg:static py-4">
         <div className="flex items-center gap-2">
-          {messagesMemo.length > 0 && (
+          {messagesMemo.length > 0 ? (
             <Button
               variant="ghost"
               size="icon"
               onClick={() => {
-                setMessages([]);
-                setError(null);
+                // setMessages([]);
+                // setError(null);
+                navigate("/search");
               }}
               className="mr-1"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-5 w-5" />
             </Button>
+          ) : (
+            <SearchHistorySheet />
           )}
+
           <h1 className="text-lg font-semibold dark:text-white">
             Fishing Assistant
           </h1>
