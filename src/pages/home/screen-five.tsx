@@ -38,7 +38,7 @@ export default function ScreenFive({
       </div>
       <img
         src={
-          "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T181410487Z.png"
+          "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T181410487Z.webp"
         }
         alt={"Pasted Image"}
         width={1572}

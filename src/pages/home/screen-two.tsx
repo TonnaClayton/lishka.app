@@ -39,7 +39,7 @@ export default function ScreenTwo({
       </div>
       <img
         src={
-          "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T180431871Z.png"
+          "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T180431871Z.webp"
         }
         alt={"Pasted Image"}
         width={1572}
