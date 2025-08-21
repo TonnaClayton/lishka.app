@@ -1,13 +1,13 @@
 import React, { useMemo, useState } from "react";
 import { MapPin } from "lucide-react";
-import WeatherWidget from "./weather-widget-pro";
-import BottomNav from "./bottom-nav";
+import WeatherWidget from "@/components/weather-widget-pro";
+import BottomNav from "@/components/bottom-nav";
 import { log } from "@/lib/logging";
 import { useAuth } from "@/contexts/auth-context";
 import { useProfile, useUserLocation } from "@/hooks/queries";
 import { DEFAULT_LOCATION } from "@/lib/const";
-import { Button } from "./ui/button";
-import LocationModal from "./location-modal";
+import { Button } from "@/components/ui/button";
+import LocationModal from "@/components/location-modal";
 
 interface LocationData {
   latitude: number;
