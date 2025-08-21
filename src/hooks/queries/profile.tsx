@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth-context";
 import { uploadImageToSupabase } from "@/lib/supabase-storage";
 import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
-import { uploadGearImage, GearUploadResult } from "@/lib/gear-upload-service";
+import { uploadGearImage } from "@/lib/gear-upload-service";
 import { log } from "@/lib/logging";
 import { useUserLocation } from "./location";
 
@@ -30,7 +30,7 @@ export const useProfile = (userId: string) => {
 
       return data;
     },
-    enabled: !!userId && userId.length > 0,
+    enabled: !!userId,
   });
 };
 
@@ -248,7 +248,7 @@ export const useDeletePhoto = () => {
       );
 
       // Update profile in database
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("profiles")
         .update({ gallery_photos: updatedPhotos })
         .eq("id", user?.id)
@@ -305,7 +305,7 @@ export const useUpdatePhotoMetadata = () => {
       updatedPhotos[photoIndex] = metadata;
 
       // Update profile in database
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("profiles")
         .update({ gallery_photos: updatedPhotos })
         .eq("id", user?.id)

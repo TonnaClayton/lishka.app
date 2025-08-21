@@ -4,7 +4,6 @@ import { ChevronLeft, Ruler, LogOut, Trash2 } from "lucide-react";
 
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
-import { Switch } from "./ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,6 +19,7 @@ import { log } from "@/lib/logging";
 
 import BottomNav from "./bottom-nav";
 import { useAuth } from "@/contexts/auth-context";
+import { ROUTES } from "@/lib/routing";
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -56,7 +56,7 @@ const SettingsPage: React.FC = () => {
     } catch (err) {
       console.error("[SettingsPage] Sign out error:", err);
       // Force redirect even if signOut fails
-      navigate("/login", { replace: true });
+      navigate(ROUTES.LOGIN, { replace: true });
     }
   };
 

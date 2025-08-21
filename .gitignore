@@ -34,4 +34,7 @@ core
 
 .vscode
 
+coverage
 dev-dist
+
+/supabase/.temp

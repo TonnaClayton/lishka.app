@@ -1,35 +1,20 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useLocation } from "react-router-dom";
+import { ChevronLeft, AlertCircle, ArrowLeft } from "lucide-react";
 import BottomNav, { SideNav } from "@/components/bottom-nav";
 import WeatherWidgetPro from "@/components/weather-widget-pro";
-import { ArrowLeft, AlertCircle } from "lucide-react";
-import {
-  FishDetails,
-  FishingGear,
-  FishingSeasons,
-  useFishDetails,
-} from "@/hooks/queries";
-
-import FishCard from "@/components/fish-card";
+import { FishingGear, FishingSeasons, useFishDetails } from "@/hooks/queries";
 import {
   handleFishImageError,
   getPlaceholderFishImage,
-  getFishImageUrl as getFishImageUrlFromService,
 } from "@/lib/fish-image-service";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import LoadingDots from "@/components/loading-dots";
 import { log } from "@/lib/logging";
-import { config } from "@/lib/config";
-import { generateTextWithAI } from "@/lib/ai";
 import { useProfile } from "@/hooks/queries";
 import { useAuth } from "@/contexts/auth-context";
 import FishDetailSkeleton from "./fish-detail-skeleton";
-import {
-  validateAndSanitizeRegulations,
-  validateFishingData,
-} from "@/lib/fish";
 
 // Fishing Season Calendar Component
 interface FishingSeasonCalendarProps {
@@ -41,7 +26,6 @@ interface FishingSeasonCalendarProps {
 const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
   fishingSeasons,
   fishName,
-  location,
 }) => {
   // Month data
   const months = [
@@ -928,7 +912,7 @@ const FishDetailPage = () => {
         <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 w-full lg:hidden">
           <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-6 w-6" />
+              <ChevronLeft className="h-6 w-6" />
             </Button>
             <h1 className="text-xl font-bold ml-2 dark:text-white">
               Loading...
@@ -952,7 +936,7 @@ const FishDetailPage = () => {
                   size="icon"
                   onClick={() => navigate(-1)}
                 >
-                  <ArrowLeft className="h-6 w-6" />
+                  <ChevronLeft className="h-6 w-6" />
                 </Button>
                 <h1 className="text-xl font-bold ml-2 dark:text-white">
                   Loading...
@@ -976,7 +960,7 @@ const FishDetailPage = () => {
         <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 w-full lg:hidden">
           <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-6 w-6" />
+              <ChevronLeft className="h-6 w-6" />
             </Button>
             <h1 className="text-xl font-bold ml-2 dark:text-white">Error</h1>
           </div>
@@ -998,7 +982,7 @@ const FishDetailPage = () => {
                   size="icon"
                   onClick={() => navigate(-1)}
                 >
-                  <ArrowLeft className="h-6 w-6" />
+                  <ChevronLeft className="h-6 w-6" />
                 </Button>
                 <h1 className="text-xl font-bold ml-2 dark:text-white">
                   Error
@@ -1028,17 +1012,16 @@ const FishDetailPage = () => {
   return (
     <div className="flex flex-col h-full bg-white dark:bg-gray-950">
       {/* Header */}
-      <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 w-full lg:hidden">
+      <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 w-full lg:hidden border-b border-[#e8e8e9]">
         <div className="flex items-center">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-6 w-6" />
+            <ChevronLeft className="h-6 w-6" />
           </Button>
           <h1 className="text-xl font-bold ml-2 dark:text-white">
             {fishDetailsData.name}
           </h1>
         </div>
       </header>
-
       <div className="flex-1 flex h-full">
         {/* Desktop Side Navigation */}
         <div className="hidden lg:block">
@@ -1057,7 +1040,7 @@ const FishDetailPage = () => {
                   size="icon"
                   onClick={() => navigate(-1)}
                 >
-                  <ArrowLeft className="h-6 w-6" />
+                  <ChevronLeft className="h-6 w-6" />
                 </Button>
                 <h1 className="text-xl font-bold ml-2 dark:text-white">
                   {fishDetailsData.name}
@@ -1370,24 +1353,24 @@ const FishDetailPage = () => {
                           l.trim() !== "" &&
                           l.trim().toLowerCase() !== "n/a"
                       );
-                    const hasJigInfo =
-                      (method.gear?.jig_weight &&
-                        typeof method.gear.jig_weight === "string" &&
-                        method.gear.jig_weight.trim() !== "") ||
-                      (method.gear?.jig_size &&
-                        typeof method.gear.jig_size === "string" &&
-                        method.gear.jig_size.trim() !== "");
+                    // const hasJigInfo =
+                    //   (method.gear?.jig_weight &&
+                    //     typeof method.gear.jig_weight === "string" &&
+                    //     method.gear.jig_weight.trim() !== "") ||
+                    //   (method.gear?.jig_size &&
+                    //     typeof method.gear.jig_size === "string" &&
+                    //     method.gear.jig_size.trim() !== "");
                     const methodTitle =
                       method.title || method.method || `Method ${index + 1}`;
-                    const isJiggingMethod = methodTitle
-                      .toLowerCase()
-                      .includes("jig");
-                    const isBottomMethod = methodTitle
-                      .toLowerCase()
-                      .includes("bottom");
-                    const isTrollingMethod = methodTitle
-                      .toLowerCase()
-                      .includes("troll");
+                    // const isJiggingMethod = methodTitle
+                    //   .toLowerCase()
+                    //   .includes("jig");
+                    // const isBottomMethod = methodTitle
+                    //   .toLowerCase()
+                    //   .includes("bottom");
+                    // const isTrollingMethod = methodTitle
+                    //   .toLowerCase()
+                    //   .includes("troll");
 
                     // Helper function to render gear information
                     const renderGearInfo = (gear: FishingGear) => {
@@ -1795,7 +1778,6 @@ const FishDetailPage = () => {
           </div>
         </div>
       </div>
-
       {/* Bottom Navigation - Mobile only */}
       <BottomNav />
     </div>

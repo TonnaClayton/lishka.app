@@ -43,7 +43,7 @@ const AccountStatusChecker: React.FC = () => {
           password: "dummy_password_to_check_user_existence_12345",
         });
 
-      let accountStatus: AccountStatus = {
+      const accountStatus: AccountStatus = {
         exists: false,
         email_confirmed: false,
       };

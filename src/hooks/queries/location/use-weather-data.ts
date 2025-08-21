@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { log } from "@/lib/logging";
-import { config } from "@/lib/config";
-import { LocationData, locationQueryKeys } from "./use-location-storage";
+import { LocationData } from "./use-location-storage";
 import { api } from "../api";
 
 interface WeatherData {

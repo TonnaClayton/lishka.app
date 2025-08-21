@@ -141,7 +141,7 @@ const getLocationToSeaMapping = (location: string) => {
       const parts = parsed.name.split(/[,\s]+/);
       normalizedLocation = parts[parts.length - 1].toLowerCase();
     }
-  } catch (e) {
+  } catch {
     const parts = location.split(/[,\s]+/);
     normalizedLocation = parts[parts.length - 1].toLowerCase();
   }
@@ -157,12 +157,13 @@ const getCleanLocationName = (location: string) => {
       return parts[parts.length - 1];
     }
     return parsed.name || location;
-  } catch (e) {
+  } catch {
     const parts = location.split(/[,\s]+/);
     return parts[parts.length - 1];
   }
 };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const cleanFishName = (fishName: string): string => {
   if (!fishName) return fishName;
 

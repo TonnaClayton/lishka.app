@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -6,7 +6,7 @@ import {
   getPlaceholderFishImage,
   getFishImageUrl,
 } from "@/lib/fish-image-service";
-import { Waves, Trophy, Target, AlertTriangle } from "lucide-react";
+import { Waves, Target } from "lucide-react";
 import { log } from "@/lib/logging";
 import { cn } from "@/lib/utils";
 
@@ -29,7 +29,6 @@ const FishCard = ({
   image = "https://images.unsplash.com/photo-1545816250-3ea6e37da790?w=400&q=80",
   name = "Atlantic Salmon",
   scientificName = "Salmo salar",
-  localName,
   habitat = "Freshwater, Coastal",
   difficulty = "Intermediate",
   isToxic = false,
@@ -99,7 +98,7 @@ const FishCard = ({
         {isToxic && (
           <Badge
             variant="destructive"
-            className="absolute bottom-2 right-2 text-xs py-0 shadow-lg rounded-[32px]"
+            className="absolute bottom-2 right-2 text-xs py-0 shadow-lg rounded-[32px] bg-[#FF004D]"
           >
             Toxic
           </Badge>

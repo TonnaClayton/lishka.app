@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Package, Waves, Loader2, AlertCircle } from "lucide-react";
+import { RefreshCw, Package, Loader2, AlertCircle } from "lucide-react";
 import LoadingDots from "@/components/loading-dots";
 import { useAuth } from "@/contexts/auth-context";
 import { useNavigate } from "react-router-dom";
@@ -212,11 +212,11 @@ const GearRecommendationWidget: React.FC = () => {
   if (userGear.length === 0) {
     return (
       <div className="mb-8">
-        <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
+        <h2 className="font-bold mb-1 text-black dark:text-white text-xl">
           AI Gear Recommendations
         </h2>
-        <p className="text-sm text-muted-foreground mb-4">
-          Personalized gear suggestions based on current conditions.
+        <p className="text-sm mb-4 text-gray-600">
+          Based on current conditions: Clear sky, 0.2m waves, 3km/h wind
         </p>
         <div className="flex items-center justify-between py-8 bg-gray-50 dark:bg-gray-800 rounded-lg px-6">
           <div className="text-left">
@@ -275,7 +275,6 @@ const GearRecommendationWidget: React.FC = () => {
           </div>
         </div>
       </div>
-
       {/* Content based on analysis phase */}
       {isLoadingGearRecommendation || isRefetchingGearRecommendation ? (
         <div className="flex flex-col items-center justify-center py-8">
@@ -311,9 +310,9 @@ const GearRecommendationWidget: React.FC = () => {
             {getSortedGear()
               .slice(0, 20)
               .map((gear, index) => {
-                const recommendation = getRecommendation(gear.id);
-                const score = recommendation?.score || null;
-                const isTopRecommendation = score && score >= 80;
+                //const recommendation = getRecommendation(gear.id);
+                //const score = recommendation?.score || null;
+                // const isTopRecommendation = score && score >= 80;
 
                 return (
                   <div
@@ -335,7 +334,6 @@ const GearRecommendationWidget: React.FC = () => {
                         </div>
                       )}
                     </div>
-
                     {/* Gear Info */}
                     <div className="p-2 sm:p-3 flex flex-col flex-1">
                       <div className="mb-1">
@@ -373,7 +371,6 @@ const GearRecommendationWidget: React.FC = () => {
           </div>
         </div>
       )}
-
       {/* Show more indicator */}
       {isLoadingGearRecommendation == false &&
         isErrorGearRecommendation == false &&

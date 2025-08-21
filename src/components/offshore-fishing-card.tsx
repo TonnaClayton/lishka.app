@@ -83,7 +83,6 @@ const OffshoreFishingCard = ({
   structures = ["Artificial reef", "Drop-off"],
   probabilityScore = 0.85,
   description = "Prime fishing location with excellent structure",
-  mapImageUrl,
   searchRadius = 10,
   actualDepth = null,
   aiAnalysis,

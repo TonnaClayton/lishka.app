@@ -81,7 +81,7 @@ const SupabaseVerificationTest: React.FC = () => {
 
     try {
       // Test basic database connectivity
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("profiles")
         .select("count")
         .limit(1);

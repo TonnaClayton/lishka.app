@@ -1,20 +1,5 @@
-import React, {
-  useState,
-  useEffect,
-  useCallback,
-  useRef,
-  useMemo,
-} from "react";
-import {
-  Fish,
-  Thermometer,
-  Wind,
-  Waves,
-  Cloud,
-  Sun,
-  CloudRain,
-  CloudSnow,
-} from "lucide-react";
+import React, { useState, useEffect, useMemo } from "react";
+import { Fish, Cloud, Sun, CloudRain, CloudSnow } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Carousel,
@@ -22,23 +7,13 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
-import { cacheApiResponse, getCachedApiResponse } from "@/lib/api-helpers";
-import LoadingDots from "@/components/loading-dots";
-import { log } from "@/lib/logging";
-import { config } from "@/lib/config";
 import {
   useFishingTips,
   useGetWeatherSummary,
   useUserLocation,
 } from "@/hooks/queries";
 import FishingTipsSkeleton from "./fishing-tips-skeleton";
-
-interface FishingTip {
-  title: string;
-  content: string;
-  category: string;
-}
+import { useAuth } from "@/contexts/auth-context";
 
 interface WeatherData {
   current?: {
@@ -160,6 +135,8 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
   // const [error, setError] = useState<string | null>(null);
   const [api, setApi] = useState<CarouselApi | undefined>(undefined);
   const [current, setCurrent] = useState(0);
+  const { profile } = useAuth();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [count, setCount] = useState(0);
   const { location: userLocation } = useUserLocation();
   const {
@@ -492,12 +469,17 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
 
   return (
     <div className="space-y-4">
-      <div className="mb-2">
-        <div className="flex items-center gap-2">
-          <h2 className="text-foreground text-3xl font-bold">Today</h2>
+      <div className="mb-2 flex flex-col gap-y-3">
+        <div className="flex gap-2 flex-col items-start justify-start gap-y-2">
+          <h2 className="text-foreground font-bold text-2xl">
+            {profile?.full_name
+              ? `Welcome back, ${profile.full_name}`
+              : "Today"}
+          </h2>
+          <p className="text-sm text-muted-foreground">{getCurrentDate()}</p>
         </div>
-        <p className="text-sm text-muted-foreground pt-2">{getCurrentDate()}</p>
         {/* Weather summary - only visible on mobile */}
+
         <div className="lg:hidden mt-2">
           {loadingWeather ? (
             <div className="flex items-center gap-1">
@@ -507,7 +489,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
               </p>
             </div>
           ) : weatherSummary && typeof weatherSummary === "object" ? (
-            <div className="flex items-center gap-3 py-2 px-1 gap-x-[16px]">
+            <div className="flex items-center gap-3 px-1 gap-x-[16px]">
               {/* Weather icon based on condition */}
               <div className="flex items-center gap-x-[4px]">
                 {weatherSummary.condition === "Clear" && (
@@ -600,7 +582,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
         <CarouselContent>
           {tips.map((tip, index) => (
             <CarouselItem key={index}>
-              <Card className="overflow-hidden border border-border bg-background shadow-sm rounded-xl">
+              <Card className="overflow-hidden border bg-background shadow-sm rounded-xl border-[#e8e8e9] h-full">
                 <CardContent className="p-4 pb-4 flex flex-col h-full">
                   <p
                     className="text-2xl text-black leading-relaxed mb-4 flex-grow"
