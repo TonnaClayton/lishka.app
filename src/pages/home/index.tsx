@@ -32,7 +32,7 @@ interface HomePageProps {
 const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, profile: authProfile } = useAuth();
   const { data: profile } = useProfile(user?.id);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
@@ -56,17 +56,22 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   }, [profile]);
 
   const hasSeenOnboardingFlow = useMemo(() => {
-    const hasSeenOnboardingFlow = location.state?.hasSeenOnboardingFlow;
+    const hasSeenOnboardingFlowFromLocationState =
+      location.state?.hasSeenOnboardingFlow;
 
-    if (hasSeenOnboardingFlow === true) {
+    if (hasSeenOnboardingFlowFromLocationState === true) {
       return false;
     }
 
-    if (profile == undefined) {
+    if (profile == undefined && authProfile == undefined) {
       return true;
     }
 
-    return profile.has_seen_onboarding_flow == true;
+    const hasSeenOnboardingFlow =
+      profile?.has_seen_onboarding_flow == true ||
+      authProfile?.has_seen_onboarding_flow == true;
+
+    return hasSeenOnboardingFlow;
   }, [profile]);
 
   // React Query hooks
