@@ -25,16 +25,20 @@ const HomePageSkeleton: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 w-full p-4 lg:p-6 pb-20 overflow-y-auto">
+      <div className="flex-1 w-full pb-20 overflow-y-auto">
         {/* Fishing Tips Carousel Section Skeleton */}
-        <FishingTipsSkeleton />
+        <div className="px-4 lg:px-6">
+          <FishingTipsSkeleton />
+        </div>
 
         {/* Gear Recommendation Widget Skeleton */}
-        <GearRecommendationSkeleton />
+        <div className="px-4 lg:px-6">
+          <GearRecommendationSkeleton />
+        </div>
 
         {/* Toxic Fish Section Skeleton */}
         <div className="mb-8">
-          <div className="mb-4">
+          <div className="mb-4 px-4 lg:px-6">
             <Skeleton className="h-6 w-48 mb-2" />
             <Skeleton className="h-4 w-64" />
           </div>
@@ -42,13 +46,13 @@ const HomePageSkeleton: React.FC = () => {
         </div>
 
         {/* Active Fish Section Skeleton */}
-        <div className="mb-6">
+        <div className="mb-6 px-4 lg:px-6">
           <Skeleton className="h-6 w-48 mb-2" />
           <Skeleton className="h-4 w-64 mb-4" />
         </div>
 
         {/* Fish Grid Skeleton */}
-        <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-3 px-4 lg:px-6 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
           {[...Array(8)].map((_, index) => (
             <Card key={index} className="overflow-hidden h-full">
               <div className="relative w-full aspect-[3/2] overflow-hidden">
