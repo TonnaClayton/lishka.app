@@ -342,9 +342,9 @@ const SearchPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <MapPin
             size={16}
-            className={useLocationContext ? "text-[#025DFB]" : "text-gray-400"}
+            className={useLocationContext ? "text-[#0251FB]" : "text-gray-400"}
           />
-          <span className="text-xs text-[#025DFB] dark:text-blue-400">
+          <span className="text-xs text-[#0251FB]">
             {useLocationContext
               ? location?.name || "Getting location..."
               : "Global search"}
@@ -352,7 +352,7 @@ const SearchPage: React.FC = () => {
           <Switch
             checked={useLocationContext}
             onCheckedChange={setUseLocationContext}
-            className="data-[state=checked]:bg-[#025DFB]"
+            className="data-[state=checked]:bg-[#0251FB]"
           />
         </div>
       </header>
@@ -371,8 +371,8 @@ const SearchPage: React.FC = () => {
               !(isMobile && deviceSize.height < 850) && "h-full",
             )}
           >
-            <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
-              <MapPin className="h-8 w-8 text-[#025DFB]" />
+            <div className="rounded-full bg-[#E6EFFF] p-3">
+              <MapPin className="h-8 w-8 text-[#0251FB]" />
             </div>
             <h2 className="text-2xl font-bold dark:text-white">
               Ask me anything about fishing!
@@ -415,11 +415,11 @@ const SearchPage: React.FC = () => {
                 >
                   <div
                     className={cn(
-                      "rounded-lg pt-3 w-fit max-w-[85%]",
+                      "rounded-[16px] pt-3 w-fit max-w-[85%]",
                       isMobile && "max-w-[95%]",
                       message.user_role === "user"
-                        ? "bg-blue-500 text-white"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100",
+                        ? "bg-[#0251FB] text-white"
+                        : "bg-[#F7F7F7] text-[#191B1F]",
                     )}
                   >
                     {message.image && (
@@ -616,7 +616,7 @@ const SearchPage: React.FC = () => {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="hover:text-gray-600 dark:hover:text-gray-300 transition-colors my-auto text-gray-300"
+                  className="hover:text-[#0251FB] transition-colors my-auto text-[#989CA3]"
                 >
                   <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
                   <circle cx="9" cy="9" r="2" />
@@ -627,7 +627,7 @@ const SearchPage: React.FC = () => {
                 type="submit"
                 size="icon"
                 disabled={(!query.trim() && !imageFile) || loading}
-                className={`bg-transparent hover:bg-transparent ${query.trim() || imageFile ? "text-blue-500 dark:text-blue-400" : "text-gray-400"} hover:text-blue-500 dark:hover:text-blue-400 h-10 w-10 flex-shrink-0 p-0 flex items-center justify-center`}
+                className={`bg-transparent hover:bg-transparent ${query.trim() || imageFile ? "text-[#0251FB] " : "text-[#989CA3]"} hover:text-[#0251FB] h-10 w-10 flex-shrink-0 p-0 flex items-center justify-center`}
                 variant="ghost"
               >
                 <Send size={20} />
@@ -653,7 +653,7 @@ const MemoizedContent = React.memo(({ content }: { content: string }) => {
         ul: ({ children }) => <ul className="list-disc">{children}</ul>,
         li: ({ children }) => <li className="ml-4">{children}</li>,
         p: ({ children }) => (
-          <p className="mb-3 text-sm text-text">{children}</p>
+          <p className="mb-0.5 text-sm text-text">{children}</p>
         ),
         h1: ({ children }) => (
           <h1 className="text-2xl font-bold mb-1 dark:text-white lg:text-3xl">
@@ -712,7 +712,7 @@ const FollowUpQuestions = ({
                 <Button
                   key={`followup-${i}`}
                   variant="outline"
-                  className="rounded-full px-2 py-2 text-xs truncate justify-start flex-shrink-0 overflow-hidden whitespace-nowrap bg-[#025DFB1A] hover:bg-[#025DFB33] text-[#0251FB] hover:text-[#0251FB] shadow-none border-none"
+                  className="rounded-full px-2 py-2 text-xs truncate justify-start flex-shrink-0 overflow-hidden whitespace-nowrap bg-[#0251FB1A] hover:bg-[#0251FB33] text-[#0251FB] hover:text-[#0251FB] shadow-none border-none"
                   onClick={() => handleSuggestionClick(q)}
                   disabled={loading}
                 >

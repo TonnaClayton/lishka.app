@@ -126,14 +126,14 @@ const FishCard = ({
             // For non-toxic fish, show habitat and difficulty as before
             <>
               <div className="flex items-center">
-                <Waves className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500 dark:text-blue-400 mr-1 sm:mr-1.5 shrink-0" />
+                <Waves className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#0251FB] mr-1 sm:mr-1.5 shrink-0" />
                 <span className="text-foreground line-clamp-1 text-xs">
                   {habitat}
                 </span>
               </div>
 
               <div className="flex items-center">
-                <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-orange-500 dark:text-orange-400 mr-1 sm:mr-1.5 shrink-0" />
+                <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#F97316] mr-1 sm:mr-1.5 shrink-0" />
                 <span className="text-foreground line-clamp-1 text-xs">
                   {difficulty}
                 </span>

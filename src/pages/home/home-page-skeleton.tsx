@@ -21,7 +21,7 @@ const HomePageSkeleton: React.FC = () => {
       </header>
 
       {/* Main Content */}
-      <div className="flex-1 w-full p-4 lg:p-6 pb-20 overflow-y-auto">
+      <div className="flex-1 w-full pb-20 overflow-y-auto">
         {/* Fishing Tips Carousel Section Skeleton */}
 
         {/* Gear Recommendation Widget Skeleton */}

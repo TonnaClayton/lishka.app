@@ -261,12 +261,15 @@ function FishImageCard({
   return (
     <div
       className={cn(
-        `relative cursor-pointer hover:opacity-90 transition-opacity overflow-hidden bg-gray-100 dark:bg-gray-700`,
+        `relative cursor-pointer hover:opacity-90 transition-opacity rounded-[8px] overflow-hidden bg-gray-100 dark:bg-gray-700`,
         isSingleColumn ? "" : "aspect-square",
       )}
     >
       {/* Main image button */}
-      <button onClick={handleImageClick} className="w-full h-full">
+      <button
+        onClick={handleImageClick}
+        className="w-full h-full rounded-[8px]"
+      >
         {/* Loading spinner */}
         {isLoading && (
           <div className="absolute inset-0 flex items-center justify-center">
@@ -303,7 +306,7 @@ function FishImageCard({
           <img
             src={`${photoUrl}${photoUrl.includes("?") ? "&" : "?"}cb=${metadata?.cacheBuster || Date.now()}`}
             alt={photo.url}
-            className={`w-full transition-opacity duration-200 ${
+            className={`w-full transition-opacity duration-200 rounded-[8px] ${
               isLoading ? "opacity-0" : "opacity-100"
             } ${hasError ? "hidden" : ""} ${
               isSingleColumn ? "h-auto object-contain" : "h-full object-cover"

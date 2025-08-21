@@ -38,7 +38,6 @@ import {
   CloudLightning,
   Umbrella,
   Gauge,
-  Fish,
 } from "lucide-react";
 import LocationModal from "./location-modal";
 import { log } from "@/lib/logging";
@@ -58,7 +57,8 @@ const WeatherWidget: React.FC<{
   userLocation?: LocationData;
   onLocationUpdate?: (location: LocationData) => void;
   className?: string;
-}> = ({ onLocationUpdate, className }) => {
+  hideLocation?: boolean;
+}> = ({ onLocationUpdate, className, hideLocation = false }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showLocationModal, setShowLocationModal] = useState(false);
@@ -230,7 +230,7 @@ const WeatherWidget: React.FC<{
     return (
       <div className="inline-flex items-center justify-center">
         <div
-          className="text-blue-400 transform"
+          className="text-[#0251FB] transform"
           style={{ transform: `rotate(${degrees}deg)` }}
         >
           ↑
@@ -664,33 +664,35 @@ const WeatherWidget: React.FC<{
       )}
     >
       {/* Location Button */}
-      <div className="flex justify-between items-center">
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowLocationModal(true)}
-          className="flex items-center text-[#0251FB] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-        >
-          <MapPin className="h-5 w-5 mr-1" />
-          <span className="font-medium">
-            {typeof location?.name === "string"
-              ? location.name.replace(/^"|"$/g, "")
-              : "Unknown Location"}
-          </span>
-        </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          disabled={disableRefreshBtn}
-          onClick={handleRefresh}
-          className={cn(
-            "text-[#0251FB] dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20",
-            disableRefreshBtn && "opacity-50 cursor-not-allowe animate-spin",
-          )}
-        >
-          <RefreshCw className="h-4 w-4" />
-        </Button>
-      </div>
+      {hideLocation == false && (
+        <div className="flex justify-between items-center">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowLocationModal(true)}
+            className="flex items-center text-[#0251FB] px-0  hover:bg-blue-50 dark:hover:bg-blue-900/20"
+          >
+            <MapPin className="h-5 w-5 mr-1" />
+            <span className="font-medium">
+              {typeof location?.name === "string"
+                ? location.name.replace(/^"|"$/g, "")
+                : "Unknown Location"}
+            </span>
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            disabled={disableRefreshBtn}
+            onClick={handleRefresh}
+            className={cn(
+              "text-[#0251FB]  hover:bg-blue-50 dark:hover:bg-blue-900/20",
+              disableRefreshBtn && "opacity-50 cursor-not-allowe animate-spin",
+            )}
+          >
+            <RefreshCw className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
 
       {/* Location Modal */}
       <LocationModal
@@ -701,7 +703,7 @@ const WeatherWidget: React.FC<{
         title="Update Your Location"
       />
       {/* Weather Card - Enhanced Weather Data */}
-      <Card className="p-6 bg-gradient-to-br from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
+      <Card className="p-6 bg-gradient-to-br border-none from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-medium opacity-90">
@@ -839,7 +841,7 @@ const WeatherWidget: React.FC<{
         </div>
       </Card>
       {/* Marine Card - Fishing Conditions */}
-      <Card className="p-6 bg-[#1E40AF] text-white overflow-hidden relative shadow-md mt-4 rounded-xl">
+      <Card className="p-6 bg-[#1E40AF] border-none text-white overflow-hidden relative shadow-md mt-4 rounded-xl">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-medium opacity-90">
@@ -963,9 +965,7 @@ const WeatherWidget: React.FC<{
               AI-Generated Advice
             </p>
           </div>
-          <div>
-            <Fish className="h-8 w-8 text-[#0251FB] dark:text-blue-400" />
-          </div>
+          <div></div>
         </div>
 
         <div className="mt-4">
@@ -984,7 +984,7 @@ const WeatherWidget: React.FC<{
             >
               {isLoadingFishingAdvice ? (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#0251FB] dark:text-blue-400" />
+                  <Loader2 className="h-6 w-6 animate-spin text-[#0251FB]" />
                 </div>
               ) : fishingAdvice?.inshore ? (
                 <p className="text-sm">{fishingAdvice.inshore}</p>
@@ -1000,7 +1000,7 @@ const WeatherWidget: React.FC<{
             >
               {isLoadingFishingAdvice ? (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#0251FB] dark:text-blue-400" />
+                  <Loader2 className="h-6 w-6 animate-spin text-[#0251FB] " />
                 </div>
               ) : fishingAdvice?.offshore ? (
                 <p className="text-sm">{fishingAdvice.offshore}</p>
@@ -1020,28 +1020,28 @@ const WeatherWidget: React.FC<{
           <h2 className="text-lg font-semibold dark:text-white">
             Marine Data Forecast
           </h2>
-          <Navigation className="h-5 w-5 text-[#0251FB] dark:text-blue-400" />
+          <Navigation className="h-5 w-5 text-[#0251FB] " />
         </div>
 
         {/* Wave Height Hourly Card */}
         <div className="mb-4">
           <div className="flex items-center mb-2">
-            <Waves className="h-5 w-5 mr-2 text-[#0251FB] dark:text-blue-400" />
+            <Waves className="h-5 w-5 mr-2 text-[#0251FB] " />
             <h3 className="text-md font-medium dark:text-white">
               Wave Height (m)
             </h3>
           </div>
           <div className="overflow-x-auto">
-            <div className="flex space-x-3 pb-2 min-w-[800px]">
+            <div className="flex gap-3 pb-2 min-w-[800px]">
               {times.slice(0, 12).map((time, index) => (
                 <div
                   key={`wave-${index}`}
-                  className="flex flex-col items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg min-w-[70px]"
+                  className="flex flex-col items-center p-3 bg-[#025DFB0D] rounded-[8px] flex-shrink-0 min-w-[70px]"
                 >
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {time ? formatTime(time) : "--:--"}
                   </p>
-                  <p className="text-lg font-bold text-blue-600 dark:text-blue-300">
+                  <p className="text-lg font-bold text-[#0251FB] ">
                     {waveHeights[index] !== null &&
                     waveHeights[index] !== undefined
                       ? waveHeights[index].toFixed(1)
@@ -1049,7 +1049,7 @@ const WeatherWidget: React.FC<{
                   </p>
                   {waveDirections[index] !== undefined &&
                     waveDirections[index] !== null && (
-                      <div className="mt-1 text-xs text-blue-500 dark:text-blue-400">
+                      <div className="mt-1 text-xs text-[#0251FB] ">
                         {getDirectionArrow(waveDirections[index])}
                       </div>
                     )}
@@ -1062,19 +1062,19 @@ const WeatherWidget: React.FC<{
         {/* Wind Speed Hourly Card */}
         <div>
           <div className="flex items-center mb-2">
-            <Wind className="h-5 w-5 mr-2 text-[#0251FB] dark:text-blue-400" />
+            <Wind className="h-5 w-5 mr-2 text-[#0251FB] " />
             <h3 className="text-md font-medium dark:text-white">
               Wind Speed (km/h)
             </h3>
           </div>
           <div className="overflow-x-auto">
-            <div className="flex space-x-3 pb-2 min-w-[800px]">
+            <div className="flex gap-3 pb-2 min-w-[800px]">
               {times.slice(0, 24).map((time, index) => (
                 <div
                   key={`wind-${index}`}
-                  className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[70px]"
+                  className="flex flex-col items-center p-3 bg-[#F7F7F7] rounded-[8px] flex-shrink-0 min-w-[70px]"
                 >
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  <p className="text-xs font-medium text-[#6B7280] mb-1">
                     {time ? formatTime(time) : "--:--"}
                   </p>
                   <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
@@ -1085,7 +1085,7 @@ const WeatherWidget: React.FC<{
                   </p>
                   {windDirections[index] !== undefined &&
                     windDirections[index] !== null && (
-                      <div className="mt-1 text-xs text-gray-600 dark:text-gray-400 flex items-center">
+                      <div className="mt-1 text-xs text-[#191B1FCC] flex items-center">
                         {getWindDirection(windDirections[index])}
                         <span className="ml-1">
                           {getDirectionArrow(windDirections[index])}
@@ -1098,16 +1098,16 @@ const WeatherWidget: React.FC<{
           </div>
         </div>
 
-        <div className="p-3 bg-gray-50 dark:bg-gray-800 rounded-md mt-4">
-          <p className="text-sm font-medium mb-1 dark:text-white">
+        <div className="p-3 bg-[#F7F7F7] rounded-md mt-4">
+          <p className="text-sm font-medium mb-1 text-[#191B1F]">
             Data Sources:
           </p>
-          <div className="text-xs text-gray-600 dark:text-gray-300 flex items-center gap-2">
-            <Layers className="h-4 w-4 text-gray-600 dark:text-gray-300" />
+          <div className="text-xs text-[#191B1FCC]  flex items-center gap-2">
+            <Layers className="h-4 w-4 text-[#191B1FCC] " />
             <span>Open-Meteo Weather & Marine API</span>
           </div>
           {location && (
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 italic">
+            <div className="text-xs text-[#6B7280]  mt-1 italic">
               {weatherData?.marineDataFromNearby ? (
                 <span className="text-amber-600 dark:text-amber-400">
                   Note: Marine data is from nearby coordinates as it was not
@@ -1136,17 +1136,17 @@ const WeatherWidget: React.FC<{
           Hourly Forecast
         </h2>
         <div className="overflow-x-auto">
-          <div className="flex space-x-3 pb-2 min-w-[1200px]">
+          <div className="flex gap-3 pb-2 min-w-[1200px]">
             {times.slice(0, 12).map((time, index) => (
               <div
                 key={`hourly-${index}`}
-                className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[90px]"
+                className="flex flex-col flex-shrink-0 items-center p-3 bg-[#F7F7F7] rounded-[8px] min-w-[90px]"
               >
-                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                <p className="text-xs font-medium text-[#6B7280] mb-1">
                   {time ? formatTime(time) : "--:--"}
                 </p>
                 <div className="mb-2">{getWeatherIcon()}</div>
-                <p className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">
+                <p className="text-lg font-bold text-[#191B1F] mb-2">
                   {temperatures[index] !== null &&
                   temperatures[index] !== undefined
                     ? `${Math.round(temperatures[index])}°`
@@ -1155,8 +1155,8 @@ const WeatherWidget: React.FC<{
 
                 {/* Wind Speed and Direction */}
                 <div className="flex items-center mb-1">
-                  <Wind className="h-3 w-3 mr-1 text-blue-400" />
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                  <Wind className="h-3 w-3 mr-1 text-[#0251FB]" />
+                  <p className="text-xs text-[#191B1FCC]">
                     {windSpeeds[index] !== null &&
                     windSpeeds[index] !== undefined
                       ? `${Math.round(windSpeeds[index])}`
@@ -1165,7 +1165,7 @@ const WeatherWidget: React.FC<{
                   {windDirections[index] !== undefined &&
                     windDirections[index] !== null && (
                       <div className="ml-1 flex items-center">
-                        <span className="text-xs text-gray-600 dark:text-gray-400">
+                        <span className="text-xs text-[#191B1FCC] ">
                           {getWindDirection(windDirections[index])}
                         </span>
                         <span className="ml-1 text-xs">
@@ -1177,8 +1177,8 @@ const WeatherWidget: React.FC<{
 
                 {/* Wave Height and Direction */}
                 <div className="flex items-center">
-                  <Waves className="h-3 w-3 mr-1 text-blue-500" />
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                  <Waves className="h-3 w-3 mr-1 text-[#0251FB]" />
+                  <p className="text-xs text-[#191B1FCC]">
                     {waveHeights[index] !== null &&
                     waveHeights[index] !== undefined
                       ? `${waveHeights[index].toFixed(1)}m`
@@ -1203,10 +1203,10 @@ const WeatherWidget: React.FC<{
           <h2 className="text-lg font-semibold dark:text-white">
             Hourly Precipitation (mm)
           </h2>
-          <Droplets className="h-5 w-5 text-[#0251FB] dark:text-blue-400" />
+          <Droplets className="h-5 w-5 text-[#0251FB] " />
         </div>
         <div className="overflow-x-auto">
-          <div className="flex space-x-3 pb-2 min-w-[800px]">
+          <div className="flex gap-3 pb-2 min-w-[800px]">
             {times.slice(0, 12).map((time, index) => {
               const precipitation =
                 weatherData?.hourly?.precipitation?.[
@@ -1219,20 +1219,20 @@ const WeatherWidget: React.FC<{
               return (
                 <div
                   key={`precip-${index}`}
-                  className="flex flex-col items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[70px]"
+                  className="flex flex-col flex-shrink-0 items-center p-3 bg-[#F7F7F7] rounded-lg min-w-[70px]"
                 >
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  <p className="text-xs font-medium text-[#6B7280] mb-1">
                     {time ? formatTime(time) : "--:--"}
                   </p>
                   <div className="flex items-center mb-1">
-                    <Droplets className="h-3 w-3 mr-1 text-blue-500" />
-                    <p className="text-sm font-bold text-blue-600 dark:text-blue-300">
+                    <Droplets className="h-3 w-3 mr-1 text-[#0251FB]" />
+                    <p className="text-sm font-bold text-[#0251FB] ">
                       {precipitation !== null && precipitation !== undefined
                         ? precipitation.toFixed(1)
                         : "0.0"}
                     </p>
                   </div>
-                  <p className="text-xs text-gray-600 dark:text-gray-400">
+                  <p className="text-xs text-[#191B1FCC] ">
                     (
                     {precipitationProbability !== null &&
                     precipitationProbability !== undefined
@@ -1266,7 +1266,7 @@ const WeatherWidget: React.FC<{
           {/* 24-hour Precipitation Forecast */}
           <div className="mt-4 sm:mt-6">
             <div className="overflow-x-auto">
-              <div className="flex space-x-1 sm:space-x-2 pb-2 min-w-[300px] w-full sm:min-w-[800px] md:min-w-[1200px] lg:min-w-[1600px] sm:w-auto">
+              <div className="flex gap-1 sm:gap-2 pb-2 min-w-[300px] w-full sm:min-w-[800px] md:min-w-[1200px] lg:min-w-[1600px] sm:w-auto">
                 {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
                   const probability =
                     weatherData?.hourly?.precipitation_probability?.[
@@ -1279,7 +1279,7 @@ const WeatherWidget: React.FC<{
                   return (
                     <div
                       key={`precip-24h-${hour}`}
-                      className="flex flex-col items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[50px]"
+                      className="flex flex-col flex-shrink-0 items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[50px]"
                     >
                       <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                         {times[hour] ? formatTime(times[hour]) : `+${hour}h`}
@@ -1290,7 +1290,7 @@ const WeatherWidget: React.FC<{
                           title={`${probability}% chance, ${amount.toFixed(1)}mm`}
                         >
                           <div
-                            className="absolute bottom-0 w-full bg-blue-500 dark:bg-blue-600 transition-all duration-300"
+                            className="absolute bottom-0 w-full bg-[#0251FB] transition-all duration-300"
                             style={{
                               height: `${Math.max(5, probability)}%`,
                             }}
@@ -1315,11 +1315,11 @@ const WeatherWidget: React.FC<{
             Weekly Forecast
           </h2>
           <div className="overflow-x-auto">
-            <div className="flex space-x-3 pb-2 min-w-[800px]">
+            <div className="flex gap-3 pb-2 min-w-[800px]">
               {weatherData.daily.time.slice(0, 7).map((time, index) => (
                 <div
                   key={`day-${index}`}
-                  className="flex flex-col items-center p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg flex-shrink-0 w-[100px] sm:w-[120px]"
+                  className="flex flex-col flex-shrink-0 items-center p-2 sm:p-3 bg-gray-50 dark:bg-gray-800 rounded-lg w-[100px] sm:w-[120px]"
                 >
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {new Date(time).toLocaleDateString([], {
@@ -1363,7 +1363,7 @@ const WeatherWidget: React.FC<{
                           );
                         case weatherCode >= 61 && weatherCode <= 65:
                           return (
-                            <CloudRain className="h-5 w-5 text-blue-500" />
+                            <CloudRain className="h-5 w-5 text-[#0251FB]" />
                           );
                         case weatherCode >= 66 && weatherCode <= 67:
                           return (
@@ -1375,7 +1375,7 @@ const WeatherWidget: React.FC<{
                           );
                         case weatherCode >= 80 && weatherCode <= 82:
                           return (
-                            <CloudRain className="h-5 w-5 text-blue-500" />
+                            <CloudRain className="h-5 w-5 text-[#0251FB]" />
                           );
                         case weatherCode >= 85 && weatherCode <= 86:
                           return (
@@ -1407,7 +1407,7 @@ const WeatherWidget: React.FC<{
                         </p>
                       </div>
                       <div className="flex items-center">
-                        <Thermometer className="h-3 w-3 mr-1 text-blue-500" />
+                        <Thermometer className="h-3 w-3 mr-1 text-[#0251FB]" />
                         <p className="text-xs dark:text-gray-300">
                           {weatherData.daily.temperature_2m_min &&
                           weatherData.daily.temperature_2m_min[index] !== null
@@ -1424,7 +1424,7 @@ const WeatherWidget: React.FC<{
                       Wind
                     </p>
                     <div className="flex items-center justify-center">
-                      <Wind className="h-3 w-3 mr-1 text-blue-400" />
+                      <Wind className="h-3 w-3 mr-1 text-[#0251FB]" />
                       <p className="text-xs dark:text-gray-300 mr-1">
                         {(() => {
                           // Calculate the day's start and end indices in hourly data
@@ -1526,7 +1526,7 @@ const WeatherWidget: React.FC<{
                       Waves
                     </p>
                     <div className="flex items-center justify-center">
-                      <Waves className="h-3 w-3 mr-1 text-blue-500" />
+                      <Waves className="h-3 w-3 mr-1 text-[#0251FB]" />
                       <p className="text-xs dark:text-gray-300 mr-1">
                         {/* Use average wave height from hourly data for this day */}
                         {(() => {
@@ -1632,7 +1632,7 @@ const WeatherWidget: React.FC<{
                   {weatherData.daily.uv_index_max && (
                     <div className="w-full border-t border-gray-200 dark:border-gray-700 pt-2">
                       <div className="flex items-center justify-center">
-                        <Sun className="h-3 w-3 mr-1 text-yellow-500" />
+                        <Sun className="h-3 w-3 mr-1 text-[#FFBF00]" />
                         <p className="text-xs dark:text-gray-300">
                           UV:{" "}
                           {weatherData.daily.uv_index_max[index] !== null
@@ -1650,10 +1650,10 @@ const WeatherWidget: React.FC<{
       )}
 
       {/* Data Source Information */}
-      <div className="flex flex-col space-y-2 text-xs text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm">
+      <div className="flex flex-col space-y-2 text-xs text-[#6B7280] p-3 ">
         <div className="flex items-center justify-between">
           <div className="flex items-center">
-            <Info className="h-3 w-3 mr-1 text-gray-500 dark:text-gray-400" />
+            <Info className="h-3 w-3 mr-1" />
             <span>Data provided by Open-Meteo.com</span>
           </div>
           {lastUpdated && (
