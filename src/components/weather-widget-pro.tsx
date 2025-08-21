@@ -38,9 +38,7 @@ import {
   CloudLightning,
   Umbrella,
   Gauge,
-  Fish,
 } from "lucide-react";
-import LocationModal from "./location-modal";
 import { log } from "@/lib/logging";
 import WeatherWidgetProSkeleton from "./skeletons/weather-widget-pro-skeleton";
 import {
@@ -58,9 +56,10 @@ const WeatherWidget: React.FC<{
   userLocation?: LocationData;
   onLocationUpdate?: (location: LocationData) => void;
   className?: string;
-}> = ({ onLocationUpdate, className }) => {
+}> = ({ className }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentIndex, setCurrentIndex] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showLocationModal, setShowLocationModal] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoadingRecommendation, setIsLoadingRecommendation] = useState(false);
@@ -73,7 +72,7 @@ const WeatherWidget: React.FC<{
     location,
     isLoading: isLoadingLocation,
 
-    updateLocationAsync,
+    // updateLocationAsync,
 
     refreshLocationAsync,
   } = useUserLocation();
@@ -178,22 +177,22 @@ const WeatherWidget: React.FC<{
   // Removed chart refs as we're using card-based display instead
 
   // Handle location update
-  const handleLocationUpdate = async (newLocation: LocationData) => {
-    try {
-      // Update location using React Query mutation
-      await updateLocationAsync(newLocation);
+  // const handleLocationUpdate = async (newLocation: LocationData) => {
+  //   try {
+  //     // Update location using React Query mutation
+  //     await updateLocationAsync(newLocation);
 
-      // Notify parent component if callback provided
-      if (onLocationUpdate) {
-        onLocationUpdate(newLocation);
-      }
+  //     // Notify parent component if callback provided
+  //     if (onLocationUpdate) {
+  //       onLocationUpdate(newLocation);
+  //     }
 
-      // Close the location modal
-      setShowLocationModal(false);
-    } catch (error) {
-      console.error("Error updating location:", error);
-    }
-  };
+  //     // Close the location modal
+  //     setShowLocationModal(false);
+  //   } catch (error) {
+  //     console.error("Error updating location:", error);
+  //   }
+  // };
 
   // Removed chart drawing effect as we're using card-based display instead
 
@@ -230,7 +229,7 @@ const WeatherWidget: React.FC<{
     return (
       <div className="inline-flex items-center justify-center">
         <div
-          className="text-blue-400 transform"
+          className="transform text-[#0251FB]"
           style={{ transform: `rotate(${degrees}deg)` }}
         >
           ↑
@@ -693,15 +692,9 @@ const WeatherWidget: React.FC<{
       </div>
 
       {/* Location Modal */}
-      <LocationModal
-        isOpen={showLocationModal}
-        onClose={() => setShowLocationModal(false)}
-        onLocationSelect={handleLocationUpdate}
-        currentLocation={location}
-        title="Update Your Location"
-      />
+
       {/* Weather Card - Enhanced Weather Data */}
-      <Card className="p-6 bg-gradient-to-br from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
+      <Card className="p-6 bg-gradient-to-br from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl border-0">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-medium opacity-90">
@@ -839,7 +832,7 @@ const WeatherWidget: React.FC<{
         </div>
       </Card>
       {/* Marine Card - Fishing Conditions */}
-      <Card className="p-6 bg-[#1E40AF] text-white overflow-hidden relative shadow-md mt-4 rounded-xl">
+      <Card className="p-6 bg-[#1E40AF] text-white overflow-hidden relative shadow-md mt-4 rounded-xl border-0">
         <div className="flex justify-between items-start">
           <div>
             <h2 className="text-lg font-medium opacity-90">
@@ -963,9 +956,7 @@ const WeatherWidget: React.FC<{
               AI-Generated Advice
             </p>
           </div>
-          <div>
-            <Fish className="h-8 w-8 text-[#0251FB] dark:text-blue-400" />
-          </div>
+          <div></div>
         </div>
 
         <div className="mt-4">
@@ -1013,7 +1004,6 @@ const WeatherWidget: React.FC<{
           </Tabs>
         </div>
       </Card>
-
       {/* Marine Data Hourly Cards */}
       <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
         <div className="flex justify-between items-center mb-4">
@@ -1041,7 +1031,7 @@ const WeatherWidget: React.FC<{
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {time ? formatTime(time) : "--:--"}
                   </p>
-                  <p className="text-lg font-bold text-blue-600 dark:text-blue-300">
+                  <p className="text-lg font-bold dark:text-blue-300 text-[#0251FB]">
                     {waveHeights[index] !== null &&
                     waveHeights[index] !== undefined
                       ? waveHeights[index].toFixed(1)
@@ -1196,14 +1186,12 @@ const WeatherWidget: React.FC<{
           </div>
         </div>
       </Card>
-
       {/* Hourly Precipitation Card */}
       <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold dark:text-white">
             Hourly Precipitation (mm)
           </h2>
-          <Droplets className="h-5 w-5 text-[#0251FB] dark:text-blue-400" />
         </div>
         <div className="overflow-x-auto">
           <div className="flex space-x-3 pb-2 min-w-[800px]">
@@ -1226,7 +1214,7 @@ const WeatherWidget: React.FC<{
                   </p>
                   <div className="flex items-center mb-1">
                     <Droplets className="h-3 w-3 mr-1 text-blue-500" />
-                    <p className="text-sm font-bold text-blue-600 dark:text-blue-300">
+                    <p className="text-sm font-bold dark:text-blue-300 text-[#0251FB]">
                       {precipitation !== null && precipitation !== undefined
                         ? precipitation.toFixed(1)
                         : "0.0"}
@@ -1246,7 +1234,6 @@ const WeatherWidget: React.FC<{
           </div>
         </div>
       </Card>
-
       {/* Precipitation Forecast Card */}
       {precipitationForecast && precipitationForecast.chance > 0 && (
         <Card className="p-4 bg-white dark:bg-card shadow-sm">
@@ -1407,8 +1394,8 @@ const WeatherWidget: React.FC<{
                         </p>
                       </div>
                       <div className="flex items-center">
-                        <Thermometer className="h-3 w-3 mr-1 text-blue-500" />
-                        <p className="text-xs dark:text-gray-300">
+                        <Thermometer className="h-3 w-3 mr-1 text-[#0251FB]" />
+                        <p className="text-xs dark:text-gray-300 text-[#0251FB]">
                           {weatherData.daily.temperature_2m_min &&
                           weatherData.daily.temperature_2m_min[index] !== null
                             ? `${Math.round(weatherData.daily.temperature_2m_min[index])}°`
@@ -1424,7 +1411,7 @@ const WeatherWidget: React.FC<{
                       Wind
                     </p>
                     <div className="flex items-center justify-center">
-                      <Wind className="h-3 w-3 mr-1 text-blue-400" />
+                      <Wind className="h-3 w-3 mr-1 text-[#0251FB]" />
                       <p className="text-xs dark:text-gray-300 mr-1">
                         {(() => {
                           // Calculate the day's start and end indices in hourly data
@@ -1526,7 +1513,7 @@ const WeatherWidget: React.FC<{
                       Waves
                     </p>
                     <div className="flex items-center justify-center">
-                      <Waves className="h-3 w-3 mr-1 text-blue-500" />
+                      <Waves className="h-3 w-3 mr-1 text-[#0251FB]" />
                       <p className="text-xs dark:text-gray-300 mr-1">
                         {/* Use average wave height from hourly data for this day */}
                         {(() => {
@@ -1648,7 +1635,6 @@ const WeatherWidget: React.FC<{
           </div>
         </Card>
       )}
-
       {/* Data Source Information */}
       <div className="flex flex-col space-y-2 text-xs text-gray-500 dark:text-gray-400 p-3 bg-gray-50 dark:bg-gray-800 rounded-md shadow-sm">
         <div className="flex items-center justify-between">

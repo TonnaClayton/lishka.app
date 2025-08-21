@@ -7,8 +7,6 @@ import {
   Trash2,
   Edit3,
   MoreVertical,
-  Check,
-  X,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -686,7 +684,6 @@ const GearCategoryPage: React.FC = () => {
           </div>
         </div>
       </header>
-
       {/* Main Content */}
       <main className="flex-1 p-4 max-w-2xl mx-auto w-full pb-20 lg:pb-4 h-full overflow-y-auto">
         <div className="space-y-6">
@@ -882,7 +879,6 @@ const GearCategoryPage: React.FC = () => {
                             </DropdownMenu>
                           </div>
                         </div>
-
                         {/* Large Image */}
                         <div className="w-full aspect-square rounded-xl overflow-hidden bg-gray-200 dark:bg-gray-600 max-w-full">
                           <img
@@ -891,7 +887,6 @@ const GearCategoryPage: React.FC = () => {
                             className="w-full h-full object-cover"
                           />
                         </div>
-
                         {/* Detailed Information */}
                         <div className="grid grid-cols-1 gap-4 max-w-full overflow-hidden">
                           {/* Primary specs */}
@@ -1405,25 +1400,24 @@ const GearCategoryPage: React.FC = () => {
           )}
         </div>
       </main>
-
       {/* Bottom Navigation */}
       <div className="lg:hidden">
         <BottomNav />
       </div>
-
       {/* Edit Gear Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="w-[calc(100vw-2rem)] max-w-md px-6 py-6 max-h-[90vh] overflow-y-auto [&>button]:hidden">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Package className="w-5 h-5" />
               Edit Gear Information
             </DialogTitle>
           </DialogHeader>
 
           <div className="space-y-4 mt-4">
             <div className="space-y-2">
-              <Label htmlFor="gearName">Gear Name</Label>
+              <Label htmlFor="gearName" className="text-xs">
+                Gear Name
+              </Label>
               <Input
                 id="gearName"
                 value={editFormData.name}
@@ -1438,7 +1432,9 @@ const GearCategoryPage: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="gearCategory">Category</Label>
+              <Label htmlFor="gearCategory" className="text-xs">
+                Category
+              </Label>
               <select
                 id="gearCategory"
                 value={editFormData.category}
@@ -1460,7 +1456,9 @@ const GearCategoryPage: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="gearBrand">Brand</Label>
+                <Label htmlFor="gearBrand" className="text-xs">
+                  Brand
+                </Label>
                 <Input
                   id="gearBrand"
                   value={editFormData.brand}
@@ -1474,7 +1472,9 @@ const GearCategoryPage: React.FC = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="gearModel">Model</Label>
+                <Label htmlFor="gearModel" className="text-xs">
+                  Model
+                </Label>
                 <Input
                   id="gearModel"
                   value={editFormData.model}
@@ -1490,7 +1490,9 @@ const GearCategoryPage: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="gearCondition">Condition</Label>
+              <Label htmlFor="gearCondition" className="text-xs">
+                Condition
+              </Label>
               <select
                 id="gearCondition"
                 value={editFormData.condition}
@@ -1706,7 +1708,9 @@ const GearCategoryPage: React.FC = () => {
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="gearDescription">Description</Label>
+              <Label htmlFor="gearDescription" className="text-xs">
+                Description
+              </Label>
               <textarea
                 id="gearDescription"
                 value={editFormData.description}
@@ -1727,20 +1731,19 @@ const GearCategoryPage: React.FC = () => {
               variant="outline"
               onClick={() => setShowEditDialog(false)}
               disabled={loading}
-              className="flex-1"
+              className="flex-1 h-11 rounded-full bg-[#E6EFFF] text-[#0251FB]"
             >
-              <X className="w-4 h-4 mr-2" />
               Cancel
             </Button>
             <Button
               onClick={handleSaveEdit}
               disabled={loading}
-              className="flex-1"
+              className="flex-1 bg-[#0251FB] rounded-full h-11"
             >
               {loading ? (
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
               ) : (
-                <Check className="w-4 h-4 mr-2" />
+                <></>
               )}
               {loading ? "Saving..." : "Save Changes"}
             </Button>
