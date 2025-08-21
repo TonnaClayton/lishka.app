@@ -142,11 +142,6 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
                         {fishName}
                       </span>
                     </div>
-                    {shouldShowConfidence && (
-                      <div className="bg-white/20 text-white border border-white/30 text-xs px-2 py-1 rounded-md flex items-center justify-center h-6">
-                        {Math.round(confidence * 100)}% confident
-                      </div>
-                    )}
                   </div>
                 ) : (
                   /* Show "Fish Detected" when we have size/weight but no name */
@@ -168,7 +163,7 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
                   {hasValidFishSize && (
                     <div className="flex items-center gap-2 min-h-[20px]">
                       <Ruler className="w-4 h-4 text-white flex-shrink-0" />
-                      <span className="text-white leading-tight">
+                      <span className="text-white text-sm leading-tight">
                         Size: {fishSize}
                       </span>
                     </div>
@@ -177,7 +172,7 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
                   {hasValidFishWeight && (
                     <div className="flex items-center gap-2 min-h-[20px]">
                       <Weight className="w-4 h-4 text-white flex-shrink-0" />
-                      <span className="text-white leading-tight">
+                      <span className="text-white text-sm leading-tight">
                         Weight: {fishWeight}
                       </span>
                     </div>
@@ -197,7 +192,7 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
           </div>
 
           {/* Logo */}
-          <div className="relative z-20">
+          <div className="relative z-20 flex justify-between">
             <img
               src="/images/Logo.png"
               alt="Lishka Logo"
@@ -214,6 +209,16 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
                 }
               }}
             />
+            {shouldShowConfidence && (
+              <div className="flex flex-col items-end text-white">
+                <p className="text-sm font-bold">
+                  {Math.round(confidence * 100)}%
+                </p>
+                <p className="text-[10px] font-normal leading-[12px]">
+                  AI Confidence
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

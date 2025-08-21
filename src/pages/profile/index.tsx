@@ -1055,9 +1055,9 @@ const ProfilePage: React.FC = () => {
               <Button
                 variant="outline"
                 className={cn(
-                  "flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-10 flex items-center justify-center gap-2",
+                  "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-10 flex items-center justify-center gap-2 rounded-[8px]",
                 )}
-                style={{ backgroundColor: "#025DFB0D" }}
+                style={{ backgroundColor: "#0251FB0D" }}
                 onClick={() => navigate("/my-gear")}
               >
                 My gear
@@ -1066,7 +1066,7 @@ const ProfilePage: React.FC = () => {
                   profile.gear_items.length > 0 && (
                     <Badge
                       className={cn(
-                        "bg-blue-600 hover:bg-blue-600 text-white rounded-full min-w-[24px] h-6 flex items-center justify-center text-sm font-medium",
+                        "bg-[#0251FB] hover:bg-[#0251FB] text-white rounded-full min-w-[24px] h-6 flex items-center justify-center text-sm font-medium",
                       )}
                     >
                       {profile.gear_items.length}
@@ -1076,9 +1076,9 @@ const ProfilePage: React.FC = () => {
               <Button
                 variant="outline"
                 className={cn(
-                  "flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-10 flex items-center justify-center gap-2",
+                  "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-10 flex items-center justify-center gap-2 rounded-[8px]",
                 )}
-                style={{ backgroundColor: "#025DFB0D" }}
+                style={{ backgroundColor: "#0251FB0D" }}
                 onClick={() => {
                   // Trigger file input for gear upload
                   const gearInput = document.createElement("input");
@@ -1239,10 +1239,9 @@ const ProfilePage: React.FC = () => {
               </TabsContent>
 
               <TabsContent value="achievements" className="mt-4">
-                <Card className="bg-white dark:bg-gray-800">
+                <Card className="bg-white dark:bg-gray-800 border-[#191B1F1A]">
                   <CardHeader className="text-center">
-                    <CardTitle className="flex items-center justify-center gap-2">
-                      <Trophy className="w-5 h-5" />
+                    <CardTitle className="flex items-center justify-center gap-2 text-base">
                       Achievements
                     </CardTitle>
                   </CardHeader>
@@ -1252,7 +1251,7 @@ const ProfilePage: React.FC = () => {
                       <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
                         Coming Soon!
                       </h3>
-                      <p className="text-gray-500 dark:text-gray-400">
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">
                         Track your fishing milestones and unlock achievements
                       </p>
                     </div>
@@ -1261,10 +1260,9 @@ const ProfilePage: React.FC = () => {
               </TabsContent>
 
               <TabsContent value="trips" className="mt-4">
-                <Card className="bg-white dark:bg-gray-800">
+                <Card className="bg-white dark:bg-gray-800 border-[#191B1F1A]">
                   <CardHeader className="text-center">
-                    <CardTitle className="flex items-center justify-center gap-2">
-                      <MapIcon className="w-5 h-5" />
+                    <CardTitle className="flex items-center justify-center gap-2 text-base">
                       Fishing Trips
                     </CardTitle>
                   </CardHeader>
@@ -1274,7 +1272,7 @@ const ProfilePage: React.FC = () => {
                       <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
                         Coming Soon!
                       </h3>
-                      <p className="text-gray-500 dark:text-gray-400">
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">
                         Log and track your fishing adventures
                       </p>
                     </div>

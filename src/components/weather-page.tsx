@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { MapPin } from "lucide-react";
 import WeatherWidget from "./weather-widget-pro";
 import BottomNav from "./bottom-nav";
@@ -6,6 +6,8 @@ import { log } from "@/lib/logging";
 import { useAuth } from "@/contexts/auth-context";
 import { useProfile, useUserLocation } from "@/hooks/queries";
 import { DEFAULT_LOCATION } from "@/lib/const";
+import { Button } from "./ui/button";
+import LocationModal from "./location-modal";
 
 interface LocationData {
   latitude: number;
@@ -21,6 +23,23 @@ const WeatherPage: React.FC = () => {
   );
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [dataLoaded, setDataLoaded] = useState(false);
+
+  const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+
+  const openLocationModal = useMemo(() => {
+    if (profile == undefined) {
+      return false;
+    }
+
+    if (
+      (profile?.location == "" || profile?.location == null) &&
+      profile?.has_seen_onboarding_flow !== true &&
+      isLocationModalOpen
+    ) {
+      return true;
+    }
+    return false;
+  }, [profile]);
 
   const { updateLocation } = useUserLocation();
 
@@ -45,7 +64,7 @@ const WeatherPage: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full bg-[#F7F7F7] dark:bg-background max-w-full overflow-hidden">
+    <div className="flex flex-col h-full bg-[#F7F7F7] max-w-full overflow-hidden">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full lg:hidden">
         <div className="flex justify-between items-center">
@@ -64,24 +83,34 @@ const WeatherPage: React.FC = () => {
           <div className="hidden lg:block">
             <h1 className="text-xl font-semibold dark:text-white">Weather</h1>
           </div>
+          <div className="flex items-center gap-2">
+            {/* Location Information */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="flex items-center gap-1 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 p-1 h-auto"
+              onClick={() => setIsLocationModalOpen(true)}
+            >
+              <span className="text-sm truncate">{location}</span>
+              <MapPin className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </header>
 
       <div className="flex-1 overflow-y-auto">
         <div className=" p-4 lg:p-6 lg:max-w-3xl lg:mx-auto pb-20 w-full">
-          <div className="mb-4">
-            <h1 className="text-2xl font-bold mb-1 dark:text-white lg:text-3xl">
+          <div className="mb-2">
+            <h1 className="text-2xl font-bold mb-1 text-[#191B1F] lg:text-3xl">
               {location} Weather
             </h1>
-            <div className="flex items-center">
-              <MapPin className="h-4 w-4 text-blue-500 mr-1" />
-              <p className="text-sm text-muted-foreground dark:text-gray-300 lg:text-base">
-                Marine conditions for fishing
-              </p>
-            </div>
+            <p className="text-sm text-[#65758B] dark:text-gray-300 lg:text-base">
+              Marine conditions for fishing
+            </p>
           </div>
 
           <WeatherWidget
+            hideLocation={true}
             userLocation={{
               latitude: (profile.location_coordinates as any)
                 .latitude as number,
@@ -94,6 +123,30 @@ const WeatherPage: React.FC = () => {
           />
         </div>
       </div>
+
+      <LocationModal
+        isOpen={openLocationModal}
+        onClose={() => {
+          if (profile?.location != "" && profile?.location != null) {
+            setIsLocationModalOpen(false);
+          }
+        }}
+        onLocationSelect={() => {
+          //onLocationChange(newLocation.name);
+        }}
+        currentLocation={(() => {
+          const locationCoordinates = profile?.location_coordinates as any;
+
+          return locationCoordinates
+            ? {
+                latitude: locationCoordinates.latitude as number | undefined,
+                longitude: locationCoordinates.longitude as number | undefined,
+                name: profile.location,
+              }
+            : null;
+        })()}
+        title="Set Your Location"
+      />
 
       <BottomNav />
     </div>

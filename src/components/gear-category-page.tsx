@@ -1396,7 +1396,7 @@ const GearCategoryPage: React.FC = () => {
               <Button
                 onClick={() => navigate("/profile")}
                 className="border-none shadow-none text-gray-800 font-medium py-4 h-auto"
-                style={{ backgroundColor: "#025DFB0D" }}
+                style={{ backgroundColor: "#0251FB0D" }}
               >
                 Go to Profile
                 <Plus className="w-4 h-4 ml-2" />
