@@ -43,7 +43,7 @@ export const authService = {
   // Sign up new user
   async signUp(email: string, password: string, fullName: string) {
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const response = await supabase.auth.signUp({
         email,
         password,
         options: {
@@ -54,16 +54,14 @@ export const authService = {
         },
       });
 
-      log("SignUp response:", { data, error });
-      return { data, error };
+      return response;
     } catch (err) {
       console.error("SignUp error:", err);
       return {
         data: null,
         error: {
-          message: err instanceof Error
-            ? err.message
-            : "Unknown error occurred",
+          message:
+            err instanceof Error ? err.message : "Unknown error occurred",
         },
       };
     }
@@ -108,9 +106,8 @@ export const authService = {
       return {
         data: null,
         error: {
-          message: err instanceof Error
-            ? err.message
-            : "Unknown error occurred",
+          message:
+            err instanceof Error ? err.message : "Unknown error occurred",
         },
       };
     }
@@ -125,9 +122,8 @@ export const authService = {
       console.error("SignOut error:", err);
       return {
         error: {
-          message: err instanceof Error
-            ? err.message
-            : "Unknown error occurred",
+          message:
+            err instanceof Error ? err.message : "Unknown error occurred",
         },
       };
     }
@@ -146,9 +142,8 @@ export const authService = {
       return {
         user: null,
         error: {
-          message: err instanceof Error
-            ? err.message
-            : "Unknown error occurred",
+          message:
+            err instanceof Error ? err.message : "Unknown error occurred",
         },
       };
     }
@@ -166,9 +161,8 @@ export const authService = {
       return {
         data: null,
         error: {
-          message: err instanceof Error
-            ? err.message
-            : "Unknown error occurred",
+          message:
+            err instanceof Error ? err.message : "Unknown error occurred",
         },
       };
     }
@@ -186,9 +180,8 @@ export const authService = {
       return {
         data: null,
         error: {
-          message: err instanceof Error
-            ? err.message
-            : "Unknown error occurred",
+          message:
+            err instanceof Error ? err.message : "Unknown error occurred",
         },
       };
     }
@@ -211,9 +204,8 @@ export const authService = {
       return {
         data: null,
         error: {
-          message: err instanceof Error
-            ? err.message
-            : "Unknown error occurred",
+          message:
+            err instanceof Error ? err.message : "Unknown error occurred",
         },
       };
     }
@@ -232,9 +224,8 @@ export const authService = {
       return {
         data: null,
         error: {
-          message: err instanceof Error
-            ? err.message
-            : "Unknown error occurred",
+          message:
+            err instanceof Error ? err.message : "Unknown error occurred",
         },
       };
     }
@@ -273,9 +264,8 @@ export const profileService = {
       return {
         data: null,
         error: {
-          message: err instanceof Error
-            ? err.message
-            : "Unknown error occurred",
+          message:
+            err instanceof Error ? err.message : "Unknown error occurred",
         },
       };
     }
@@ -436,9 +426,11 @@ export const profileService = {
         gearItemsCount: Array.isArray(data?.gear_items)
           ? data.gear_items.length
           : 0,
-        galleryPhotosChanged: JSON.stringify(existingProfile.gallery_photos) !==
+        galleryPhotosChanged:
+          JSON.stringify(existingProfile.gallery_photos) !==
           JSON.stringify(data?.gallery_photos),
-        gearItemsChanged: JSON.stringify(existingProfile.gear_items) !==
+        gearItemsChanged:
+          JSON.stringify(existingProfile.gear_items) !==
           JSON.stringify(data?.gear_items),
       });
 
@@ -470,9 +462,9 @@ export const profileService = {
             })),
             actualItems: Array.isArray(data.gear_items)
               ? data.gear_items.map((item: any) => ({
-                id: item.id,
-                name: item.name,
-              }))
+                  id: item.id,
+                  name: item.name,
+                }))
               : [],
           });
         }
@@ -500,8 +492,7 @@ export const profileService = {
           err.message.includes("took too long")
         ) {
           errorCategory = "TIMEOUT";
-          userMessage =
-            `Database timeout after ${totalTime}ms - operation took too long`;
+          userMessage = `Database timeout after ${totalTime}ms - operation took too long`;
         } else if (
           err.message.includes("fetch") ||
           err.message.includes("network")
@@ -532,11 +523,16 @@ export const profileService = {
 
   async createProfile(userId: string, profileData: any) {
     try {
+      console.log("[ProfileService] Creating profile with data:", {
+        userId,
+        profileData,
+      });
       const { data, error } = await supabase
         .from("profiles")
         .insert({
           id: userId,
           ...profileData,
+          has_seen_onboarding_flow: false,
         })
         .select()
         .single();
@@ -547,9 +543,8 @@ export const profileService = {
       return {
         data: null,
         error: {
-          message: err instanceof Error
-            ? err.message
-            : "Unknown error occurred",
+          message:
+            err instanceof Error ? err.message : "Unknown error occurred",
         },
       };
     }

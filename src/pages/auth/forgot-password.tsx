@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
+import { ROUTES } from "@/lib/routing";
 
 const forgotPasswordSchema = z.object({
   email: z
@@ -55,7 +56,7 @@ const ForgotPasswordPage: React.FC = () => {
         setSubmittedEmail(data.email);
         setSuccess(true);
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);
@@ -78,7 +79,7 @@ const ForgotPasswordPage: React.FC = () => {
           </p>
           <div className="space-y-3">
             <Button
-              onClick={() => navigate("/login")}
+              onClick={() => navigate(ROUTES.LOGIN)}
               className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl"
             >
               Back to Sign In
@@ -144,14 +145,14 @@ const ForgotPasswordPage: React.FC = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
                       Email
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         placeholder="Enter your email address"
-                        className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
+                        className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />
@@ -164,7 +165,7 @@ const ForgotPasswordPage: React.FC = () => {
               <div className="pt-4">
                 <Button
                   type="submit"
-                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-[46px] bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? "Sending..." : "Send Reset Link"}
@@ -178,7 +179,7 @@ const ForgotPasswordPage: React.FC = () => {
           <p className="text-base text-gray-600 dark:text-gray-300">
             Remember your password?{" "}
             <Link
-              to="/login"
+              to={ROUTES.LOGIN}
               className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"
             >
               Sign in

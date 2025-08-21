@@ -17,6 +17,7 @@ import { useUserLocation } from "@/hooks/queries";
 // which includes both weather and marine data combined
 
 const WeatherWidgetSimplified: React.FC = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Use the location hook to get the current location

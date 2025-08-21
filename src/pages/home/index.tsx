@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
-import { MapPin, User, Menu } from "lucide-react";
+import React, { useState, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { MapPin } from "lucide-react";
 import BottomNav from "@/components/bottom-nav";
 import FishCard from "@/components/fish-card";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import {
   useToxicFishData,
 } from "@/hooks/queries";
 import { DEFAULT_LOCATION } from "@/lib/const";
+import { OnboardingDialog } from "./onboarding-dialog";
 
 interface HomePageProps {
   location?: string;
@@ -40,11 +41,9 @@ interface FishData {
   probabilityScore?: number;
 }
 
-const HomePage: React.FC<HomePageProps> = ({
-  location = "Malta",
-  onLocationChange = () => {},
-}) => {
+const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const { data: profile } = useProfile(user?.id);
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
@@ -59,13 +58,27 @@ const HomePage: React.FC<HomePageProps> = ({
     }
 
     if (
-      profile?.location == "" ||
-      profile?.location == null ||
+      (profile?.location == "" || profile?.location == null) &&
+      profile?.has_seen_onboarding_flow !== true &&
       isLocationModalOpen
     ) {
       return true;
     }
     return false;
+  }, [profile]);
+
+  const hasSeenOnboardingFlow = useMemo(() => {
+    const hasSeenOnboardingFlow = location.state?.hasSeenOnboardingFlow;
+
+    if (hasSeenOnboardingFlow === true) {
+      return false;
+    }
+
+    if (profile == undefined) {
+      return true;
+    }
+
+    return profile.has_seen_onboarding_flow == true;
   }, [profile]);
 
   // React Query hooks
@@ -78,14 +91,10 @@ const HomePage: React.FC<HomePageProps> = ({
     isFetchingNextPage,
   } = useFishDataInfinite(userLocation);
 
-  const {
-    data: toxicFishData,
-    isLoading: loadingToxicFish,
-    error: toxicFishError,
-  } = useToxicFishData(
+  const { data: toxicFishData, isLoading: loadingToxicFish } = useToxicFishData(
     userLocation,
     (profile?.location_coordinates as any)?.latitude,
-    (profile?.location_coordinates as any)?.longitude
+    (profile?.location_coordinates as any)?.longitude,
   );
 
   // Extract fish list from infinite query data
@@ -120,17 +129,17 @@ const HomePage: React.FC<HomePageProps> = ({
   };
 
   // Location validation and standardization
-  const validateLocation = (location: string) => {
-    if (!location) return "Unknown Location";
-    try {
-      // Handle JSON string locations
-      const parsed = JSON.parse(location);
-      return parsed.name || location;
-    } catch {
-      // Not JSON, use as is
-      return location;
-    }
-  };
+  // const validateLocation = (location: string) => {
+  //   if (!location) return "Unknown Location";
+  //   try {
+  //     // Handle JSON string locations
+  //     const parsed = JSON.parse(location);
+  //     return parsed.name || location;
+  //   } catch {
+  //     // Not JSON, use as is
+  //     return location;
+  //   }
+  // };
 
   const handleFishClick = (fish: FishData) => {
     // Use a sanitized version of the name for the URL
@@ -154,19 +163,19 @@ const HomePage: React.FC<HomePageProps> = ({
   };
 
   // Helper function to get user initials
-  const getInitials = (name: string) => {
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
+  // const getInitials = (name: string) => {
+  //   return name
+  //     .split(" ")
+  //     .map((n) => n[0])
+  //     .join("")
+  //     .toUpperCase()
+  //     .slice(0, 2);
+  // };
 
   // Handle avatar click to navigate to profile
-  const handleAvatarClick = () => {
-    navigate("/profile");
-  };
+  // const handleAvatarClick = () => {
+  //   navigate("/profile");
+  // };
 
   // Show skeleton during initial loading
   if (loadingFish && fishList.length === 0) {
@@ -177,7 +186,6 @@ const HomePage: React.FC<HomePageProps> = ({
     <div className="flex flex-col dark:bg-background h-full relative border-l-0 border-y-0 border-r-0 rounded-xl">
       {/* Email Verification Banner */}
       <EmailVerificationBanner />
-
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white p-4 w-full lg:hidden dark:bg-gray-800 border-t-0 border-x-0 border-b">
         <div className="flex justify-between items-center">
@@ -213,7 +221,7 @@ const HomePage: React.FC<HomePageProps> = ({
       {/* Main Content */}
       <div className="flex-1 w-full py-4 lg:py-6 pb-20 overflow-y-auto">
         {/* Fishing Tips Carousel Section */}
-        <div className="mb-8 px-4 lg:px-6">
+        <div className="px-4 lg:px-6 mb-9">
           <FishingTipsCarousel location={userLocation} />
         </div>
 
@@ -228,7 +236,7 @@ const HomePage: React.FC<HomePageProps> = ({
             <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
               Toxic & Risky Catches
             </h2>
-            <p className="text-sm text-muted-foreground mb-4">
+            <p className="text-sm mb-4 text-gray-600">
               Venomous and toxic fish found in {getSeaName(userLocation)}.
             </p>
           </div>
@@ -321,7 +329,7 @@ const HomePage: React.FC<HomePageProps> = ({
           <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
             Active fish in {getCurrentMonth()}
           </h2>
-          <p className="text-sm text-muted-foreground mb-4">
+          <p className="text-sm mb-4 text-gray-600">
             Discover fish species available in your area this month
           </p>
         </div>
@@ -406,6 +414,7 @@ const HomePage: React.FC<HomePageProps> = ({
         })()}
         title="Set Your Location"
       />
+      <OnboardingDialog hasSeenOnboardingFlow={hasSeenOnboardingFlow} />
     </div>
   );
 };

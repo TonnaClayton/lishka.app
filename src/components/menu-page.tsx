@@ -1,15 +1,6 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import {
-  ChevronLeft,
-  Settings,
-  HelpCircle,
-  Instagram,
-  FileText,
-  Shield,
-  Info,
-  Smartphone,
-} from "lucide-react";
+import { ChevronLeft, Instagram } from "lucide-react";
 import BottomNav from "./bottom-nav";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -29,7 +20,7 @@ const MenuPage: React.FC = () => {
         </div>
       </header>
       {/* Main Content */}
-      <main className="flex-1 p-4 max-w-3xl mx-auto pb-20 h-full overflow-y-auto">
+      <main className="flex-1 p-4 mx-auto pb-20 h-full w-full pl-4 pr-4">
         <div className="space-y-4 w-full">
           {/* Plan Section */}
           <div className="space-y-2">
@@ -58,7 +49,7 @@ const MenuPage: React.FC = () => {
             <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wide px-4">
               Support
             </h2>
-            <div className="bg-white rounded-lg divide-y divide-gray-200">
+            <div className="bg-white rounded-lg divide-y divide-[#E8E8E9]">
               <Button
                 variant="ghost"
                 className="w-full justify-between text-left p-4 h-auto hover:bg-transparent rounded-t-lg rounded-b-none"
@@ -87,7 +78,7 @@ const MenuPage: React.FC = () => {
             <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wide px-4">
               Legal
             </h2>
-            <div className="bg-white rounded-lg divide-y divide-gray-200">
+            <div className="bg-white rounded-lg divide-y divide-[#E8E8E9]">
               <Button
                 variant="ghost"
                 className="w-full justify-between text-left p-4 h-auto hover:bg-transparent rounded-t-lg rounded-b-none"
@@ -112,7 +103,7 @@ const MenuPage: React.FC = () => {
             <h2 className="text-xs font-medium text-gray-500 uppercase tracking-wide px-4">
               App Details
             </h2>
-            <div className="bg-white rounded-lg divide-y divide-gray-200">
+            <div className="bg-white rounded-lg divide-y divide-[#E8E8E9]">
               <Button
                 variant="ghost"
                 className="w-full justify-between text-left p-4 h-auto hover:bg-transparent rounded-t-lg rounded-b-none"

@@ -33,6 +33,7 @@ import {
   Fish,
   CropIcon,
   Check,
+  Menu,
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
 import {
@@ -62,6 +63,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import FishImageCard from "./fish-image-card";
+import { ROUTES } from "@/lib/routing";
 
 // Zod schema for profile form validation
 const profileSchema = z.object({
@@ -216,12 +218,8 @@ const ProfilePage: React.FC = () => {
     }
     return false;
   });
-  const [imageLoadingStates, setImageLoadingStates] = useState<
-    Record<string, boolean>
-  >({});
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
   const [borderStyle, setBorderStyle] = useState({ left: 0, width: 0 });
-  const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [showEditAIDialog, setShowEditAIDialog] = useState(false);
@@ -688,7 +686,6 @@ const ProfilePage: React.FC = () => {
     setEditingPhotoIndex(index);
     setEditingMetadata(metadata);
     setShowEditAIDialog(true);
-    setOpenMenuIndex(null);
   };
 
   // Update border position when active tab changes
@@ -801,7 +798,7 @@ const ProfilePage: React.FC = () => {
   // Redirect to login if no user
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/login", { replace: true });
+      navigate(ROUTES.LOGIN, { replace: true });
     }
   }, [user, authLoading, navigate]);
 
@@ -838,13 +835,22 @@ const ProfilePage: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             {!isEditing ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsEditing(true)}
-              >
-                <Edit3 className="h-5 w-5" />
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Edit3 className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/menu")}
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </>
             ) : (
               <div className="flex gap-2">
                 <Button

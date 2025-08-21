@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Send, MapPin, ArrowLeft, Loader2, Image } from "lucide-react";
+import { Send, MapPin, Loader2, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Card } from "@/components/ui/card";
@@ -14,7 +14,6 @@ import { config } from "@/lib/config";
 import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
 import { useImperialUnits } from "@/lib/unit-conversion";
 import BottomNav from "@/components/bottom-nav";
-import TextareaAutosize from "react-textarea-autosize";
 import useDeviceSize from "@/hooks/use-device-size";
 import useIsMobile from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
@@ -76,6 +75,7 @@ const SearchPage: React.FC = () => {
 
   const deviceSize = useDeviceSize();
   const isMobile = useIsMobile();
+  const units = useImperialUnits();
 
   // Scroll to bottom of messages when new messages are added
   useEffect(() => {
@@ -85,7 +85,7 @@ const SearchPage: React.FC = () => {
   // Listen for units changes from settings
   useEffect(() => {
     const handleUnitsChange = () => {
-      setImperialUnits(useImperialUnits());
+      setImperialUnits(units);
     };
 
     window.addEventListener("unitsChanged", handleUnitsChange);
@@ -106,7 +106,7 @@ const SearchPage: React.FC = () => {
   const processQuery = async (
     queryText: string,
     userMessage: Message,
-    imageFile?: File
+    imageFile?: File,
   ) => {
     try {
       // Check if OpenAI is disabled
@@ -119,7 +119,7 @@ const SearchPage: React.FC = () => {
       const apiKey = config.VITE_OPENAI_API_KEY;
       if (!apiKey) {
         throw new Error(
-          "OpenAI API key is missing. Please add it in project settings."
+          "OpenAI API key is missing. Please add it in project settings.",
         );
       }
 
@@ -198,7 +198,7 @@ const SearchPage: React.FC = () => {
             ],
             max_tokens: imageFile ? 1000 : undefined,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -213,7 +213,7 @@ const SearchPage: React.FC = () => {
       // Extract fish data if present
       let fishData: Fish[] = [];
       const fishDataMatch = assistantResponse.match(
-        /\[FISH_DATA\](.+?)\[\/?FISH_DATA\]/s
+        /\[FISH_DATA\](.+?)\[\/?FISH_DATA\]/s,
       );
 
       let cleanedResponse = assistantResponse;
@@ -238,7 +238,7 @@ const SearchPage: React.FC = () => {
           // Remove the fish data section from the displayed response
           cleanedResponse = assistantResponse.replace(
             /\[FISH_DATA\].+?\[\/?FISH_DATA\]/s,
-            ""
+            "",
           );
         } catch (err) {
           console.error("Error parsing fish data:", err);
@@ -299,7 +299,7 @@ const SearchPage: React.FC = () => {
       await processQuery(
         currentQuery || "What can you tell me about this image?",
         userMessage,
-        currentImageFile || undefined
+        currentImageFile || undefined,
       );
     } catch (err) {
       console.error("Error in handleSubmit:", err);
@@ -355,7 +355,7 @@ const SearchPage: React.FC = () => {
         // First try to parse as regular JSON
         questions = JSON.parse(aiResponse.text);
         if (!Array.isArray(questions)) throw new Error("Not an array");
-      } catch (err) {
+      } catch {
         // Try to extract array from quoted string
         try {
           const trimmedText = aiResponse.text.trim();
@@ -368,7 +368,7 @@ const SearchPage: React.FC = () => {
           // Parse the cleaned text
           questions = JSON.parse(cleanText);
           if (!Array.isArray(questions)) throw new Error("Still not an array");
-        } catch (secondErr) {
+        } catch {
           // Final fallback: try to extract array using regex
           try {
             const match = aiResponse.text.match(/\[(.*?)\]/s);
@@ -380,7 +380,7 @@ const SearchPage: React.FC = () => {
                 .map((item) => item.trim().replace(/^["']|["']$/g, ""))
                 .filter((item) => item.length > 0);
             }
-          } catch (thirdErr) {
+          } catch {
             questions = [];
           }
         }
@@ -389,9 +389,9 @@ const SearchPage: React.FC = () => {
       setFollowUpQuestions(
         Array.isArray(questions)
           ? questions.filter((q) => typeof q === "string" && q.length > 0)
-          : []
+          : [],
       );
-    } catch (err) {
+    } catch {
       setFollowUpQuestions([]);
     } finally {
       setFollowUpLoading(false);
@@ -416,7 +416,7 @@ const SearchPage: React.FC = () => {
       style={{ "--header-height": "64px" } as React.CSSProperties}
     >
       {/* Header - Fixed at top */}
-      <header className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black px-4 py-3 lg:static">
+      <header className="fixed top-0 left-0 right-0 z-20 flex items-center justify-between border-b border-gray-200 dark:border-gray-800 bg-white dark:bg-black px-4 lg:static py-4">
         <div className="flex items-center gap-2">
           {messages.length > 0 && (
             <Button
@@ -428,7 +428,7 @@ const SearchPage: React.FC = () => {
               }}
               className="mr-1"
             >
-              <ArrowLeft className="h-4 w-4" />
+              <ChevronLeft className="h-4 w-4" />
             </Button>
           )}
           <h1 className="text-lg font-semibold dark:text-white">
@@ -438,9 +438,9 @@ const SearchPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <MapPin
             size={16}
-            className={useLocationContext ? "text-blue-500" : "text-gray-400"}
+            className={useLocationContext ? "text-[#025DFB]" : "text-gray-400"}
           />
-          <span className="text-xs text-blue-500 dark:text-blue-400">
+          <span className="text-xs text-[#025DFB] dark:text-blue-400">
             {useLocationContext
               ? location?.name || "Getting location..."
               : "Global search"}
@@ -448,41 +448,40 @@ const SearchPage: React.FC = () => {
           <Switch
             checked={useLocationContext}
             onCheckedChange={setUseLocationContext}
-            className="data-[state=checked]:bg-blue-500"
+            className="data-[state=checked]:bg-[#025DFB]"
           />
         </div>
       </header>
       {/* Scrollable Content Area - With padding for header and input form */}
-
       {messages.length === 0 ? (
         <div
           className={cn(
             "flex-1 h-full",
-            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-16"
+            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-16",
           )}
         >
           <div
             className={cn(
               "flex flex-col items-center justify-center px-4 max-w-2xl mx-auto text-center space-y-6",
-              !(isMobile && deviceSize.height < 850) && "h-full"
+              !(isMobile && deviceSize.height < 850) && "h-full",
             )}
           >
             <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
-              <MapPin className="h-8 w-8 text-blue-500" />
+              <MapPin className="h-8 w-8 text-[#025DFB]" />
             </div>
             <h2 className="text-2xl font-bold dark:text-white">
               Ask me anything about fishing!
             </h2>
-            <p className="text-muted-foreground dark:text-gray-400">
+            <p className="text-muted-foreground dark:text-gray-400 text-sm mt-0 my-0">
               Get AI advice on techniques, species identification, fishing
               spots, sonar image readings and more.
             </p>
-            <div className="flex flex-wrap justify-center gap-2 w-full max-w-md">
+            <div className="flex justify-center gap-2 w-full max-w-md flex-wrap">
               {suggestions.map((suggestion, index) => (
                 <Button
                   key={`suggestion-${index}`}
                   variant="outline"
-                  className="text-left justify-start h-auto py-3 px-2 dark:bg-gray-800 dark:border-gray-700"
+                  className="text-left h-auto py-3 px-2 dark:bg-gray-800 dark:border-gray-700 rounded-2xl border-0 bg-[#E6EFFF] text-[#0251fb] justify-center items-center w-[48%]"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
                   {suggestion}
@@ -504,7 +503,7 @@ const SearchPage: React.FC = () => {
                   key={message.id}
                   className={cn(
                     "flex",
-                    message.role === "user" ? "justify-end" : "justify-start"
+                    message.role === "user" ? "justify-end" : "justify-start",
                   )}
                 >
                   <div
@@ -512,7 +511,7 @@ const SearchPage: React.FC = () => {
                       "rounded-lg pt-3 w-fit max-w-[85%]",
                       message.role === "user"
                         ? "bg-blue-500 text-white"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100",
                     )}
                   >
                     {message.image && (
@@ -596,7 +595,7 @@ const SearchPage: React.FC = () => {
                                 onClick={() => {
                                   navigate(
                                     `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
-                                    { state: { fish } }
+                                    { state: { fish } },
                                   );
                                 }}
                               />
@@ -653,7 +652,6 @@ const SearchPage: React.FC = () => {
           </div>
         </div>
       )}
-
       {/* Input Form - Fixed at bottom on mobile, static on desktop */}
 
       <div className="fixed bottom-16 left-0 right-0 z-20 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 md:static md:bottom-auto md:border-t md:w-full md:mx-auto md:mb-4">
@@ -701,7 +699,7 @@ const SearchPage: React.FC = () => {
               placeholder={
                 selectedImage ? "Ask about this image..." : "Send a message..."
               }
-              className="resize-none flex-1 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent bg-transparent text-gray-900 dark:text-gray-100 border-none my-auto grow h-px shadow-none py-6 px-4 outline-none"
+              className="resize-none flex-1 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent bg-transparent text-gray-900 dark:text-gray-100 border-none my-auto grow shadow-none px-4 outline-none py-4 h-[100px]"
               disabled={loading}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && !e.shiftKey) {

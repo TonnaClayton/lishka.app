@@ -14,8 +14,6 @@ import {
 } from "lucide-react";
 import { getBlobStorageStatus, uploadImage } from "@/lib/blob-storage";
 import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
-import { useAuth } from "@/contexts/auth-context";
-import { config } from "@/lib/config";
 import { log } from "@/lib/logging";
 
 interface UploadState {
@@ -27,7 +25,6 @@ interface UploadState {
 }
 
 const ImageUploadDebugger: React.FC = () => {
-  const { user } = useAuth();
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [uploadState, setUploadState] = useState<UploadState>({
     loading: false,
@@ -40,7 +37,6 @@ const ImageUploadDebugger: React.FC = () => {
 
   // Check system status
   const storageStatus = getBlobStorageStatus();
-  const hasOpenAI = !!config.VITE_OPENAI_API_KEY;
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabase";
 import { Session, User } from "@supabase/supabase-js";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 export const authQueryKeys = {
   useVerifyAuthToken: (token: string) => ["useVerifyAuthToken", token] as const,
@@ -25,8 +25,6 @@ export const useVerifyAuthToken = (token: string) =>
   });
 
 export const useSignUp = () => {
-  const queryClient = useQueryClient();
-
   return useMutation<
     {
       user: User | null;
