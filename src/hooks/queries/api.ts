@@ -20,8 +20,6 @@ export async function api<T = any>(
     supabaseLocalAuthTokenKey,
   );
 
-  console.log("supabaseLocalAuthTokenRaw", supabaseLocalAuthTokenRaw);
-
   let supabaseLocalAuthToken: SupabaseLocalAuthToken | null = null;
 
   if (supabaseLocalAuthTokenRaw) {
@@ -29,8 +27,6 @@ export async function api<T = any>(
       supabaseLocalAuthTokenRaw,
     ) as SupabaseLocalAuthToken;
   }
-
-  console.log("supabaseLocalAuthToken", supabaseLocalAuthToken);
 
   const defaultHeaders: Record<string, string> = {
     Accept: "*/*",
