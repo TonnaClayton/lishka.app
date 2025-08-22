@@ -11,7 +11,6 @@ import { motion } from "framer-motion";
 import { ImageMetadata } from "@/lib/image-metadata";
 import ReactCrop, { Crop, PixelCrop } from "react-image-crop";
 import {
-  useProfile,
   useUpdateProfile,
   useUploadAvatar,
   useUploadPhoto,
@@ -171,12 +170,10 @@ const MapClickHandler = ({
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
 
   // React Query hooks - always call them, let React Query handle the enabled state
-  const { data: profile, isLoading: profileLoading } = useProfile(
-    user?.id ?? "",
-  );
+
   const updateProfile = useUpdateProfile();
   const uploadAvatar = useUploadAvatar();
   const uploadPhoto = useUploadPhoto();
@@ -803,7 +800,7 @@ const ProfilePage: React.FC = () => {
   }, [user, authLoading, navigate]);
 
   // Early returns after all hooks
-  if (authLoading || profileLoading) {
+  if (authLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-[#F7F7F7] dark:bg-background">
         <div className="flex items-center justify-center flex-1">

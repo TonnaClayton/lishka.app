@@ -334,7 +334,6 @@ function AppContent() {
   // Check if we're on the splash page
   const location = useLocation();
   // const { user } = useAuth();
-  // const { data: profile } = useProfile(user?.id);
   // const navigate = useNavigate();
   // const isSplashPage = location.pathname === "/" && !profile?.location;
 
