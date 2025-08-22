@@ -57,15 +57,18 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
       return false;
     }
 
-    if (
-      (profile?.location == "" || profile?.location == null) &&
-      profile?.has_seen_onboarding_flow !== true &&
-      isLocationModalOpen
-    ) {
+    const newProfile = profile || authProfile;
+
+    const hasSetLocation =
+      (newProfile?.location == "" || newProfile?.location == null) &&
+      newProfile?.has_seen_onboarding_flow !== true;
+
+    if (isLocationModalOpen || hasSetLocation) {
       return true;
     }
+
     return false;
-  }, [profile]);
+  }, [profile, isLocationModalOpen]);
 
   const hasSeenOnboardingFlow = useMemo(() => {
     const hasSeenOnboardingFlowFromLocationState =
