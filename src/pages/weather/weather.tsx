@@ -16,7 +16,7 @@ interface LocationData {
 }
 
 const WeatherPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, profile: authProfile } = useAuth();
   const { data: profile } = useProfile(user.id);
   const [location, setLocation] = useState<string>(
     profile.location || DEFAULT_LOCATION.name,
@@ -31,15 +31,18 @@ const WeatherPage: React.FC = () => {
       return false;
     }
 
-    if (
-      (profile?.location == "" || profile?.location == null) &&
-      profile?.has_seen_onboarding_flow !== true &&
-      isLocationModalOpen
-    ) {
+    const newProfile = profile || authProfile;
+
+    const hasSetLocation =
+      (newProfile?.location == "" || newProfile?.location == null) &&
+      newProfile?.has_seen_onboarding_flow !== true;
+
+    if (isLocationModalOpen || hasSetLocation) {
       return true;
     }
+
     return false;
-  }, [profile]);
+  }, [profile, isLocationModalOpen]);
 
   const { updateLocation } = useUserLocation();
 
