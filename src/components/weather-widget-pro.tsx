@@ -39,7 +39,6 @@ import {
   Umbrella,
   Gauge,
 } from "lucide-react";
-import LocationModal from "./location-modal";
 import { log } from "@/lib/logging";
 import WeatherWidgetProSkeleton from "./skeletons/weather-widget-pro-skeleton";
 import {
@@ -58,9 +57,10 @@ const WeatherWidget: React.FC<{
   onLocationUpdate?: (location: LocationData) => void;
   className?: string;
   hideLocation?: boolean;
-}> = ({ onLocationUpdate, className, hideLocation = false }) => {
+}> = ({ className, hideLocation = false }) => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentIndex, setCurrentIndex] = useState(0);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [showLocationModal, setShowLocationModal] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [isLoadingRecommendation, setIsLoadingRecommendation] = useState(false);
@@ -73,7 +73,7 @@ const WeatherWidget: React.FC<{
     location,
     isLoading: isLoadingLocation,
 
-    updateLocationAsync,
+    // updateLocationAsync,
 
     refreshLocationAsync,
   } = useUserLocation();
@@ -178,22 +178,22 @@ const WeatherWidget: React.FC<{
   // Removed chart refs as we're using card-based display instead
 
   // Handle location update
-  const handleLocationUpdate = async (newLocation: LocationData) => {
-    try {
-      // Update location using React Query mutation
-      await updateLocationAsync(newLocation);
+  // const handleLocationUpdate = async (newLocation: LocationData) => {
+  //   try {
+  //     // Update location using React Query mutation
+  //     await updateLocationAsync(newLocation);
 
-      // Notify parent component if callback provided
-      if (onLocationUpdate) {
-        onLocationUpdate(newLocation);
-      }
+  //     // Notify parent component if callback provided
+  //     if (onLocationUpdate) {
+  //       onLocationUpdate(newLocation);
+  //     }
 
-      // Close the location modal
-      setShowLocationModal(false);
-    } catch (error) {
-      console.error("Error updating location:", error);
-    }
-  };
+  //     // Close the location modal
+  //     setShowLocationModal(false);
+  //   } catch (error) {
+  //     console.error("Error updating location:", error);
+  //   }
+  // };
 
   // Removed chart drawing effect as we're using card-based display instead
 
@@ -695,13 +695,7 @@ const WeatherWidget: React.FC<{
       )}
 
       {/* Location Modal */}
-      <LocationModal
-        isOpen={showLocationModal}
-        onClose={() => setShowLocationModal(false)}
-        onLocationSelect={handleLocationUpdate}
-        currentLocation={location}
-        title="Update Your Location"
-      />
+
       {/* Weather Card - Enhanced Weather Data */}
       <Card className="p-6 bg-gradient-to-br border-none from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
         <div className="flex justify-between items-start">
@@ -1013,7 +1007,6 @@ const WeatherWidget: React.FC<{
           </Tabs>
         </div>
       </Card>
-
       {/* Marine Data Hourly Cards */}
       <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
         <div className="flex justify-between items-center mb-4">
@@ -1196,7 +1189,6 @@ const WeatherWidget: React.FC<{
           </div>
         </div>
       </Card>
-
       {/* Hourly Precipitation Card */}
       <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
         <div className="flex justify-between items-center mb-4">
@@ -1246,7 +1238,6 @@ const WeatherWidget: React.FC<{
           </div>
         </div>
       </Card>
-
       {/* Precipitation Forecast Card */}
       {precipitationForecast && precipitationForecast.chance > 0 && (
         <Card className="p-4 bg-white dark:bg-card shadow-sm">
@@ -1408,7 +1399,7 @@ const WeatherWidget: React.FC<{
                       </div>
                       <div className="flex items-center">
                         <Thermometer className="h-3 w-3 mr-1 text-[#0251FB]" />
-                        <p className="text-xs dark:text-gray-300">
+                        <p className="text-xs  text-[#0251FB]">
                           {weatherData.daily.temperature_2m_min &&
                           weatherData.daily.temperature_2m_min[index] !== null
                             ? `${Math.round(weatherData.daily.temperature_2m_min[index])}°`
@@ -1648,7 +1639,6 @@ const WeatherWidget: React.FC<{
           </div>
         </Card>
       )}
-
       {/* Data Source Information */}
       <div className="flex flex-col space-y-2 text-xs text-[#6B7280] p-3 ">
         <div className="flex items-center justify-between">
