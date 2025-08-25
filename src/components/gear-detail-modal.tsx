@@ -1,30 +1,7 @@
 import React from "react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Package, X } from "lucide-react";
-
-interface GearItem {
-  id: string;
-  name: string;
-  category: string;
-  imageUrl?: string;
-  description?: string;
-  brand?: string;
-  model?: string;
-  price?: string;
-  gearType?: string;
-  size?: string;
-  weight?: string;
-  targetFish?: string;
-  fishingTechnique?: string;
-  weatherConditions?: string;
-  waterConditions?: string;
-  seasonalUsage?: string;
-  colorPattern?: string;
-  actionType?: string;
-  depthRange?: string;
-  versatility?: string;
-  compatibleGear?: string;
-}
+import { GearItem } from "@/lib/gear";
 
 interface AIRecommendation {
   gearId: string;

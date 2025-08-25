@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "12.2.3 (519615d)";
   };
+  graphql_public: {
+    Tables: {
+      [_ in never]: never;
+    };
+    Views: {
+      [_ in never]: never;
+    };
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json;
+          operationName?: string;
+          query?: string;
+          variables?: Json;
+        };
+        Returns: Json;
+      };
+    };
+    Enums: {
+      [_ in never]: never;
+    };
+    CompositeTypes: {
+      [_ in never]: never;
+    };
+  };
   public: {
     Tables: {
       caches: {
@@ -176,7 +201,7 @@ export type Database = {
           favorite_fish_species: string[] | null;
           fishing_experience: string | null;
           full_name: string | null;
-          gallery_photos: string[] | null;
+          gallery_photos: Json[] | null;
           gear_items: Json | null;
           has_seen_onboarding_flow: boolean | null;
           id: string;
@@ -194,7 +219,7 @@ export type Database = {
           favorite_fish_species?: string[] | null;
           fishing_experience?: string | null;
           full_name?: string | null;
-          gallery_photos?: string[] | null;
+          gallery_photos?: Json[] | null;
           gear_items?: Json | null;
           has_seen_onboarding_flow?: boolean | null;
           id: string;
@@ -212,7 +237,7 @@ export type Database = {
           favorite_fish_species?: string[] | null;
           fishing_experience?: string | null;
           full_name?: string | null;
-          gallery_photos?: string[] | null;
+          gallery_photos?: Json[] | null;
           gear_items?: Json | null;
           has_seen_onboarding_flow?: boolean | null;
           id?: string;
@@ -435,6 +460,9 @@ export type CompositeTypes<
     : never;
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       seach_agent_role: ["user", "assistant"],

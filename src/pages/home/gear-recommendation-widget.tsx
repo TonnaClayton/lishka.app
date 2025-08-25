@@ -73,9 +73,9 @@ const GearRecommendationWidget: React.FC = () => {
   });
 
   // Get user gear directly from profile (no local state)
-  const userGear =
+  const userGear: GearItem[] =
     profile?.gear_items && Array.isArray(profile.gear_items)
-      ? profile.gear_items
+      ? (profile.gear_items as unknown as GearItem[])
       : [];
 
   // Track previous location to detect changes
@@ -186,7 +186,7 @@ const GearRecommendationWidget: React.FC = () => {
   const startAnalysis = async () => {
     if (!location || userGear.length === 0) return;
 
-    const gearIds = userGear.map((gear) => gear.id);
+    const gearIds = userGear.map((gear: any) => gear.id);
     const cacheKey = getCacheKey(location, gearIds);
 
     // Try to load from cache first
@@ -481,7 +481,7 @@ Rank ALL gear items (score 1-100) based on suitability for current surface condi
 
   // Sort gear by AI scores
   const getSortedGear = (): GearItem[] => {
-    return [...userGear].sort((a, b) => {
+    return [...userGear].sort((a: any, b: any) => {
       const scoreA = getRecommendation(a.id)?.score || 0;
       const scoreB = getRecommendation(b.id)?.score || 0;
 
