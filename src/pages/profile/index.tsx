@@ -13,7 +13,6 @@ import ReactCrop, { Crop, PixelCrop } from "react-image-crop";
 import {
   useUpdateProfile,
   useUploadAvatar,
-  useUploadPhoto,
   useDeletePhoto,
   useUploadGear,
   useUsernameValidation,
@@ -63,6 +62,7 @@ import {
 } from "@/components/ui/form";
 import FishImageCard from "./fish-image-card";
 import { ROUTES } from "@/lib/routing";
+import { useStream } from "@/hooks/use-stream";
 
 // Zod schema for profile form validation
 const profileSchema = z.object({
@@ -176,7 +176,8 @@ const ProfilePage: React.FC = () => {
 
   const updateProfile = useUpdateProfile();
   const uploadAvatar = useUploadAvatar();
-  const uploadPhoto = useUploadPhoto();
+  // const uploadPhoto = useUploadPhoto();
+
   const deletePhoto = useDeletePhoto();
   const uploadGear = useUploadGear();
   const usernameValidation = useUsernameValidation();
@@ -229,6 +230,19 @@ const ProfilePage: React.FC = () => {
   const [tempLocationData, setTempLocationData] = useState<LocationData | null>(
     null,
   );
+
+  const uploadPhotoStream = useStream({
+    path: "user/gallery-photos/stream",
+    onData: (chunk) => {
+      console.log("[STREAM] Received chunk:", chunk);
+    },
+    onError: (error) => {
+      console.error("[STREAM] Error uploading photo:", error);
+    },
+    onComplete: () => {
+      console.log("[STREAM] Photo uploaded successfully!");
+    },
+  });
 
   // React Hook Form setup
   const form = useForm<ProfileFormData>({
@@ -320,14 +334,23 @@ const ProfilePage: React.FC = () => {
 
     try {
       setLoading(true);
-      const metadata = await uploadPhoto.mutateAsync(file);
+      const formData = new FormData();
+      formData.append("file", file);
 
-      if (metadata.fishInfo && metadata.fishInfo.name !== "Unknown") {
-        const successMsg = `Photo uploaded! Identified: ${metadata.fishInfo.name} (${Math.round(metadata.fishInfo.confidence * 100)}% confident)`;
-        setSuccess(successMsg);
-      } else {
-        setSuccess("Photo uploaded successfully!");
-      }
+      uploadPhotoStream.startStream({
+        options: {
+          method: "POST",
+          body: formData,
+        },
+        isFormData: true,
+      });
+
+      // if (metadata.fishInfo && metadata.fishInfo.name !== "Unknown") {
+      //   const successMsg = `Photo uploaded! Identified: ${metadata.fishInfo.name} (${Math.round(metadata.fishInfo.confidence * 100)}% confident)`;
+      //   setSuccess(successMsg);
+      // } else {
+      //   setSuccess("Photo uploaded successfully!");
+      // }
       setTimeout(() => setSuccess(null), 5000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload photo");
@@ -1156,7 +1179,7 @@ const ProfilePage: React.FC = () => {
                   {/* Add Photo button - always first item in grid, smaller in single column */}
                   <button
                     onClick={handlePhotoUpload}
-                    disabled={uploadPhoto.isPending}
+                    disabled={uploadPhotoStream.isStreaming}
                     className={cn(
                       "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex-col relative transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation",
                       isSingleColumn ? "h-20 rounded-lg mb-2" : "aspect-square",
@@ -1166,7 +1189,7 @@ const ProfilePage: React.FC = () => {
                       touchAction: "manipulation",
                     }}
                   >
-                    {uploadPhoto.isPending ? (
+                    {uploadPhotoStream.isStreaming ? (
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600 dark:border-gray-300" />
                     ) : (
                       <>
@@ -1213,7 +1236,7 @@ const ProfilePage: React.FC = () => {
                   accept="image/*"
                   onChange={handlePhotoChange}
                   className="hidden"
-                  disabled={uploadPhoto.isPending}
+                  disabled={uploadPhotoStream.isStreaming}
                   key="photo-input"
                   style={{
                     position: "absolute",
@@ -1230,7 +1253,7 @@ const ProfilePage: React.FC = () => {
                   capture="environment"
                   onChange={handlePhotoChange}
                   className="hidden"
-                  disabled={uploadPhoto.isPending}
+                  disabled={uploadPhotoStream.isStreaming}
                   key="camera-input"
                 />
               </TabsContent>

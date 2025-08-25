@@ -2,10 +2,11 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth-context";
 import { uploadImageToSupabase } from "@/lib/supabase-storage";
-import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
+import { ImageMetadata } from "@/lib/image-metadata";
 import { uploadGearImage } from "@/lib/gear-upload-service";
 import { log } from "@/lib/logging";
 import { useUserLocation } from "./location";
+import { api } from "./api";
 
 export const profileQueryKeys = {
   useProfile: (userId: string) => ["profile", userId] as const,
@@ -35,6 +36,8 @@ export const useProfile = (userId: string) => {
 
         throw error;
       }
+
+      console.log("[PROFILE]", data);
 
       return data;
     },
@@ -178,86 +181,80 @@ export const useUploadPhoto = () => {
       });
 
       // Get user location if available
-      let userLocation: { latitude: number; longitude: number } | null = null;
+      //  let userLocation: { latitude: number; longitude: number } | null = null;
       try {
-        const { getCurrentLocation } = await import("@/lib/image-metadata");
-        userLocation = await Promise.race([
-          getCurrentLocation(),
-          new Promise<never>((_, reject) => {
-            setTimeout(() => {
-              log("Location request timeout - continuing without location");
-              reject(new Error("Location request timeout"));
-            }, 10000);
-          }),
-        ]);
+        // const { getCurrentLocation } = await import("@/lib/image-metadata");
+        // userLocation = await Promise.race([
+        //   getCurrentLocation(),
+        //   new Promise<never>((_, reject) => {
+        //     setTimeout(() => {
+        //       log("Location request timeout - continuing without location");
+        //       reject(new Error("Location request timeout"));
+        //     }, 10000);
+        //   }),
+        // ]);
       } catch (locationError) {
         log("Location not available:", locationError);
       }
 
-      // Compress image if needed
-      let processedFile = file;
-      if (file.size > 2 * 1024 * 1024) {
-        try {
-          const { compressImage } = await import("@/lib/image-metadata");
-          const compressionResult = await compressImage(file, 800, 800, 0.7);
-          processedFile = compressionResult.compressedFile;
-        } catch (compressionError) {
-          console.error("Image compression failed:", compressionError);
-        }
-      }
+      const formData = new FormData();
+      formData.append("file", file);
 
-      // Process image metadata
-      const metadata = await processImageUpload(processedFile, userLocation);
-
-      // Upload to Supabase storage
-      const photoUrl = await uploadImageToSupabase(
-        processedFile,
-        "fish-photos",
+      const data = await api<{
+        data: any;
+      }>(
+        "user/gallery-photos",
+        {
+          method: "POST",
+          body: formData,
+        },
+        true,
       );
 
-      // Create complete metadata object
-      const completeMetadata: ImageMetadata = {
-        ...metadata,
-        url: photoUrl,
-      };
+      console.log("[FISHING TIPS]", data);
 
-      return completeMetadata;
+      return data.data;
+
+      // // Compress image if needed
+      // let processedFile = file;
+      // if (file.size > 2 * 1024 * 1024) {
+      //   try {
+      //     const { compressImage } = await import("@/lib/image-metadata");
+      //     const compressionResult = await compressImage(file, 800, 800, 0.7);
+      //     processedFile = compressionResult.compressedFile;
+      //   } catch (compressionError) {
+      //     console.error("Image compression failed:", compressionError);
+      //   }
+      // }
+
+      // // Process image metadata
+      // const metadata = await processImageUpload(processedFile, userLocation);
+
+      // // Upload to Supabase storage
+      // const photoUrl = await uploadImageToSupabase(
+      //   processedFile,
+      //   "fish-photos",
+      // );
+
+      // // Create complete metadata object
+      // const completeMetadata: ImageMetadata = {
+      //   ...metadata,
+      //   url: photoUrl,
+      // };
+
+      // return completeMetadata;
     },
     onSuccess: async (metadata) => {
       // Update user's photos in profile
       if (user?.id) {
-        let updatedPhotos = [];
-
         queryClient.setQueryData(
           profileQueryKeys.useProfile(user.id),
           (oldData: any) => {
             if (!oldData) return oldData;
 
-            const currentPhotos = oldData.gallery_photos || [];
-            // Add a unique timestamp to prevent caching issues
-            const metadataWithTimestamp = {
-              ...metadata,
-              timestamp: new Date().toISOString(),
-              cacheBuster: Date.now(),
-            };
-            updatedPhotos = [metadataWithTimestamp, ...currentPhotos];
-
-            return {
-              ...oldData,
-              gallery_photos: updatedPhotos,
-            };
+            return metadata;
           },
         );
-
-        if (updatedPhotos.length > 0) {
-          // Update profile in database
-          await supabase
-            .from("profiles")
-            .update({ gallery_photos: updatedPhotos })
-            .eq("id", user?.id)
-            .select()
-            .single();
-        }
 
         // Invalidate the profile query to ensure fresh data
         queryClient.invalidateQueries({
