@@ -180,23 +180,6 @@ export const useUploadPhoto = () => {
         type: file.type,
       });
 
-      // Get user location if available
-      //  let userLocation: { latitude: number; longitude: number } | null = null;
-      try {
-        // const { getCurrentLocation } = await import("@/lib/image-metadata");
-        // userLocation = await Promise.race([
-        //   getCurrentLocation(),
-        //   new Promise<never>((_, reject) => {
-        //     setTimeout(() => {
-        //       log("Location request timeout - continuing without location");
-        //       reject(new Error("Location request timeout"));
-        //     }, 10000);
-        //   }),
-        // ]);
-      } catch (locationError) {
-        log("Location not available:", locationError);
-      }
-
       const formData = new FormData();
       formData.append("file", file);
 
@@ -211,38 +194,7 @@ export const useUploadPhoto = () => {
         true,
       );
 
-      console.log("[FISHING TIPS]", data);
-
       return data.data;
-
-      // // Compress image if needed
-      // let processedFile = file;
-      // if (file.size > 2 * 1024 * 1024) {
-      //   try {
-      //     const { compressImage } = await import("@/lib/image-metadata");
-      //     const compressionResult = await compressImage(file, 800, 800, 0.7);
-      //     processedFile = compressionResult.compressedFile;
-      //   } catch (compressionError) {
-      //     console.error("Image compression failed:", compressionError);
-      //   }
-      // }
-
-      // // Process image metadata
-      // const metadata = await processImageUpload(processedFile, userLocation);
-
-      // // Upload to Supabase storage
-      // const photoUrl = await uploadImageToSupabase(
-      //   processedFile,
-      //   "fish-photos",
-      // );
-
-      // // Create complete metadata object
-      // const completeMetadata: ImageMetadata = {
-      //   ...metadata,
-      //   url: photoUrl,
-      // };
-
-      // return completeMetadata;
     },
     onSuccess: async (metadata) => {
       // Update user's photos in profile
@@ -272,48 +224,30 @@ export const useDeletePhoto = () => {
 
   return useMutation({
     mutationFn: async (photoIndex: number) => {
-      // Get current photos from cache
-      const currentProfile = queryClient.getQueryData(
-        profileQueryKeys.useProfile(user?.id || ""),
-      ) as any;
+      const data = await api<{
+        data: any;
+      }>(`user/gallery-photos/${photoIndex}`, {
+        method: "DELETE",
+        body: JSON.stringify({}),
+      });
 
-      if (!currentProfile?.gallery_photos) {
-        throw new Error("No photos found");
-      }
-
-      // Remove photo from array
-      const updatedPhotos = currentProfile.gallery_photos.filter(
-        (_: any, index: number) => index !== photoIndex,
-      );
-
-      // Update profile in database
-      const { error } = await supabase
-        .from("profiles")
-        .update({ gallery_photos: updatedPhotos })
-        .eq("id", user?.id)
-        .select()
-        .single();
-
-      if (error) {
-        throw error;
-      }
-
-      return { updatedPhotos, deletedIndex: photoIndex };
+      return data.data;
     },
-    onSuccess: ({ updatedPhotos }) => {
+    onSuccess: ({ updatedData }) => {
       // Update cache
       if (user?.id) {
         queryClient.setQueryData(
           profileQueryKeys.useProfile(user.id),
           (oldData: any) => {
             if (!oldData) return oldData;
-            return {
-              ...oldData,
-              gallery_photos: updatedPhotos,
-            };
+            return updatedData;
           },
         );
       }
+
+      queryClient.invalidateQueries({
+        queryKey: profileQueryKeys.useProfile(user.id),
+      });
     },
   });
 };

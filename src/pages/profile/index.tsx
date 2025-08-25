@@ -31,8 +31,6 @@ import {
   Fish,
   CropIcon,
   Check,
-  CheckIcon,
-  LoaderIcon,
   Menu,
 } from "lucide-react";
 import { Badge } from "../../components/ui/badge";
@@ -65,6 +63,7 @@ import {
 import FishImageCard from "./fish-image-card";
 import { ROUTES } from "@/lib/routing";
 import { useStream } from "@/hooks/use-stream";
+import PhotoUploadBar, { UploadPhotoStreamData } from "./photo-upload-bar";
 
 // Zod schema for profile form validation
 const profileSchema = z.object({
@@ -232,17 +231,26 @@ const ProfilePage: React.FC = () => {
   const [tempLocationData, setTempLocationData] = useState<LocationData | null>(
     null,
   );
+  const [uploadPhotoStreamData, setUploadPhotoStreamData] =
+    useState<UploadPhotoStreamData | null>(null);
 
   const uploadPhotoStream = useStream({
     path: "user/gallery-photos/stream",
     onData: (chunk) => {
       console.log("[STREAM] Received chunk:", chunk);
+
+      const data = JSON.parse(chunk);
+      setUploadPhotoStreamData(data);
     },
     onError: (error) => {
       console.error("[STREAM] Error uploading photo:", error);
     },
     onComplete: () => {
       console.log("[STREAM] Photo uploaded successfully!");
+
+      setTimeout(() => {
+        setUploadPhotoStreamData(null);
+      }, 3000);
     },
   });
 
@@ -335,6 +343,25 @@ const ProfilePage: React.FC = () => {
     }
 
     try {
+      // Get user location if available
+      let userLocation: { latitude: number; longitude: number } | null = null;
+      try {
+        const { getCurrentLocation } = await import("@/lib/image-metadata");
+        userLocation = await Promise.race([
+          getCurrentLocation(),
+          new Promise<never>((_, reject) => {
+            setTimeout(() => {
+              log("Location request timeout - continuing without location");
+              reject(new Error("Location request timeout"));
+            }, 10000);
+          }),
+        ]);
+      } catch (locationError) {
+        log("Location not available:", locationError);
+      }
+
+      console.log("[ProfilePage] User location:", userLocation);
+
       setLoading(true);
       const formData = new FormData();
       formData.append("file", file);
@@ -903,23 +930,7 @@ const ProfilePage: React.FC = () => {
         </div>
       </header>
 
-      <div className="size-full bg-[#0251FB] py-3 px-4 flex flex-col gap-y-2 h-fit z-20 fixed top-[69px]">
-        <div className="h-[26px] w-full flex items-center justify-between">
-          <p className="leading-snug text-white text-base">
-            AI Analyzing Photo
-          </p>
-          <CheckIcon className="w-5 h-5 text-white" />
-        </div>
-        <div className="h-[26px] w-full flex items-center justify-between opacity-50">
-          <p className="leading-snug text-white text-base">Photo Uploading</p>
-
-          <LoaderIcon className="w-5 h-5 text-white" />
-        </div>
-        <div className="h-[26px] w-full flex items-center justify-between opacity-50">
-          <p className="leading-snug text-white text-base">Photo Saved</p>
-          <LoaderIcon className="w-5 h-5 text-white" />
-        </div>
-      </div>
+      <PhotoUploadBar uploadPhotoStreamData={uploadPhotoStreamData} />
 
       {/* Main Content */}
       <main className="flex-1 p-4 w-full overflow-y-auto">
