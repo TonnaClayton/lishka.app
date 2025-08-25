@@ -177,7 +177,7 @@ export default function LoginPage() {
           {isMobile && (
             <img
               src={
-                "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T193646745Z.png"
+                "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250804T193646745Z.webp"
               }
               alt={"Pasted Image"}
               width={1572}
