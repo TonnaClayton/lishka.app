@@ -31,6 +31,7 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import BottomNav from "./bottom-nav";
 import { log } from "@/lib/logging";
+import { Json } from "@/types/supabase";
 
 // Gear categories as specified
 const GEAR_CATEGORIES = [
@@ -396,7 +397,8 @@ const GearCategoryPage: React.FC = () => {
           profileId: profile?.id,
           profileGearItems: profile?.gear_items,
           profileGearItemsType: typeof profile?.gear_items,
-          profileGearItemsLength: profile?.gear_items?.length,
+          profileGearItemsLength: (profile?.gear_items as unknown as GearItem[])
+            ?.length,
           categoryId,
           gearId,
           currentUrl: window.location.href,
@@ -412,7 +414,7 @@ const GearCategoryPage: React.FC = () => {
         if (profile?.gear_items && Array.isArray(profile.gear_items)) {
           log("[GearCategoryPage] 🔍 PROCESSING GEAR ITEMS:", {
             totalGearCount: profile.gear_items.length,
-            allGearItems: profile.gear_items.map((item, index) => ({
+            allGearItems: profile.gear_items.map((item: any, index) => ({
               index,
               id: item.id,
               name: item.name,
@@ -424,7 +426,7 @@ const GearCategoryPage: React.FC = () => {
           });
 
           // Filter gear items by category
-          categoryGear = profile.gear_items.filter(
+          categoryGear = (profile.gear_items as unknown as GearItem[]).filter(
             (item: GearItem) => item.category === categoryId,
           );
 
@@ -510,13 +512,13 @@ const GearCategoryPage: React.FC = () => {
 
       // Get current full gear list and replace items for this category
       const currentGear = profile?.gear_items || [];
-      const otherCategoryGear = currentGear.filter(
+      const otherCategoryGear = (currentGear as unknown as GearItem[]).filter(
         (item: GearItem) => item.category !== categoryId,
       );
       const finalGearList = [...otherCategoryGear, ...newGearList];
 
       const { error } = await updateProfile({
-        gear_items: finalGearList,
+        gear_items: finalGearList as unknown as Json[],
       });
 
       if (error) {

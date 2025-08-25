@@ -25,6 +25,14 @@ export const useProfile = (userId: string) => {
         .single();
 
       if (error) {
+        if (
+          error.message?.includes("No rows") ||
+          error.message?.includes("PGRST116") ||
+          error.code === "PGRST116"
+        ) {
+          throw new Error("Profile not found");
+        }
+
         throw error;
       }
 
@@ -52,6 +60,40 @@ export const useUsernameValidation = () => {
         isAvailable: data.length === 0,
         exists: data.length > 0,
       };
+    },
+  });
+};
+
+// Profile creation hook
+export const useCreateProfile = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({
+      userId,
+      profileData,
+    }: {
+      userId: string;
+      profileData: any;
+    }) => {
+      const { data, error } = await supabase
+        .from("profiles")
+        .insert({
+          id: userId,
+          ...profileData,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        throw error;
+      }
+
+      return data;
+    },
+    onSuccess: (data) => {
+      // Update cache with new profile
+      queryClient.setQueryData(profileQueryKeys.useProfile(data.id), data);
     },
   });
 };
@@ -358,7 +400,7 @@ export const useUploadGear = () => {
 
       // Create gear item from metadata
       const gearItem = {
-        id: `gear_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        id: `gear_${Date.now()}_${Math.random().toString(36).substring(2, 11)}`,
         name: result.metadata.gearInfo?.name || "Unknown Gear",
         category: mapGearTypeToCategory(
           result.metadata.gearInfo?.type || "other",
