@@ -7,6 +7,9 @@ import { OPENAI_DISABLED_MESSAGE, OPENAI_ENABLED } from "@/lib/openai-toggle";
 import { config } from "@/lib/config";
 import { log } from "@/lib/logging";
 import { FishData, fishQueryKeys } from "./use-fish-data";
+import { api } from "../api";
+import z from "zod";
+import { fishSchema } from "./type";
 
 // Helper functions
 const getCurrentMonth = () => {
@@ -184,7 +187,7 @@ export interface ToxicFishResponse {
 }
 
 // Toxic fish data fetching function
-const fetchToxicFishData = async (
+export const fetchToxicFishData = async (
   location: string,
   userLatitude?: number,
   userLongitude?: number,
@@ -535,7 +538,16 @@ export const useToxicFishData = (
       userLatitude,
       userLongitude,
     ),
-    queryFn: () => fetchToxicFishData(location, userLatitude, userLongitude),
+    queryFn: async () => {
+      const data = await api<{
+        data: z.infer<typeof fishSchema>[];
+      }>("fish/toxic", {
+        method: "GET",
+      });
+
+      return data.data;
+      //return fetchToxicFishData(location, userLatitude, userLongitude);
+    },
     enabled: !!location,
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
     gcTime: 48 * 60 * 60 * 1000, // 48 hours

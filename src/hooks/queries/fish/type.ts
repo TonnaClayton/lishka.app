@@ -1,0 +1,28 @@
+import z from "zod";
+
+export const fishSchema = z.object({
+  added_by: z.string().optional().nullable(),
+  all_round_gear: z.any().optional().nullable(),
+  created_at: z.string().optional().nullable(),
+  current_season_status: z.string().optional().nullable(),
+  danger_type: z.string().optional().nullable(),
+  description: z.string().optional().nullable(),
+  difficulty: z.string().optional().nullable(),
+  fishing_location: z.string().optional().nullable(),
+  fishing_methods: z.any().optional().nullable(),
+  fishing_regulations: z.any().optional().nullable(),
+  fishing_seasons: z.any().optional().nullable(),
+  habitat: z.string().optional().nullable(),
+  id: z.string().optional().nullable(),
+  image: z.string().optional().nullable(),
+  is_toxic: z.boolean().default(false),
+  local_name: z.string().optional().nullable(),
+  metadata: z.any().optional().nullable(),
+  name: z.string().optional().nullable(),
+  official_season_dates: z.string().optional().nullable(),
+  probability_score: z.number().optional().nullable(),
+  scientific_name: z.string().optional().nullable(),
+  season: z.string().optional().nullable(),
+  slug: z.string().optional().nullable(),
+  updated_at: z.string().optional().nullable(),
+});

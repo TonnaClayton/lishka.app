@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { log } from "@/lib/logging";
 import { LocationData } from "./use-location-storage";
+import { api } from "../api";
 
 interface WeatherData {
   hourly: {
@@ -76,6 +77,17 @@ export const weatherQueryKeys = {
       location?.name || "null",
     ] as const,
   currentWeatherData: () => ["weather", "current"] as const,
+  getWeatherSummary: (location?: {
+    latitude?: number;
+    longitude?: number;
+    name?: string;
+  }) => [
+    "weather",
+    "summary",
+    location?.name,
+    location?.latitude,
+    location?.longitude,
+  ],
 };
 
 // Function to fetch weather data from Open-Meteo API
@@ -372,4 +384,56 @@ export const useWeatherData = (location: LocationData | null) => {
     isStale: weatherQuery.isStale,
     lastUpdated: weatherQuery.dataUpdatedAt,
   };
+};
+
+// Weather summary data hook
+export const useGetWeatherSummary = (location?: {
+  latitude?: number;
+  longitude?: number;
+  name?: string;
+}) => {
+  return useQuery({
+    queryKey: weatherQueryKeys.getWeatherSummary(location),
+    queryFn: async () => {
+      let path = "weather/summary";
+
+      let query = "";
+
+      if (location.name) {
+        query = `name=${location.name}`;
+      }
+
+      if (location.latitude) {
+        query = `latitude=${location.latitude}`;
+      }
+
+      if (location.longitude) {
+        query = `longitude=${location.longitude}`;
+      }
+
+      if (query) {
+        path = `${path}?${query}`;
+      }
+
+      const data = await api<{
+        data: {
+          temperature: number;
+          condition: string;
+          wind_speed: number;
+          wave_height: number | null;
+          is_sea_location?: boolean;
+          wind_direction?: number | null;
+          swell_wave_height?: number | null;
+          swell_wave_period?: number | null;
+          is_day?: boolean;
+          is_night?: boolean;
+        };
+      }>(path, {
+        method: "GET",
+      });
+
+      return data.data;
+    },
+    enabled: !!location && !!location.latitude && !!location.longitude,
+  });
 };
