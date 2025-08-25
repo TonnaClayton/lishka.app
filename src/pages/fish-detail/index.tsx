@@ -12,7 +12,6 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { log } from "@/lib/logging";
-import { useProfile } from "@/hooks/queries";
 import { useAuth } from "@/contexts/auth-context";
 import FishDetailSkeleton from "./fish-detail-skeleton";
 
@@ -245,8 +244,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
 
 const FishDetailPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { data: profile, isLoading: isProfileLoading } = useProfile(user.id);
+  const { profile, loading: isProfileLoading } = useAuth();
   const { fishName } = useParams<{ fishName: string }>();
   // const [loading, setLoading] = useState(true);
   // const [error, setError] = useState<string | null>(null);

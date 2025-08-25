@@ -6,6 +6,8 @@ import { CheckCircle2, AlertCircle, Database, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
 import { log } from "@/lib/logging";
+import { ImageMetadata } from "@/lib/image-metadata";
+import { toImageMetadataItem } from "@/lib/gallery-photo";
 
 const DatabaseDebugger: React.FC = () => {
   const { user, profile } = useAuth();
@@ -14,7 +16,7 @@ const DatabaseDebugger: React.FC = () => {
     profileExists: boolean;
     profileData: any;
     galleryPhotosField: boolean;
-    galleryPhotosValue: string[] | null;
+    galleryPhotosValue: ImageMetadata[] | null;
     databaseError: string | null;
     testUpdateResult: any;
   } | null>(null);
@@ -76,12 +78,21 @@ const DatabaseDebugger: React.FC = () => {
         error: verifyError,
       });
 
+      const galleryPhotosValue = verifyData?.gallery_photos.map((photo) => {
+        try {
+          const photoItem = toImageMetadataItem(photo);
+          return photoItem;
+        } catch {
+          return null;
+        }
+      });
+
       // Compile results
       setResults({
         profileExists: !!profileData && !profileError,
         profileData: profileData,
         galleryPhotosField: profileData && "gallery_photos" in profileData,
-        galleryPhotosValue: profileData?.gallery_photos || null,
+        galleryPhotosValue: galleryPhotosValue,
         databaseError:
           profileError?.message ||
           updateError?.message ||
@@ -116,8 +127,7 @@ const DatabaseDebugger: React.FC = () => {
       const { error } = await supabase
         .from("profiles")
         .update({
-          gallery_photos:
-            profile?.gallery_photos.map((photo) => photo.url) || [],
+          gallery_photos: profile?.gallery_photos || [],
         })
         .eq("id", user.id);
 

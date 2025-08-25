@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { log } from "@/lib/logging";
 import { LocationData, locationQueryKeys } from "./use-location-storage";
-import { useProfile, useUpdateProfile } from "@/hooks/queries";
+import { useUpdateProfile } from "@/hooks/queries";
 import { useAuth } from "@/contexts/auth-context";
 
 // Default location (Malta)
@@ -18,8 +18,7 @@ export const useUserLocation = () => {
     null,
   );
   const updateProfile = useUpdateProfile();
-  const { user } = useAuth();
-  const { data: profile, isLoading: isLoadingProfile } = useProfile(user?.id);
+  const { profile, loading: isLoadingProfile } = useAuth();
   const userLocation = useMemo(() => {
     const locationCoordinates = profile?.location_coordinates as any;
 

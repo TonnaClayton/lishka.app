@@ -14,11 +14,7 @@ import ToxicFishSkeleton from "./toxic-fish-skeleton";
 import FishingTipsCarousel from "./fishing-tips-carousel";
 
 // Import Dialog components from ui folder
-import {
-  useFishDataInfinite,
-  useProfile,
-  useToxicFishData,
-} from "@/hooks/queries";
+import { useFishDataInfinite, useToxicFishData } from "@/hooks/queries";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,8 +28,7 @@ interface HomePageProps {
 const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, profile: authProfile } = useAuth();
-  const { data: profile } = useProfile(user?.id);
+  const { profile } = useAuth();
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
   const userLocation = useMemo(() => {
@@ -41,17 +36,15 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   }, [profile]);
 
   const openLocationModal = useMemo(() => {
-    if (profile == undefined) {
+    if (profile === undefined) {
       return false;
     }
 
-    const newProfile = profile || authProfile;
+    const needsLocationAfterOnboarding =
+      (profile?.location === "" || profile?.location === null) &&
+      profile?.has_seen_onboarding_flow === true;
 
-    const hasSetLocation =
-      (newProfile?.location == "" || newProfile?.location == null) &&
-      newProfile?.has_seen_onboarding_flow !== true;
-
-    if (isLocationModalOpen || hasSetLocation) {
+    if (isLocationModalOpen || needsLocationAfterOnboarding) {
       return true;
     }
 
@@ -62,20 +55,18 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     const hasSeenOnboardingFlowFromLocationState =
       location.state?.hasSeenOnboardingFlow;
 
+    // If location state says user just completed onboarding, they have seen it
     if (hasSeenOnboardingFlowFromLocationState === true) {
-      return false;
-    }
-
-    if (profile == undefined && authProfile == undefined) {
       return true;
     }
 
-    const hasSeenOnboardingFlow =
-      profile?.has_seen_onboarding_flow == true ||
-      authProfile?.has_seen_onboarding_flow == true;
+    // If profile is still loading, assume they haven't seen it yet
+    if (profile === undefined) {
+      return false;
+    }
 
-    return hasSeenOnboardingFlow;
-  }, [profile]);
+    return profile?.has_seen_onboarding_flow === true;
+  }, [profile, location.state]);
 
   // React Query hooks
   const {

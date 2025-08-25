@@ -4,7 +4,7 @@ import WeatherWidget from "@/components/weather-widget-pro";
 import BottomNav from "@/components/bottom-nav";
 import { log } from "@/lib/logging";
 import { useAuth } from "@/contexts/auth-context";
-import { useProfile, useUserLocation } from "@/hooks/queries";
+import { useUserLocation } from "@/hooks/queries";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import { Button } from "@/components/ui/button";
 import LocationModal from "@/components/location-modal";
@@ -16,8 +16,7 @@ interface LocationData {
 }
 
 const WeatherPage: React.FC = () => {
-  const { user, profile: authProfile } = useAuth();
-  const { data: profile } = useProfile(user.id);
+  const { profile } = useAuth();
   const [location, setLocation] = useState<string>(
     profile.location || DEFAULT_LOCATION.name,
   );
@@ -31,13 +30,11 @@ const WeatherPage: React.FC = () => {
       return false;
     }
 
-    const newProfile = profile || authProfile;
+    const needsLocationAfterOnboarding =
+      (profile?.location == "" || profile?.location == null) &&
+      profile?.has_seen_onboarding_flow === true;
 
-    const hasSetLocation =
-      (newProfile?.location == "" || newProfile?.location == null) &&
-      newProfile?.has_seen_onboarding_flow !== true;
-
-    if (isLocationModalOpen || hasSetLocation) {
+    if (isLocationModalOpen || needsLocationAfterOnboarding) {
       return true;
     }
 

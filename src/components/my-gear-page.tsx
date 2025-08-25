@@ -24,6 +24,8 @@ import GearDetailModal from "./gear-detail-modal";
 import { useAuth } from "@/contexts/auth-context";
 import BottomNav from "./bottom-nav";
 import { log } from "@/lib/logging";
+import { toGearItem } from "@/lib/gear";
+import { Json } from "@/types/supabase";
 
 // Gear categories as specified
 const GEAR_CATEGORIES = [
@@ -34,35 +36,6 @@ const GEAR_CATEGORIES = [
   { id: "electronics", name: "Electronics", icon: "📱" },
   { id: "other", name: "Other", icon: "📦" },
 ];
-
-// Gear item interface
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-interface GearItem {
-  id: string;
-  name: string;
-  category: string;
-  description?: string;
-  brand?: string;
-  model?: string;
-  price?: string;
-  purchaseDate?: string;
-  imageUrl: string;
-  timestamp: string;
-  userConfirmed?: boolean;
-  gearType?: string;
-  aiConfidence?: number;
-  // Enhanced fields for detailed gear information
-  size?: string;
-  weight?: string;
-  targetFish?: string;
-  fishingTechnique?: string;
-  weatherConditions?: string;
-  waterConditions?: string;
-  seasonalUsage?: string;
-  colorPattern?: string;
-  actionType?: string;
-  depthRange?: string;
-}
 
 const MyGearPage: React.FC = () => {
   const navigate = useNavigate();
@@ -93,7 +66,7 @@ const MyGearPage: React.FC = () => {
   // Get gear items directly from profile (no local state)
   const gearItems =
     profile?.gear_items && Array.isArray(profile.gear_items)
-      ? profile.gear_items
+      ? profile.gear_items.map((item) => toGearItem(item))
       : [];
 
   // Load gear items from profile on component mount
@@ -203,7 +176,7 @@ const MyGearPage: React.FC = () => {
       };
 
       // Update profile with new gear data
-      await updateProfile({ gear_items: updatedGear });
+      await updateProfile({ gear_items: updatedGear as unknown as Json[] });
       setShowEditDialog(false);
       setEditingGearIndex(null);
       setSuccess("Gear updated successfully!");
@@ -225,7 +198,7 @@ const MyGearPage: React.FC = () => {
       const updatedGear = gearItems.filter((_, i) => i !== index);
 
       // Update profile with new gear data
-      await updateProfile({ gear_items: updatedGear });
+      await updateProfile({ gear_items: updatedGear as unknown as Json[] });
       setOpenMenuIndex(null);
       setSuccess("Gear deleted successfully!");
       setTimeout(() => setSuccess(null), 3000);

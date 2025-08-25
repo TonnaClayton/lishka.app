@@ -7,34 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { useGetWeatherSummary } from "@/hooks/queries";
 import GearRecommendationSkeleton from "./gear-recommendation-skeleton";
 import { useGetGearRecommendation } from "@/hooks/queries/gear/use-gear-recommendation";
-
-interface GearItem {
-  id: string;
-  name: string;
-  category: string;
-  imageUrl?: string;
-  description?: string;
-  brand?: string;
-  model?: string;
-
-  purchaseDate?: string;
-  timestamp?: string;
-  userConfirmed?: boolean;
-  aiConfidence?: number;
-  fishingTechnique?: string;
-  targetFish?: string;
-  depthRange?: string;
-  size?: string;
-  weight?: string;
-  gearType?: string;
-  weatherConditions?: string;
-  waterConditions?: string;
-  seasonalUsage?: string;
-  colorPattern?: string;
-  actionType?: string;
-  versatility?: string;
-  compatibleGear?: string;
-}
+import { GearItem } from "@/lib/gear";
 
 // interface WeatherConditions {
 //   temperature: number;
@@ -95,9 +68,9 @@ const GearRecommendationWidget: React.FC = () => {
   );
 
   // Get user gear directly from profile (no local state)
-  const userGear =
+  const userGear: GearItem[] =
     profile?.gear_items && Array.isArray(profile.gear_items)
-      ? profile.gear_items
+      ? (profile.gear_items as unknown as GearItem[])
       : [];
 
   // Track previous location to detect changes
@@ -177,7 +150,7 @@ const GearRecommendationWidget: React.FC = () => {
 
   // Sort gear by AI scores
   const getSortedGear = (): GearItem[] => {
-    return [...userGear].sort((a, b) => {
+    return [...userGear].sort((a: any, b: any) => {
       const scoreA = getRecommendation(a.id)?.score || 0;
       const scoreB = getRecommendation(b.id)?.score || 0;
 
