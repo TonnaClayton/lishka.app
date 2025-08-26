@@ -39,7 +39,7 @@ export default function GearItemUploadBar({
   };
 
   return (
-    <div className="size-full bg-[#0251FB] py-3 px-4 flex flex-col gap-y-2 h-fit z-20 fixed top-[69px]">
+    <div className="size-full bg-[#0251FB] py-3 px-4 flex flex-col gap-y-2 h-fit z-20 sticky top-[69px]">
       <div
         className={cn(
           "h-[26px] w-full flex items-center justify-between",
