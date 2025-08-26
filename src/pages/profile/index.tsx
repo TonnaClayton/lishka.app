@@ -874,7 +874,7 @@ const ProfilePage: React.FC = () => {
   }
 
   return (
-    <div className="flex flex-col h-full dark:bg-background bg-[#ffffff]">
+    <div className="flex flex-col h-full relative dark:bg-background bg-[#ffffff]">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 p-4 w-full border-b">
         <div className="flex items-center justify-between">
