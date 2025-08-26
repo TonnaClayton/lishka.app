@@ -14,7 +14,6 @@ import {
   useUpdateProfile,
   useUploadAvatar,
   useDeletePhoto,
-  useUploadGear,
   useUsernameValidation,
 } from "@/hooks/queries";
 import {
@@ -64,6 +63,7 @@ import FishImageCard from "./fish-image-card";
 import { ROUTES } from "@/lib/routing";
 import { useStream } from "@/hooks/use-stream";
 import PhotoUploadBar, { UploadPhotoStreamData } from "./photo-upload-bar";
+import GearItemUploadBar from "./gear-item-upload-bar";
 
 // Zod schema for profile form validation
 const profileSchema = z.object({
@@ -180,7 +180,6 @@ const ProfilePage: React.FC = () => {
   // const uploadPhoto = useUploadPhoto();
 
   const deletePhoto = useDeletePhoto();
-  const uploadGear = useUploadGear();
   const usernameValidation = useUsernameValidation();
 
   // Local state
@@ -234,6 +233,9 @@ const ProfilePage: React.FC = () => {
   const [uploadPhotoStreamData, setUploadPhotoStreamData] =
     useState<UploadPhotoStreamData | null>(null);
 
+  const [uploadGearItemStreamData, setUploadGearItemStreamData] =
+    useState<UploadPhotoStreamData | null>(null);
+
   const uploadPhotoStream = useStream({
     path: "user/gallery-photos/stream",
     onData: (chunk) => {
@@ -252,6 +254,28 @@ const ProfilePage: React.FC = () => {
 
       setTimeout(() => {
         setUploadPhotoStreamData(null);
+      }, 3000);
+    },
+  });
+
+  const uploadGearItemStream = useStream({
+    path: "user/gear-items/stream",
+    onData: (chunk) => {
+      console.log("[STREAM] Received chunk:", chunk);
+
+      const data = JSON.parse(chunk);
+      setUploadGearItemStreamData(data);
+    },
+    onError: (error) => {
+      console.error("[STREAM] Error uploading photo:", error);
+    },
+    onComplete: () => {
+      console.log("[STREAM] Photo uploaded successfully!");
+
+      refreshProfile();
+
+      setTimeout(() => {
+        setUploadGearItemStreamData(null);
       }, 3000);
     },
   });
@@ -408,15 +432,26 @@ const ProfilePage: React.FC = () => {
     if (!file) return;
 
     try {
-      const { metadata } = await uploadGear.mutateAsync(file);
+      // const { metadata } = await uploadGear.mutateAsync(file);
 
-      if (metadata.gearInfo && metadata.gearInfo.name !== "Unknown Gear") {
-        const successMsg = `Gear uploaded! Identified: ${metadata.gearInfo.name} (${Math.round((metadata.gearInfo.confidence || 0) * 100)}% confident)`;
-        setSuccess(successMsg);
-      } else {
-        setSuccess("Gear uploaded successfully!");
-      }
-      setTimeout(() => setSuccess(null), 5000);
+      const formData = new FormData();
+      formData.append("file", file);
+
+      uploadGearItemStream.startStream({
+        options: {
+          method: "POST",
+          body: formData,
+        },
+        isFormData: true,
+      });
+
+      // if (metadata.gearInfo && metadata.gearInfo.name !== "Unknown Gear") {
+      //   const successMsg = `Gear uploaded! Identified: ${metadata.gearInfo.name} (${Math.round((metadata.gearInfo.confidence || 0) * 100)}% confident)`;
+      //   setSuccess(successMsg);
+      // } else {
+      //   setSuccess("Gear uploaded successfully!");
+      // }
+      // setTimeout(() => setSuccess(null), 5000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload gear");
     } finally {
@@ -430,15 +465,9 @@ const ProfilePage: React.FC = () => {
   };
 
   const handlePhotoUpload = () => {
-    log("[ProfilePage] Add photo button clicked - mobile optimized");
-    log("[ProfilePage] photoInputRef.current:", photoInputRef.current);
-    log("[ProfilePage] User agent:", navigator.userAgent);
-    log(
-      "[ProfilePage] Is mobile:",
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent,
-      ),
-    );
+    if (uploadPhotoStream.isStreaming) {
+      return;
+    }
 
     if (photoInputRef.current) {
       try {
@@ -449,8 +478,6 @@ const ProfilePage: React.FC = () => {
           );
 
         if (isMobile) {
-          log("[ProfilePage] Mobile device detected - using direct click");
-          // Reset the input value first to ensure change event fires
           photoInputRef.current.value = "";
           // Use setTimeout to ensure the click happens after any event bubbling
           setTimeout(() => {
@@ -463,8 +490,6 @@ const ProfilePage: React.FC = () => {
           log("[ProfilePage] Desktop device - using standard click");
           photoInputRef.current.click();
         }
-
-        log("[ProfilePage] File input click triggered successfully");
       } catch (error) {
         console.error("[ProfilePage] Error clicking file input:", error);
       }
@@ -933,6 +958,7 @@ const ProfilePage: React.FC = () => {
       </header>
 
       <PhotoUploadBar uploadPhotoStreamData={uploadPhotoStreamData} />
+      <GearItemUploadBar uploadGearItemStreamData={uploadGearItemStreamData} />
 
       {/* Main Content */}
       <main className="flex-1 p-4 w-full overflow-y-auto">
@@ -1128,11 +1154,16 @@ const ProfilePage: React.FC = () => {
               </Button>
               <Button
                 variant="outline"
+                disabled={uploadGearItemStream.isStreaming}
                 className={cn(
                   "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-10 flex items-center justify-center gap-2 rounded-[8px]",
                 )}
                 style={{ backgroundColor: "#0251FB0D" }}
                 onClick={() => {
+                  if (uploadGearItemStream.isStreaming) {
+                    return;
+                  }
+
                   // Trigger file input for gear upload
                   const gearInput = document.createElement("input");
                   gearInput.type = "file";
@@ -1364,7 +1395,7 @@ const ProfilePage: React.FC = () => {
               accept="image/*"
               onChange={handleGearUpload}
               className="hidden"
-              disabled={uploadGear.isPending}
+              disabled={uploadGearItemStream.isStreaming}
             />
           </div>
         </div>

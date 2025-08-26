@@ -252,6 +252,40 @@ export const useDeletePhoto = () => {
   });
 };
 
+export const useDeleteGear = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (photoIndex: number) => {
+      const data = await api<{
+        data: any;
+      }>(`user/gear-items/${photoIndex}`, {
+        method: "DELETE",
+        body: JSON.stringify({}),
+      });
+
+      return data.data;
+    },
+    onSuccess: ({ updatedData }) => {
+      // Update cache
+      if (user?.id) {
+        queryClient.setQueryData(
+          profileQueryKeys.useProfile(user.id),
+          (oldData: any) => {
+            if (!oldData) return oldData;
+            return updatedData;
+          },
+        );
+      }
+
+      queryClient.invalidateQueries({
+        queryKey: profileQueryKeys.useProfile(user.id),
+      });
+    },
+  });
+};
+
 export const useUpdatePhotoMetadata = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();

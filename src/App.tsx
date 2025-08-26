@@ -31,8 +31,9 @@ const MenuPage = lazy(() => import("./components/menu-page"));
 const SearchPage = lazy(() => import("./pages/search"));
 const WeatherPage = lazy(() => import("./pages/weather/weather"));
 const ProfilePage = lazy(() => import("./pages/profile"));
-const MyGearPage = lazy(() => import("./components/my-gear-page"));
-const GearCategoryPage = lazy(() => import("./components/gear-category-page"));
+const MyGearPage = lazy(() => import("./pages/gear/my-gear"));
+const GearDetailPage = lazy(() => import("./pages/gear/gear-detail"));
+const GearCategoryPage = lazy(() => import("./pages/gear/gear-category"));
 const SideNav = lazy(() =>
   import("./components/bottom-nav").then((module) => ({
     default: module.SideNav,
@@ -233,6 +234,14 @@ const router = createBrowserRouter(
           element: (
             <ProtectedRoute>
               <MyGearPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: ROUTES.GEAR_DETAIL,
+          element: (
+            <ProtectedRoute>
+              <GearDetailPage />
             </ProtectedRoute>
           ),
         },

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ChevronLeft,
@@ -20,15 +20,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import GearDetailModal from "./gear-detail-modal";
+import GearDetailModal from "../../components/gear-detail-modal";
 import { useAuth } from "@/contexts/auth-context";
-import BottomNav from "./bottom-nav";
-import { log } from "@/lib/logging";
+import BottomNav from "../../components/bottom-nav";
 import { toGearItem } from "@/lib/gear";
 import { Json } from "@/types/supabase";
 
 // Gear categories as specified
-const GEAR_CATEGORIES = [
+export const GEAR_CATEGORIES = [
   { id: "rods-reels", name: "Rods & Reels", icon: "🎣" },
   { id: "lures-jigs", name: "Lures and Jigs", icon: "🪝" },
   { id: "bait-chum", name: "Bait & Chum", icon: "🐟" },
@@ -64,49 +63,11 @@ const MyGearPage: React.FC = () => {
   });
 
   // Get gear items directly from profile (no local state)
-  const gearItems =
-    profile?.gear_items && Array.isArray(profile.gear_items)
-      ? profile.gear_items.map((item) => toGearItem(item))
+  const gearItems = useMemo(() => {
+    return profile?.gear_items && Array.isArray(profile.gear_items)
+      ? profile.gear_items.map(toGearItem)
       : [];
-
-  // Load gear items from profile on component mount
-  useEffect(() => {
-    const loadGearItems = async () => {
-      try {
-        log("[MyGearPage] Loading gear items:", {
-          hasUser: !!user?.id,
-          hasProfile: !!profile,
-          profileGearItems: profile?.gear_items,
-        });
-
-        if (!profile && user?.id) {
-          log("[MyGearPage] Profile not loaded yet, waiting...");
-          return;
-        }
-
-        if (profile?.gear_items && Array.isArray(profile.gear_items)) {
-          log("[MyGearPage] Loading gear from database:", {
-            gearCount: profile.gear_items.length,
-          });
-        } else {
-          log("[MyGearPage] No gear items found");
-        }
-      } catch (error) {
-        console.error("[MyGearPage] Error loading gear items:", error);
-      } finally {
-        setGearLoaded(true);
-      }
-    };
-
-    if (user?.id) {
-      loadGearItems();
-    } else {
-      setGearLoaded(true);
-    }
-  }, [user?.id, profile?.gear_items, profile?.id]);
-
-  // Removed automatic save - gear is now only saved from ProfilePage
-  // This page is now view-only for gear items
+  }, [profile?.gear_items]);
 
   // Get ranking text based on gear count
   const getRankingText = (count: number): string => {
@@ -211,7 +172,12 @@ const MyGearPage: React.FC = () => {
   };
 
   // Get gear items by category
-  const getGearByCategory = (categoryId: string) => {
+  const getGearByCategory = (categoryId: string | null) => {
+    if (categoryId == null) {
+      return gearItems;
+    }
+
+    console.log("[MyGearPage] categoryId:", categoryId, gearItems);
     return gearItems.filter((item) => item.category === categoryId);
   };
 
