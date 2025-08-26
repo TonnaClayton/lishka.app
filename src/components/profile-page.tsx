@@ -68,6 +68,8 @@ interface LocationData {
 import { uploadGearImage } from "@/lib/gear-upload-service";
 import FishInfoOverlay from "./fish-info-overlay";
 import BottomNav from "./bottom-nav";
+import { Json } from "@/types/supabase";
+import { toImageMetadataItem } from "@/lib/gallery-photo";
 
 // Fix Leaflet icon issue with proper CDN URLs
 if (typeof window !== "undefined") {
@@ -235,7 +237,7 @@ const ProfilePage: React.FC = () => {
             "[ProfilePage] Loaded photos from database:",
             profile.gallery_photos.length,
           );
-          setUploadedPhotos(profile.gallery_photos);
+          setUploadedPhotos(profile.gallery_photos.map(toImageMetadataItem));
         } else {
           // Fallback to localStorage for migration
           const storedPhotos = localStorage.getItem(`user_photos_${user?.id}`);
@@ -291,7 +293,9 @@ const ProfilePage: React.FC = () => {
               "[ProfilePage] Saving photos to database:",
               uploadedPhotos.length,
             );
-            await updateProfile({ gallery_photos: uploadedPhotos });
+            await updateProfile({
+              gallery_photos: uploadedPhotos as unknown as Json[],
+            });
             log("[ProfilePage] Photos saved to database successfully");
           }
         } catch (error) {
@@ -1223,7 +1227,9 @@ const ProfilePage: React.FC = () => {
       setUploadedPhotos(updatedPhotos);
 
       // Update the database
-      const { error } = await updateProfile({ gallery_photos: updatedPhotos });
+      const { error } = await updateProfile({
+        gallery_photos: updatedPhotos as unknown as Json[],
+      });
 
       if (error) {
         console.error("[ProfilePage] Error updating AI info:", error);
@@ -1268,7 +1274,9 @@ const ProfilePage: React.FC = () => {
       setUploadedPhotos(updatedPhotos);
 
       // Update the database
-      const { error } = await updateProfile({ gallery_photos: updatedPhotos });
+      const { error } = await updateProfile({
+        gallery_photos: updatedPhotos as unknown as Json[],
+      });
 
       if (error) {
         console.error(

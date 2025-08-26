@@ -171,7 +171,7 @@ const MapClickHandler = ({
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
 
   // React Query hooks - always call them, let React Query handle the enabled state
 
@@ -247,6 +247,8 @@ const ProfilePage: React.FC = () => {
     },
     onComplete: () => {
       console.log("[STREAM] Photo uploaded successfully!");
+
+      refreshProfile();
 
       setTimeout(() => {
         setUploadPhotoStreamData(null);
