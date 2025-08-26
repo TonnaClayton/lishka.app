@@ -9,6 +9,7 @@ import {
 import { Edit3, MoreVertical, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router";
+import { ROUTES } from "@/lib/routing";
 
 export default function GearItemCard({
   gear,
@@ -112,7 +113,7 @@ export default function GearItemCard({
                   onClick={(e) => {
                     e.stopPropagation();
                     //handleEditGear(index);
-                    navigate(`/gear-detail/${gear.id}`);
+                    navigate(ROUTES.GEAR_DETAIL.replace(":gearId", gear.id));
                   }}
                   className="cursor-pointer"
                   disabled={loading}
@@ -161,7 +162,7 @@ export default function GearItemCard({
                   <DropdownMenuItem
                     onClick={(e) => {
                       e.stopPropagation();
-                      navigate(`/gear-detail/${gear.id}`);
+                      navigate(ROUTES.GEAR_DETAIL.replace(":gearId", gear.id));
                     }}
                     className="cursor-pointer"
                     disabled={loading}
