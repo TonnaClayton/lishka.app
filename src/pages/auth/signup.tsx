@@ -349,19 +349,18 @@ const SignupPage: React.FC = () => {
               </div>
             </form>
           </Form>
-        </div>
-
-        <div className="mt-auto pb-8 pt-8 text-center">
-          <p className="text-base text-gray-600 dark:text-gray-300">
-            Already have an account?{" "}
-            <Link
-              to={ROUTES.LOGIN}
-              state={{ from: location.state?.from }}
-              className="text-lishka-blue hover:text-lishka-blue  font-medium"
-            >
-              Sign in
-            </Link>
-          </p>
+          <div className="pb-8 pt-8 text-center">
+            <p className="text-base text-gray-600 dark:text-gray-300">
+              Already have an account?{" "}
+              <Link
+                to={ROUTES.LOGIN}
+                state={{ from: location.state?.from }}
+                className="text-lishka-blue hover:text-lishka-blue  font-medium"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
