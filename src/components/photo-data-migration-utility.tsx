@@ -138,7 +138,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-2xl font-bold text-lishka-blue">
                   {analysis.totalPhotos}
                 </div>
                 <div className="text-sm text-gray-600">Total Photos</div>
@@ -245,7 +245,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-lishka-blue">
                     {result.totalPhotos}
                   </div>
                   <div className="text-sm text-gray-600">Total Photos</div>
@@ -257,7 +257,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
                   <div className="text-sm text-gray-600">Migrated</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-lishka-blue">
                     {result.alreadyCorrect}
                   </div>
                   <div className="text-sm text-gray-600">Already Correct</div>

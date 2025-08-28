@@ -557,7 +557,7 @@ Rank ALL gear items (score 1-100) based on suitability for current surface condi
           {/* Status indicator */}
           <div className="flex items-center gap-2">
             {analysis.phase === "loading-weather" && (
-              <div className="flex items-center gap-2 text-blue-500">
+              <div className="flex items-center gap-2 text-lishka-blue">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-xs">Loading weather...</span>
               </div>

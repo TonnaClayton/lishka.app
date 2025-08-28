@@ -230,7 +230,7 @@ const WeatherWidget: React.FC<{
     return (
       <div className="inline-flex items-center justify-center">
         <div
-          className="text-[#0251FB] transform"
+          className="text-lishka-blue transform"
           style={{ transform: `rotate(${degrees}deg)` }}
         >
           ↑
@@ -336,17 +336,17 @@ const WeatherWidget: React.FC<{
       case weatherCode >= 45 && weatherCode <= 49:
         return <CloudFog className="h-8 w-8 text-gray-400" />;
       case weatherCode >= 51 && weatherCode <= 55:
-        return <CloudDrizzle className="h-8 w-8 text-blue-400" />;
+        return <CloudDrizzle className="h-8 w-8 text-lishka-blue" />;
       case weatherCode >= 56 && weatherCode <= 57:
-        return <CloudSnow className="h-8 w-8 text-blue-300" />;
+        return <CloudSnow className="h-8 w-8 text-lishka-blue" />;
       case weatherCode >= 61 && weatherCode <= 65:
         return <CloudRain className="h-8 w-8 text-white" />;
       case weatherCode >= 66 && weatherCode <= 67:
-        return <CloudHail className="h-8 w-8 text-blue-300" />;
+        return <CloudHail className="h-8 w-8 text-lishka-blue" />;
       case weatherCode >= 71 && weatherCode <= 77:
         return <CloudSnow className="h-8 w-8 text-blue-200" />;
       case weatherCode >= 80 && weatherCode <= 82:
-        return <CloudRain className="h-8 w-8 text-blue-500" />;
+        return <CloudRain className="h-8 w-8 text-lishka-blue" />;
       case weatherCode >= 85 && weatherCode <= 86:
         return <CloudSnow className="h-8 w-8 text-blue-200" />;
       case weatherCode >= 95 && weatherCode <= 99:
@@ -628,7 +628,7 @@ const WeatherWidget: React.FC<{
         </p>
         <Button
           onClick={() => setShowLocationModal(true)}
-          className="bg-[#0251FB] dark:bg-blue-700 text-white hover:bg-[#0251FB]/90 dark:hover:bg-blue-600 rounded-full"
+          className="bg-lishka-blue  text-white hover:bg-lishka-blue/90 dark:hover:bg-lishka-blue rounded-full"
         >
           <MapPin className="mr-2 h-4 w-4" /> Set Location
         </Button>
@@ -670,7 +670,7 @@ const WeatherWidget: React.FC<{
             variant="ghost"
             size="sm"
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center text-[#0251FB] px-0  hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            className="flex items-center text-lishka-blue px-0  hover:bg-blue-50"
           >
             <MapPin className="h-5 w-5 mr-1" />
             <span className="font-medium">
@@ -685,7 +685,7 @@ const WeatherWidget: React.FC<{
             disabled={disableRefreshBtn}
             onClick={handleRefresh}
             className={cn(
-              "text-[#0251FB]  hover:bg-blue-50 dark:hover:bg-blue-900/20",
+              "text-lishka-blue  hover:bg-blue-50",
               disableRefreshBtn && "opacity-50 cursor-not-allowe animate-spin",
             )}
           >
@@ -859,7 +859,7 @@ const WeatherWidget: React.FC<{
             <Badge
               className={`
               ${displayConditions.fishingConditions === "Excellent" ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100" : ""}
-              ${displayConditions.fishingConditions === "Good" ? "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-100" : ""}
+              ${displayConditions.fishingConditions === "Good" ? "bg-blue-100 text-lishka-blue  " : ""}
               ${displayConditions.fishingConditions === "Fair" ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100" : ""}
               ${displayConditions.fishingConditions === "Poor" ? "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100" : ""}
               text-sm px-3 py-1
@@ -984,7 +984,7 @@ const WeatherWidget: React.FC<{
             >
               {isLoadingFishingAdvice ? (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#0251FB]" />
+                  <Loader2 className="h-6 w-6 animate-spin text-lishka-blue" />
                 </div>
               ) : fishingAdvice?.inshore ? (
                 <p className="text-sm">{fishingAdvice.inshore}</p>
@@ -1000,7 +1000,7 @@ const WeatherWidget: React.FC<{
             >
               {isLoadingFishingAdvice ? (
                 <div className="flex items-center justify-center py-4">
-                  <Loader2 className="h-6 w-6 animate-spin text-[#0251FB] " />
+                  <Loader2 className="h-6 w-6 animate-spin text-lishka-blue " />
                 </div>
               ) : fishingAdvice?.offshore ? (
                 <p className="text-sm">{fishingAdvice.offshore}</p>
@@ -1020,13 +1020,13 @@ const WeatherWidget: React.FC<{
           <h2 className="text-lg font-semibold dark:text-white">
             Marine Data Forecast
           </h2>
-          <Navigation className="h-5 w-5 text-[#0251FB] " />
+          <Navigation className="h-5 w-5 text-lishka-blue " />
         </div>
 
         {/* Wave Height Hourly Card */}
         <div className="mb-4">
           <div className="flex items-center mb-2">
-            <Waves className="h-5 w-5 mr-2 text-[#0251FB] " />
+            <Waves className="h-5 w-5 mr-2 text-lishka-blue " />
             <h3 className="text-md font-medium dark:text-white">
               Wave Height (m)
             </h3>
@@ -1041,7 +1041,7 @@ const WeatherWidget: React.FC<{
                   <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
                     {time ? formatTime(time) : "--:--"}
                   </p>
-                  <p className="text-lg font-bold text-[#0251FB] ">
+                  <p className="text-lg font-bold text-lishka-blue ">
                     {waveHeights[index] !== null &&
                     waveHeights[index] !== undefined
                       ? waveHeights[index].toFixed(1)
@@ -1049,7 +1049,7 @@ const WeatherWidget: React.FC<{
                   </p>
                   {waveDirections[index] !== undefined &&
                     waveDirections[index] !== null && (
-                      <div className="mt-1 text-xs text-[#0251FB] ">
+                      <div className="mt-1 text-xs text-lishka-blue ">
                         {getDirectionArrow(waveDirections[index])}
                       </div>
                     )}
@@ -1062,7 +1062,7 @@ const WeatherWidget: React.FC<{
         {/* Wind Speed Hourly Card */}
         <div>
           <div className="flex items-center mb-2">
-            <Wind className="h-5 w-5 mr-2 text-[#0251FB] " />
+            <Wind className="h-5 w-5 mr-2 text-lishka-blue " />
             <h3 className="text-md font-medium dark:text-white">
               Wind Speed (km/h)
             </h3>
@@ -1155,7 +1155,7 @@ const WeatherWidget: React.FC<{
 
                 {/* Wind Speed and Direction */}
                 <div className="flex items-center mb-1">
-                  <Wind className="h-3 w-3 mr-1 text-[#0251FB]" />
+                  <Wind className="h-3 w-3 mr-1 text-lishka-blue" />
                   <p className="text-xs text-[#191B1FCC]">
                     {windSpeeds[index] !== null &&
                     windSpeeds[index] !== undefined
@@ -1177,7 +1177,7 @@ const WeatherWidget: React.FC<{
 
                 {/* Wave Height and Direction */}
                 <div className="flex items-center">
-                  <Waves className="h-3 w-3 mr-1 text-[#0251FB]" />
+                  <Waves className="h-3 w-3 mr-1 text-lishka-blue" />
                   <p className="text-xs text-[#191B1FCC]">
                     {waveHeights[index] !== null &&
                     waveHeights[index] !== undefined
@@ -1203,7 +1203,7 @@ const WeatherWidget: React.FC<{
           <h2 className="text-lg font-semibold dark:text-white">
             Hourly Precipitation (mm)
           </h2>
-          <Droplets className="h-5 w-5 text-[#0251FB] " />
+          <Droplets className="h-5 w-5 text-lishka-blue " />
         </div>
         <div className="overflow-x-auto">
           <div className="flex gap-3 pb-2 min-w-[800px]">
@@ -1225,8 +1225,8 @@ const WeatherWidget: React.FC<{
                     {time ? formatTime(time) : "--:--"}
                   </p>
                   <div className="flex items-center mb-1">
-                    <Droplets className="h-3 w-3 mr-1 text-[#0251FB]" />
-                    <p className="text-sm font-bold text-[#0251FB] ">
+                    <Droplets className="h-3 w-3 mr-1 text-lishka-blue" />
+                    <p className="text-sm font-bold text-lishka-blue ">
                       {precipitation !== null && precipitation !== undefined
                         ? precipitation.toFixed(1)
                         : "0.0"}
@@ -1256,7 +1256,7 @@ const WeatherWidget: React.FC<{
             </h2>
             <CloudRain className="h-5 w-5 text-white" />
           </div>
-          <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-4">
+          <div className="bg-blue-50 /20 p-3 rounded-lg mb-4">
             <p className="text-sm font-medium dark:text-white">
               Next 6 hours: {precipitationForecast.chance}% chance,{" "}
               {precipitationForecast.amount}mm expected
@@ -1290,7 +1290,7 @@ const WeatherWidget: React.FC<{
                           title={`${probability}% chance, ${amount.toFixed(1)}mm`}
                         >
                           <div
-                            className="absolute bottom-0 w-full bg-[#0251FB] transition-all duration-300"
+                            className="absolute bottom-0 w-full bg-lishka-blue transition-all duration-300"
                             style={{
                               height: `${Math.max(5, probability)}%`,
                             }}
@@ -1355,19 +1355,19 @@ const WeatherWidget: React.FC<{
                           return <CloudFog className="h-5 w-5 text-gray-400" />;
                         case weatherCode >= 51 && weatherCode <= 55:
                           return (
-                            <CloudDrizzle className="h-5 w-5 text-blue-400" />
+                            <CloudDrizzle className="h-5 w-5 text-lishka-blue" />
                           );
                         case weatherCode >= 56 && weatherCode <= 57:
                           return (
-                            <CloudSnow className="h-5 w-5 text-blue-300" />
+                            <CloudSnow className="h-5 w-5 text-lishka-blue" />
                           );
                         case weatherCode >= 61 && weatherCode <= 65:
                           return (
-                            <CloudRain className="h-5 w-5 text-[#0251FB]" />
+                            <CloudRain className="h-5 w-5 text-lishka-blue" />
                           );
                         case weatherCode >= 66 && weatherCode <= 67:
                           return (
-                            <CloudHail className="h-5 w-5 text-blue-300" />
+                            <CloudHail className="h-5 w-5 text-lishka-blue" />
                           );
                         case weatherCode >= 71 && weatherCode <= 77:
                           return (
@@ -1375,7 +1375,7 @@ const WeatherWidget: React.FC<{
                           );
                         case weatherCode >= 80 && weatherCode <= 82:
                           return (
-                            <CloudRain className="h-5 w-5 text-[#0251FB]" />
+                            <CloudRain className="h-5 w-5 text-lishka-blue" />
                           );
                         case weatherCode >= 85 && weatherCode <= 86:
                           return (
@@ -1407,7 +1407,7 @@ const WeatherWidget: React.FC<{
                         </p>
                       </div>
                       <div className="flex items-center">
-                        <Thermometer className="h-3 w-3 mr-1 text-[#0251FB]" />
+                        <Thermometer className="h-3 w-3 mr-1 text-lishka-blue" />
                         <p className="text-xs dark:text-gray-300">
                           {weatherData.daily.temperature_2m_min &&
                           weatherData.daily.temperature_2m_min[index] !== null
@@ -1424,7 +1424,7 @@ const WeatherWidget: React.FC<{
                       Wind
                     </p>
                     <div className="flex items-center justify-center">
-                      <Wind className="h-3 w-3 mr-1 text-[#0251FB]" />
+                      <Wind className="h-3 w-3 mr-1 text-lishka-blue" />
                       <p className="text-xs dark:text-gray-300 mr-1">
                         {(() => {
                           // Calculate the day's start and end indices in hourly data
@@ -1526,7 +1526,7 @@ const WeatherWidget: React.FC<{
                       Waves
                     </p>
                     <div className="flex items-center justify-center">
-                      <Waves className="h-3 w-3 mr-1 text-[#0251FB]" />
+                      <Waves className="h-3 w-3 mr-1 text-lishka-blue" />
                       <p className="text-xs dark:text-gray-300 mr-1">
                         {/* Use average wave height from hourly data for this day */}
                         {(() => {

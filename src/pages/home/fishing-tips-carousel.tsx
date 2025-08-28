@@ -532,17 +532,17 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
                   <Sun className="w-8 h-8 text-yellow-500" />
                 )}
                 {weatherSummary.condition === "Partly cloudy" && (
-                  <Cloud className="w-8 h-8 text-blue-400" />
+                  <Cloud className="w-8 h-8 text-lishka-blue" />
                 )}
                 {weatherSummary.condition === "Rainy" && (
-                  <CloudRain className="w-8 h-8 text-blue-500" />
+                  <CloudRain className="w-8 h-8 text-lishka-blue" />
                 )}
                 {weatherSummary.condition === "Snowy" && (
-                  <CloudSnow className="w-8 h-8 text-blue-300" />
+                  <CloudSnow className="w-8 h-8 text-lishka-blue" />
                 )}
                 {!["Clear", "Partly cloudy", "Rainy", "Snowy"].includes(
                   weatherSummary.condition,
-                ) && <Cloud className="w-8 h-8 text-blue-400" />}
+                ) && <Cloud className="w-8 h-8 text-lishka-blue" />}
                 <span className="text-foreground text-2xl font-normal">
                   {weatherSummary.temperature !== null
                     ? `${weatherSummary.temperature}°`
@@ -563,7 +563,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-blue-500 rotate-45 text-[20px]"
+                  className="text-lishka-blue rotate-45 text-[20px]"
                 >
                   <path d="M5 12h14"></path>
                   <path d="m12 5 7 7-7 7"></path>

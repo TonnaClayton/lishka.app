@@ -316,7 +316,7 @@ const ImageDebugTest = () => {
           {/* Raw Metadata */}
           <Separator />
           <details className="space-y-2">
-            <summary className="font-medium cursor-pointer hover:text-blue-600">
+            <summary className="font-medium cursor-pointer hover:text-lishka-blue">
               Raw Metadata (Click to expand)
             </summary>
             <pre className="text-xs bg-gray-100 p-3 rounded overflow-auto max-h-40">

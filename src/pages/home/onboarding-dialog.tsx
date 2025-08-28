@@ -182,7 +182,7 @@ export const OnboardingDialog = React.memo(
                 <button
                   disabled={isLoading}
                   className={
-                    "flex-1 py-4 px-6 rounded-full text-white font-medium text-lg transition-colors hover:bg-blue-700 border-gray-200  border-0 bg-[#0251FB] disabled:opacity-50 disabled:cursor-not-allowed"
+                    "flex-1 py-4 px-6 rounded-full text-white font-medium text-lg transition-colors hover:bg-lishka-blue border-gray-200  border-0 bg-lishka-blue disabled:opacity-50 disabled:cursor-not-allowed"
                   }
                   onClick={() => {
                     if (current === 5) {

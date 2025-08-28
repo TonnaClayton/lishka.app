@@ -462,8 +462,8 @@ const BottomNav: React.FC = () => {
             className={cn(
               `flex items-center`,
               currentPath === "/"
-                ? "text-[#0251FB] "
-                : "text-[#191B1F] hover:text-[#0251FB]",
+                ? "text-lishka-blue "
+                : "text-[#191B1F] hover:text-lishka-blue",
             )}
           >
             <Home size={24} />
@@ -473,8 +473,8 @@ const BottomNav: React.FC = () => {
             className={cn(
               `flex items-center`,
               currentPath === "/search"
-                ? "text-[#0251FB] "
-                : "text-[#191B1F] hover:text-[#0251FB]",
+                ? "text-lishka-blue "
+                : "text-[#191B1F] hover:text-lishka-blue",
             )}
           >
             <Search size={24} />
@@ -483,7 +483,7 @@ const BottomNav: React.FC = () => {
           <button
             onClick={handleCameraClick}
             disabled={uploadingPhoto || classifyingImage}
-            className="flex items-center text-[#191B1F] hover:text-[#0251FB] disabled:opacity-50 relative"
+            className="flex items-center text-[#191B1F] hover:text-lishka-blue disabled:opacity-50 relative"
           >
             {classifyingImage ? (
               <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#0251FB] border-t-transparent" />
@@ -498,8 +498,8 @@ const BottomNav: React.FC = () => {
               className={cn(
                 `flex items-center`,
                 currentPath === "/weather"
-                  ? "text-[#0251FB] "
-                  : "text-[#191B1F] hover:text-[#0251FB]",
+                  ? "text-lishka-blue "
+                  : "text-[#191B1F] hover:text-lishka-blue",
               )}
             >
               <Cloud size={24} />
@@ -510,8 +510,8 @@ const BottomNav: React.FC = () => {
             className={cn(
               `flex items-center`,
               currentPath === "/profile"
-                ? "text-[#0251FB] "
-                : "text-[#191B1F] hover:text-[#0251FB]",
+                ? "text-lishka-blue "
+                : "text-[#191B1F] hover:text-lishka-blue",
             )}
           >
             <User size={24} />
@@ -661,7 +661,7 @@ export const SideNav: React.FC = () => {
                   `flex items-center py-3 rounded-lg`,
                   isCollapsed ? "justify-center" : "px-4",
                   currentPath === "/"
-                    ? "bg-[#E6EFFF] text-[#0251FB]  "
+                    ? "bg-[#E6EFFF] text-lishka-blue  "
                     : "text-[#191B1F] hover:bg-gray-100 ",
                 )}
               >
@@ -674,7 +674,7 @@ export const SideNav: React.FC = () => {
                   `flex items-center py-3 rounded-lg`,
                   isCollapsed ? "justify-center" : "px-4",
                   currentPath === "/search"
-                    ? "bg-[#E6EFFF] text-[#0251FB] "
+                    ? "bg-[#E6EFFF] text-lishka-blue "
                     : "text-[#191B1F] hover:bg-gray-100 ",
                 )}
               >
@@ -716,7 +716,7 @@ export const SideNav: React.FC = () => {
                 `flex items-center py-3 rounded-lg`,
                 isCollapsed ? "justify-center" : "px-4",
                 currentPath === "/settings"
-                  ? "bg-[#E6EFFF] text-[#0251FB]  "
+                  ? "bg-[#E6EFFF] text-lishka-blue  "
                   : "text-[#191B1F] hover:bg-gray-100 ",
               )}
             >
@@ -729,7 +729,7 @@ export const SideNav: React.FC = () => {
                 `flex items-center py-3 rounded-lg`,
                 isCollapsed ? "justify-center" : "px-4",
                 currentPath === "/settings"
-                  ? "bg-[#E6EFFF] text-[#0251FB]  "
+                  ? "bg-[#E6EFFF] text-lishka-blue  "
                   : "text-[#191B1F] hover:bg-gray-100 ",
               )}
             >
@@ -742,7 +742,7 @@ export const SideNav: React.FC = () => {
               `flex items-center py-3 rounded-lg`,
               isCollapsed ? "justify-center" : "px-4",
               currentPath === "/help"
-                ? "bg-[#E6EFFF] text-[#0251FB]  "
+                ? "bg-[#E6EFFF] text-lishka-blue  "
                 : "text-[#191B1F] hover:bg-gray-100 ",
             )}
           >
