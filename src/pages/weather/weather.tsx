@@ -88,7 +88,7 @@ const WeatherPage: React.FC = () => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-1 text-[#0251FB] dark:text-[#0251FB] hover:text-[#0251FB] dark:hover:text-[#0251FB] p-1 h-auto"
+              className="flex items-center gap-1 text-lishka-blue dark:text-lishka-blue hover:text-lishka-blue dark:hover:text-lishka-blue p-1 h-auto"
               onClick={() => setIsLocationModalOpen(true)}
             >
               <span className="text-sm truncate">{location}</span>

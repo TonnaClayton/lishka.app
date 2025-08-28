@@ -149,7 +149,7 @@ const WeatherWidgetProSkeleton: React.FC = () => {
               {Array.from({ length: 12 }).map((_, index) => (
                 <div
                   key={`wave-skeleton-${index}`}
-                  className="flex flex-col items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg min-w-[70px]"
+                  className="flex flex-col items-center p-3 bg-blue-50 /20 rounded-lg min-w-[70px]"
                 >
                   <Skeleton className="h-3 w-12 mb-1" />
                   <Skeleton className="h-6 w-8" />

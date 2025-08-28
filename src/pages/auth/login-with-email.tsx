@@ -159,10 +159,10 @@ const LoginWithEmailPage: React.FC = () => {
 
         {/* Title */}
         <div className="mb-8">
-          <h1 className="font-bold text-gray-900 dark:text-white mb-2 text-4xl">
+          <h1 className="font-bold text-gray-900 dark:text-white mb-2 text-3xl">
             Welcome Back
           </h1>
-          <p className="text-gray-600 dark:text-gray-400 text-lg">
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
             Sign in to your Lishka account
           </p>
         </div>
@@ -190,7 +190,7 @@ const LoginWithEmailPage: React.FC = () => {
                           onClick={handleResendVerification}
                           disabled={resendingEmail}
                           size="sm"
-                          className="bg-blue-600 hover:bg-blue-700 text-white"
+                          className="bg-lishka-blue hover:bg-blue-700 text-white"
                         >
                           {resendingEmail ? (
                             <>
@@ -273,7 +273,7 @@ const LoginWithEmailPage: React.FC = () => {
               <div className="flex items-center justify-end">
                 <Link
                   to={ROUTES.FORGOT_PASSWORD}
-                  className="text-sm text-blue-600 hover:text-blue-500 dark:text-blue-400"
+                  className="text-sm text-lishka-blue hover:text-lishka-blue "
                 >
                   Forgot password?
                 </Link>
@@ -282,7 +282,7 @@ const LoginWithEmailPage: React.FC = () => {
               <div className="space-y-3 mt-0">
                 <Button
                   type="submit"
-                  className="w-full h-[46px] bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-[46px] bg-lishka-blue hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? "Signing in..." : "Sign In"}
@@ -298,7 +298,7 @@ const LoginWithEmailPage: React.FC = () => {
             <Link
               to={ROUTES.SIGNUP}
               state={{ from: location.state?.from }}
-              className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"
+              className="text-lishka-blue hover:text-lishka-blue  font-medium"
             >
               Create account
             </Link>

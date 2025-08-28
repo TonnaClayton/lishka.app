@@ -91,7 +91,7 @@ const GearColorDebugCards: React.FC = () => {
               <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">
                 Jigging & Vertical
               </p>
-              <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+              <p className="text-sm text-lishka-blue  font-medium">
                 Perfect for current conditions
               </p>
             </div>
@@ -151,7 +151,7 @@ const GearColorDebugCards: React.FC = () => {
       </Card>
 
       {/* Info */}
-      <Card className="p-4 bg-blue-50 dark:bg-blue-900/20">
+      <Card className="p-4 bg-blue-50 /20">
         <h3 className="font-semibold mb-2">About Grey Circles</h3>
         <p className="text-sm text-gray-600 dark:text-gray-400">
           The grey circles with "--" on gear cards appear when AI hasn't

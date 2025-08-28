@@ -265,7 +265,7 @@ const LocationSetup = ({
               <Button
                 onClick={handleDetectLocation}
                 disabled={isDetecting}
-                className="w-full bg-blue-600 text-white hover:bg-blue-700 rounded-full flex items-center justify-center gap-2 transition-all duration-300 border-0 py-6"
+                className="w-full bg-lishka-blue text-white hover:bg-blue-700 rounded-full flex items-center justify-center gap-2 transition-all duration-300 border-0 py-6"
               >
                 {isDetecting ? (
                   <>
@@ -290,7 +290,7 @@ const LocationSetup = ({
               {/* Select on map link */}
               <button
                 onClick={handleMapSelection}
-                className="w-full text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium flex items-center justify-center gap-2 transition-colors border-0"
+                className="w-full text-lishka-blue  hover:text-lishka-blue text-sm font-medium flex items-center justify-center gap-2 transition-colors border-0"
               >
                 <Navigation className="h-4 w-4" />
                 Select on map

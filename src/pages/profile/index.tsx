@@ -915,7 +915,7 @@ const ProfilePage: React.FC = () => {
                     </Avatar>
                     {isEditing && (
                       <div
-                        className="absolute -bottom-2 -right-2 bg-blue-600 rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
+                        className="absolute -bottom-2 -right-2 bg-lishka-blue rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <Camera className="w-4 h-4 text-white" />
@@ -1063,7 +1063,7 @@ const ProfilePage: React.FC = () => {
                   profile.gear_items.length > 0 && (
                     <Badge
                       className={cn(
-                        "bg-[#0251FB] hover:bg-[#0251FB] text-white rounded-full min-w-[24px] h-6 flex items-center justify-center text-sm font-medium",
+                        "bg-lishka-blue hover:bg-lishka-blue text-white rounded-full min-w-[24px] h-6 flex items-center justify-center text-sm font-medium",
                       )}
                     >
                       {profile.gear_items.length}
@@ -1567,8 +1567,8 @@ const ProfilePage: React.FC = () => {
           </div>
 
           <div className="mt-4">
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
-              <p className="text-xs text-blue-800 dark:text-blue-200">
+            <div className="bg-blue-50 /20 border border-blue-200  rounded-lg p-2">
+              <p className="text-xs text-lishka-blue">
                 <strong>Note:</strong> Updating this information will remove the
                 AI confidence indicator.
               </p>

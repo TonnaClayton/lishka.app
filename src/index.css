@@ -55,6 +55,8 @@
     --ring: 222.2 84% 4.9%;
 
     --radius: 0.5rem;
+
+    --lishka-blue: #0251fb;
   }
 
   .dark {
@@ -367,7 +369,7 @@
   }
 
   .forecast-item-blue {
-    @apply bg-blue-50 dark:bg-blue-900/20;
+    @apply bg-blue-50 /20;
   }
 
   .forecast-item-gray {
@@ -383,7 +385,7 @@
   }
 
   .precipitation-summary {
-    @apply bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg mb-4;
+    @apply bg-blue-50 /20 p-3 rounded-lg mb-4;
   }
 
   .precipitation-scroll {

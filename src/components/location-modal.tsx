@@ -406,7 +406,7 @@ const LocationModal = ({
             <Button
               onClick={handleDetectLocation}
               variant="outline"
-              className="w-full h-12 border-none shadow-none bg-[#0251FB] hover:bg-[#0251FB] text-white hover:text-white rounded-full"
+              className="w-full h-12 border-none shadow-none bg-lishka-blue hover:bg-lishka-blue text-white hover:text-white rounded-full"
               disabled={loading}
             >
               <MapPin className="mr-2" />
@@ -417,7 +417,7 @@ const LocationModal = ({
               onClick={handleMapLocationSelect}
               disabled={loading}
               variant="default"
-              className="confirm-location-button w-full bg-[#0251FB1A] h-12 text-[#0251FB] hover:bg-[#0251FB33] hover:text-[#0251FB] rounded-full shadow-none border-none"
+              className="confirm-location-button w-full bg-[#0251FB1A] h-12 text-lishka-blue hover:bg-[#0251FB33] hover:text-lishka-blue rounded-full shadow-none border-none"
             >
               Set this location
             </Button>

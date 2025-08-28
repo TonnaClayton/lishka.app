@@ -249,7 +249,7 @@ const BlobImageTest: React.FC = () => {
                   </Card>
                   <Card className="border">
                     <CardContent className="p-4 text-center">
-                      <div className="text-2xl font-bold text-blue-600">
+                      <div className="text-2xl font-bold text-lishka-blue">
                         {
                           results.imageTests.filter(
                             (t) => t.imageUrl === getPlaceholderFishImage(),
