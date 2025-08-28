@@ -670,7 +670,7 @@ const WeatherWidget: React.FC<{
             variant="ghost"
             size="sm"
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center text-lishka-blue px-0  hover:bg-blue-50 dark:hover:bg-blue-900/20"
+            className="flex items-center text-lishka-blue px-0  hover:bg-blue-50"
           >
             <MapPin className="h-5 w-5 mr-1" />
             <span className="font-medium">
@@ -685,7 +685,7 @@ const WeatherWidget: React.FC<{
             disabled={disableRefreshBtn}
             onClick={handleRefresh}
             className={cn(
-              "text-lishka-blue  hover:bg-blue-50 dark:hover:bg-blue-900/20",
+              "text-lishka-blue  hover:bg-blue-50",
               disableRefreshBtn && "opacity-50 cursor-not-allowe animate-spin",
             )}
           >

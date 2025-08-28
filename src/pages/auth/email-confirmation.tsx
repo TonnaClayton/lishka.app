@@ -156,7 +156,7 @@ const EmailConfirmationPage: React.FC = () => {
             </p>
             <Button
               onClick={() => navigate("/", { replace: true })}
-              className="w-full h-14 bg-lishka-blue hover:bg-blue-700 text-white text-base font-medium rounded-xl"
+              className="w-full h-14 bg-lishka-blue hover:bg-lishka-blue text-white text-base font-medium rounded-xl"
             >
               Continue to App
             </Button>
@@ -180,7 +180,7 @@ const EmailConfirmationPage: React.FC = () => {
               <Button
                 onClick={handleResendConfirmation}
                 disabled={resending}
-                className="w-full h-14 bg-lishka-blue hover:bg-blue-700 text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-14 bg-lishka-blue hover:bg-lishka-blue text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {resending ? (
                   <>
@@ -224,7 +224,7 @@ const EmailConfirmationPage: React.FC = () => {
                 <Button
                   onClick={handleResendConfirmation}
                   disabled={resending}
-                  className="w-full h-14 bg-lishka-blue hover:bg-blue-700 text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-14 bg-lishka-blue hover:bg-lishka-blue text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {resending ? (
                     <>

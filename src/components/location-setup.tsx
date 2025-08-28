@@ -265,7 +265,7 @@ const LocationSetup = ({
               <Button
                 onClick={handleDetectLocation}
                 disabled={isDetecting}
-                className="w-full bg-lishka-blue text-white hover:bg-blue-700 rounded-full flex items-center justify-center gap-2 transition-all duration-300 border-0 py-6"
+                className="w-full bg-lishka-blue text-white hover:bg-lishka-blue rounded-full flex items-center justify-center gap-2 transition-all duration-300 border-0 py-6"
               >
                 {isDetecting ? (
                   <>

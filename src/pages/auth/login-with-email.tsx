@@ -190,7 +190,7 @@ const LoginWithEmailPage: React.FC = () => {
                           onClick={handleResendVerification}
                           disabled={resendingEmail}
                           size="sm"
-                          className="bg-lishka-blue hover:bg-blue-700 text-white"
+                          className="bg-lishka-blue hover:bg-lishka-blue text-white"
                         >
                           {resendingEmail ? (
                             <>
@@ -282,7 +282,7 @@ const LoginWithEmailPage: React.FC = () => {
               <div className="space-y-3 mt-0">
                 <Button
                   type="submit"
-                  className="w-full h-[46px] bg-lishka-blue hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-[46px] bg-lishka-blue hover:bg-lishka-blue text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? "Signing in..." : "Sign In"}

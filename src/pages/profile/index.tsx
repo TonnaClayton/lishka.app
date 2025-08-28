@@ -915,7 +915,7 @@ const ProfilePage: React.FC = () => {
                     </Avatar>
                     {isEditing && (
                       <div
-                        className="absolute -bottom-2 -right-2 bg-lishka-blue rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
+                        className="absolute -bottom-2 -right-2 bg-lishka-blue rounded-full p-2 cursor-pointer hover:bg-lishka-blue transition-colors shadow-lg"
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <Camera className="w-4 h-4 text-white" />
