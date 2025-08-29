@@ -25,7 +25,7 @@ export const getDirectionArrow = (degrees: number): JSX.Element => {
   return (
     <div className="inline-flex items-center justify-center">
       <div
-        className="text-[#0251FB] transform"
+        className="text-lishka-blue transform"
         style={{ transform: `rotate(${degrees}deg)` }}
       >
         ↑

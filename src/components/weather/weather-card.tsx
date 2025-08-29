@@ -60,7 +60,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
   };
 
   return (
-    <Card className="p-6 bg-gradient-to-br border-none from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
+    <Card className="p-6 bg-gradient-to-br border-none from-lishka-blue to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
       <div className="flex justify-between items-start">
         <div>
           <h2 className="text-lg font-medium opacity-90">

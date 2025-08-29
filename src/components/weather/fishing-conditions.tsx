@@ -47,7 +47,7 @@ export const FishingConditions: React.FC<FishingConditionsProps> = ({
           >
             {isLoadingFishingAdvice ? (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-[#0251FB]" />
+                <Loader2 className="h-6 w-6 animate-spin text-lishka-blue" />
               </div>
             ) : fishingAdvice?.inshore ? (
               <p className="text-sm">{fishingAdvice.inshore}</p>
@@ -64,7 +64,7 @@ export const FishingConditions: React.FC<FishingConditionsProps> = ({
           >
             {isLoadingFishingAdvice ? (
               <div className="flex items-center justify-center py-4">
-                <Loader2 className="h-6 w-6 animate-spin text-[#0251FB]" />
+                <Loader2 className="h-6 w-6 animate-spin text-lishka-blue" />
               </div>
             ) : fishingAdvice?.offshore ? (
               <p className="text-sm">{fishingAdvice.offshore}</p>

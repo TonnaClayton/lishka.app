@@ -577,7 +577,7 @@ export default function GearDetailPage() {
                       !form.formState.isDirty || form.formState.isSubmitting
                     }
                     onClick={() => navigate(-1)}
-                    className="bg-[#025DFB1A] hover:bg-[#025DFB1A] hover:text-[#0251FB] text-[#0251FB] h-10 border-none rounded-full text-xs font-semibold shadow-none"
+                    className="bg-[#025DFB1A] hover:bg-[#025DFB1A] hover:text-lishka-blue text-lishka-blue h-10 border-none rounded-full text-xs font-semibold shadow-none"
                   >
                     Cancel
                   </Button>

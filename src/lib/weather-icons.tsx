@@ -89,13 +89,13 @@ export const getDailyWeatherIcon = (weatherCode: number): JSX.Element => {
     case weatherCode >= 56 && weatherCode <= 57:
       return <CloudSnow className="h-5 w-5 text-blue-300" />;
     case weatherCode >= 61 && weatherCode <= 65:
-      return <CloudRain className="h-5 w-5 text-[#0251FB]" />;
+      return <CloudRain className="h-5 w-5 text-lishka-blue" />;
     case weatherCode >= 66 && weatherCode <= 67:
       return <CloudHail className="h-5 w-5 text-blue-300" />;
     case weatherCode >= 71 && weatherCode <= 77:
       return <CloudSnow className="h-5 w-5 text-blue-200" />;
     case weatherCode >= 80 && weatherCode <= 82:
-      return <CloudRain className="h-5 w-5 text-[#0251FB]" />;
+      return <CloudRain className="h-5 w-5 text-lishka-blue" />;
     case weatherCode >= 85 && weatherCode <= 86:
       return <CloudSnow className="h-5 w-5 text-blue-200" />;
     case weatherCode >= 95 && weatherCode <= 99:
