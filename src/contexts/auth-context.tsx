@@ -75,6 +75,7 @@ interface AuthContextType {
     fullName: string,
   ) => Promise<{ error: any; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   forgotPassword: (email: string) => Promise<{ error: any }>;
   resetPassword: (password: string) => Promise<{ error: any }>;
@@ -354,6 +355,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("[AuthContext] SignIn exception:", err);
       return {
         error: { message: "An unexpected error occurred during signin" },
+      };
+    }
+  };
+
+  const signInWithGoogle = async () => {
+    try {
+      log("[AuthContext] Starting Google sign-in");
+
+      const { data, error } = await authService.signInWithGoogle();
+
+      log("[AuthContext] Google sign-in result:", {
+        hasData: !!data,
+        hasError: !!error,
+        errorMessage: error?.message,
+      });
+
+      if (error) {
+        log("[AuthContext] Google sign-in error:", error);
+        return { error };
+      }
+
+      // Success - user will be set via onAuthStateChange when redirect returns
+      log("[AuthContext] Google sign-in initiated successfully");
+      return { error: null };
+    } catch (err) {
+      console.error("[AuthContext] Google sign-in exception:", err);
+      return {
+        error: {
+          message: "An unexpected error occurred during Google sign-in",
+        },
       };
     }
   };
@@ -1025,6 +1056,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     loading: loading || profileLoading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     resetPassword,
     forgotPassword,

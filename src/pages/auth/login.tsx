@@ -2,9 +2,28 @@ import useIsMobile from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/routing";
+import { useAuth } from "@/contexts/auth-context";
+import { useState } from "react";
 
 export default function LoginPage() {
   const isMobile = useIsMobile();
+  const { signInWithGoogle } = useAuth();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    try {
+      const { error } = await signInWithGoogle();
+      if (error) {
+        console.error("Google sign-in error:", error);
+        // You could add a toast notification here
+      }
+    } catch (err) {
+      console.error("Unexpected error during Google sign-in:", err);
+    } finally {
+      setIsGoogleLoading(false);
+    }
+  };
 
   return (
     <div className="bg-white dark:bg-gray-900 h-full w-full">
@@ -63,8 +82,10 @@ export default function LoginPage() {
               </div>
 
               <button
+                onClick={handleGoogleSignIn}
+                disabled={isGoogleLoading}
                 className={
-                  "flex-1 px-6 rounded-full font-medium size-full text-sm py-4 border bg-white border-gray-200 text-[#243041] flex justify-center items-center"
+                  "flex-1 px-6 rounded-full font-medium size-full text-sm py-4 border bg-white border-gray-200 text-[#243041] flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed"
                 }
               >
                 <svg
@@ -105,7 +126,7 @@ export default function LoginPage() {
                     </clipPath>
                   </defs>
                 </svg>
-                Continue with Google
+                {isGoogleLoading ? "Connecting..." : "Continue with Google"}
               </button>
               <button
                 className={
