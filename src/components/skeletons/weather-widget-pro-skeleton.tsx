@@ -13,7 +13,7 @@ const WeatherWidgetProSkeleton: React.FC = () => {
       </div>
 
       {/* Weather Card Skeleton */}
-      <Card className="p-6 bg-gradient-to-br from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
+      <Card className="p-6 bg-gradient-to-br from-lishka-blue to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
         <div className="flex justify-between items-start">
           <div>
             <Skeleton className="h-6 w-48 bg-white/20" />
