@@ -109,7 +109,29 @@ const SearchPage: React.FC = () => {
   const deviceSize = useDeviceSize();
   const isMobile = useIsMobile();
 
-  const messagesMemo = useMemo(() => {
+  const fixBrokenBase64Url = (url: string | null) => {
+    if (url != null && url != "") {
+      if (
+        url.startsWith("data:image/jpeg;base64,") ||
+        url.startsWith("data:image/png;base64,")
+      ) {
+        return url;
+      }
+
+      // check if url does not start with data:image/jpeg;base64, or data:image/png;base64,
+      // then return null
+      if (
+        !url.startsWith("data:image/jpeg;base64,") &&
+        !url.startsWith("data:image/png;base64,")
+      ) {
+        return `data:image/jpeg;base64,${url}`;
+      }
+    }
+
+    return null;
+  };
+
+  const messagesMemo: Message[] = useMemo(() => {
     if (id == undefined || id == null) {
       return messages;
     }
@@ -119,6 +141,7 @@ const SearchPage: React.FC = () => {
         session?.messages.map((message) => ({
           id: message.id,
           user_role: message.user_role,
+          image: fixBrokenBase64Url(message.image),
           content: message.content,
           timestamp: new Date(message.created_at),
           fish_results: message.metadata?.fish_results || [],
