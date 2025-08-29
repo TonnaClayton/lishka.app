@@ -137,17 +137,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [count, setCount] = useState(0);
   const { location: userLocation } = useUserLocation();
-  const {
-    data: fishingTips,
-    isLoading: loadingFishingTips,
-    isError: errorFishingTips,
-    error: errorFishingTipsError,
-  } = useFishingTips({
-    // temperature: weatherData?.current?.temperature_2m,
-    // windSpeed: weatherData?.current?.wind_speed_10m,
-    // waveHeight: weatherData?.current?.wave_height,
-    // weatherCondition: weatherData?.current?.weather_code,
-  });
+
   const {
     data: weatherSummary,
     isLoading: loadingWeather,
@@ -156,6 +146,18 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
     latitude: userLocation?.latitude,
     longitude: userLocation?.longitude,
     name: userLocation?.name,
+  });
+
+  const {
+    data: fishingTips,
+    isLoading: loadingFishingTips,
+    isError: errorFishingTips,
+    error: errorFishingTipsError,
+  } = useFishingTips({
+    temperature: weatherSummary?.temperature,
+    windSpeed: weatherSummary?.wind_speed,
+    waveHeight: weatherSummary?.wave_height,
+    weatherCondition: weatherSummary?.condition,
   });
 
   const tips = useMemo(() => {
