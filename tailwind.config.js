@@ -75,6 +75,11 @@ module.exports = {
         "gear-badge": {
           DEFAULT: "rgb(37 99 235 / var(--tw-bg-opacity))",
         },
+        lishka: {
+          blue: {
+            DEFAULT: "var(--lishka-blue)",
+          },
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

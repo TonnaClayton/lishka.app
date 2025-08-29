@@ -126,7 +126,7 @@ const EmailConfirmationPage: React.FC = () => {
       case "loading":
         return (
           <div className="text-center">
-            <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-blue-100  rounded-full flex items-center justify-center mx-auto mb-6">
               <LoadingDots />
             </div>
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">
@@ -156,7 +156,7 @@ const EmailConfirmationPage: React.FC = () => {
             </p>
             <Button
               onClick={() => navigate("/", { replace: true })}
-              className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl"
+              className="w-full h-14 bg-lishka-blue hover:bg-lishka-blue text-white text-base font-medium rounded-xl"
             >
               Continue to App
             </Button>
@@ -180,7 +180,7 @@ const EmailConfirmationPage: React.FC = () => {
               <Button
                 onClick={handleResendConfirmation}
                 disabled={resending}
-                className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full h-14 bg-lishka-blue hover:bg-lishka-blue text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {resending ? (
                   <>
@@ -224,7 +224,7 @@ const EmailConfirmationPage: React.FC = () => {
                 <Button
                   onClick={handleResendConfirmation}
                   disabled={resending}
-                  className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-14 bg-lishka-blue hover:bg-lishka-blue text-white text-base font-medium rounded-xl disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {resending ? (
                     <>

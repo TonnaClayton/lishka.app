@@ -55,7 +55,7 @@ const MagicLinkEmail = (props: {
 
               <Button
                 href={magicLink}
-                className="bg-[#0251FB] text-white px-[32px] py-[12px] rounded-[24px] text-[16px] font-medium no-underline box-border"
+                className="bg-lishka-blue text-white px-[32px] py-[12px] rounded-[24px] text-[16px] font-medium no-underline box-border"
               >
                 Login to Lishka
               </Button>

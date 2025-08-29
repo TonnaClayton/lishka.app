@@ -204,7 +204,7 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
 
     if (isInSeason) {
       // In season - light blue
-      return "bg-blue-100 border-blue-200 text-blue-700 dark:bg-blue-900/20 dark:border-blue-800 dark:text-blue-300";
+      return "bg-blue-100 border-blue-200 text-lishka-blue /20 dark:border-blue-800 ";
     } else {
       // Not in season - light gray
       return "bg-gray-50 border-gray-200 text-gray-400 dark:bg-gray-800/20 dark:border-gray-700 dark:text-gray-500";

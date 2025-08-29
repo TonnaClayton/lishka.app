@@ -144,7 +144,7 @@ const ImageUploadDebugger: React.FC = () => {
       <Card className="bg-white dark:bg-gray-800">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl">
-            <Camera className="w-6 h-6 text-blue-600" />
+            <Camera className="w-6 h-6 text-lishka-blue" />
             Image Upload Debugger
           </CardTitle>
         </CardHeader>
@@ -349,10 +349,10 @@ const ImageUploadDebugger: React.FC = () => {
 
             {/* Metadata Summary */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
+              <div className="bg-blue-50 /20 p-3 rounded-lg">
                 <div className="flex items-center gap-2 mb-2">
-                  <Fish className="w-4 h-4 text-blue-600" />
-                  <span className="font-medium text-blue-800 dark:text-blue-200">
+                  <Fish className="w-4 h-4 text-lishka-blue" />
+                  <span className="font-medium text-lishka-blue">
                     Fish Detection
                   </span>
                 </div>
@@ -443,7 +443,7 @@ const ImageUploadDebugger: React.FC = () => {
                         const parent = e.currentTarget.parentElement;
                         if (parent) {
                           parent.innerHTML =
-                            '<div class="text-sm font-bold text-blue-600 px-2 py-1">LISHKA</div>';
+                            '<div class="text-sm font-bold text-lishka-blue px-2 py-1">LISHKA</div>';
                         }
                       };
                     }}
@@ -457,7 +457,7 @@ const ImageUploadDebugger: React.FC = () => {
                       const parent = e.currentTarget.parentElement;
                       if (parent) {
                         parent.innerHTML =
-                          '<div class="text-sm font-bold text-blue-600 px-2 py-1">LISHKA</div>';
+                          '<div class="text-sm font-bold text-lishka-blue px-2 py-1">LISHKA</div>';
                       }
                     }}
                   />
@@ -633,13 +633,11 @@ const ImageUploadDebugger: React.FC = () => {
       )}
 
       {/* Instructions */}
-      <Card className="bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800">
+      <Card className="bg-blue-50 /20 border-blue-200">
         <CardHeader>
-          <CardTitle className="text-blue-800 dark:text-blue-200">
-            How to Use
-          </CardTitle>
+          <CardTitle className="text-lishka-blue">How to Use</CardTitle>
         </CardHeader>
-        <CardContent className="text-blue-700 dark:text-blue-300">
+        <CardContent className="text-lishka-blue ">
           <ol className="list-decimal list-inside space-y-2 text-sm">
             <li>
               Select an image file (preferably containing a fish for best
