@@ -98,20 +98,20 @@ export const useCreateSearchSession = () =>
       attachment?: File;
       session_id?: string;
     }) => {
-      // const formData = new FormData();
-      // formData.append(
-      //     "use_location_context",
-      //     payload.use_location_context?.toString() || "false",
-      // );
-      // formData.append(
-      //     "use_imperial_units",
-      //     payload.use_imperial_units?.toString() || "false",
-      // );
-      // formData.append("message", payload.message);
+      const formData = new FormData();
+      formData.append(
+        "use_location_context",
+        payload.use_location_context?.toString() || "false",
+      );
+      formData.append(
+        "use_imperial_units",
+        payload.use_imperial_units?.toString() || "false",
+      );
+      formData.append("message", payload.message);
 
-      // if (payload.attachment) {
-      //     formData.append("attachment", payload.attachment);
-      // }
+      if (payload.attachment) {
+        formData.append("attachment", payload.attachment);
+      }
 
       let path = "search-agent/sessions";
       if (payload.session_id) {
@@ -129,18 +129,14 @@ export const useCreateSearchSession = () =>
           updated_at: string | null;
           user_role: "user" | "assistant";
         };
-      }>(path, {
-        method: "POST",
-        // headers: {
-        //     "Content-Type": "multipart/form-data",
-        // },
-        body: JSON.stringify({
-          use_location_context: payload.use_location_context,
-          use_imperial_units: payload.use_imperial_units,
-          message: payload.message,
-          attachment: payload.attachment,
-        }),
-      });
+      }>(
+        path,
+        {
+          method: "POST",
+          body: formData,
+        },
+        true,
+      );
 
       return data.data;
     },
