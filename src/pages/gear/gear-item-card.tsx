@@ -204,10 +204,10 @@ export default function GearItemCard({
                     !gear.weight && "col-span-2",
                   )}
                 >
-                  <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                  <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                     Size
                   </div>
-                  <div className="text-sm font-normal text-[#1E3A8A]">
+                  <div className="text-sm font-normal text-lishka-blue-500">
                     {gear.size}
                   </div>
                 </div>
@@ -219,10 +219,10 @@ export default function GearItemCard({
                     !gear.size && "col-span-2",
                   )}
                 >
-                  <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                  <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                     Weight
                   </div>
-                  <div className="text-sm font-normal text-[#1E3A8A]">
+                  <div className="text-sm font-normal text-lishka-blue-500">
                     {gear.weight}
                   </div>
                 </div>
@@ -232,10 +232,10 @@ export default function GearItemCard({
             {/* Target Fish */}
             {gear.targetFish && (
               <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                   Target Fish
                 </div>
-                <div className="text-sm font-normal text-[#1E3A8A]">
+                <div className="text-sm font-normal text-lishka-blue-500">
                   {gear.targetFish}
                 </div>
               </div>
@@ -248,80 +248,80 @@ export default function GearItemCard({
                 <>
                   {gear.gearRatio && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Gear Ratio
                       </div>
-                      <div className="text-sm font-normal text-[#1E3A8A]">
+                      <div className="text-sm font-normal text-lishka-blue-500">
                         {gear.gearRatio}
                       </div>
                     </div>
                   )}
                   {gear.bearings && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Bearings
                       </div>
-                      <div className="text-sm font-normal text-[#1E3A8A]">
+                      <div className="text-sm font-normal text-lishka-blue-500">
                         {gear.bearings}
                       </div>
                     </div>
                   )}
                   {gear.dragSystem && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Drag System
                       </div>
-                      <div className="text-sm font-normal text-[#1E3A8A]">
+                      <div className="text-sm font-normal text-lishka-blue-500">
                         {gear.dragSystem}
                       </div>
                     </div>
                   )}
                   {gear.lineCapacity && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Line Capacity
                       </div>
-                      <div className="text-sm font-normal text-[#1E3A8A]">
+                      <div className="text-sm font-normal text-lishka-blue-500">
                         {gear.lineCapacity}
                       </div>
                     </div>
                   )}
                   {gear.action && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Action
                       </div>
-                      <div className="text-sm font-normal text-[#1E3A8A]">
+                      <div className="text-sm font-normal text-lishka-blue-500">
                         {gear.action}
                       </div>
                     </div>
                   )}
                   {gear.power && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Power
                       </div>
-                      <div className="text-sm font-normal text-[#1E3A8A]">
+                      <div className="text-sm font-normal text-lishka-blue-500">
                         {gear.power}
                       </div>
                     </div>
                   )}
                   {gear.lineWeight && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Line Weight
                       </div>
-                      <div className="text-sm font-normal text-[#1E3A8A]">
+                      <div className="text-sm font-normal text-lishka-blue-500">
                         {gear.lineWeight}
                       </div>
                     </div>
                   )}
                   {gear.lureWeight && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Lure Weight
                       </div>
-                      <div className="text-sm font-normal text-[#1E3A8A]">
+                      <div className="text-sm font-normal text-lishka-blue-500">
                         {gear.lureWeight}
                       </div>
                     </div>
@@ -334,50 +334,50 @@ export default function GearItemCard({
                 <>
                   {gear.capacity && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Capacity
                       </div>
-                      <div className="text-sm font-normal text-[#1E3A8A]">
+                      <div className="text-sm font-normal text-lishka-blue-500">
                         {gear.capacity}
                       </div>
                     </div>
                   )}
                   {gear.compartments && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Compartments
                       </div>
-                      <div className="text-sm font-normal text-[#1E3A8A]">
+                      <div className="text-sm font-normal text-lishka-blue-500">
                         {gear.compartments}
                       </div>
                     </div>
                   )}
                   {gear.waterResistant && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Water Resistant
                       </div>
-                      <div className="text-sm font-normal text-[#1E3A8A]">
+                      <div className="text-sm font-normal text-lishka-blue-500">
                         {gear.waterResistant}
                       </div>
                     </div>
                   )}
                   {gear.usage && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Usage
                       </div>
-                      <div className="text-sm font-normal text-[#1E3A8A]">
+                      <div className="text-sm font-normal text-lishka-blue-500">
                         {gear.usage}
                       </div>
                     </div>
                   )}
                   {gear.durability && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Durability
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.durability}
                       </div>
                     </div>
@@ -390,50 +390,50 @@ export default function GearItemCard({
                 <>
                   {gear.baitType && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Bait Type
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.baitType}
                       </div>
                     </div>
                   )}
                   {gear.scent && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Scent
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.scent}
                       </div>
                     </div>
                   )}
                   {gear.color && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Color
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.color}
                       </div>
                     </div>
                   )}
                   {gear.waterType && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Water Type
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.waterType}
                       </div>
                     </div>
                   )}
                   {gear.technique && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Technique
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.technique}
                       </div>
                     </div>
@@ -446,58 +446,60 @@ export default function GearItemCard({
                 <>
                   {gear.screenSize && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Screen Size
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.screenSize}
                       </div>
                     </div>
                   )}
                   {gear.frequency && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Frequency
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.frequency}
                       </div>
                     </div>
                   )}
                   {gear.maxDepth && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Max Depth
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.maxDepth}
                       </div>
                     </div>
                   )}
                   {gear.gps && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         GPS
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">{gear.gps}</div>
+                      <div className="text-sm text-lishka-blue-500 ">
+                        {gear.gps}
+                      </div>
                     </div>
                   )}
                   {gear.accuracy && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Accuracy
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.accuracy}
                       </div>
                     </div>
                   )}
                   {gear.battery && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Battery
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.battery}
                       </div>
                     </div>
@@ -510,40 +512,42 @@ export default function GearItemCard({
                 <>
                   {gear.insulation && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Insulation
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.insulation}
                       </div>
                     </div>
                   )}
                   {gear.iceRetention && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Ice Retention
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.iceRetention}
                       </div>
                     </div>
                   )}
                   {gear.pockets && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Pockets
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.pockets}
                       </div>
                     </div>
                   )}
                   {gear.fit && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Fit
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">{gear.fit}</div>
+                      <div className="text-sm text-lishka-blue-500 ">
+                        {gear.fit}
+                      </div>
                     </div>
                   )}
                 </>
@@ -554,60 +558,60 @@ export default function GearItemCard({
                 <>
                   {gear.fishingTechnique && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Technique
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.fishingTechnique}
                       </div>
                     </div>
                   )}
                   {gear.depthRange && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Depth Range
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.depthRange}
                       </div>
                     </div>
                   )}
                   {gear.colorPattern && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Color Pattern
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.colorPattern}
                       </div>
                     </div>
                   )}
                   {gear.actionType && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Action Type
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.actionType}
                       </div>
                     </div>
                   )}
                   {gear.versatility && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Versatility
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.versatility}
                       </div>
                     </div>
                   )}
                   {gear.compatibleGear && (
                     <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                      <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                      <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                         Compatible Gear
                       </div>
-                      <div className="text-sm text-[#1E3A8A] ">
+                      <div className="text-sm text-lishka-blue-500 ">
                         {gear.compatibleGear}
                       </div>
                     </div>
@@ -618,10 +622,10 @@ export default function GearItemCard({
               {/* Common fields for all categories */}
               {gear.fishingTechnique && categoryId !== "lures-jigs" && (
                 <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                  <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                  <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                     Fishing Technique
                   </div>
-                  <div className="text-sm text-[#1E3A8A] ">
+                  <div className="text-sm text-lishka-blue-500 ">
                     {gear.fishingTechnique}
                   </div>
                 </div>
@@ -629,10 +633,10 @@ export default function GearItemCard({
 
               {gear.construction && (
                 <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                  <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                  <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                     Construction
                   </div>
-                  <div className="text-sm text-[#1E3A8A] ">
+                  <div className="text-sm text-lishka-blue-500 ">
                     {gear.construction}
                   </div>
                 </div>
@@ -640,38 +644,44 @@ export default function GearItemCard({
 
               {gear.material && (
                 <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                  <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                  <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                     Material
                   </div>
-                  <div className="text-sm text-[#1E3A8A] ">{gear.material}</div>
+                  <div className="text-sm text-lishka-blue-500 ">
+                    {gear.material}
+                  </div>
                 </div>
               )}
 
               {gear.features && (
                 <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                  <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                  <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                     Features
                   </div>
-                  <div className="text-sm text-[#1E3A8A] ">{gear.features}</div>
+                  <div className="text-sm text-lishka-blue-500 ">
+                    {gear.features}
+                  </div>
                 </div>
               )}
 
               {gear.season && (
                 <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                  <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                  <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                     Season
                   </div>
-                  <div className="text-sm text-[#1E3A8A] ">{gear.season}</div>
+                  <div className="text-sm text-lishka-blue-500 ">
+                    {gear.season}
+                  </div>
                 </div>
               )}
 
               {/* Standard description fallback */}
               {gear.description && (
                 <div className="bg-[#025DFB0D] p-3 rounded-lg">
-                  <div className="text-xs font-medium text-[#2563EB] uppercase tracking-wide mb-1">
+                  <div className="text-xs font-medium text-lishka-blue uppercase tracking-wide mb-1">
                     Description
                   </div>
-                  <div className="text-sm text-[#1E3A8A] ">
+                  <div className="text-sm text-lishka-blue-500 ">
                     {gear.description}
                   </div>
                 </div>
