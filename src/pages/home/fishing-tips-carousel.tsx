@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Fish, Cloud, Sun, CloudRain, CloudSnow } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -7,19 +7,14 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
-import { cacheApiResponse, getCachedApiResponse } from "@/lib/api-helpers";
-import LoadingDots from "@/components/loading-dots";
-import { log } from "@/lib/logging";
-import { config } from "@/lib/config";
-import { useUserLocation } from "@/hooks/queries";
+import {
+  useFishingTips,
+  useGetWeatherSummary,
+  useUserLocation,
+} from "@/hooks/queries";
+import FishingTipsSkeleton from "./fishing-tips-skeleton";
 import { useAuth } from "@/contexts/auth-context";
-
-interface FishingTip {
-  title: string;
-  content: string;
-  category: string;
-}
+import { cn } from "@/lib/utils";
 
 interface WeatherData {
   current?: {
@@ -132,273 +127,249 @@ const highlightKeywords = (text: string): string => {
   return result;
 };
 
-const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
-  location = "Miami Coast",
-  weatherData,
-}) => {
-  const { profile } = useAuth();
-  const [tips, setTips] = useState<FishingTip[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
+  // const [tips, setTips] = useState<FishingTip[]>([]);
+  // const [loading, setLoading] = useState(true);
+  // const [error, setError] = useState<string | null>(null);
   const [api, setApi] = useState<CarouselApi | undefined>(undefined);
   const [current, setCurrent] = useState(0);
+  const { profile } = useAuth();
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [count, setCount] = useState(0);
-  const [weatherSummary, setWeatherSummary] = useState<any>(null);
-  const [loadingWeather, setLoadingWeather] = useState(false);
   const { location: userLocation } = useUserLocation();
+
+  const {
+    data: weatherSummary,
+    isLoading: loadingWeather,
+    isError: errorWeather,
+  } = useGetWeatherSummary({
+    latitude: userLocation?.latitude,
+    longitude: userLocation?.longitude,
+    name: userLocation?.name,
+  });
+
+  const {
+    data: fishingTips,
+    isLoading: loadingFishingTips,
+    isError: errorFishingTips,
+    error: errorFishingTipsError,
+  } = useFishingTips({
+    temperature: weatherSummary?.temperature,
+    windSpeed: weatherSummary?.wind_speed,
+    waveHeight: weatherSummary?.wave_height,
+    weatherCondition: weatherSummary?.condition,
+  });
+
+  const tips = useMemo(() => {
+    if (!fishingTips) {
+      return [];
+    }
+
+    return fishingTips.map((tip) => ({
+      ...tip,
+      content: highlightKeywords(tip.content),
+    }));
+  }, [fishingTips]);
+
+  // const [weatherSummary, setWeatherSummary] = useState<any>(null);
+  // const [loadingWeather, setLoadingWeather] = useState(false);
+
   // Removed maxCardHeight state and tipContentRefs to fix height growing issue
 
   // Get current season based on month
-  const getCurrentSeason = () => {
-    const month = new Date().getMonth() + 1;
-    if (month >= 3 && month <= 5) return "spring";
-    if (month >= 6 && month <= 8) return "summer";
-    if (month >= 9 && month <= 11) return "autumn";
-    return "winter";
-  };
+  // const getCurrentSeason = () => {
+  //   const month = new Date().getMonth() + 1;
+  //   if (month >= 3 && month <= 5) return "spring";
+  //   if (month >= 6 && month <= 8) return "summer";
+  //   if (month >= 9 && month <= 11) return "autumn";
+  //   return "winter";
+  // };
 
   // Get current month name
-  const getCurrentMonth = () => {
-    const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    return months[new Date().getMonth()];
-  };
+  // const getCurrentMonth = () => {
+  //   const months = [
+  //     "January",
+  //     "February",
+  //     "March",
+  //     "April",
+  //     "May",
+  //     "June",
+  //     "July",
+  //     "August",
+  //     "September",
+  //     "October",
+  //     "November",
+  //     "December",
+  //   ];
+  //   return months[new Date().getMonth()];
+  // };
 
-  const fetchFishingTips = async () => {
-    setLoading(true);
-    setError(null);
+  // const fetchFishingTips = async () => {
+  //   setLoading(true);
+  //   setError(null);
 
-    try {
-      if (!OPENAI_ENABLED) {
-        throw new Error(OPENAI_DISABLED_MESSAGE);
-      }
+  //   try {
+  //     if (!OPENAI_ENABLED) {
+  //       throw new Error(OPENAI_DISABLED_MESSAGE);
+  //     }
 
-      const apiKey = config.VITE_OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error("OpenAI API key is missing");
-      }
+  //     const apiKey = config.VITE_OPENAI_API_KEY;
+  //     if (!apiKey) {
+  //       throw new Error("OpenAI API key is missing");
+  //     }
 
-      const currentSeason = getCurrentSeason();
-      const currentMonth = getCurrentMonth();
-      const cacheKey = `fishing_tips_${location}_${currentMonth}_${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`;
+  //     const currentSeason = getCurrentSeason();
+  //     const currentMonth = getCurrentMonth();
+  //     const cacheKey = `fishing_tips_${location}_${currentMonth}_${new Date().toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" })}`;
 
-      // Check cache first
-      const cachedData = getCachedApiResponse(cacheKey);
-      if (cachedData) {
-        log("Using cached fishing tips for", location, currentMonth);
-        setTips(cachedData);
-        setLoading(false);
-        return;
-      }
+  //     // Check cache first
+  //     const cachedData = getCachedApiResponse(cacheKey);
+  //     if (cachedData) {
+  //       log("Using cached fishing tips for", location, currentMonth);
+  //       setTips(cachedData);
+  //       setLoading(false);
+  //       return;
+  //     }
 
-      // Get weather context if available
-      const weatherContext = weatherData
-        ? `Current Weather: Temperature - ${weatherData.current?.temperature_2m || "Unknown"}°C, Wind Speed - ${weatherData.current?.wind_speed_10m || "Unknown"} km/h, Weather Code - ${weatherData.current?.weather_code || "Unknown"} m.`
-        : "";
+  //     // Get weather context if available
+  //     const weatherContext = weatherData
+  //       ? `Current Weather: Temperature - ${weatherData.current?.temperature_2m || "Unknown"}°C, Wind Speed - ${weatherData.current?.wind_speed_10m || "Unknown"} km/h, Weather Code - ${weatherData.current?.weather_code || "Unknown"} m.`
+  //       : "";
 
-      const response = await fetch(
-        "https://api.openai.com/v1/chat/completions",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${apiKey.trim()}`,
-          },
-          body: JSON.stringify({
-            model: "gpt-4o",
-            messages: [
-              {
-                role: "system",
-                content:
-                  "You are an expert fishing instructor. Create educational, actionable fishing guidance that teaches anglers WHY and HOW to fish effectively. Be direct, specific, and instructional. Each tip should guide the angler's decision-making with clear reasoning. You must respond with ONLY a valid JSON array. No explanations, markdown, or extra text.",
-              },
-              {
-                role: "user",
-                content: `Generate exactly 5 educational fishing tips for ${location} in ${currentSeason} (${currentMonth}). ${weatherContext}
-              
-              Make each tip educational and guiding - teach the angler something specific they can apply immediately. Focus on:
-              - WHY certain techniques work in current conditions
-              - HOW to adjust methods for weather/season
-              - WHAT specific actions to take
-              
-              Examples of educational style:
-              - "Target 5-8m depths - fish move deeper when water warms above 24°C."
-              - "Use bright lures in murky water - visibility drops to 0.6m after rain."
-              - "Fish dawn/dusk in summer - metabolism peaks at 20-22°C water temps."
-              
-              Requirements:
-              - Maximum 150 characters per tip
-              - Include specific numbers/measurements
-              - ALWAYS use metric units (meters, degrees Celsius) for all measurements
-              - Explain the reasoning behind the advice
-              - Focus on current weather/seasonal conditions
-              
-              Format: [{"title":"Educational Tip","content":"Instructional guidance (max 100 chars)","category":"Weather|Technique|Bait|Timing|Location"}]
-              
-              Return only the JSON array.`,
-              },
-            ],
-            temperature: 0.7,
-            max_tokens: 1500,
-          }),
-        },
-      );
+  //     const response = await fetch(
+  //       "https://api.openai.com/v1/chat/completions",
+  //       {
+  //         method: "POST",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${apiKey.trim()}`,
+  //         },
+  //         body: JSON.stringify({
+  //           model: "gpt-4o",
+  //           messages: [
+  //             {
+  //               role: "system",
+  //               content:
+  //                 "You are an expert fishing instructor. Create educational, actionable fishing guidance that teaches anglers WHY and HOW to fish effectively. Be direct, specific, and instructional. Each tip should guide the angler's decision-making with clear reasoning. You must respond with ONLY a valid JSON array. No explanations, markdown, or extra text.",
+  //             },
+  //             {
+  //               role: "user",
+  //               content: `Generate exactly 5 educational fishing tips for ${location} in ${currentSeason} (${currentMonth}). ${weatherContext}
 
-      if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
-      }
+  //             Make each tip educational and guiding - teach the angler something specific they can apply immediately. Focus on:
+  //             - WHY certain techniques work in current conditions
+  //             - HOW to adjust methods for weather/season
+  //             - WHAT specific actions to take
 
-      const data = await response.json();
-      const content = data.choices[0].message.content;
+  //             Examples of educational style:
+  //             - "Target 5-8m depths - fish move deeper when water warms above 24°C."
+  //             - "Use bright lures in murky water - visibility drops to 0.6m after rain."
+  //             - "Fish dawn/dusk in summer - metabolism peaks at 20-22°C water temps."
 
-      let fishingTips: FishingTip[] = [];
-      try {
-        // Clean the response
-        let jsonStr = content.trim();
-        jsonStr = jsonStr.replace(/```json\s*|```\s*|```/g, "");
-        jsonStr = jsonStr.replace(/^[^\[\{]*/, "");
-        jsonStr = jsonStr.replace(/[^\]\}]*$/, "");
+  //             Requirements:
+  //             - Maximum 150 characters per tip
+  //             - Include specific numbers/measurements
+  //             - ALWAYS use metric units (meters, degrees Celsius) for all measurements
+  //             - Explain the reasoning behind the advice
+  //             - Focus on current weather/seasonal conditions
 
-        const arrayStart = jsonStr.indexOf("[");
-        const arrayEnd = jsonStr.lastIndexOf("]");
+  //             Format: [{"title":"Educational Tip","content":"Instructional guidance (max 100 chars)","category":"Weather|Technique|Bait|Timing|Location"}]
 
-        if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
-          jsonStr = jsonStr.substring(arrayStart, arrayEnd + 1);
-        }
+  //             Return only the JSON array.`,
+  //             },
+  //           ],
+  //           temperature: 0.7,
+  //           max_tokens: 1500,
+  //         }),
+  //       }
+  //     );
 
-        log("Cleaned fishing tips JSON:", jsonStr);
-        const parsedTips = JSON.parse(jsonStr);
-        fishingTips = Array.isArray(parsedTips) ? parsedTips : [];
-      } catch (e) {
-        console.error("Error parsing fishing tips:", e);
-        console.error("Raw response:", content);
+  //     if (!response.ok) {
+  //       throw new Error(`OpenAI API error: ${response.status}`);
+  //     }
 
-        // Fallback tips
-        fishingTips = [
-          {
-            title: "Early Morning Success",
-            content:
-              "Fish are most active during dawn and dusk when water temperatures are cooler. Plan your fishing trips around these golden hours for better results.",
-            category: "Timing",
-          },
-          {
-            title: "Weather Awareness",
-            content:
-              "Overcast days often provide excellent fishing conditions as fish feel more secure and venture into shallower waters to feed.",
-            category: "Weather",
-          },
-          {
-            title: "Bait Selection",
-            content:
-              "Match your bait to local prey species. Live bait typically outperforms artificial lures, especially when fish are being selective.",
-            category: "Bait",
-          },
-          {
-            title: "Structure Fishing",
-            content:
-              "Focus on underwater structures like reefs, drop-offs, and weed beds where fish congregate for shelter and feeding opportunities.",
-            category: "Location",
-          },
-          {
-            title: "Patience and Persistence",
-            content:
-              "Stay quiet and patient. Fish can be easily spooked by noise and sudden movements, especially in shallow or clear water.",
-            category: "Technique",
-          },
-        ];
-      }
+  //     const data = await response.json();
+  //     const content = data.choices[0].message.content;
 
-      if (!Array.isArray(fishingTips) || fishingTips.length === 0) {
-        throw new Error("Response is not a valid array or is empty");
-      }
+  //     let fishingTips: FishingTip[] = [];
+  //     try {
+  //       // Clean the response
+  //       let jsonStr = content.trim();
+  //       jsonStr = jsonStr.replace(/```json\s*|```\s*|```/g, "");
+  //       jsonStr = jsonStr.replace(/^[^\[\{]*/, "");
+  //       jsonStr = jsonStr.replace(/[^\]\}]*$/, "");
 
-      setTips(fishingTips);
-      // Cache for 6 hours
-      cacheApiResponse(cacheKey, fishingTips, 6 * 60 * 60 * 1000);
-    } catch (err) {
-      console.error("Error fetching fishing tips:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to fetch fishing tips",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
+  //       const arrayStart = jsonStr.indexOf("[");
+  //       const arrayEnd = jsonStr.lastIndexOf("]");
+
+  //       if (arrayStart !== -1 && arrayEnd !== -1 && arrayEnd > arrayStart) {
+  //         jsonStr = jsonStr.substring(arrayStart, arrayEnd + 1);
+  //       }
+
+  //       log("Cleaned fishing tips JSON:", jsonStr);
+  //       const parsedTips = JSON.parse(jsonStr);
+  //       fishingTips = Array.isArray(parsedTips) ? parsedTips : [];
+  //     } catch (e) {
+  //       console.error("Error parsing fishing tips:", e);
+  //       console.error("Raw response:", content);
+
+  //       // Fallback tips
+  //       fishingTips = [
+  //         {
+  //           title: "Early Morning Success",
+  //           content:
+  //             "Fish are most active during dawn and dusk when water temperatures are cooler. Plan your fishing trips around these golden hours for better results.",
+  //           category: "Timing",
+  //         },
+  //         {
+  //           title: "Weather Awareness",
+  //           content:
+  //             "Overcast days often provide excellent fishing conditions as fish feel more secure and venture into shallower waters to feed.",
+  //           category: "Weather",
+  //         },
+  //         {
+  //           title: "Bait Selection",
+  //           content:
+  //             "Match your bait to local prey species. Live bait typically outperforms artificial lures, especially when fish are being selective.",
+  //           category: "Bait",
+  //         },
+  //         {
+  //           title: "Structure Fishing",
+  //           content:
+  //             "Focus on underwater structures like reefs, drop-offs, and weed beds where fish congregate for shelter and feeding opportunities.",
+  //           category: "Location",
+  //         },
+  //         {
+  //           title: "Patience and Persistence",
+  //           content:
+  //             "Stay quiet and patient. Fish can be easily spooked by noise and sudden movements, especially in shallow or clear water.",
+  //           category: "Technique",
+  //         },
+  //       ];
+  //     }
+
+  //     if (!Array.isArray(fishingTips) || fishingTips.length === 0) {
+  //       throw new Error("Response is not a valid array or is empty");
+  //     }
+
+  //     setTips(fishingTips);
+  //     // Cache for 6 hours
+  //     cacheApiResponse(cacheKey, fishingTips, 6 * 60 * 60 * 1000);
+  //   } catch (err) {
+  //     console.error("Error fetching fishing tips:", err);
+  //     setError(
+  //       err instanceof Error ? err.message : "Failed to fetch fishing tips"
+  //     );
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // };
 
   // Fetch weather data for summary
-  const fetchWeatherSummary = async () => {
-    if (!location) return;
 
-    setLoadingWeather(true);
-    try {
-      // Fetch weather and marine data from Open-Meteo
-      const weatherUrl = `https://customer-api.open-meteo.com/v1/forecast?latitude=${userLocation?.latitude}&longitude=${userLocation?.longitude}&current=temperature_2m,weather_code,wind_speed_10m,is_day&hourly=temperature_2m,weather_code,wind_speed_10m&timezone=auto&apikey=1g8vJZI7DhEIFDIt`;
-      const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${userLocation?.latitude}&longitude=${userLocation?.longitude}&current=wave_height`;
-
-      const [weatherResponse, marineResponse] = await Promise.all([
-        fetch(weatherUrl),
-        fetch(marineUrl),
-      ]);
-
-      if (weatherResponse.ok) {
-        const weatherData = await weatherResponse.json();
-        let marineData = null;
-
-        if (marineResponse.ok) {
-          marineData = await marineResponse.json();
-        }
-
-        // Create weather summary object
-        const temp = weatherData.current?.temperature_2m;
-        const windSpeed = weatherData.current?.wind_speed_10m;
-        const weatherCode = weatherData.current?.weather_code;
-        const waveHeight = marineData?.current?.wave_height;
-
-        let condition = "Clear";
-        if (weatherCode !== undefined) {
-          if (weatherCode === 0) condition = "Clear";
-          else if (weatherCode <= 3) condition = "Partly cloudy";
-          else if (weatherCode <= 49) condition = "Foggy";
-          else if (weatherCode <= 69) condition = "Rainy";
-          else if (weatherCode <= 79) condition = "Snowy";
-          else if (weatherCode >= 95) condition = "Stormy";
-          else condition = "Cloudy";
-        }
-
-        const summaryData = {
-          temperature: temp ? Math.round(temp) : null,
-          condition,
-          windSpeed: windSpeed ? Math.round(windSpeed) : null,
-          waveHeight: waveHeight ? parseFloat(waveHeight.toFixed(1)) : null,
-        };
-
-        setWeatherSummary(summaryData);
-      }
-    } catch (error) {
-      console.error("Error fetching weather summary:", error);
-      setWeatherSummary("Weather unavailable");
-    } finally {
-      setLoadingWeather(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchFishingTips();
-    fetchWeatherSummary();
-  }, [location]);
+  // useEffect(() => {
+  //   fetchFishingTips();
+  // }, [location]);
 
   // Removed height calculation logic that was causing cards to grow on touch
 
@@ -428,26 +399,19 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
     return () => clearInterval(interval);
   }, [api, tips.length]);
 
-  if (loading) {
-    return (
-      <Card className="p-6 border border-border bg-background shadow-sm">
-        <div className="flex flex-col items-center justify-center py-8">
-          <LoadingDots />
-          <p className="text-sm text-muted-foreground mt-2">
-            Generating fishing tips...
-          </p>
-        </div>
-      </Card>
-    );
+  if (loadingFishingTips) {
+    return <FishingTipsSkeleton />;
   }
 
-  if (error || tips.length === 0) {
+  if (errorFishingTips || tips.length === 0) {
     return (
       <Card className="p-6 border border-border bg-background shadow-sm">
         <div className="flex items-center justify-center py-4">
           <Fish className="h-5 w-5 text-destructive mr-2" />
           <p className="text-sm text-destructive">
-            {error || "Unable to load fishing tips"}
+            {errorFishingTipsError instanceof Error
+              ? errorFishingTipsError.message
+              : "Unable to load fishing tips"}
           </p>
         </div>
       </Card>
@@ -563,19 +527,19 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="text-lishka-blue rotate-45 text-[20px]"
+                  className="text-[#A855F7] rotate-45 text-[20px]"
                 >
                   <path d="M5 12h14"></path>
                   <path d="m12 5 7 7-7 7"></path>
                 </svg>
                 <span className="text-foreground text-2xl">
-                  {weatherSummary.windSpeed !== null
-                    ? `${weatherSummary.windSpeed} km/h`
+                  {weatherSummary.wind_speed !== null
+                    ? `${weatherSummary.wind_speed} km/h`
                     : "--"}
                 </span>
               </div>
               {/* Wave height with wave icon */}
-              {weatherSummary.waveHeight !== null && (
+              {weatherSummary.wave_height !== null && (
                 <div className="flex items-center gap-1 ml-0">
                   <svg
                     xmlns="http://www.w3.org/2000/svg"
@@ -587,19 +551,19 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-purple-500"
+                    className="text-[#0251FB]"
                   >
                     <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
                     <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
                     <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"></path>
                   </svg>
                   <span className="text-foreground text-2xl">
-                    {weatherSummary.waveHeight}m
+                    {weatherSummary.wave_height}m
                   </span>
                 </div>
               )}
             </div>
-          ) : weatherSummary === "Weather unavailable" ? (
+          ) : errorWeather === true ? (
             <p className="text-xs text-muted-foreground italic">
               Weather unavailable
             </p>
@@ -618,7 +582,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
         <CarouselContent>
           {tips.map((tip, index) => (
             <CarouselItem key={index}>
-              <Card className="overflow-hidden border bg-background shadow-sm rounded-xl border-[#e8e8e9] h-full">
+              <Card className="overflow-hidden border bg-background rounded-[12px] border-[#191B1F1A] h-full shadow-[0_1px_2px_#0000000D]">
                 <CardContent className="p-4 pb-4 flex flex-col h-full">
                   <p
                     className="text-2xl text-black leading-relaxed mb-4 flex-grow"
@@ -649,9 +613,10 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
             <button
               key={index}
               onClick={() => api?.scrollTo(index)}
-              className={`w-2 h-2 rounded-full transition-colors ${
-                index === current - 1 ? "bg-foreground" : "bg-muted"
-              }`}
+              className={cn(
+                "w-2 h-2 rounded-full transition-colors",
+                index === current - 1 ? "bg-[#191B1F]" : "bg-[#191B1F0D]",
+              )}
             />
           ))}
         </div>

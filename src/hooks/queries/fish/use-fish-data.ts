@@ -6,6 +6,9 @@ import { getFishImageUrl } from "@/lib/fish-image-service";
 import { OPENAI_DISABLED_MESSAGE, OPENAI_ENABLED } from "@/lib/openai-toggle";
 import { config } from "@/lib/config";
 import { log } from "@/lib/logging";
+import { api } from "../api";
+import { fishSchema } from "./type";
+import z from "zod";
 
 export interface FishData {
   name: string;
@@ -355,6 +358,12 @@ export const fishQueryKeys = {
     userLatitude?: number,
     userLongitude?: number,
   ) => ["toxicFishData", location, userLatitude, userLongitude] as const,
+  fishingTips: (query: {
+    temperature?: number;
+    windSpeed?: number;
+    waveHeight?: number;
+    weatherCondition?: string;
+  }) => ["fishingTips", query] as const,
 };
 
 export const useFishData = (location: string, page: number = 1) => {
@@ -370,7 +379,17 @@ export const useFishData = (location: string, page: number = 1) => {
 export const useFishDataInfinite = (location: string) => {
   return useInfiniteQuery({
     queryKey: fishQueryKeys.fishDataInfinite(location),
-    queryFn: ({ pageParam = 1 }) => fetchFishData(location, pageParam),
+    queryFn: async ({ pageParam = 1 }) => {
+      // return fetchFishData(location, pageParam);
+
+      const data = await api<{
+        data: z.infer<typeof fishSchema>[];
+      }>(`fish?page=${pageParam}&pageSize=20`, {
+        method: "GET",
+      });
+
+      return data.data;
+    },
     getNextPageParam: (lastPage, allPages) => {
       // Return next page number if we have data
       return lastPage.length > 0 ? allPages.length + 1 : undefined;
@@ -379,5 +398,36 @@ export const useFishDataInfinite = (location: string) => {
     enabled: !!location,
     staleTime: 12 * 60 * 60 * 1000, // 12 hours
     gcTime: 24 * 60 * 60 * 1000, // 24 hours
+  });
+};
+
+export const useFishingTips = (query: {
+  temperature?: number;
+  windSpeed?: number;
+  waveHeight?: number;
+  weatherCondition?: string;
+}) => {
+  return useQuery({
+    queryKey: fishQueryKeys.fishingTips(query),
+    queryFn: async () => {
+      const data = await api<{
+        data: {
+          title: string;
+          content: string;
+          category: string;
+        }[];
+      }>("fish/tips", {
+        method: "GET",
+      });
+
+      console.log("[FISHING TIPS]", data);
+
+      return data.data;
+      //return fetchToxicFishData(location, userLatitude, userLongitude);
+    },
+    // enabled: !!query.temperature && !!query.windSpeed && !!query.waveHeight &&
+    //   !!query.weatherCondition,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 48 * 60 * 60 * 1000, // 48 hours
   });
 };

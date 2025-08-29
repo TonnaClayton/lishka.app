@@ -17,7 +17,7 @@ interface FishCardProps {
   localName?: string;
 
   habitat?: string;
-  difficulty?: "Easy" | "Intermediate" | "Hard" | "Advanced" | "Expert";
+  difficulty?: string;
   isToxic?: boolean;
   dangerType?: string;
   className?: string;
@@ -29,7 +29,6 @@ const FishCard = ({
   image = "https://images.unsplash.com/photo-1545816250-3ea6e37da790?w=400&q=80",
   name = "Atlantic Salmon",
   scientificName = "Salmo salar",
-
   habitat = "Freshwater, Coastal",
   difficulty = "Intermediate",
   isToxic = false,
@@ -99,7 +98,7 @@ const FishCard = ({
         {isToxic && (
           <Badge
             variant="destructive"
-            className="absolute bottom-2 right-2 text-xs py-0 shadow-lg rounded-[32px] bg-[#FF004D]"
+            className="absolute bottom-2 right-2 text-xs py-0 shadow-lg rounded-[32px] bg-[#FF004D] text-white"
           >
             Toxic
           </Badge>

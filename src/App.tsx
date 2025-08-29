@@ -173,6 +173,14 @@ const router = createBrowserRouter(
           ),
         },
         {
+          path: "search/:id",
+          element: (
+            <ProtectedRoute>
+              <SearchPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: ROUTES.PROFILE,
           element: (
             <ProtectedRoute>
@@ -338,7 +346,8 @@ function AppContent() {
   // const isSplashPage = location.pathname === "/" && !profile?.location;
 
   // Check if current route should have the weather widget in desktop layout
-  const shouldShowWeatherWidget = ["/", "/search"].includes(location.pathname);
+  const shouldShowWeatherWidget =
+    location.pathname.includes("/search") || location.pathname == "/";
 
   // Check if we're on auth pages (login/signup) to hide sidebar
   const isAuthPage = [

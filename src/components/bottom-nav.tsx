@@ -673,7 +673,7 @@ export const SideNav: React.FC = () => {
                 className={cn(
                   `flex items-center py-3 rounded-lg`,
                   isCollapsed ? "justify-center" : "px-4",
-                  currentPath === "/search"
+                  currentPath.includes("/search")
                     ? "bg-[#E6EFFF] text-lishka-blue "
                     : "text-[#191B1F] hover:bg-gray-100 ",
                 )}
