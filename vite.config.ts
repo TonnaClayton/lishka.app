@@ -191,7 +191,7 @@ export default defineConfig({
   },
   server: {
     // @ts-ignore
-    port: process.env.NODE_ENV === "development" ? 3000 : undefined,
+    port: process.env.NODE_ENV === "development" ? 3001 : undefined,
     allowedHosts: true,
     hmr: {
       overlay: false, // Disable error overlay to prevent blocking UI during development

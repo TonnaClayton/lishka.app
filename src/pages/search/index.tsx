@@ -416,6 +416,7 @@ const SearchPage: React.FC = () => {
                   )}
                 >
                   <div
+                    // className={`max-w-[85%] rounded-lg px-4 py-3 ${message.role === "user" ? "text-white" : "dark:bg-gray-800 text-gray-900 dark:text-gray-100 bg-blue-500 bg-gray-100"}`}
                     className={cn(
                       "rounded-[16px] pt-3 w-fit max-w-[85%]",
                       isMobile && "max-w-[95%]",

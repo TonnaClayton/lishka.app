@@ -202,7 +202,7 @@ export type Database = {
           fishing_experience: string | null;
           full_name: string | null;
           gallery_photos: Json[] | null;
-          gear_items: Json | null;
+          gear_items: Json[] | null;
           has_seen_onboarding_flow: boolean | null;
           id: string;
           location: string | null;
@@ -220,7 +220,7 @@ export type Database = {
           fishing_experience?: string | null;
           full_name?: string | null;
           gallery_photos?: Json[] | null;
-          gear_items?: Json | null;
+          gear_items?: Json[] | null;
           has_seen_onboarding_flow?: boolean | null;
           id: string;
           location?: string | null;
@@ -238,7 +238,7 @@ export type Database = {
           fishing_experience?: string | null;
           full_name?: string | null;
           gallery_photos?: Json[] | null;
-          gear_items?: Json | null;
+          gear_items?: Json[] | null;
           has_seen_onboarding_flow?: boolean | null;
           id?: string;
           location?: string | null;
