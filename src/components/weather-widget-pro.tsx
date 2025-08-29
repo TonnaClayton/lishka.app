@@ -1399,7 +1399,7 @@ const WeatherWidget: React.FC<{
                       </div>
                       <div className="flex items-center">
                         <Thermometer className="h-3 w-3 mr-1 text-lishka-blue" />
-                        <p className="text-xs  text-lishka-blue">
+                        <p className="text-xs text-lishka-blue">
                           {weatherData.daily.temperature_2m_min &&
                           weatherData.daily.temperature_2m_min[index] !== null
                             ? `${Math.round(weatherData.daily.temperature_2m_min[index])}°`

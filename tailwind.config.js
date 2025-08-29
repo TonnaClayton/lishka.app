@@ -78,6 +78,7 @@ module.exports = {
         lishka: {
           blue: {
             DEFAULT: "var(--lishka-blue)",
+            500: "var(--lishka-blue-500)",
           },
         },
       },

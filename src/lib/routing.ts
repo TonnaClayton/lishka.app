@@ -19,6 +19,7 @@ export const ROUTES = {
   TERMS: "/terms",
   PRIVACY_POLICY: "/privacy-policy",
   MY_GEAR: "/my-gear",
+  GEAR_DETAIL: "/gear-detail/:gearId",
   GEAR_CATEGORY: "/gear-category",
   SINGLE_GEAR_CATEGORY: "/gear-category/:categoryId",
   BLOB_TEST: "/blob-test",
