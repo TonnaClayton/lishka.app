@@ -67,7 +67,7 @@ export const OnboardingDialog = React.memo(
       >
         <DialogContent
           className={cn(
-            "h-full w-full p-0 overflow-hidden rounded-[24px] border-none",
+            "h-full w-full p-0 overflow-hidden rounded-[32px] bg-transparent sm:rounded-[32px] border-none",
             isMobile ? "rounded-none" : "max-w-[393px]  max-h-[852px]",
           )}
           style={{
@@ -86,7 +86,7 @@ export const OnboardingDialog = React.memo(
               "h-full w-full",
               isMobile
                 ? "rounded-none"
-                : "max-w-[393px]  max-h-[852px] rounded-[24px]",
+                : "max-w-[393px]  max-h-[852px] rounded-[32px]",
             )}
             style={{
               maxWidth: isMobile ? `${deviceSize.width}px` : undefined,
@@ -98,7 +98,7 @@ export const OnboardingDialog = React.memo(
             >
               <CarouselItem
                 className={cn(
-                  "h-full rounded-[24px] w-full p-0",
+                  "h-full rounded-[32px] w-full p-0",
                   isMobile && "rounded-none",
                 )}
               >
@@ -111,7 +111,7 @@ export const OnboardingDialog = React.memo(
               </CarouselItem>
               <CarouselItem
                 className={cn(
-                  "h-full rounded-[24px] w-full p-0",
+                  "h-full rounded-[32px] w-full p-0",
                   isMobile && "rounded-none",
                 )}
               >
@@ -124,7 +124,7 @@ export const OnboardingDialog = React.memo(
               </CarouselItem>
               <CarouselItem
                 className={cn(
-                  "h-full rounded-[24px] w-full p-0",
+                  "h-full rounded-[32px] w-full p-0",
                   isMobile && "rounded-none",
                 )}
               >
@@ -137,7 +137,7 @@ export const OnboardingDialog = React.memo(
               </CarouselItem>
               <CarouselItem
                 className={cn(
-                  "h-full rounded-[24px] w-full p-0",
+                  "h-full rounded-[32px] w-full p-0",
                   isMobile && "rounded-none",
                 )}
               >
@@ -150,7 +150,7 @@ export const OnboardingDialog = React.memo(
               </CarouselItem>
               <CarouselItem
                 className={cn(
-                  "h-full rounded-[24px] w-full p-0",
+                  "h-full rounded-[32px] w-full p-0",
                   isMobile && "rounded-none",
                 )}
               >
@@ -182,7 +182,7 @@ export const OnboardingDialog = React.memo(
                 <button
                   disabled={isLoading}
                   className={
-                    "flex-1 py-4 px-6 rounded-full text-white font-medium text-lg transition-colors hover:bg-blue-700 border-gray-200  border-0 bg-[#0251FB] disabled:opacity-50 disabled:cursor-not-allowed"
+                    "flex-1 py-4 px-6 rounded-full text-white font-medium text-lg transition-colors hover:bg-lishka-blue border-gray-200  border-0 bg-lishka-blue disabled:opacity-50 disabled:cursor-not-allowed"
                   }
                   onClick={() => {
                     if (current === 5) {

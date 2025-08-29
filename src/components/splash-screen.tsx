@@ -9,7 +9,7 @@ interface SplashScreenProps {
 
 const SplashScreen = ({ onContinue = () => {} }: SplashScreenProps) => {
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-[#0251FB] dark:bg-primary p-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-lishka-blue dark:bg-primary p-4">
       <motion.div
         className="flex flex-col items-center justify-center gap-8 w-full max-w-md"
         initial={{ opacity: 0, y: 20 }}
@@ -34,7 +34,7 @@ const SplashScreen = ({ onContinue = () => {} }: SplashScreenProps) => {
         >
           <Button
             onClick={onContinue}
-            className="w-full py-6 rounded-full bg-white dark:bg-card text-[#0251FB] dark:text-primary hover:bg-gray-100 dark:hover:bg-secondary font-medium text-lg"
+            className="w-full py-6 rounded-full bg-white dark:bg-card text-lishka-blue dark:text-primary hover:bg-gray-100 dark:hover:bg-secondary font-medium text-lg"
           >
             Continue
           </Button>

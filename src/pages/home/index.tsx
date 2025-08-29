@@ -175,7 +175,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
             <Button
               variant="ghost"
               size="sm"
-              className="flex items-center gap-1 text-[#0251FB] dark:text-[#0251FB] hover:text-[#0251FB] dark:hover:text-[#0251FB] p-1 h-auto"
+              className="flex items-center gap-1 text-lishka-blue dark:text-lishka-blue hover:text-lishka-blue dark:hover:text-lishka-blue p-1 h-auto"
               onClick={() => setIsLocationModalOpen(true)}
             >
               <span className="text-sm truncate">{userLocation}</span>
@@ -210,17 +210,17 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
           {/* Debug Info */}
           {toxicFishList.length > 0 &&
             localStorage.getItem("showToxicFishDebug") === "true" && (
-              <div className="mb-2 p-2 bg-blue-50 px-4 lg:px-6 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded text-xs space-y-1">
-                <div className="font-mono text-blue-700 dark:text-blue-400">
+              <div className="mb-2 p-2 bg-blue-50 px-4 lg:px-6 /20 border border-blue-200 dark:border-blue-800 rounded text-xs space-y-1">
+                <div className="font-mono text-lishka-blue ">
                   DEBUG: Final toxic fish count: {toxicFishList.length}
                 </div>
                 {/* Show debug info from state if available */}
                 {debugInfo && (
                   <>
-                    <div className="font-mono text-blue-700 dark:text-blue-400">
+                    <div className="font-mono text-lishka-blue ">
                       Location: {getSeaName(userLocation)}
                     </div>
-                    <div className="font-mono text-blue-700 dark:text-blue-400">
+                    <div className="font-mono text-lishka-blue ">
                       Original count from OpenAI: {debugInfo.originalCount}
                     </div>
                     {debugInfo.filteredOut.length > 0 && (

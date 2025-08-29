@@ -14,7 +14,7 @@ const SearchMiniCard = ({
   key,
   variant = "outline",
   size = "sm",
-  className = "cursor-pointer bg-gray-100 dark:bg-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-900/30 transition-colors h-auto px-4 py-3 text-sm rounded-2xl border-0 whitespace-normal flex items-start justify-start shadow-sm w-full aspect-[1.8/1]",
+  className = "cursor-pointer bg-gray-100 dark:bg-gray-700 dark:text-gray-200 hover:bg-blue-50 transition-colors h-auto px-4 py-3 text-sm rounded-2xl border-0 whitespace-normal flex items-start justify-start shadow-sm w-full aspect-[1.8/1]",
   onClick,
   children,
 }: SearchMiniCardProps) => {

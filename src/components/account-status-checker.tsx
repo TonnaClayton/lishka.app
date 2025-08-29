@@ -197,7 +197,7 @@ const AccountStatusChecker: React.FC = () => {
                         onClick={handleResendVerification}
                         disabled={resendingEmail}
                         size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        className="bg-lishka-blue hover:bg-lishka-blue text-white"
                       >
                         {resendingEmail ? (
                           <>

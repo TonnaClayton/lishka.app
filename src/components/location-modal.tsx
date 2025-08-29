@@ -14,6 +14,7 @@ import {
   Marker,
   // useMapEvents,
   LayersControl,
+  useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -104,64 +105,65 @@ const MapSelection = ({
 
   // Function to handle map click and set marker
   const MapClickHandler = () => {
-    // const map = useMapEvents({
-    //   click: async (e) => {
-    //     const { lat, lng } = e.latlng;
-    //     setSelectedPosition([lat, lng]);
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const map = useMapEvents({
+      click: async (e) => {
+        const { lat, lng } = e.latlng;
+        setSelectedPosition([lat, lng]);
 
-    //     // Attempt to get location name via reverse geocoding
-    //     try {
-    //       const response = await fetch(
-    //         `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
-    //       );
-    //       const data = await response.json();
+        // Attempt to get location name via reverse geocoding
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+          );
+          const data = await response.json();
 
-    //       // Extract city/town and country from address details
-    //       const city =
-    //         data.address?.city ||
-    //         data.address?.town ||
-    //         data.address?.village ||
-    //         data.address?.hamlet ||
-    //         "";
-    //       const country = data.address?.country || "";
+          // Extract city/town and country from address details
+          const city =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            data.address?.hamlet ||
+            "";
+          const country = data.address?.country || "";
 
-    //       // Format as "city, country"
-    //       const name = [city, country].filter(Boolean).join(", ");
+          // Format as "city, country"
+          const name = [city, country].filter(Boolean).join(", ");
 
-    //       // Check if location is on sea or water
-    //       const isSeaLocation =
-    //         !city || // No city means likely on water
-    //         data.address?.sea ||
-    //         data.address?.ocean ||
-    //         data.address?.water ||
-    //         data.address?.bay;
+          // Check if location is on sea or water
+          const isSeaLocation =
+            !city || // No city means likely on water
+            data.address?.sea ||
+            data.address?.ocean ||
+            data.address?.water ||
+            data.address?.bay;
 
-    //       log("Location data:", {
-    //         isSeaLocation,
-    //         city,
-    //         country,
-    //         address: data.address,
-    //         lat,
-    //         lng,
-    //       });
+          log("Location data:", {
+            isSeaLocation,
+            city,
+            country,
+            address: data.address,
+            lat,
+            lng,
+          });
 
-    //       if (isSeaLocation) {
-    //         // For sea locations, display only coordinates
-    //         const formattedLat = lat.toFixed(6);
-    //         const formattedLng = lng.toFixed(6);
-    //         setLocationName(`${formattedLat}, ${formattedLng}`);
-    //       } else {
-    //         setLocationName(name);
-    //       }
-    //     } catch (error) {
-    //       console.error("Error getting location name:", error);
-    //       // Display coordinates as fallback
-    //       const formattedLat = lat.toFixed(6);
-    //       const formattedLng = lng.toFixed(6);
-    //       setLocationName(`${formattedLat}, ${formattedLng}`);
-    //     }
-    //   },
-    // });
+          if (isSeaLocation) {
+            // For sea locations, display only coordinates
+            const formattedLat = lat.toFixed(6);
+            const formattedLng = lng.toFixed(6);
+            setLocationName(`${formattedLat}, ${formattedLng}`);
+          } else {
+            setLocationName(name);
+          }
+        } catch (error) {
+          console.error("Error getting location name:", error);
+          // Display coordinates as fallback
+          const formattedLat = lat.toFixed(6);
+          const formattedLng = lng.toFixed(6);
+          setLocationName(`${formattedLat}, ${formattedLng}`);
+        }
+      },
+    });
     return null;
   };
 
@@ -320,14 +322,8 @@ const LocationModal = ({
           setLoading(false);
 
           // If geolocation fails, set a default location instead of showing an alert
-          const defaultLocation = {
-            latitude: 35.8997,
-            longitude: 14.5146,
-            name: "Malta",
-          };
 
-          log("Setting default location after error:", defaultLocation);
-          handleLocationUpdate(defaultLocation);
+          handleLocationUpdate(DEFAULT_LOCATION);
         },
         {
           enableHighAccuracy: true,
@@ -336,18 +332,7 @@ const LocationModal = ({
         },
       );
     } else {
-      // If geolocation is not supported, set a default location
-      const defaultLocation = {
-        latitude: 35.8997,
-        longitude: 14.5146,
-        name: "Malta",
-      };
-
-      log(
-        "Setting default location (no geolocation support):",
-        defaultLocation,
-      );
-      handleLocationUpdate(defaultLocation);
+      handleLocationUpdate(DEFAULT_LOCATION);
       setLoading(false);
     }
   };
@@ -406,7 +391,7 @@ const LocationModal = ({
             <Button
               onClick={handleDetectLocation}
               variant="outline"
-              className="w-full h-12 border-none shadow-none bg-[#0251FB] hover:bg-[#0251FB] text-white hover:text-white rounded-full"
+              className="w-full h-12 border-none shadow-none bg-lishka-blue hover:bg-lishka-blue text-white hover:text-white rounded-full"
               disabled={loading}
             >
               <MapPin className="mr-2" />
@@ -417,7 +402,7 @@ const LocationModal = ({
               onClick={handleMapLocationSelect}
               disabled={loading}
               variant="default"
-              className="confirm-location-button w-full bg-[#0251FB1A] h-12 text-[#0251FB] hover:bg-[#0251FB33] hover:text-[#0251FB] rounded-full shadow-none border-none"
+              className="confirm-location-button w-full bg-[#0251FB1A] h-12 text-lishka-blue hover:bg-[#0251FB33] hover:text-lishka-blue rounded-full shadow-none border-none"
             >
               Set this location
             </Button>

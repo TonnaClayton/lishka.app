@@ -49,7 +49,7 @@ const WhatsNewPage: React.FC = () => {
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-blue-100 p-2 rounded-lg">
-                      <Zap className="h-5 w-5 text-blue-600" />
+                      <Zap className="h-5 w-5 text-lishka-blue" />
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 mb-2">
@@ -68,7 +68,7 @@ const WhatsNewPage: React.FC = () => {
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
                     <div className="bg-blue-100 p-2 rounded-lg">
-                      <Bell className="h-5 w-5 text-blue-600" />
+                      <Bell className="h-5 w-5 text-lishka-blue" />
                     </div>
                     <div className="flex-1">
                       <h3 className="font-semibold text-gray-900 mb-2">
