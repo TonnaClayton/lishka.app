@@ -342,9 +342,11 @@ const SearchPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <MapPin
             size={16}
-            className={useLocationContext ? "text-[#0251FB]" : "text-gray-400"}
+            className={
+              useLocationContext ? "text-lishka-blue" : "text-gray-400"
+            }
           />
-          <span className="text-xs text-[#0251FB]">
+          <span className="text-xs text-lishka-blue">
             {useLocationContext
               ? location?.name || "Getting location..."
               : "Global search"}
@@ -352,7 +354,7 @@ const SearchPage: React.FC = () => {
           <Switch
             checked={useLocationContext}
             onCheckedChange={setUseLocationContext}
-            className="data-[state=checked]:bg-[#0251FB]"
+            className="data-[state=checked]:bg-lishka-blue"
           />
         </div>
       </header>
@@ -372,7 +374,7 @@ const SearchPage: React.FC = () => {
             )}
           >
             <div className="rounded-full bg-[#E6EFFF] p-3">
-              <MapPin className="h-8 w-8 text-[#0251FB]" />
+              <MapPin className="h-8 w-8 text-lishka-blue" />
             </div>
             <h2 className="text-2xl font-bold dark:text-white">
               Ask me anything about fishing!
@@ -386,7 +388,7 @@ const SearchPage: React.FC = () => {
                 <Button
                   key={`suggestion-${index}`}
                   variant="outline"
-                  className="text-left h-auto py-3 px-2 dark:bg-gray-800 dark:border-gray-700 rounded-2xl border-0 bg-[#E6EFFF] text-[#0251fb] justify-center items-center w-[48%]"
+                  className="text-left h-auto py-3 px-2 dark:bg-gray-800 dark:border-gray-700 rounded-2xl border-0 bg-[#E6EFFF] text-lishka-blue justify-center items-center w-[48%]"
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
                   {suggestion}
@@ -419,7 +421,7 @@ const SearchPage: React.FC = () => {
                       "rounded-[16px] pt-3 w-fit max-w-[85%]",
                       isMobile && "max-w-[95%]",
                       message.user_role === "user"
-                        ? "bg-[#0251FB] text-white"
+                        ? "bg-lishka-blue text-white"
                         : "bg-[#F7F7F7] text-[#191B1F]",
                     )}
                   >
@@ -617,7 +619,7 @@ const SearchPage: React.FC = () => {
                   strokeWidth="2"
                   strokeLinecap="round"
                   strokeLinejoin="round"
-                  className="hover:text-[#0251FB] transition-colors my-auto text-[#989CA3]"
+                  className="hover:text-lishka-blue transition-colors my-auto text-[#989CA3]"
                 >
                   <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
                   <circle cx="9" cy="9" r="2" />
@@ -628,7 +630,7 @@ const SearchPage: React.FC = () => {
                 type="submit"
                 size="icon"
                 disabled={(!query.trim() && !imageFile) || loading}
-                className={`bg-transparent hover:bg-transparent ${query.trim() || imageFile ? "text-[#0251FB] " : "text-[#989CA3]"} hover:text-[#0251FB] h-10 w-10 flex-shrink-0 p-0 flex items-center justify-center`}
+                className={`bg-transparent hover:bg-transparent ${query.trim() || imageFile ? "text-lishka-blue " : "text-[#989CA3]"} hover:text-lishka-blue h-10 w-10 flex-shrink-0 p-0 flex items-center justify-center`}
                 variant="ghost"
               >
                 <Send size={20} />
@@ -713,7 +715,7 @@ const FollowUpQuestions = ({
                 <Button
                   key={`followup-${i}`}
                   variant="outline"
-                  className="rounded-full px-2 py-2 text-xs truncate justify-start flex-shrink-0 overflow-hidden whitespace-nowrap bg-[#0251FB1A] hover:bg-[#0251FB33] text-[#0251FB] hover:text-[#0251FB] shadow-none border-none"
+                  className="rounded-full px-2 py-2 text-xs truncate justify-start flex-shrink-0 overflow-hidden whitespace-nowrap bg-[#0251FB1A] hover:bg-[#0251FB33] text-lishka-blue hover:text-lishka-blue shadow-none border-none"
                   onClick={() => handleSuggestionClick(q)}
                   disabled={loading}
                 >

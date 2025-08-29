@@ -232,7 +232,7 @@ const GearRecommendationWidget: React.FC = () => {
           {/* Status indicator */}
           <div className="flex items-center gap-2">
             {isLoadingGearRecommendation && (
-              <div className="flex items-center gap-2 text-blue-500">
+              <div className="flex items-center gap-2 text-lishka-blue">
                 <Loader2 className="h-4 w-4 animate-spin" />
                 <span className="text-xs">Loading weather...</span>
               </div>

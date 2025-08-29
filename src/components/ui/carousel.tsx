@@ -296,7 +296,7 @@ const CarouselDot = React.forwardRef<
         size={size}
         className={cn(
           "h-2 w-2 !bg-gray-300 rounded-full border-0 hover:!bg-gray-400",
-          scrollToIndex === selectedIndex ? "!bg-blue-600 w-8" : "",
+          scrollToIndex === selectedIndex ? "!bg-lishka-blue w-8" : "",
           className,
           scrollToIndex === selectedIndex ? selectedClassName : "",
         )}

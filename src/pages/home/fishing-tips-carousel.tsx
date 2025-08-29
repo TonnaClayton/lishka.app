@@ -137,17 +137,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [count, setCount] = useState(0);
   const { location: userLocation } = useUserLocation();
-  const {
-    data: fishingTips,
-    isLoading: loadingFishingTips,
-    isError: errorFishingTips,
-    error: errorFishingTipsError,
-  } = useFishingTips({
-    // temperature: weatherData?.current?.temperature_2m,
-    // windSpeed: weatherData?.current?.wind_speed_10m,
-    // waveHeight: weatherData?.current?.wave_height,
-    // weatherCondition: weatherData?.current?.weather_code,
-  });
+
   const {
     data: weatherSummary,
     isLoading: loadingWeather,
@@ -156,6 +146,18 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
     latitude: userLocation?.latitude,
     longitude: userLocation?.longitude,
     name: userLocation?.name,
+  });
+
+  const {
+    data: fishingTips,
+    isLoading: loadingFishingTips,
+    isError: errorFishingTips,
+    error: errorFishingTipsError,
+  } = useFishingTips({
+    temperature: weatherSummary?.temperature,
+    windSpeed: weatherSummary?.wind_speed,
+    waveHeight: weatherSummary?.wave_height,
+    weatherCondition: weatherSummary?.condition,
   });
 
   const tips = useMemo(() => {
@@ -494,17 +496,17 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
                   <Sun className="w-8 h-8 text-yellow-500" />
                 )}
                 {weatherSummary.condition === "Partly cloudy" && (
-                  <Cloud className="w-8 h-8 text-[#0251FB]" />
+                  <Cloud className="w-8 h-8 text-lishka-blue" />
                 )}
                 {weatherSummary.condition === "Rainy" && (
-                  <CloudRain className="w-8 h-8 text-[#0251FB]" />
+                  <CloudRain className="w-8 h-8 text-lishka-blue" />
                 )}
                 {weatherSummary.condition === "Snowy" && (
-                  <CloudSnow className="w-8 h-8 text-blue-300" />
+                  <CloudSnow className="w-8 h-8 text-lishka-blue" />
                 )}
                 {!["Clear", "Partly cloudy", "Rainy", "Snowy"].includes(
                   weatherSummary.condition,
-                ) && <Cloud className="w-8 h-8 text-[#0251FB]" />}
+                ) && <Cloud className="w-8 h-8 text-lishka-blue" />}
                 <span className="text-foreground text-2xl font-normal">
                   {weatherSummary.temperature !== null
                     ? `${weatherSummary.temperature}°`

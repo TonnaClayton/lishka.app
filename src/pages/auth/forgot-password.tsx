@@ -67,8 +67,8 @@ const ForgotPasswordPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-6">
         <div className="w-full max-w-sm mx-auto text-center">
-          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Mail className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+          <div className="w-16 h-16 bg-blue-100  rounded-full flex items-center justify-center mx-auto mb-6">
+            <Mail className="w-8 h-8 text-lishka-blue " />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Check Your Email
@@ -80,7 +80,7 @@ const ForgotPasswordPage: React.FC = () => {
           <div className="space-y-3">
             <Button
               onClick={() => navigate(ROUTES.LOGIN)}
-              className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl"
+              className="w-full h-14 bg-lishka-blue hover:bg-lishka-blue text-white text-base font-medium rounded-xl"
             >
               Back to Sign In
             </Button>
@@ -165,7 +165,7 @@ const ForgotPasswordPage: React.FC = () => {
               <div className="pt-4">
                 <Button
                   type="submit"
-                  className="w-full h-[46px] bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-[46px] bg-lishka-blue hover:bg-lishka-blue text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? "Sending..." : "Send Reset Link"}
@@ -180,7 +180,7 @@ const ForgotPasswordPage: React.FC = () => {
             Remember your password?{" "}
             <Link
               to={ROUTES.LOGIN}
-              className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"
+              className="text-lishka-blue hover:text-lishka-blue  font-medium"
             >
               Sign in
             </Link>

@@ -755,17 +755,17 @@ const GearCategoryPage: React.FC = () => {
                           {/* Main info badges */}
                           <div className="flex flex-wrap gap-1 sm:gap-2 overflow-hidden">
                             {gear.size && (
-                              <span className="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium truncate max-w-[60px] sm:max-w-[80px]">
+                              <span className="inline-block px-2 py-1 text-xs bg-blue-100  text-lishka-blue  rounded-full font-medium truncate max-w-[60px] sm:max-w-[80px]">
                                 {gear.size}
                               </span>
                             )}
                             {gear.weight && (
-                              <span className="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium truncate max-w-[60px] sm:max-w-[80px]">
+                              <span className="inline-block px-2 py-1 text-xs bg-blue-100  text-lishka-blue  rounded-full font-medium truncate max-w-[60px] sm:max-w-[80px]">
                                 {gear.weight}
                               </span>
                             )}
                             {gear.targetFish && (
-                              <span className="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium truncate max-w-[80px] sm:max-w-[100px]">
+                              <span className="inline-block px-2 py-1 text-xs bg-blue-100  text-lishka-blue  rounded-full font-medium truncate max-w-[80px] sm:max-w-[100px]">
                                 {gear.targetFish.split(",")[0].trim()}
                                 {gear.targetFish.includes(",") && "..."}
                               </span>
@@ -894,21 +894,21 @@ const GearCategoryPage: React.FC = () => {
                           {/* Primary specs */}
                           <div className="grid grid-cols-2 gap-3">
                             {gear.size && (
-                              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                              <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                   Size
                                 </div>
-                                <div className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                                <div className="text-sm font-semibold text-lishka-blue ">
                                   {gear.size}
                                 </div>
                               </div>
                             )}
                             {gear.weight && (
-                              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                              <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                   Weight
                                 </div>
-                                <div className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                                <div className="text-sm font-semibold text-lishka-blue ">
                                   {gear.weight}
                                 </div>
                               </div>
@@ -917,11 +917,11 @@ const GearCategoryPage: React.FC = () => {
 
                           {/* Target Fish */}
                           {gear.targetFish && (
-                            <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                              <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                            <div className="bg-blue-50 /20 p-3 rounded-lg">
+                              <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                 Target Fish
                               </div>
-                              <div className="text-sm font-semibold text-blue-900 dark:text-blue-100">
+                              <div className="text-sm font-semibold text-lishka-blue ">
                                 {gear.targetFish}
                               </div>
                             </div>
@@ -933,81 +933,81 @@ const GearCategoryPage: React.FC = () => {
                             {categoryId === "rods-reels" && (
                               <>
                                 {gear.gearRatio && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Gear Ratio
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.gearRatio}
                                     </div>
                                   </div>
                                 )}
                                 {gear.bearings && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Bearings
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.bearings}
                                     </div>
                                   </div>
                                 )}
                                 {gear.dragSystem && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Drag System
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.dragSystem}
                                     </div>
                                   </div>
                                 )}
                                 {gear.lineCapacity && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Line Capacity
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.lineCapacity}
                                     </div>
                                   </div>
                                 )}
                                 {gear.action && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Action
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.action}
                                     </div>
                                   </div>
                                 )}
                                 {gear.power && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Power
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.power}
                                     </div>
                                   </div>
                                 )}
                                 {gear.lineWeight && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Line Weight
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.lineWeight}
                                     </div>
                                   </div>
                                 )}
                                 {gear.lureWeight && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Lure Weight
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.lureWeight}
                                     </div>
                                   </div>
@@ -1019,51 +1019,51 @@ const GearCategoryPage: React.FC = () => {
                             {categoryId === "accessories" && (
                               <>
                                 {gear.capacity && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Capacity
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.capacity}
                                     </div>
                                   </div>
                                 )}
                                 {gear.compartments && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Compartments
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.compartments}
                                     </div>
                                   </div>
                                 )}
                                 {gear.waterResistant && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Water Resistant
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.waterResistant}
                                     </div>
                                   </div>
                                 )}
                                 {gear.usage && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Usage
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.usage}
                                     </div>
                                   </div>
                                 )}
                                 {gear.durability && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Durability
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.durability}
                                     </div>
                                   </div>
@@ -1075,51 +1075,51 @@ const GearCategoryPage: React.FC = () => {
                             {categoryId === "bait-chum" && (
                               <>
                                 {gear.baitType && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Bait Type
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.baitType}
                                     </div>
                                   </div>
                                 )}
                                 {gear.scent && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Scent
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.scent}
                                     </div>
                                   </div>
                                 )}
                                 {gear.color && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Color
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.color}
                                     </div>
                                   </div>
                                 )}
                                 {gear.waterType && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Water Type
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.waterType}
                                     </div>
                                   </div>
                                 )}
                                 {gear.technique && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Technique
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.technique}
                                     </div>
                                   </div>
@@ -1131,61 +1131,61 @@ const GearCategoryPage: React.FC = () => {
                             {categoryId === "electronics" && (
                               <>
                                 {gear.screenSize && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Screen Size
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.screenSize}
                                     </div>
                                   </div>
                                 )}
                                 {gear.frequency && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Frequency
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.frequency}
                                     </div>
                                   </div>
                                 )}
                                 {gear.maxDepth && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Max Depth
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.maxDepth}
                                     </div>
                                   </div>
                                 )}
                                 {gear.gps && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       GPS
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.gps}
                                     </div>
                                   </div>
                                 )}
                                 {gear.accuracy && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Accuracy
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.accuracy}
                                     </div>
                                   </div>
                                 )}
                                 {gear.battery && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Battery
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.battery}
                                     </div>
                                   </div>
@@ -1197,41 +1197,41 @@ const GearCategoryPage: React.FC = () => {
                             {categoryId === "other" && (
                               <>
                                 {gear.insulation && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Insulation
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.insulation}
                                     </div>
                                   </div>
                                 )}
                                 {gear.iceRetention && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Ice Retention
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.iceRetention}
                                     </div>
                                   </div>
                                 )}
                                 {gear.pockets && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Pockets
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.pockets}
                                     </div>
                                   </div>
                                 )}
                                 {gear.fit && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Fit
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.fit}
                                     </div>
                                   </div>
@@ -1243,61 +1243,61 @@ const GearCategoryPage: React.FC = () => {
                             {categoryId === "lures-jigs" && (
                               <>
                                 {gear.fishingTechnique && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Technique
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.fishingTechnique}
                                     </div>
                                   </div>
                                 )}
                                 {gear.depthRange && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Depth Range
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.depthRange}
                                     </div>
                                   </div>
                                 )}
                                 {gear.colorPattern && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Color Pattern
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.colorPattern}
                                     </div>
                                   </div>
                                 )}
                                 {gear.actionType && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Action Type
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.actionType}
                                     </div>
                                   </div>
                                 )}
                                 {gear.versatility && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Versatility
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.versatility}
                                     </div>
                                   </div>
                                 )}
                                 {gear.compatibleGear && (
-                                  <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                    <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                  <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                    <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                       Compatible Gear
                                     </div>
-                                    <div className="text-sm text-blue-900 dark:text-blue-100">
+                                    <div className="text-sm text-lishka-blue ">
                                       {gear.compatibleGear}
                                     </div>
                                   </div>
@@ -1308,55 +1308,55 @@ const GearCategoryPage: React.FC = () => {
                             {/* Common fields for all categories */}
                             {gear.fishingTechnique &&
                               categoryId !== "lures-jigs" && (
-                                <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                  <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                                <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                  <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                     Fishing Technique
                                   </div>
-                                  <div className="text-sm text-blue-900 dark:text-blue-100">
+                                  <div className="text-sm text-lishka-blue ">
                                     {gear.fishingTechnique}
                                   </div>
                                 </div>
                               )}
 
                             {gear.construction && (
-                              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                              <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                   Construction
                                 </div>
-                                <div className="text-sm text-blue-900 dark:text-blue-100">
+                                <div className="text-sm text-lishka-blue ">
                                   {gear.construction}
                                 </div>
                               </div>
                             )}
 
                             {gear.material && (
-                              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                              <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                   Material
                                 </div>
-                                <div className="text-sm text-blue-900 dark:text-blue-100">
+                                <div className="text-sm text-lishka-blue ">
                                   {gear.material}
                                 </div>
                               </div>
                             )}
 
                             {gear.features && (
-                              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                              <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                   Features
                                 </div>
-                                <div className="text-sm text-blue-900 dark:text-blue-100">
+                                <div className="text-sm text-lishka-blue ">
                                   {gear.features}
                                 </div>
                               </div>
                             )}
 
                             {gear.season && (
-                              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                              <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                   Season
                                 </div>
-                                <div className="text-sm text-blue-900 dark:text-blue-100">
+                                <div className="text-sm text-lishka-blue ">
                                   {gear.season}
                                 </div>
                               </div>
@@ -1364,11 +1364,11 @@ const GearCategoryPage: React.FC = () => {
 
                             {/* Standard description fallback */}
                             {gear.description && (
-                              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg">
-                                <div className="text-xs font-medium text-blue-600 dark:text-blue-400 uppercase tracking-wide mb-1">
+                              <div className="bg-blue-50 /20 p-3 rounded-lg">
+                                <div className="text-xs font-medium text-lishka-blue  uppercase tracking-wide mb-1">
                                   Description
                                 </div>
-                                <div className="text-sm text-blue-900 dark:text-blue-100">
+                                <div className="text-sm text-lishka-blue ">
                                   {gear.description}
                                 </div>
                               </div>

@@ -240,7 +240,9 @@ const MobileOverlayDebugger: React.FC = () => {
                 Look for logs starting with "🔍 [OVERLAY SERVICE]" and "🔍 [FISH
                 INFO OVERLAY]"
               </p>
-              <p className="mt-2 text-blue-600">Expected behavior on mobile:</p>
+              <p className="mt-2 text-lishka-blue">
+                Expected behavior on mobile:
+              </p>
               <p>- shouldShowOverlay should be TRUE</p>
               <p>- Overlay should render and be visible</p>
               <p>- Fish info and location should display</p>
