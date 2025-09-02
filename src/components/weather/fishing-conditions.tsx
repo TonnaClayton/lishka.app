@@ -4,7 +4,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Loader2 } from "lucide-react";
 
 interface FishingConditionsProps {
-  fishingAdvice: any;
+  fishingAdvice: {
+    inshore?: string;
+    offshore?: string;
+  };
   isLoadingFishingAdvice: boolean;
   activeTab: string;
   setActiveTab: (value: string) => void;

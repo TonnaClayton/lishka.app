@@ -21,7 +21,6 @@ import {
   useUserLocation,
   LocationData,
   useWeatherData,
-  useFishingAdvice,
   CurrentConditions,
 } from "@/hooks/queries/location";
 import { cn } from "@/lib/utils";
@@ -126,24 +125,13 @@ const WeatherWidget: React.FC<{
     };
   }, [weatherData, location, getWeatherCondition]);
 
-  // Use React Query fishing advice hook
-  const {
-    fishingAdvice,
-    isLoading: isLoadingFishingAdvice,
-    refreshFishingAdviceAsync,
-  } = useFishingAdvice(location, currentConditions);
-
   const handleRefresh = async () => {
     if (location && location.latitude && location.longitude) {
       try {
         // Reset states and clear cached data
 
         // Trigger a fresh fetch using React Query mutations
-        await Promise.all([
-          refreshLocationAsync(),
-          refreshWeatherAsync(),
-          refreshFishingAdviceAsync(),
-        ]);
+        await Promise.all([refreshLocationAsync(), refreshWeatherAsync()]);
       } catch (error) {
         console.error("Error refreshing data:", error);
       }
@@ -343,8 +331,13 @@ const WeatherWidget: React.FC<{
       />
       {/* Fishing Conditions Card */}
       <FishingConditions
-        fishingAdvice={fishingAdvice}
-        isLoadingFishingAdvice={isLoadingFishingAdvice}
+        fishingAdvice={{
+          inshore: weatherData?.inshoreAdvice || "",
+          offshore: weatherData?.offshoreAdvice || "",
+        }}
+        isLoadingFishingAdvice={
+          isRefreshingWeather || isLoadingWeather || isLoadingLocation
+        }
         activeTab={activeTab}
         setActiveTab={setActiveTab}
       />
