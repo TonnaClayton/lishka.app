@@ -152,7 +152,7 @@ const ForgotPasswordPage: React.FC = () => {
                       <Input
                         type="email"
                         placeholder="Enter your email address"
-                        className="text-sm text-[#191B1F] font-semibold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white px-3 py-4 h-[48px]"
+                        className="text-sm text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white px-3 py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />

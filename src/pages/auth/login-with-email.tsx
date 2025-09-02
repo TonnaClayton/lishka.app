@@ -222,7 +222,7 @@ const LoginWithEmailPage: React.FC = () => {
                       <Input
                         type="email"
                         placeholder="Enter your email"
-                        className="text-sm text-[#191B1F] font-semibold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white"
+                        className="text-sm text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white"
                         disabled={loading}
                         {...field}
                       />
@@ -245,7 +245,7 @@ const LoginWithEmailPage: React.FC = () => {
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter your password"
-                          className="px-3 h-[48px] py-4 text-sm text-[#191B1F] font-semibold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white"
+                          className="px-3 h-[48px] py-4 text-sm text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white"
                           disabled={loading}
                           {...field}
                         />

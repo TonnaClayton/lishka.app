@@ -227,7 +227,7 @@ const SignupPage: React.FC = () => {
                       <Input
                         type="text"
                         placeholder="Enter your full name"
-                        className="text-[#191B1F] font-semibold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
+                        className="text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />
@@ -249,7 +249,7 @@ const SignupPage: React.FC = () => {
                       <Input
                         type="email"
                         placeholder="Enter your email"
-                        className="text-[#191B1F] font-semibold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200  bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
+                        className="text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200  bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />
@@ -272,7 +272,7 @@ const SignupPage: React.FC = () => {
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Create a password (min. 6 characters)"
-                          className="text-[#191B1F] font-semibold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
+                          className="text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                           disabled={loading}
                           minLength={6}
                           {...field}
@@ -311,7 +311,7 @@ const SignupPage: React.FC = () => {
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
                           placeholder="Confirm your password"
-                          className="text-[#191B1F] font-semibold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
+                          className="text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                           disabled={loading}
                           {...field}
                         />
