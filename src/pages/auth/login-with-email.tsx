@@ -215,14 +215,14 @@ const LoginWithEmailPage: React.FC = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Email
                     </FormLabel>
                     <FormControl className="px-3 rounded-[12px] py-4 h-[48px]">
                       <Input
                         type="email"
                         placeholder="Enter your email"
-                        className="text-base border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white"
+                        className="text-sm text-[#191B1F] font-semibold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white"
                         disabled={loading}
                         {...field}
                       />
@@ -237,7 +237,7 @@ const LoginWithEmailPage: React.FC = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Password
                     </FormLabel>
                     <FormControl>
@@ -245,7 +245,7 @@ const LoginWithEmailPage: React.FC = () => {
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Enter your password"
-                          className="px-3 h-[48px] py-4 text-base border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white"
+                          className="px-3 h-[48px] py-4 text-sm text-[#191B1F] font-semibold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white"
                           disabled={loading}
                           {...field}
                         />

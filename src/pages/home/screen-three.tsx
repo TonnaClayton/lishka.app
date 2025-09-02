@@ -31,8 +31,8 @@ export default function ScreenThree({
               descriptionClassName,
             )}
           >
-            Upload sonar images and let AI decode fish activity. Get optimised
-            settings and suggestions, tailored to your spot.
+            Upload sonar images, and AI reveals fish activity with spot-specific
+            settings and tips.
           </p>
         </div>
         <div className="h-[100px]"></div>

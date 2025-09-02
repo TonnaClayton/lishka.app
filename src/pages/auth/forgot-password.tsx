@@ -145,14 +145,14 @@ const ForgotPasswordPage: React.FC = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Email
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         placeholder="Enter your email address"
-                        className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
+                        className="text-sm text-[#191B1F] font-semibold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white px-3 py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />

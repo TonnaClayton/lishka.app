@@ -108,14 +108,14 @@ export default function ResetPasswordPage() {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Password
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="password"
                         placeholder="Enter your password"
-                        className="h-[48px] text-base border-gray-200 dark:border-gray-700 rounded-[12px] bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
+                        className="px-3 h-[48px] py-4 text-sm text-[#191B1F] font-semibold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white"
                         disabled={loading}
                         {...field}
                       />
@@ -130,14 +130,14 @@ export default function ResetPasswordPage() {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Confirm Password
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="password"
                         placeholder="Confirm your password"
-                        className="h-[48px] text-base border-gray-200 dark:border-gray-700 rounded-[12px] bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
+                        className="px-3 h-[48px] py-4 text-sm text-[#191B1F] font-semibold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white"
                         disabled={loading}
                         {...field}
                       />
