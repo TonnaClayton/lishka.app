@@ -2,6 +2,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { LocationData } from "./use-location-storage";
 import { api } from "../api";
 
+export interface CurrentConditions {
+  temperature: number | null;
+  windSpeed: number | null;
+  windDirection: number | null;
+  waveHeight: number | null;
+  swellWaveHeight: number | null;
+  swellWavePeriod: number | null;
+  weatherCondition: string;
+}
+
 interface WeatherData {
   hourly: {
     time: number[] | string[];
@@ -64,6 +74,8 @@ interface WeatherData {
     latitude: number;
     longitude: number;
   };
+  inshoreAdvice?: string;
+  offshoreAdvice?: string;
 }
 
 export const weatherQueryKeys = {
