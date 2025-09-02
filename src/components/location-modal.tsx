@@ -65,6 +65,7 @@ const MapSelection = ({
   >(null);
   const [locationName, setLocationName] = useState("");
   const [map, setMap] = useState<L.Map | null>(null);
+  const [isSeaLocation, setIsSeaLocation] = useState(false);
 
   // Make selectedPosition and locationName available to parent component
   React.useEffect(() => {
@@ -72,6 +73,7 @@ const MapSelection = ({
     (window as any).mapSelectionState = {
       selectedPosition,
       locationName,
+      isSeaLocation,
     };
   }, [selectedPosition, locationName, currentLocation]);
 
@@ -148,6 +150,8 @@ const MapSelection = ({
             lat,
             lng,
           });
+
+          setIsSeaLocation(isSeaLocation);
 
           // if (isSeaLocation) {
           //   // For sea locations, display only coordinates
@@ -268,6 +272,7 @@ const LocationModal = ({
           const lng = position.coords.longitude;
           let locationName = "Current Location";
           let countryCode = "";
+          let isSeaLocation = false;
 
           // Attempt to get location name via reverse geocoding
           try {
@@ -291,21 +296,21 @@ const LocationModal = ({
             const name = [city, country].filter(Boolean).join(", ");
 
             // Check if location is on sea or water
-            const isSeaLocation =
+            isSeaLocation =
               !city || // No city means likely on water
               data.address?.sea ||
               data.address?.ocean ||
               data.address?.water ||
               data.address?.bay;
 
-            if (isSeaLocation) {
-              // For sea locations, display only coordinates
-              const formattedLat = lat.toFixed(6);
-              const formattedLng = lng.toFixed(6);
-              locationName = `${formattedLat}, ${formattedLng}`;
-            } else {
-              locationName = name || "Current Location";
-            }
+            // if (isSeaLocation) {
+            //   // For sea locations, display only coordinates
+            //   const formattedLat = lat.toFixed(6);
+            //   const formattedLng = lng.toFixed(6);
+            //   locationName = `${formattedLat}, ${formattedLng}`;
+            // } else {
+            locationName = name || "Current Location";
+            // }
           } catch (error) {
             console.error("Error getting location name:", error);
           }
@@ -315,6 +320,7 @@ const LocationModal = ({
             longitude: lng,
             name: locationName,
             countryCode: countryCode,
+            isSeaLocation: isSeaLocation,
           };
 
           log("Setting new location:", newLocation);
