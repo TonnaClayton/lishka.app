@@ -23,6 +23,7 @@ import {
   useCreateSearchSession,
   useGetSearchSession,
   useGetSearchSessionFollowQuestions,
+  useGetSearchSessions,
   useUserLocation,
 } from "@/hooks/queries";
 import SearchPageSkeleton from "@/hooks/queries/search/skeleton";
@@ -60,6 +61,8 @@ const SearchPage: React.FC = () => {
   const routerLocation = useLocation();
   const { location } = useUserLocation();
   const { id } = useParams<{ id?: string }>();
+  const [isSuggestedQuestionClicked, setIsSuggestedQuestionClicked] =
+    useState(false);
 
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -99,9 +102,10 @@ const SearchPage: React.FC = () => {
   const {
     data: followUpQuestions,
     isLoading: followUpLoading,
-    refetch: refetchFollowUpQuestions,
+    // refetch: refetchFollowUpQuestions,
     isRefetching: isRefetchingFollowUpQuestions,
   } = useGetSearchSessionFollowQuestions(id);
+  const { refetch: refetchSessions } = useGetSearchSessions();
   const mutation = useCreateSearchSession();
   // const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
   // const [followUpLoading, setFollowUpLoading] = useState(false);
@@ -215,6 +219,7 @@ const SearchPage: React.FC = () => {
           //
         }
 
+        refetchSessions();
         // Update local state so both messages render immediately before navigation
         setMessages([userMessage, content]);
         // Navigate to the canonical session URL without relying on router state
@@ -285,6 +290,7 @@ const SearchPage: React.FC = () => {
   };
 
   const handleSuggestionClick = async (suggestion: string) => {
+    setIsSuggestedQuestionClicked(true);
     // Create a user message for the clicked suggestion
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -322,7 +328,7 @@ const SearchPage: React.FC = () => {
       messagesMemo[messagesMemo.length - 1].user_role === "assistant"
     ) {
       //fetchFollowUpQuestions(messages);
-      refetchFollowUpQuestions();
+      //refetchFollowUpQuestions();
     } else if (messagesMemo.length === 0) {
       //setFollowUpQuestions([]);
     }
@@ -346,8 +352,8 @@ const SearchPage: React.FC = () => {
               variant="ghost"
               size="icon"
               onClick={() => {
-                // setMessages([]);
-                // setError(null);
+                setMessages([]);
+                setError(null);
                 navigate("/search");
               }}
               className="mr-1"
@@ -387,7 +393,7 @@ const SearchPage: React.FC = () => {
         <div
           className={cn(
             "flex-1 h-full",
-            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-16",
+            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-24",
           )}
         >
           <div
@@ -510,7 +516,7 @@ const SearchPage: React.FC = () => {
                 </div>
               ))}
 
-              {isMobile && (
+              {isMobile && !isSuggestedQuestionClicked && (
                 <div className="flex flex-col gap-2">
                   {followUpQuestions?.length > 0 && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -561,7 +567,7 @@ const SearchPage: React.FC = () => {
       <div className="fixed bottom-16 left-0 right-0 z-20 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 md:static md:bottom-auto md:border-t md:w-full md:mx-auto md:mb-4">
         {/* Follow-up questions chips or loading skeleton */}
 
-        {!isMobile && (
+        {!isMobile && !isSuggestedQuestionClicked && (
           <FollowUpQuestions
             followUpQuestions={followUpQuestions || []}
             followUpLoading={followUpLoading || isRefetchingFollowUpQuestions}

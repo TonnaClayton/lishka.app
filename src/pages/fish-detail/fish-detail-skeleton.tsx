@@ -4,7 +4,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 const FishDetailSkeleton: React.FC = () => {
   return (
-    <div className="flex flex-col p-4">
+    <div className="flex flex-col p-4 gap-4">
       {/* Fish Image Card Skeleton */}
       <Card className="overflow-hidden rounded-xl border border-gray-200 dark:border-gray-800">
         <div className="relative w-full" style={{ aspectRatio: "3/2" }}>
