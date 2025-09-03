@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +64,7 @@ import { ROUTES } from "@/lib/routing";
 import { useStream } from "@/hooks/use-stream";
 import PhotoUploadBar, { UploadPhotoStreamData } from "./photo-upload-bar";
 import GearItemUploadBar from "./gear-item-upload-bar";
+import { toImageMetadataItem } from "@/lib/gallery-photo";
 
 // Zod schema for profile form validation
 const profileSchema = z.object({
@@ -257,6 +258,12 @@ const ProfilePage: React.FC = () => {
       }, 3000);
     },
   });
+
+  const galleryPhotos = useMemo(() => {
+    if (!profile?.gallery_photos) return [];
+
+    return profile?.gallery_photos.map(toImageMetadataItem);
+  }, [profile, uploadPhotoStream.isStreaming, uploadPhotoStreamData]);
 
   const uploadGearItemStream = useStream({
     path: "user/gear-items/stream",
@@ -1276,7 +1283,7 @@ const ProfilePage: React.FC = () => {
                   </button>
 
                   {/* Show uploaded photos */}
-                  {profile?.gallery_photos.map((photo: any, index) => {
+                  {galleryPhotos.map((photo, index) => {
                     return (
                       <FishImageCard
                         key={index}

@@ -73,7 +73,7 @@ export const useGetSearchSessionFollowQuestions = (id?: string | null) =>
     queryKey: searchQueryKeys.sessionFollowQuestions(id),
     queryFn: async () => {
       if (!id || id == undefined || id == null) {
-        return [];
+        throw new Error("No ID provided");
       }
 
       const data = await api<{
