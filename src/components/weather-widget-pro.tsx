@@ -10,7 +10,6 @@ import {
   MapPin,
   RefreshCw,
   Info,
-  Navigation,
   Layers,
   CloudRain,
   Sun,
@@ -287,7 +286,7 @@ const WeatherWidget: React.FC<{
             className="flex items-center text-lishka-blue px-0  hover:bg-blue-50"
           >
             <MapPin className="h-5 w-5 mr-1" />
-            <span className="font-medium">
+            <span className="font-semibold">
               {typeof location?.name === "string"
                 ? location.name.replace(/^"|"$/g, "")
                 : "Unknown Location"}
@@ -347,7 +346,6 @@ const WeatherWidget: React.FC<{
           <h2 className="text-lg font-semibold dark:text-white">
             Marine Data Forecast
           </h2>
-          <Navigation className="h-5 w-5 text-lishka-blue " />
         </div>
 
         {/* Wave Height Hourly Card */}
@@ -529,7 +527,6 @@ const WeatherWidget: React.FC<{
           <h2 className="text-lg font-semibold dark:text-white">
             Hourly Precipitation (mm)
           </h2>
-          <Droplets className="h-5 w-5 text-lishka-blue " />
         </div>
         <div className="overflow-x-auto">
           <div className="flex gap-3 pb-2 min-w-[800px]">

@@ -46,16 +46,16 @@ export const FishingConditions: React.FC<FishingConditionsProps> = ({
 
           <TabsContent
             value="inshore"
-            className="mt-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-md"
+            className="mt-4 bg-[#F7F7F7] text-[#191B1F] p-4 rounded-md"
           >
             {isLoadingFishingAdvice ? (
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="h-6 w-6 animate-spin text-lishka-blue" />
               </div>
             ) : fishingAdvice?.inshore ? (
-              <p className="text-sm">{fishingAdvice.inshore}</p>
+              <p className="text-sm font-normal">{fishingAdvice.inshore}</p>
             ) : (
-              <p className="text-sm italic">
+              <p className="text-sm font-normal italic">
                 No inshore fishing advice available
               </p>
             )}
@@ -63,16 +63,16 @@ export const FishingConditions: React.FC<FishingConditionsProps> = ({
 
           <TabsContent
             value="offshore"
-            className="mt-4 bg-gray-50 dark:bg-gray-800 p-4 rounded-md"
+            className="mt-4 bg-[#F7F7F7] text-[#191B1F] p-4 rounded-md"
           >
             {isLoadingFishingAdvice ? (
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="h-6 w-6 animate-spin text-lishka-blue" />
               </div>
             ) : fishingAdvice?.offshore ? (
-              <p className="text-sm">{fishingAdvice.offshore}</p>
+              <p className="text-sm font-normal">{fishingAdvice.offshore}</p>
             ) : (
-              <p className="text-sm italic">
+              <p className="text-sm font-normal italic">
                 No offshore fishing advice available
               </p>
             )}

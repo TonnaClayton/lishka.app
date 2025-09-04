@@ -375,7 +375,7 @@ const SearchPage: React.FC = () => {
               useLocationContext ? "text-lishka-blue" : "text-gray-400"
             }
           />
-          <span className="text-xs text-lishka-blue">
+          <span className="text-sm text-lishka-blue truncate font-semibold">
             {useLocationContext
               ? location?.name || "Getting location..."
               : "Global search"}
