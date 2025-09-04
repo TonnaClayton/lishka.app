@@ -239,6 +239,10 @@ function FishImageCard({
           });
 
           log("[ProfilePage] Photo with overlay shared successfully");
+          setSuccess(
+            "Fish image exported successfully! Tag us on Instagram @lishka.app and use #lishkaapp to get featured",
+          );
+          setTimeout(() => setSuccess(null), 5000);
         } catch (shareError) {
           console.error("[ProfilePage] Error sharing photo:", shareError);
           // Fallback to copying URL
