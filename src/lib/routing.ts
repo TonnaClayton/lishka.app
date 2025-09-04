@@ -6,6 +6,7 @@ export const ROUTES = {
   RESET_PASSWORD: "/reset-password",
   EMAIL_CONFIRMATION: "/confirm-email",
   AUTH_CONFIRMATION: "/auth/confirm",
+  AUTH_CALLBACK: "/auth/callback",
   HOME: "/",
   FISH: "/fish",
   FISH_DETAIL: "/fish/:fishName",

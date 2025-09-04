@@ -15,6 +15,7 @@ import {
   EmailConfirmationPage,
   LoginWithEmailPage,
 } from "./pages/auth";
+import AuthCallback from "./pages/auth/callback";
 import ProtectedRoute from "./components/auth/protected-route";
 import SafariScrollFix from "./components/safari-scroll-fix";
 import { AuthProvider } from "./contexts/auth-context";
@@ -130,6 +131,14 @@ const router = createBrowserRouter(
           element: (
             <ProtectedRoute requireAuth={false}>
               <EmailConfirmationPage />
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: ROUTES.AUTH_CALLBACK,
+          element: (
+            <ProtectedRoute requireAuth={false}>
+              <AuthCallback />
             </ProtectedRoute>
           ),
         },

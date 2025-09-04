@@ -11,6 +11,7 @@ describe("ROUTES constants", () => {
       RESET_PASSWORD: "/reset-password",
       EMAIL_CONFIRMATION: "/confirm-email",
       AUTH_CONFIRMATION: "/auth/confirm",
+      AUTH_CALLBACK: "/auth/callback",
       HOME: "/",
       FISH: "/fish",
       FISH_DETAIL: "/fish/:fishName",
@@ -24,6 +25,7 @@ describe("ROUTES constants", () => {
       TERMS: "/terms",
       PRIVACY_POLICY: "/privacy-policy",
       MY_GEAR: "/my-gear",
+      GEAR_DETAIL: "/gear-detail/:gearId",
       GEAR_CATEGORY: "/gear-category",
       SINGLE_GEAR_CATEGORY: "/gear-category/:categoryId",
       BLOB_TEST: "/blob-test",
@@ -63,6 +65,7 @@ describe("ROUTES constants", () => {
 
   it("has proper route structure for gear routes", () => {
     expect(ROUTES.MY_GEAR).toBe("/my-gear");
+    expect(ROUTES.GEAR_DETAIL).toBe("/gear-detail/:gearId");
     expect(ROUTES.GEAR_CATEGORY).toBe("/gear-category");
     expect(ROUTES.SINGLE_GEAR_CATEGORY).toBe("/gear-category/:categoryId");
   });
@@ -100,6 +103,7 @@ describe("ROUTES constants", () => {
 
   it("ensures parameterized routes use correct syntax", () => {
     expect(ROUTES.FISH_DETAIL).toMatch(/:fishName/);
+    expect(ROUTES.GEAR_DETAIL).toMatch(/:gearId/);
     expect(ROUTES.SINGLE_GEAR_CATEGORY).toMatch(/:categoryId/);
   });
 

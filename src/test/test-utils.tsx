@@ -1,4 +1,4 @@
-import React, { ReactElement } from "react";
+import React, { ReactElement, createContext, useContext } from "react";
 import { render, RenderOptions } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -31,7 +31,25 @@ export const mockAuthContext = {
   resetPassword: vi.fn(),
   updateProfile: vi.fn(),
   deleteAccount: vi.fn(),
-  refreshSession: vi.fn(),
+  refreshProfile: vi.fn(),
+  uploadAvatar: vi.fn(),
+  confirmEmail: vi.fn(),
+  signInWithGoogle: vi.fn(),
+};
+
+// Create a mock AuthContext for testing
+const MockAuthContext = createContext<any>(mockAuthContext);
+
+// Mock useAuth hook
+export const useAuth = () => useContext(MockAuthContext);
+
+// Create a mock AuthProvider component
+const MockAuthProvider = ({ children }: { children: React.ReactNode }) => {
+  return (
+    <MockAuthContext.Provider value={mockAuthContext}>
+      {children}
+    </MockAuthContext.Provider>
+  );
 };
 
 interface AllTheProvidersProps {
@@ -43,7 +61,9 @@ const AllTheProviders = ({ children }: AllTheProvidersProps) => {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>{children}</BrowserRouter>
+      <BrowserRouter>
+        <MockAuthProvider>{children}</MockAuthProvider>
+      </BrowserRouter>
     </QueryClientProvider>
   );
 };
