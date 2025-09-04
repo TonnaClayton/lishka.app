@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { MapPin } from "lucide-react";
+// import { MapPin } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,8 @@ import L from "leaflet";
 import { log } from "@/lib/logging";
 import { useUserLocation } from "@/hooks/queries";
 import { DEFAULT_LOCATION } from "@/lib/const";
+import useDeviceSize from "@/hooks/use-device-size";
+import { cn } from "@/lib/utils";
 
 interface LocationData {
   latitude: number;
@@ -63,6 +65,7 @@ const MapSelection = ({
   >(null);
   const [locationName, setLocationName] = useState("");
   const [map, setMap] = useState<L.Map | null>(null);
+  const [isSeaLocation, setIsSeaLocation] = useState(false);
 
   // Make selectedPosition and locationName available to parent component
   React.useEffect(() => {
@@ -70,6 +73,7 @@ const MapSelection = ({
     (window as any).mapSelectionState = {
       selectedPosition,
       locationName,
+      isSeaLocation,
     };
   }, [selectedPosition, locationName, currentLocation]);
 
@@ -147,14 +151,17 @@ const MapSelection = ({
             lng,
           });
 
-          if (isSeaLocation) {
-            // For sea locations, display only coordinates
-            const formattedLat = lat.toFixed(6);
-            const formattedLng = lng.toFixed(6);
-            setLocationName(`${formattedLat}, ${formattedLng}`);
-          } else {
-            setLocationName(name);
-          }
+          setIsSeaLocation(isSeaLocation);
+
+          // if (isSeaLocation) {
+          //   // For sea locations, display only coordinates
+          //   const formattedLat = lat.toFixed(6);
+          //   const formattedLng = lng.toFixed(6);
+          //   setLocationName(`${formattedLat}, ${formattedLng}`);
+          // } else {
+
+          // }
+          setLocationName(name);
         } catch (error) {
           console.error("Error getting location name:", error);
           // Display coordinates as fallback
@@ -213,6 +220,7 @@ const LocationModal = ({
 }: LocationModalProps) => {
   const [loading, setLoading] = useState(false);
   const { updateLocationAsync } = useUserLocation();
+  const { height } = useDeviceSize();
 
   const handleLocationUpdate = async (newLocation: LocationData) => {
     //startTransition(async () => {
@@ -264,6 +272,7 @@ const LocationModal = ({
           const lng = position.coords.longitude;
           let locationName = "Current Location";
           let countryCode = "";
+          let isSeaLocation = false;
 
           // Attempt to get location name via reverse geocoding
           try {
@@ -287,21 +296,21 @@ const LocationModal = ({
             const name = [city, country].filter(Boolean).join(", ");
 
             // Check if location is on sea or water
-            const isSeaLocation =
+            isSeaLocation =
               !city || // No city means likely on water
               data.address?.sea ||
               data.address?.ocean ||
               data.address?.water ||
               data.address?.bay;
 
-            if (isSeaLocation) {
-              // For sea locations, display only coordinates
-              const formattedLat = lat.toFixed(6);
-              const formattedLng = lng.toFixed(6);
-              locationName = `${formattedLat}, ${formattedLng}`;
-            } else {
-              locationName = name || "Current Location";
-            }
+            // if (isSeaLocation) {
+            //   // For sea locations, display only coordinates
+            //   const formattedLat = lat.toFixed(6);
+            //   const formattedLng = lng.toFixed(6);
+            //   locationName = `${formattedLat}, ${formattedLng}`;
+            // } else {
+            locationName = name || "Current Location";
+            // }
           } catch (error) {
             console.error("Error getting location name:", error);
           }
@@ -311,6 +320,7 @@ const LocationModal = ({
             longitude: lng,
             name: locationName,
             countryCode: countryCode,
+            isSeaLocation: isSeaLocation,
           };
 
           log("Setting new location:", newLocation);
@@ -340,6 +350,7 @@ const LocationModal = ({
   const handleMapLocationSelect = () => {
     // Access the stored map selection state
     const mapState = (window as any).mapSelectionState;
+    console.log("mapState", mapState);
     if (mapState && mapState.selectedPosition) {
       const [lat, lng] = mapState.selectedPosition;
       const newLocation = {
@@ -357,7 +368,13 @@ const LocationModal = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[600px] w-[90%] rounded-[16px] max-h-[80vh] shadow-xl dark:bg-card dark:border-border/30 [&>button]:hidden p-4">
+      <DialogContent
+        className={cn(
+          "sm:max-w-[600px] w-[90%] rounded-[16px] shadow-xl dark:bg-card dark:border-border/30 [&>button]:hidden p-4",
+          height > 768 ? "max-h-[80vh]" : "max-h-auto",
+          height < 600 && "max-h-full rounded-none w-full overflow-y-auto",
+        )}
+      >
         <DialogHeader className="flex flex-row items-center justify-between space-y-0">
           <DialogTitle className="dark:text-white">{title}</DialogTitle>
           <button
@@ -394,7 +411,7 @@ const LocationModal = ({
               className="w-full h-12 border-none shadow-none bg-lishka-blue hover:bg-lishka-blue text-white hover:text-white rounded-full"
               disabled={loading}
             >
-              <MapPin className="mr-2" />
+              {/* <MapPin className="mr-2" /> */}
               {loading ? "Detecting..." : "Detect my location"}
             </Button>
 

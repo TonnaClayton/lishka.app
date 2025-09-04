@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, AlertCircle } from "lucide-react";
 import BottomNav, { SideNav } from "@/components/bottom-nav";
@@ -7,6 +7,7 @@ import { FishingGear, FishingSeasons, useFishDetails } from "@/hooks/queries";
 import {
   handleFishImageError,
   getPlaceholderFishImage,
+  getFishImageUrl,
 } from "@/lib/fish-image-service";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -250,8 +251,8 @@ const FishDetailPage = () => {
   // const [error, setError] = useState<string | null>(null);
   // const [fishDetails, setFishDetails] = useState<FishDetails | null>(null);
 
-  const [fishImageUrl] = useState<string>("");
-  const [imageLoading] = useState(true);
+  const [fishImageUrl, setFishImageUrl] = useState<string>("");
+  const [imageLoading, setImageLoading] = useState(false);
 
   const {
     data: fishDetailsData,
@@ -902,6 +903,52 @@ const FishDetailPage = () => {
   //     getFishDetails();
   //   }, [fishName, location.state, profile]);
 
+  useEffect(() => {
+    const loadFishImage = async () => {
+      try {
+        log(
+          `FishCard: Starting image load for ${fishDetailsData.name} (${fishDetailsData.scientific_name})`,
+        );
+        setImageLoading(true);
+        const fishImageUrl = await getFishImageUrl(
+          fishDetailsData.name,
+          fishDetailsData.scientific_name,
+        );
+        log(
+          `FishCard: Got image URL for ${fishDetailsData.name}:`,
+          fishImageUrl,
+        );
+        setFishImageUrl(fishImageUrl);
+      } catch (error) {
+        console.error(`FishCard: Error loading image for ${name}:`, error);
+        setFishImageUrl(getPlaceholderFishImage());
+      } finally {
+        setImageLoading(false);
+      }
+    };
+
+    // Only load if we don't already have a good image URL
+    if (!fishDetailsData) return;
+    if (
+      !fishDetailsData.image ||
+      fishDetailsData.image.includes("unsplash") ||
+      fishDetailsData.image.includes("placeholder")
+    ) {
+      log(
+        `FishCard: Loading new image for ${fishDetailsData.name}, current image:`,
+        fishDetailsData.image,
+      );
+      loadFishImage();
+    } else {
+      log(
+        `FishCard: Using existing image for ${fishDetailsData.name}:`,
+        fishDetailsData.image,
+      );
+      setFishImageUrl(fishDetailsData.image);
+      setImageLoading(false);
+    }
+  }, [fishDetailsData, fishName]);
+
   if (isFishDetailsLoading || isProfileLoading) {
     return (
       <div className="flex flex-col h-full bg-white dark:bg-gray-950">
@@ -916,17 +963,18 @@ const FishDetailPage = () => {
             </h1>
           </div>
         </header>
-
-        <div className="flex-1 flex">
+        <div className="flex-1 flex h-full">
           {/* Desktop Side Navigation */}
           <div className="hidden lg:block">
             <SideNav />
           </div>
 
           {/* Main Content */}
-          <div className="flex-1 flex flex-col overflow-y-auto">
-            {/* Desktop Header */}
-            <div className="hidden lg:block sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 shadow-sm">
+          <div className="flex-1 flex flex-col lg:flex-row">
+            {/* Fish Details Content */}
+            <div className="flex-1 h-full overflow-y-auto">
+              {/* Desktop Header */}
+              {/* <div className="hidden lg:block sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 shadow-sm">
               <div className="flex items-center">
                 <Button
                   variant="ghost"
@@ -936,15 +984,38 @@ const FishDetailPage = () => {
                   <ChevronLeft className="h-6 w-6" />
                 </Button>
                 <h1 className="text-xl font-bold ml-2 dark:text-white">
-                  Loading...
+                  {fishDetailsData.name}
                 </h1>
               </div>
+            </div> */}
+
+              <div className="hidden lg:block sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 shadow-sm">
+                <div className="flex items-center">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => navigate(-1)}
+                  >
+                    <ChevronLeft className="h-6 w-6" />
+                  </Button>
+                  <h1 className="text-xl font-bold ml-2 dark:text-white">
+                    Loading...
+                  </h1>
+                </div>
+              </div>
+
+              <FishDetailSkeleton />
             </div>
 
-            <FishDetailSkeleton />
+            {/* Weather Widget - Desktop only */}
+            <div className="hidden lg:block w-80 min-w-[320px] border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+              <div className="h-full overflow-y-auto">
+                <WeatherWidgetPro />
+              </div>
+            </div>
           </div>
         </div>
-
+        {/* Bottom Navigation - Mobile only */}
         <BottomNav />
       </div>
     );

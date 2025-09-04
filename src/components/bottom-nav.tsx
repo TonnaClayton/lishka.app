@@ -486,7 +486,7 @@ const BottomNav: React.FC = () => {
             className="flex items-center text-[#191B1F] hover:text-lishka-blue disabled:opacity-50 relative"
           >
             {classifyingImage ? (
-              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#0251FB] border-t-transparent" />
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-lishka-blue border-t-transparent" />
             ) : (
               <Camera size={24} />
             )}

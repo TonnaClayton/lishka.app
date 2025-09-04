@@ -1781,7 +1781,7 @@ const ProfilePage: React.FC = () => {
           </div>
         </div>
       </header>
-      <div className="size-full bg-[#0251FB] py-3 px-4 flex flex-col gap-y-2 h-fit z-20 fixed top-[69px]">
+      <div className="size-full bg-lishka-blue py-3 px-4 flex flex-col gap-y-2 h-fit z-20 fixed top-[69px]">
         <div className="h-[26px] w-full flex items-center justify-between">
           <p className="leading-snug text-white text-base">
             AI Analyzing Photo

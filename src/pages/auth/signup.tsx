@@ -94,14 +94,14 @@ const SignupPage: React.FC = () => {
         if (needsConfirmation) {
           setSuccess(true);
           // Redirect to homepage with email verification banner
-          setTimeout(() => {
-            navigate("/login/email", {
-              replace: true,
-              state: {
-                hasSeenOnboardingFlow: false,
-              },
-            });
-          }, 5000);
+          // setTimeout(() => {
+          //   navigate("/login/email", {
+          //     replace: true,
+          //     state: {
+          //       hasSeenOnboardingFlow: false,
+          //     },
+          //   });
+          // }, 5000);
         } else {
           // User is already logged in, redirect immediately
           navigate("/", {
@@ -158,9 +158,9 @@ const SignupPage: React.FC = () => {
               click the link to verify your account.
             </p>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          {/* <p className="text-sm text-gray-500 dark:text-gray-400">
             Redirecting you to the app...
-          </p>
+          </p> */}
         </div>
       </div>
     );
@@ -220,14 +220,14 @@ const SignupPage: React.FC = () => {
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Full Name
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="text"
                         placeholder="Enter your full name"
-                        className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
+                        className="text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />
@@ -242,14 +242,14 @@ const SignupPage: React.FC = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Email
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         placeholder="Enter your email"
-                        className="text-base border-gray-200  bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
+                        className="text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200  bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />
@@ -264,7 +264,7 @@ const SignupPage: React.FC = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Password
                     </FormLabel>
                     <FormControl>
@@ -272,7 +272,7 @@ const SignupPage: React.FC = () => {
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Create a password (min. 6 characters)"
-                          className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
+                          className="text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                           disabled={loading}
                           minLength={6}
                           {...field}
@@ -303,7 +303,7 @@ const SignupPage: React.FC = () => {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="font-medium text-gray-700 leading-snug text-lg">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Confirm Password
                     </FormLabel>
                     <FormControl>
@@ -311,7 +311,7 @@ const SignupPage: React.FC = () => {
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
                           placeholder="Confirm your password"
-                          className="text-base border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
+                          className="text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                           disabled={loading}
                           {...field}
                         />
@@ -353,7 +353,7 @@ const SignupPage: React.FC = () => {
             <p className="text-base text-gray-600 dark:text-gray-300">
               Already have an account?{" "}
               <Link
-                to={ROUTES.LOGIN}
+                to={ROUTES.LOGIN_EMAIL}
                 state={{ from: location.state?.from }}
                 className="text-lishka-blue hover:text-lishka-blue  font-medium"
               >

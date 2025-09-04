@@ -1,7 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { log } from "@/lib/logging";
 import { LocationData } from "./use-location-storage";
 import { api } from "../api";
+
+export interface CurrentConditions {
+  temperature: number | null;
+  windSpeed: number | null;
+  windDirection: number | null;
+  waveHeight: number | null;
+  swellWaveHeight: number | null;
+  swellWavePeriod: number | null;
+  weatherCondition: string;
+}
 
 interface WeatherData {
   hourly: {
@@ -65,6 +74,8 @@ interface WeatherData {
     latitude: number;
     longitude: number;
   };
+  inshoreAdvice?: string;
+  offshoreAdvice?: string;
 }
 
 export const weatherQueryKeys = {
@@ -91,122 +102,44 @@ export const weatherQueryKeys = {
 };
 
 // Function to fetch weather data from Open-Meteo API
-const fetchOpenMeteoData = async (
-  lat: number,
-  lng: number,
+const fetchWeatherData = async (
+  lat?: number,
+  lng?: number,
+  name?: string,
 ): Promise<WeatherData> => {
-  if (!lat || !lng) {
-    throw new Error("Latitude and longitude are required");
+  let path = "weather";
+
+  let query = "";
+
+  if (name) {
+    query = `name=${name}`;
   }
 
-  log(`Fetching weather data for coordinates: ${lat}, ${lng}`);
-
-  // Construct the API URLs with customer API endpoint and API key
-  const weatherUrl = `https://customer-api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,weather_code,precipitation,precipitation_probability,visibility&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max&current=temperature_2m,apparent_temperature,is_day,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m&timezone=auto&apikey=1g8vJZI7DhEIFDIt`;
-
-  const marineUrl = `https://marine-api.open-meteo.com/v1/marine?latitude=${lat}&longitude=${lng}&hourly=wave_height,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period&current=wave_height,wave_direction,swell_wave_height,swell_wave_direction,swell_wave_period`;
-
-  try {
-    // Fetch both weather and marine data in parallel
-    const [weatherResponse, marineResponse] = await Promise.all([
-      fetch(weatherUrl),
-      fetch(marineUrl),
-    ]);
-
-    if (!weatherResponse.ok) {
-      throw new Error(`Weather API error: ${weatherResponse.status}`);
-    }
-
-    // We'll continue even if marine API fails, just log the error
-    if (!marineResponse.ok) {
-      console.error(`Marine API error: ${marineResponse.status}`);
-    }
-
-    const weatherData = await weatherResponse.json();
-    const marineData = await marineResponse.json();
-
-    log("🌤️ [WEATHER API] Full response from OpenMeteo:", weatherData);
-    log("🌤️ [WEATHER API] Weather codes in response:", {
-      current: weatherData.current?.weather_code,
-      hourly: weatherData.hourly?.weather_code?.slice(0, 5),
-      daily: weatherData.daily?.weather_code?.slice(0, 3),
-    });
-    log("🌊 [MARINE API] Full response:", marineData);
-
-    // Enhanced API validation logging
-    log("🔍 [API VALIDATION] Request details:", {
-      weatherUrl: weatherUrl,
-      marineUrl: marineUrl,
-      coordinates: { lat, lng },
-      timestamp: new Date().toISOString(),
-      responseStatus: {
-        weather: weatherResponse.status,
-        marine: marineResponse.status,
-      },
-    });
-
-    // Log specific weather data for comparison
-    log("📊 [WEATHER COMPARISON] Key data points:", {
-      currentWeatherCode: weatherData.current?.weather_code,
-      currentCondition: weatherData.current?.weather_code
-        ? getWeatherConditionName(weatherData.current.weather_code)
-        : "N/A",
-      dailyWeatherCodes: weatherData.daily?.weather_code?.slice(0, 7),
-      dailyConditions: weatherData.daily?.weather_code
-        ?.slice(0, 7)
-        ?.map((code) => getWeatherConditionName(code)),
-      temperature: weatherData.current?.temperature_2m,
-      windSpeed: weatherData.current?.wind_speed_10m,
-      location: `${lat}, ${lng}`,
-    });
-
-    // Merge the marine data into the weather data
-    const combinedData: WeatherData = {
-      ...weatherData,
-      hourly: {
-        ...weatherData.hourly,
-        wave_height: marineData.hourly?.wave_height,
-        wave_direction: marineData.hourly?.wave_direction,
-        swell_wave_height: marineData.hourly?.swell_wave_height,
-        swell_wave_direction: marineData.hourly?.swell_wave_direction,
-        swell_wave_period: marineData.hourly?.swell_wave_period,
-      },
-      hourly_units: {
-        ...weatherData.hourly_units,
-        wave_height: marineData.hourly_units?.wave_height,
-        swell_wave_height: marineData.hourly_units?.swell_wave_height,
-        swell_wave_period: marineData.hourly_units?.swell_wave_period,
-      },
-    };
-
-    // Add marine data to current if available
-    if (weatherData.current && marineData.current) {
-      combinedData.current = {
-        ...weatherData.current,
-        wave_height: marineData.current.wave_height,
-        wave_direction: marineData.current.wave_direction,
-        swell_wave_height: marineData.current.swell_wave_height,
-        swell_wave_direction: marineData.current.swell_wave_direction,
-        swell_wave_period: marineData.current.swell_wave_period,
-      };
-
-      combinedData.current_units = {
-        ...weatherData.current_units,
-        wave_height: marineData.current_units?.wave_height,
-        swell_wave_height: marineData.current_units?.swell_wave_height,
-        swell_wave_period: marineData.current_units?.swell_wave_period,
-      };
-    }
-
-    return combinedData;
-  } catch (error) {
-    console.error("Error fetching weather data:", error);
-    throw error;
+  if (lat) {
+    query = `latitude=${lat}`;
   }
+
+  if (lng) {
+    query = `longitude=${lng}`;
+  }
+
+  if (query) {
+    path = `${path}?${query}`;
+  }
+
+  const data = await api<{
+    data: WeatherData;
+  }>(path, {
+    method: "GET",
+  });
+
+  return data.data;
 };
 
 // Helper function to get weather condition name
-const getWeatherConditionName = (weatherCode: number | null | undefined) => {
+export const getWeatherConditionName = (
+  weatherCode: number | null | undefined,
+) => {
   if (weatherCode === null || weatherCode === undefined) {
     return "Unknown";
   }
@@ -248,11 +181,16 @@ export const useWeatherData = (location: LocationData | null) => {
 
   const weatherQuery = useQuery({
     queryKey: weatherQueryKeys.weatherData(location),
-    queryFn: () => {
+    queryFn: async () => {
       if (!location || !location.latitude || !location.longitude) {
         throw new Error("No valid location available for weather data");
       }
-      return fetchOpenMeteoData(location.latitude, location.longitude);
+
+      return fetchWeatherData(
+        location.latitude,
+        location.longitude,
+        location.name,
+      );
     },
     enabled: !!location && !!location.latitude && !!location.longitude,
     staleTime: 5 * 60 * 1000, // 5 minutes
@@ -267,7 +205,11 @@ export const useWeatherData = (location: LocationData | null) => {
       if (!location || !location.latitude || !location.longitude) {
         throw new Error("No valid location available for weather refresh");
       }
-      return fetchOpenMeteoData(location.latitude, location.longitude);
+      return fetchWeatherData(
+        location.latitude,
+        location.longitude,
+        location.name,
+      );
     },
     onSuccess: (newWeatherData) => {
       // Update the weather data cache
@@ -277,43 +219,6 @@ export const useWeatherData = (location: LocationData | null) => {
           newWeatherData,
         );
       }
-
-      // Save current weather conditions to localStorage for other components
-      const currentConditions = {
-        temperature:
-          newWeatherData?.current?.temperature_2m ||
-          (newWeatherData.hourly?.temperature_2m?.length > 0
-            ? newWeatherData.hourly.temperature_2m[0]
-            : null),
-        windSpeed:
-          newWeatherData.hourly?.wind_speed_10m?.length > 0
-            ? newWeatherData.hourly.wind_speed_10m[0]
-            : null,
-        windDirection:
-          newWeatherData.hourly?.wind_direction_10m?.length > 0
-            ? newWeatherData.hourly.wind_direction_10m[0]
-            : null,
-        waveHeight:
-          newWeatherData?.current?.wave_height ||
-          (newWeatherData.hourly?.wave_height?.length > 0
-            ? newWeatherData.hourly.wave_height[0]
-            : null),
-        swellWaveHeight:
-          newWeatherData?.current?.swell_wave_height ||
-          (newWeatherData.hourly?.swell_wave_height?.length > 0
-            ? newWeatherData.hourly.swell_wave_height[0]
-            : null),
-        swellWavePeriod:
-          newWeatherData?.current?.swell_wave_period ||
-          (newWeatherData.hourly?.swell_wave_period?.length > 0
-            ? newWeatherData.hourly.swell_wave_period[0]
-            : null),
-        weatherCondition: getWeatherCondition(newWeatherData),
-      };
-      localStorage.setItem(
-        "currentWeatherData",
-        JSON.stringify(currentConditions),
-      );
     },
   });
 
