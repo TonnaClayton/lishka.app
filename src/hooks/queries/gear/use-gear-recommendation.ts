@@ -33,6 +33,27 @@ export const useGetGearRecommendation = (query?: GearRecommendationQuery) => {
         throw new Error("No query provided");
       }
 
+      let queryString = "";
+
+      if (query.temperature) {
+        queryString += `temperature=${query.temperature}`;
+      }
+      if (query.wind_speed) {
+        queryString += `&wind_speed=${query.wind_speed}`;
+      }
+      if (query.wave_height) {
+        queryString += `&wave_height=${query.wave_height}`;
+      }
+      if (query.swell_wave_height) {
+        queryString += `&swell_wave_height=${query.swell_wave_height}`;
+      }
+      if (query.swell_wave_period) {
+        queryString += `&swell_wave_period=${query.swell_wave_period}`;
+      }
+      if (query.weather_condition) {
+        queryString += `&weather_condition=${query.weather_condition}`;
+      }
+
       const data = await api<{
         data: {
           gear_id: string;
@@ -40,12 +61,9 @@ export const useGetGearRecommendation = (query?: GearRecommendationQuery) => {
           reasoning: string;
           suitability_for_conditions: string;
         }[];
-      }>(
-        `gear/recommendation?temperature=${query.temperature}&wind_speed=${query.wind_speed}&wave_height=${query.wave_height}&swell_wave_height=${query.swell_wave_height}&swell_wave_period=${query.swell_wave_period}&weather_condition=${query.weather_condition}`,
-        {
-          method: "GET",
-        },
-      );
+      }>(`gear/recommendation?${queryString}`, {
+        method: "GET",
+      });
 
       return data.data;
     },

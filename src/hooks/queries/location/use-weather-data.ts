@@ -304,16 +304,18 @@ export const useGetWeatherSummary = (location?: {
 
       let query = "";
 
-      if (location.name) {
-        query = `name=${location.name}`;
-      }
+      if (location) {
+        if (location.name) {
+          query = `name=${location.name}`;
+        }
 
-      if (location.latitude) {
-        query = `latitude=${location.latitude}`;
-      }
+        if (location.latitude) {
+          query = `latitude=${location.latitude}`;
+        }
 
-      if (location.longitude) {
-        query = `longitude=${location.longitude}`;
+        if (location.longitude) {
+          query = `longitude=${location.longitude}`;
+        }
       }
 
       if (query) {
@@ -339,6 +341,6 @@ export const useGetWeatherSummary = (location?: {
 
       return data.data;
     },
-    enabled: !!location && !!location.latitude && !!location.longitude,
+    enabled: !!location,
   });
 };

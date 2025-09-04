@@ -393,7 +393,7 @@ const SearchPage: React.FC = () => {
         <div
           className={cn(
             "flex-1 h-full",
-            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-24",
+            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-32",
           )}
         >
           <div
@@ -417,10 +417,13 @@ const SearchPage: React.FC = () => {
                 <Button
                   key={`suggestion-${index}`}
                   variant="outline"
-                  className="text-left h-auto py-3 px-2 dark:bg-gray-800 dark:border-gray-700 rounded-2xl border-0 bg-[#E6EFFF] text-lishka-blue justify-center items-center w-[48%]"
+                  className={cn(
+                    "text-left h-fit py-3 px-2 dark:bg-gray-800 dark:border-gray-700 rounded-2xl border-0 bg-[#E6EFFF] text-lishka-blue justify-center items-center w-[48%] shadow-none whitespace-normal",
+                    isMobile && "px-6 py-6",
+                  )}
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
-                  {suggestion}
+                  <div className="break-words">{suggestion}</div>
                 </Button>
               ))}
             </div>

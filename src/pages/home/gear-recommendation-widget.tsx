@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Package, Loader2, AlertCircle } from "lucide-react";
 import LoadingDots from "@/components/loading-dots";
@@ -43,10 +43,9 @@ const GearRecommendationWidget: React.FC = () => {
   //   recommendations: [],
   //   error: null,
   // });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [isLoading, setIsLoading] = useState(false);
 
   const { data: weatherData } = useGetWeatherSummary();
+  console.log("[WEATHER DATA]", weatherData);
   const {
     data: gearRecommendation,
     refetch,
@@ -175,7 +174,7 @@ const GearRecommendationWidget: React.FC = () => {
     navigate(`/gear-category/${gear.category}?gearId=${gear.id}`);
   };
 
-  if (isLoading) {
+  if (isLoadingGearRecommendation) {
     return <GearRecommendationSkeleton />;
   }
 
@@ -224,7 +223,7 @@ const GearRecommendationWidget: React.FC = () => {
               {isLoadingGearRecommendation == false &&
               isErrorGearRecommendation == false &&
               weatherData
-                ? `Based on current conditions: ${weatherData.condition}, ${weatherData.wave_height.toFixed(1)}m waves, ${Math.round(weatherData.wind_speed)}km/h wind`
+                ? `Based on current conditions: ${weatherData.condition}, ${weatherData.wave_height ? weatherData.wave_height.toFixed(1) : "0"}m waves, ${Math.round(weatherData.wind_speed)}km/h wind`
                 : "Analyzing current conditions for personalized recommendations"}
             </p>
           </div>
