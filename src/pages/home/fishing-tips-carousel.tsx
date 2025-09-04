@@ -22,12 +22,18 @@ import {
   CarouselItem,
   type CarouselApi,
 } from "@/components/ui/carousel";
-import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "@/lib/openai-toggle";
+import {
+  OPENAI_ENABLED,
+  OPENAI_DISABLED_MESSAGE,
+  validateOpenAIConfig,
+} from "@/lib/openai-toggle";
 import { cacheApiResponse, getCachedApiResponse } from "@/lib/api-helpers";
 import LoadingDots from "@/components/loading-dots";
 import { log } from "@/lib/logging";
 import { config } from "@/lib/config";
 import { useUserLocation } from "@/hooks/queries";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 
 interface FishingTip {
   title: string;
@@ -194,14 +200,48 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
     setError(null);
 
     try {
-      if (!OPENAI_ENABLED) {
-        throw new Error(OPENAI_DISABLED_MESSAGE);
+      // Validate OpenAI configuration before making API call
+      if (!validateOpenAIConfig()) {
+        // Use fallback tips when OpenAI is not configured
+        const fallbackTips = [
+          {
+            title: "Early Morning Success",
+            content:
+              "Fish are most active during dawn and dusk when water temperatures are cooler. Plan your fishing trips around these golden hours for better results.",
+            category: "Timing",
+          },
+          {
+            title: "Weather Awareness",
+            content:
+              "Overcast days often provide excellent fishing conditions as fish feel more secure and venture into shallower waters to feed.",
+            category: "Weather",
+          },
+          {
+            title: "Bait Selection",
+            content:
+              "Match your bait to local prey species. Live bait typically outperforms artificial lures, especially when fish are being selective.",
+            category: "Bait",
+          },
+          {
+            title: "Structure Fishing",
+            content:
+              "Focus on underwater structures like reefs, drop-offs, and weed beds where fish congregate for shelter and feeding opportunities.",
+            category: "Location",
+          },
+          {
+            title: "Patience and Persistence",
+            content:
+              "Stay quiet and patient. Fish can be easily spooked by noise and sudden movements, especially in shallow or clear water.",
+            category: "Technique",
+          },
+        ];
+        setTips(fallbackTips);
+        setError("OpenAI API key required for personalized tips");
+        setLoading(false);
+        return;
       }
 
       const apiKey = config.VITE_OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error("OpenAI API key is missing");
-      }
 
       const currentSeason = getCurrentSeason();
       const currentMonth = getCurrentMonth();
@@ -266,11 +306,62 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
             temperature: 0.7,
             max_tokens: 1500,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.status}`);
+        let errorMessage = "Failed to fetch personalized tips";
+
+        if (response.status === 401) {
+          errorMessage = "OpenAI API key is invalid or expired";
+        } else if (response.status === 429) {
+          errorMessage =
+            "OpenAI API rate limit exceeded. Please try again later";
+        } else if (response.status === 403) {
+          errorMessage =
+            "OpenAI API access denied. Check your API key permissions";
+        } else {
+          errorMessage = `OpenAI API error: ${response.status}`;
+        }
+
+        // Use fallback tips instead of throwing error
+        const fallbackTips = [
+          {
+            title: "Early Morning Success",
+            content:
+              "Fish are most active during dawn and dusk when water temperatures are cooler. Plan your fishing trips around these golden hours for better results.",
+            category: "Timing",
+          },
+          {
+            title: "Weather Awareness",
+            content:
+              "Overcast days often provide excellent fishing conditions as fish feel more secure and venture into shallower waters to feed.",
+            category: "Weather",
+          },
+          {
+            title: "Bait Selection",
+            content:
+              "Match your bait to local prey species. Live bait typically outperforms artificial lures, especially when fish are being selective.",
+            category: "Bait",
+          },
+          {
+            title: "Structure Fishing",
+            content:
+              "Focus on underwater structures like reefs, drop-offs, and weed beds where fish congregate for shelter and feeding opportunities.",
+            category: "Location",
+          },
+          {
+            title: "Patience and Persistence",
+            content:
+              "Stay quiet and patient. Fish can be easily spooked by noise and sudden movements, especially in shallow or clear water.",
+            category: "Technique",
+          },
+        ];
+
+        setTips(fallbackTips);
+        setError(errorMessage);
+        setLoading(false);
+        return;
       }
 
       const data = await response.json();
@@ -342,8 +433,46 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
       cacheApiResponse(cacheKey, fishingTips, 6 * 60 * 60 * 1000);
     } catch (err) {
       console.error("Error fetching fishing tips:", err);
+
+      // Use fallback tips on any error
+      const fallbackTips = [
+        {
+          title: "Early Morning Success",
+          content:
+            "Fish are most active during dawn and dusk when water temperatures are cooler. Plan your fishing trips around these golden hours for better results.",
+          category: "Timing",
+        },
+        {
+          title: "Weather Awareness",
+          content:
+            "Overcast days often provide excellent fishing conditions as fish feel more secure and venture into shallower waters to feed.",
+          category: "Weather",
+        },
+        {
+          title: "Bait Selection",
+          content:
+            "Match your bait to local prey species. Live bait typically outperforms artificial lures, especially when fish are being selective.",
+          category: "Bait",
+        },
+        {
+          title: "Structure Fishing",
+          content:
+            "Focus on underwater structures like reefs, drop-offs, and weed beds where fish congregate for shelter and feeding opportunities.",
+          category: "Location",
+        },
+        {
+          title: "Patience and Persistence",
+          content:
+            "Stay quiet and patient. Fish can be easily spooked by noise and sudden movements, especially in shallow or clear water.",
+          category: "Technique",
+        },
+      ];
+
+      setTips(fallbackTips);
       setError(
-        err instanceof Error ? err.message : "Failed to fetch fishing tips"
+        err instanceof Error
+          ? err.message
+          : "Failed to fetch personalized tips",
       );
     } finally {
       setLoading(false);
@@ -453,14 +582,39 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
     );
   }
 
-  if (error || tips.length === 0) {
+  // Only show error card if there are no tips at all
+  if (tips.length === 0) {
+    const isApiKeyError =
+      error?.includes("API key") ||
+      error?.includes("401") ||
+      error?.includes("invalid") ||
+      error?.includes("expired");
+
     return (
       <Card className="p-6 border border-border bg-background shadow-sm">
-        <div className="flex items-center justify-center py-4">
-          <Fish className="h-5 w-5 text-destructive mr-2" />
-          <p className="text-sm text-destructive">
-            {error || "Unable to load fishing tips"}
-          </p>
+        <div className="space-y-4">
+          <Alert variant={isApiKeyError ? "warning" : "destructive"}>
+            <Fish className="h-4 w-4" />
+            <AlertDescription className="text-sm">
+              {error || "Unable to load fishing tips"}
+            </AlertDescription>
+          </Alert>
+
+          {isApiKeyError && (
+            <div className="text-center">
+              <p className="text-sm text-muted-foreground mb-3">
+                To get personalized fishing tips, configure your OpenAI API key
+                in project settings.
+              </p>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => window.open("https://tempo.build", "_blank")}
+              >
+                Open Project Settings
+              </Button>
+            </div>
+          )}
         </div>
       </Card>
     );
@@ -548,7 +702,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = ({
                   <CloudSnow className="w-8 h-8 text-blue-300" />
                 )}
                 {!["Clear", "Partly cloudy", "Rainy", "Snowy"].includes(
-                  weatherSummary.condition
+                  weatherSummary.condition,
                 ) && <Cloud className="w-8 h-8 text-blue-400" />}
                 <span className="text-foreground text-2xl font-normal">
                   {weatherSummary.temperature !== null

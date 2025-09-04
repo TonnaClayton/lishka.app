@@ -106,7 +106,7 @@ const SearchPage: React.FC = () => {
   const processQuery = async (
     queryText: string,
     userMessage: Message,
-    imageFile?: File
+    imageFile?: File,
   ) => {
     try {
       // Check if OpenAI is disabled
@@ -119,7 +119,7 @@ const SearchPage: React.FC = () => {
       const apiKey = config.VITE_OPENAI_API_KEY;
       if (!apiKey) {
         throw new Error(
-          "OpenAI API key is missing. Please add it in project settings."
+          "OpenAI API key is missing. Please add it in project settings.",
         );
       }
 
@@ -198,7 +198,7 @@ const SearchPage: React.FC = () => {
             ],
             max_tokens: imageFile ? 1000 : undefined,
           }),
-        }
+        },
       );
 
       if (!response.ok) {
@@ -213,7 +213,7 @@ const SearchPage: React.FC = () => {
       // Extract fish data if present
       let fishData: Fish[] = [];
       const fishDataMatch = assistantResponse.match(
-        /\[FISH_DATA\](.+?)\[\/?FISH_DATA\]/s
+        /\[FISH_DATA\](.+?)\[\/?FISH_DATA\]/s,
       );
 
       let cleanedResponse = assistantResponse;
@@ -238,7 +238,7 @@ const SearchPage: React.FC = () => {
           // Remove the fish data section from the displayed response
           cleanedResponse = assistantResponse.replace(
             /\[FISH_DATA\].+?\[\/?FISH_DATA\]/s,
-            ""
+            "",
           );
         } catch (err) {
           console.error("Error parsing fish data:", err);
@@ -299,7 +299,7 @@ const SearchPage: React.FC = () => {
       await processQuery(
         currentQuery || "What can you tell me about this image?",
         userMessage,
-        currentImageFile || undefined
+        currentImageFile || undefined,
       );
     } catch (err) {
       console.error("Error in handleSubmit:", err);
@@ -389,7 +389,7 @@ const SearchPage: React.FC = () => {
       setFollowUpQuestions(
         Array.isArray(questions)
           ? questions.filter((q) => typeof q === "string" && q.length > 0)
-          : []
+          : [],
       );
     } catch (err) {
       setFollowUpQuestions([]);
@@ -458,13 +458,13 @@ const SearchPage: React.FC = () => {
         <div
           className={cn(
             "flex-1 h-full",
-            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-16"
+            isMobile && deviceSize.height < 850 && "overflow-y-auto pt-16",
           )}
         >
           <div
             className={cn(
               "flex flex-col items-center justify-center px-4 max-w-2xl mx-auto text-center space-y-6",
-              !(isMobile && deviceSize.height < 850) && "h-full"
+              !(isMobile && deviceSize.height < 850) && "h-full",
             )}
           >
             <div className="rounded-full bg-blue-100 p-3 dark:bg-blue-900">
@@ -504,7 +504,7 @@ const SearchPage: React.FC = () => {
                   key={message.id}
                   className={cn(
                     "flex",
-                    message.role === "user" ? "justify-end" : "justify-start"
+                    message.role === "user" ? "justify-end" : "justify-start",
                   )}
                 >
                   <div
@@ -512,7 +512,7 @@ const SearchPage: React.FC = () => {
                       "rounded-lg pt-3 w-fit max-w-[85%]",
                       message.role === "user"
                         ? "bg-blue-500 text-white"
-                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100",
                     )}
                   >
                     {message.image && (
@@ -596,7 +596,7 @@ const SearchPage: React.FC = () => {
                                 onClick={() => {
                                   navigate(
                                     `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
-                                    { state: { fish } }
+                                    { state: { fish } },
                                   );
                                 }}
                               />
