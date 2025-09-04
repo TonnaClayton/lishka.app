@@ -1,11 +1,15 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
 import { log } from "@/lib/logging";
 import { ROUTES } from "@/lib/routing";
 
 export function AuthCallback() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
+  const code = searchParams.get("code");
+  const state = searchParams.get("state");
 
   useEffect(() => {
     const handleAuthCallback = async () => {
@@ -13,7 +17,8 @@ export function AuthCallback() {
         log("[AuthCallback] Starting OAuth callback handling");
 
         // Get session from URL fragments
-        const { data, error } = await supabase.auth.getSession();
+        const { data, error } =
+          await supabase.auth.exchangeCodeForSession(code);
 
         log("[AuthCallback] Session result:", {
           hasSession: !!data?.session,
@@ -32,9 +37,9 @@ export function AuthCallback() {
 
         if (data?.session) {
           log(
-            "[AuthCallback] OAuth authentication successful, redirecting to dashboard",
+            "[AuthCallback] OAuth authentication successful, redirecting to home",
           );
-          navigate(ROUTES.DASHBOARD, { replace: true });
+          navigate(ROUTES.HOME, { replace: true });
         } else {
           log("[AuthCallback] No session found, redirecting to login");
           navigate(ROUTES.LOGIN, { replace: true });
@@ -50,8 +55,15 @@ export function AuthCallback() {
       }
     };
 
-    handleAuthCallback();
-  }, [navigate]);
+    if (code && state) {
+      handleAuthCallback();
+    } else {
+      navigate(ROUTES.LOGIN, {
+        replace: true,
+        state: { error: "Authentication failed. Please try again." },
+      });
+    }
+  }, [navigate, code, state]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">

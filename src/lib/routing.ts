@@ -8,7 +8,6 @@ export const ROUTES = {
   AUTH_CONFIRMATION: "/auth/confirm",
   AUTH_CALLBACK: "/auth/callback",
   HOME: "/",
-  DASHBOARD: "/",
   FISH: "/fish",
   FISH_DETAIL: "/fish/:fishName",
   FISH_DETAIL_WITH_ID: "/fish/*",

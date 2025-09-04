@@ -11,8 +11,9 @@ export default function LoginPage() {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const handleGoogleSignIn = async () => {
-    setIsGoogleLoading(true);
     try {
+      if (isGoogleLoading) return;
+      setIsGoogleLoading(true);
       const { error } = await signInWithGoogle();
       if (error) {
         console.error("Google sign-in error:", error);
@@ -129,6 +130,7 @@ export default function LoginPage() {
                 {isGoogleLoading ? "Connecting..." : "Continue with Google"}
               </button>
               <button
+                disabled={isGoogleLoading}
                 className={
                   "flex-1 px-6 rounded-full font-medium transition-colors size-full text-sm py-4 h-[48px] border bg-[#ffffff] border-[#d8dadc] text-[#243041] flex justify-center items-center"
                 }
@@ -150,6 +152,7 @@ export default function LoginPage() {
               </button>
               <Link
                 to={"/signup"}
+                aria-disabled={isGoogleLoading}
                 className={
                   "flex-1 px-6 rounded-full font-medium transition-colors size-full text-sm py-4 h-[48px] border bg-[#ffffff] border-[#d8dadc] text-[#243041] flex justify-center items-center"
                 }
