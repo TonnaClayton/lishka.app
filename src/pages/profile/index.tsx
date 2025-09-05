@@ -259,12 +259,6 @@ const ProfilePage: React.FC = () => {
     },
   });
 
-  const galleryPhotos = useMemo(() => {
-    if (!profile?.gallery_photos) return [];
-
-    return profile?.gallery_photos.map(toImageMetadataItem);
-  }, [profile, uploadPhotoStream.isStreaming, uploadPhotoStreamData]);
-
   const uploadGearItemStream = useStream({
     path: "user/gear-items/stream",
     onData: (chunk) => {
@@ -286,6 +280,12 @@ const ProfilePage: React.FC = () => {
       }, 3000);
     },
   });
+
+  const galleryPhotos = useMemo(() => {
+    if (!profile?.gallery_photos) return [];
+
+    return profile?.gallery_photos.map(toImageMetadataItem);
+  }, [profile, uploadPhotoStream.isStreaming, uploadPhotoStreamData]);
 
   // React Hook Form setup
   const form = useForm<ProfileFormData>({

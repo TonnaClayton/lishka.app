@@ -673,9 +673,8 @@ const SearchPage: React.FC = () => {
       </div>
 
       {/* Bottom Navigation - Fixed at bottom on mobile, hidden on desktop */}
-      <div className="fixed bottom-0 left-0 right-0 z-20 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 md:hidden">
-        <BottomNav />
-      </div>
+
+      <BottomNav />
     </div>
   );
 };

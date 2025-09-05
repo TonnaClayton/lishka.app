@@ -4,8 +4,10 @@ import { cn } from "@/lib/utils";
 
 export default function GearItemUploadBar({
   uploadGearItemStreamData,
+  className,
 }: {
   uploadGearItemStreamData: UploadPhotoStreamData | null;
+  className?: string;
 }) {
   if (uploadGearItemStreamData == null) {
     return null;
@@ -39,7 +41,12 @@ export default function GearItemUploadBar({
   };
 
   return (
-    <div className="size-full bg-lishka-blue py-3 px-4 flex flex-col gap-y-2 h-fit z-20 sticky top-[69px]">
+    <div
+      className={cn(
+        "size-full bg-lishka-blue py-3 px-4 flex flex-col gap-y-2 h-fit z-20 sticky top-[69px]",
+        className,
+      )}
+    >
       <div
         className={cn(
           "h-[26px] w-full flex items-center justify-between",
