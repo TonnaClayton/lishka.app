@@ -217,6 +217,38 @@ export const useUploadPhoto = () => {
   });
 };
 
+export const useClassifyPhoto = () => {
+  return useMutation({
+    mutationFn: async (file: File) => {
+      log("[useClassifyPhoto] Starting photo upload:", {
+        name: file.name,
+        size: file.size,
+        type: file.type,
+      });
+
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const data = await api<{
+        data: {
+          type: string;
+          confidence?: string | null;
+          reasoning?: string | null;
+        };
+      }>(
+        "image/classify",
+        {
+          method: "POST",
+          body: formData,
+        },
+        true,
+      );
+
+      return data.data;
+    },
+  });
+};
+
 // Photo management hooks
 export const useDeletePhoto = () => {
   const queryClient = useQueryClient();

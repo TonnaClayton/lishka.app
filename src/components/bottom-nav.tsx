@@ -13,56 +13,76 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { classifyImage } from "@/lib/image-classification-service";
-import { uploadGearImage } from "@/lib/gear-upload-service";
 import { log } from "@/lib/logging";
-import { config } from "@/lib/config";
 import { ROUTES } from "@/lib/routing";
 import { cn } from "@/lib/utils";
+import { useStream } from "@/hooks/use-stream";
+import PhotoUploadBar, {
+  UploadPhotoStreamData,
+} from "@/pages/profile/photo-upload-bar";
+import { useClassifyPhoto } from "@/hooks/queries";
+import GearItemUploadBar from "@/pages/profile/gear-item-upload-bar";
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-  const [uploadingPhoto, setUploadingPhoto] = useState(false);
   const [classifyingImage, setClassifyingImage] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
+  const { refreshProfile } = useAuth();
 
-  // Map gear type to category - helper function
-  const mapGearTypeToCategory = (gearType: string): string => {
-    const type = gearType.toLowerCase();
-    if (
-      type.includes("rod") ||
-      type.includes("reel") ||
-      type.includes("combo")
-    ) {
-      return "rods-reels";
-    } else if (
-      type.includes("lure") ||
-      type.includes("jig") ||
-      type.includes("spoon")
-    ) {
-      return "lures-jigs";
-    } else if (type.includes("bait") || type.includes("chum")) {
-      return "bait-chum";
-    } else if (
-      type.includes("electronic") ||
-      type.includes("finder") ||
-      type.includes("gps")
-    ) {
-      return "electronics";
-    } else if (
-      type.includes("accessory") ||
-      type.includes("hook") ||
-      type.includes("sinker") ||
-      type.includes("swivel")
-    ) {
-      return "accessories";
-    } else {
-      return "other";
-    }
-  };
+  const classifyPhotoMutation = useClassifyPhoto();
+
+  const [uploadPhotoStreamData, setUploadPhotoStreamData] =
+    useState<UploadPhotoStreamData | null>(null);
+
+  const [uploadGearItemStreamData, setUploadGearItemStreamData] =
+    useState<UploadPhotoStreamData | null>(null);
+
+  const uploadPhotoStream = useStream({
+    path: "user/gallery-photos/stream",
+    onData: (chunk) => {
+      console.log("[STREAM] Received chunk:", chunk);
+
+      const data = JSON.parse(chunk);
+      setUploadPhotoStreamData(data);
+    },
+    onError: (error) => {
+      console.error("[STREAM] Error uploading photo:", error);
+    },
+    onComplete: () => {
+      console.log("[STREAM] Photo uploaded successfully!");
+
+      refreshProfile();
+
+      setTimeout(() => {
+        setUploadPhotoStreamData(null);
+      }, 3000);
+    },
+  });
+
+  const uploadGearItemStream = useStream({
+    path: "user/gear-items/stream",
+    onData: (chunk) => {
+      console.log("[STREAM] Received chunk:", chunk);
+
+      const data = JSON.parse(chunk);
+      setUploadGearItemStreamData(data);
+    },
+    onError: (error) => {
+      console.error("[STREAM] Error uploading photo:", error);
+    },
+    onComplete: () => {
+      console.log("[STREAM] Photo uploaded successfully!");
+
+      refreshProfile();
+
+      setTimeout(() => {
+        setUploadGearItemStreamData(null);
+      }, 3000);
+    },
+  });
 
   useEffect(() => {
     const handleResize = () => {
@@ -79,373 +99,45 @@ const BottomNav: React.FC = () => {
   };
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (uploadPhotoStream.isStreaming || uploadGearItemStream.isStreaming) {
+      return;
+    }
+
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 15MB)
-    if (file.size > 15 * 1024 * 1024) {
-      alert(
-        `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
-      );
-      e.target.value = "";
-      return;
-    }
-
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      alert("Please select an image file");
-      e.target.value = "";
-      return;
-    }
-
-    // Show progress notification for large files
-    if (file.size > 5 * 1024 * 1024) {
-      log(
-        `🔍 [BOTTOMNAV] Large file detected (${(file.size / (1024 * 1024)).toFixed(1)}MB) - processing may take longer`,
-      );
-    }
-
-    log(`🔍 [BOTTOMNAV SMART UPLOAD] Photo capture started from bottomnav:`, {
-      fileName: file.name,
-      fileSize: file.size,
-      fileType: file.type,
-      fileSizeInMB: (file.size / (1024 * 1024)).toFixed(2),
-      lastModified: new Date(file.lastModified).toISOString(),
-      source: "bottomnav",
-      isFromCamera: e.target === cameraInputRef.current,
-      isFromGallery: e.target === galleryInputRef.current,
-    });
-
-    setUploadingPhoto(true);
-    setClassifyingImage(true);
-
     try {
-      // Step 1: Classify the image
-      log("🤖 [BOTTOMNAV] Classifying image...");
-      const classification = await classifyImage(file);
+      setClassifyingImage(true);
+      const classification = await classifyPhotoMutation.mutateAsync(file);
 
-      log("🎯 [BOTTOMNAV] Classification result:", classification);
       setClassifyingImage(false);
 
-      // Step 2: Route based on classification
-      if (classification.type === "fish") {
-        log("🐟 [BOTTOMNAV] Detected fish - using photo upload service");
+      if (classification.type === "gear") {
+        const formData = new FormData();
+        formData.append("file", file);
 
-        // Register callbacks for UI feedback
-        const callbackId = `bottomnav-fish-${Date.now()}`;
-        const { photoUploadService } = await import(
-          "@/lib/photo-upload-service"
-        );
-
-        photoUploadService.registerCallbacks(callbackId, {
-          onStart: () => {
-            log("🔍 [BOTTOMNAV] Fish upload started");
+        uploadGearItemStream.startStream({
+          options: {
+            method: "POST",
+            body: formData,
           },
-          onProgress: (message: string) => {
-            log(`🔍 [BOTTOMNAV] Fish upload progress: ${message}`);
-          },
-          onSuccess: (result) => {
-            log("🔍 [BOTTOMNAV] Fish upload successful:", result);
-
-            // Trigger a custom event to notify other components about the new photo
-            log("🔍 [BOTTOMNAV] Dispatching photoUploaded event:", {
-              metadata: result.metadata,
-              photoUrl: result.photoUrl || result.url,
-              source: "bottomnav",
-              type: "fish",
-              hasFishInfo: !!result.metadata?.fishInfo,
-              fishName: result.metadata?.fishInfo?.name,
-            });
-
-            window.dispatchEvent(
-              new CustomEvent("photoUploaded", {
-                detail: {
-                  photoUrl: result.photoUrl || result.url,
-                  metadata: result.metadata,
-                  source: "bottomnav",
-                  type: "fish",
-                },
-              }),
-            );
-
-            // Show success message with fish info if available
-            let successMsg = "Fish photo uploaded!";
-            const fishInfo = result.metadata?.fishInfo;
-            if (
-              fishInfo &&
-              (fishInfo.name !== "Unknown" ||
-                fishInfo.estimatedSize !== "Unknown" ||
-                fishInfo.estimatedWeight !== "Unknown")
-            ) {
-              if (fishInfo.name !== "Unknown") {
-                successMsg += ` Identified: ${fishInfo.name}`;
-                if (fishInfo.confidence > 0) {
-                  successMsg += ` (${Math.round(fishInfo.confidence * 100)}% confident)`;
-                }
-              } else {
-                successMsg += " Fish data detected!";
-              }
-            }
-
-            alert(successMsg);
-          },
-          onError: (error: string) => {
-            console.error("🔍 [BOTTOMNAV] Fish upload error:", error);
-            alert(`Fish upload error: ${error}`);
-          },
-          onComplete: () => {
-            log("🔍 [BOTTOMNAV] Fish upload process completed");
-            setUploadingPhoto(false);
-            photoUploadService.unregisterCallbacks(callbackId);
-          },
+          isFormData: true,
         });
-
-        // Use the unified PhotoUploadService for fish
-        await photoUploadService.uploadPhoto(file, "bottomnav");
-      } else if (classification.type === "gear") {
-        log("🎣 [BOTTOMNAV] Detected gear - using gear upload service");
-
-        // Use gear upload service
-        const gearResult = await uploadGearImage(file);
-
-        if (gearResult.success && gearResult.metadata) {
-          log("✅ [BOTTOMNAV] Gear upload successful:", gearResult);
-
-          try {
-            // Get the AuthContext to access updateProfile function
-            //const authContextModule = await import("@/contexts/auth-context");
-
-            // Get current user from localStorage
-            const currentUser = JSON.parse(
-              localStorage.getItem(
-                "sb-" +
-                  config.VITE_SUPABASE_URL?.split("//")[1]?.split(".")[0] +
-                  "-auth-token",
-              ) || "{}",
-            );
-
-            if (currentUser?.user) {
-              log("🔍 [BOTTOMNAV] Creating gear item from metadata:", {
-                gearName: gearResult.metadata.gearInfo?.name,
-                gearType: gearResult.metadata.gearInfo?.type,
-                confidence: gearResult.metadata.gearInfo?.confidence,
-              });
-
-              // Create gear item from metadata
-              const gearItem = {
-                id: `gear_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-                name: gearResult.metadata.gearInfo?.name || "Unknown Gear",
-                category: mapGearTypeToCategory(
-                  gearResult.metadata.gearInfo?.type || "other",
-                ),
-                description: gearResult.metadata.gearInfo?.type || "",
-                brand: gearResult.metadata.gearInfo?.brand || "",
-                model: gearResult.metadata.gearInfo?.model || "",
-                imageUrl: gearResult.metadata.url,
-                timestamp: gearResult.metadata.timestamp,
-                userConfirmed: false,
-                gearType: gearResult.metadata.gearInfo?.type || "unknown",
-                aiConfidence: gearResult.metadata.gearInfo?.confidence || 0,
-                // Enhanced fields
-                size: gearResult.metadata.gearInfo?.size || "",
-                weight: gearResult.metadata.gearInfo?.weight || "",
-                targetFish: gearResult.metadata.gearInfo?.targetFish || "",
-                fishingTechnique:
-                  gearResult.metadata.gearInfo?.fishingTechnique || "",
-                weatherConditions:
-                  gearResult.metadata.gearInfo?.weatherConditions || "",
-                waterConditions:
-                  gearResult.metadata.gearInfo?.waterConditions || "",
-                seasonalUsage:
-                  gearResult.metadata.gearInfo?.seasonalUsage || "",
-                colorPattern: gearResult.metadata.gearInfo?.colorPattern || "",
-                actionType: gearResult.metadata.gearInfo?.actionType || "",
-                depthRange: gearResult.metadata.gearInfo?.depthRange || "",
-                versatility: gearResult.metadata.gearInfo?.versatility || "",
-                compatibleGear:
-                  gearResult.metadata.gearInfo?.compatibleGear || "",
-                // Debug information
-                rawJsonResponse:
-                  gearResult.metadata.gearInfo?.rawJsonResponse || "",
-                openaiPrompt: gearResult.metadata.gearInfo?.openaiPrompt || "",
-              };
-
-              log("🔍 [BOTTOMNAV] Created gear item:", {
-                id: gearItem.id,
-                name: gearItem.name,
-                category: gearItem.category,
-                hasImageUrl: !!gearItem.imageUrl,
-              });
-
-              // Get current profile from Supabase and update it
-              const { supabase } = await import("@/lib/supabase");
-              const { data: profile, error: profileError } = await supabase
-                .from("profiles")
-                .select("gear_items")
-                .eq("id", currentUser.user.id)
-                .single();
-
-              if (!profileError) {
-                const currentGear = profile?.gear_items || [];
-                const updatedGear = [
-                  gearItem,
-                  ...(Array.isArray(currentGear) ? currentGear : []),
-                ];
-
-                log("🔍 [BOTTOMNAV] Updating profile with gear:", {
-                  currentGearCount: Array.isArray(currentGear)
-                    ? currentGear.length
-                    : 0,
-                  newGearCount: Array.isArray(updatedGear)
-                    ? updatedGear.length
-                    : 0,
-                  newGearId: gearItem.id,
-                });
-
-                // Update profile with new gear using direct Supabase call
-                const { data: updatedProfile, error: updateError } =
-                  await supabase
-                    .from("profiles")
-                    .update({ gear_items: updatedGear })
-                    .eq("id", currentUser.user.id)
-                    .select()
-                    .single();
-
-                if (!updateError && updatedProfile) {
-                  log("✅ [BOTTOMNAV] Gear saved to profile successfully:", {
-                    profileId: updatedProfile.id,
-                    gearCount: Array.isArray(updatedProfile.gear_items)
-                      ? updatedProfile.gear_items.length
-                      : 0,
-                  });
-
-                  // Force refresh the AuthContext profile to show the new gear immediately
-                  try {
-                    // Dispatch a custom event to trigger profile refresh
-                    window.dispatchEvent(
-                      new CustomEvent("profileUpdated", {
-                        detail: {
-                          updatedProfile,
-                          source: "bottomnav-gear-upload",
-                          newGearId: gearItem.id,
-                        },
-                      }),
-                    );
-
-                    log("🔍 [BOTTOMNAV] Dispatched profileUpdated event");
-                  } catch (eventError) {
-                    console.warn(
-                      "⚠️ [BOTTOMNAV] Could not dispatch profile update event:",
-                      eventError,
-                    );
-                  }
-                } else {
-                  console.error(
-                    "❌ [BOTTOMNAV] Error saving gear to profile:",
-                    updateError,
-                  );
-                }
-              } else {
-                console.error(
-                  "❌ [BOTTOMNAV] Error fetching profile:",
-                  profileError,
-                );
-              }
-            }
-          } catch (profileUpdateError) {
-            console.error(
-              "❌ [BOTTOMNAV] Error updating profile with gear:",
-              profileUpdateError,
-            );
-          }
-
-          // Trigger a custom event to notify other components about the new gear
-          window.dispatchEvent(
-            new CustomEvent("gearUploaded", {
-              detail: {
-                metadata: gearResult.metadata,
-                source: "bottomnav",
-                type: "gear",
-              },
-            }),
-          );
-
-          // Show success message with gear info if available
-          let successMsg = "Gear photo uploaded!";
-          const gearInfo = gearResult.metadata?.gearInfo;
-          if (gearInfo && gearInfo.name !== "Unknown Gear") {
-            successMsg += ` Identified: ${gearInfo.name}`;
-            if (gearInfo.confidence > 0) {
-              successMsg += ` (${Math.round(gearInfo.confidence * 100)}% confident)`;
-            }
-          }
-
-          alert(successMsg);
-        } else {
-          console.error("❌ [BOTTOMNAV] Gear upload failed:", gearResult.error);
-          alert(`Gear upload error: ${gearResult.error}`);
-        }
-
-        setUploadingPhoto(false);
       } else {
-        log("❓ [BOTTOMNAV] Unknown content - using default photo upload");
+        const formData = new FormData();
+        formData.append("file", file);
 
-        // Fallback to regular photo upload for unknown content
-        const callbackId = `bottomnav-unknown-${Date.now()}`;
-        const { photoUploadService } = await import(
-          "@/lib/photo-upload-service"
-        );
-
-        photoUploadService.registerCallbacks(callbackId, {
-          onStart: () => {
-            log("🔍 [BOTTOMNAV] Unknown upload started");
+        uploadPhotoStream.startStream({
+          options: {
+            method: "POST",
+            body: formData,
           },
-          onProgress: (message: string) => {
-            log(`🔍 [BOTTOMNAV] Unknown upload progress: ${message}`);
-          },
-          onSuccess: (result) => {
-            log("🔍 [BOTTOMNAV] Unknown upload successful:", result);
-
-            // Trigger a custom event
-            log("🔍 [BOTTOMNAV] Dispatching photoUploaded event (unknown):", {
-              metadata: result.metadata,
-              photoUrl: result.photoUrl || result.url,
-              source: "bottomnav",
-              type: "unknown",
-              hasFishInfo: !!result.metadata?.fishInfo,
-              fishName: result.metadata?.fishInfo?.name,
-            });
-
-            window.dispatchEvent(
-              new CustomEvent("photoUploaded", {
-                detail: {
-                  photoUrl: result.photoUrl || result.url,
-                  metadata: result.metadata,
-                  source: "bottomnav",
-                  type: "unknown",
-                },
-              }),
-            );
-
-            alert("Photo uploaded successfully!");
-          },
-          onError: (error: string) => {
-            console.error("🔍 [BOTTOMNAV] Unknown upload error:", error);
-            alert(`Upload error: ${error}`);
-          },
-          onComplete: () => {
-            log("🔍 [BOTTOMNAV] Unknown upload process completed");
-            setUploadingPhoto(false);
-            photoUploadService.unregisterCallbacks(callbackId);
-          },
+          isFormData: true,
         });
-
-        await photoUploadService.uploadPhoto(file, "bottomnav");
       }
     } catch (error: any) {
       console.error("❌ [BOTTOMNAV] Smart upload failed:", error);
       alert(error?.message || "Failed to process photo. Please try again.");
-      setUploadingPhoto(false);
       setClassifyingImage(false);
     }
 
@@ -455,6 +147,14 @@ const BottomNav: React.FC = () => {
 
   return (
     <>
+      <PhotoUploadBar
+        uploadPhotoStreamData={uploadPhotoStreamData}
+        className="z-[60] top-[58px] absolute md:hidden"
+      />
+      <GearItemUploadBar
+        className="z-[60] top-[58px] absolute md:hidden"
+        uploadGearItemStreamData={uploadGearItemStreamData}
+      />
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 z-50 w-full shadow-md">
         <div className="flex justify-around items-center h-16">
           <Link
@@ -482,7 +182,11 @@ const BottomNav: React.FC = () => {
           {/* Camera button */}
           <button
             onClick={handleCameraClick}
-            disabled={uploadingPhoto || classifyingImage}
+            disabled={
+              uploadPhotoStream.isStreaming ||
+              uploadGearItemStream.isStreaming ||
+              classifyingImage
+            }
             className="flex items-center text-[#191B1F] hover:text-lishka-blue disabled:opacity-50 relative"
           >
             {classifyingImage ? (
@@ -527,7 +231,11 @@ const BottomNav: React.FC = () => {
         capture="environment"
         onChange={handlePhotoChange}
         className="hidden"
-        disabled={uploadingPhoto || classifyingImage}
+        disabled={
+          uploadPhotoStream.isStreaming ||
+          uploadGearItemStream.isStreaming ||
+          classifyingImage
+        }
       />
       <input
         ref={galleryInputRef}
@@ -535,7 +243,11 @@ const BottomNav: React.FC = () => {
         accept="image/*"
         onChange={handlePhotoChange}
         className="hidden"
-        disabled={uploadingPhoto || classifyingImage}
+        disabled={
+          uploadPhotoStream.isStreaming ||
+          uploadGearItemStream.isStreaming ||
+          classifyingImage
+        }
       />
     </>
   );

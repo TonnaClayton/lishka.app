@@ -174,7 +174,7 @@ const GearRecommendationWidget: React.FC = () => {
     navigate(`/gear-category/${gear.category}?gearId=${gear.id}`);
   };
 
-  if (isLoadingGearRecommendation) {
+  if (isLoadingGearRecommendation || isRefetchingGearRecommendation) {
     return <GearRecommendationSkeleton />;
   }
 
