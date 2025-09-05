@@ -419,7 +419,7 @@ const SearchPage: React.FC = () => {
                   variant="outline"
                   className={cn(
                     "text-left h-fit py-3 px-2 dark:bg-gray-800 dark:border-gray-700 rounded-2xl border-0 bg-[#E6EFFF] text-lishka-blue justify-center items-center w-[48%] shadow-none whitespace-normal",
-                    isMobile && "px-6 py-6",
+                    isMobile && "px-6 py-6 h-auto",
                   )}
                   onClick={() => handleSuggestionClick(suggestion)}
                 >
