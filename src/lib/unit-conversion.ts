@@ -1,18 +1,3 @@
-/**
- * Unit conversion utilities for the app
- */
-
-// Check if imperial units are enabled
-export const useImperialUnits = (): boolean => {
-  const preference = localStorage.getItem("useImperialUnits");
-  return preference === "true";
-};
-
-export const getImperialUnits = (): boolean => {
-  const preference = localStorage.getItem("useImperialUnits");
-  return preference === "true";
-};
-
 // Convert cm to inches
 export const cmToInches = (cm: number): number => {
   return cm * 0.393701;
@@ -34,11 +19,13 @@ export const poundsToGrams = (pounds: number): number => {
 };
 
 // Format length with appropriate unit
-export const formatLength = (lengthCm: number | null | undefined): string => {
+export const formatLength = (
+  useImperialUnits: boolean,
+  lengthCm: number | null | undefined,
+): string => {
   if (lengthCm === null || lengthCm === undefined) return "Unknown";
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  if (useImperialUnits()) {
+  if (useImperialUnits) {
     const inches = cmToInches(lengthCm);
     if (inches >= 12) {
       const feet = Math.floor(inches / 12);
@@ -54,12 +41,12 @@ export const formatLength = (lengthCm: number | null | undefined): string => {
 
 // Format weight with appropriate unit
 export const formatWeight = (
+  useImperialUnits: boolean,
   weightGrams: number | null | undefined,
 ): string => {
   if (weightGrams === null || weightGrams === undefined) return "Unknown";
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  if (useImperialUnits()) {
+  if (useImperialUnits) {
     const pounds = gramsToPounds(weightGrams);
     if (pounds >= 1) {
       return `${pounds.toFixed(2)} lbs` + ` (${weightGrams.toFixed(0)} g)`;
@@ -77,11 +64,13 @@ export const formatWeight = (
 };
 
 // Format temperature with appropriate unit
-export const formatTemperature = (tempC: number | null | undefined): string => {
+export const formatTemperature = (
+  useImperialUnits: boolean,
+  tempC: number | null | undefined,
+): string => {
   if (tempC === null || tempC === undefined) return "Unknown";
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  if (useImperialUnits()) {
+  if (useImperialUnits) {
     const tempF = (tempC * 9) / 5 + 32;
     return `${Math.round(tempF)}°F` + ` (${Math.round(tempC)}°C)`;
   } else {
@@ -91,12 +80,12 @@ export const formatTemperature = (tempC: number | null | undefined): string => {
 
 // Format distance with appropriate unit
 export const formatDistance = (
+  useImperialUnits: boolean,
   distanceKm: number | null | undefined,
 ): string => {
   if (distanceKm === null || distanceKm === undefined) return "Unknown";
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  if (useImperialUnits()) {
+  if (useImperialUnits) {
     const miles = distanceKm * 0.621371;
     return `${miles.toFixed(1)} mi` + ` (${distanceKm.toFixed(1)} km)`;
   } else {
@@ -105,11 +94,13 @@ export const formatDistance = (
 };
 
 // Format speed with appropriate unit
-export const formatSpeed = (speedKmh: number | null | undefined): string => {
+export const formatSpeed = (
+  useImperialUnits: boolean,
+  speedKmh: number | null | undefined,
+): string => {
   if (speedKmh === null || speedKmh === undefined) return "Unknown";
 
-  // eslint-disable-next-line react-hooks/rules-of-hooks
-  if (useImperialUnits()) {
+  if (useImperialUnits) {
     const mph = speedKmh * 0.621371;
     return `${Math.round(mph)} mph` + ` (${Math.round(speedKmh)} km/h)`;
   } else {

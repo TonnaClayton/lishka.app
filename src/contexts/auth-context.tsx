@@ -161,6 +161,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           username: null,
           gallery_photos: null,
           gear_items: null,
+          use_imperial_units: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         };
