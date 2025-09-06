@@ -1,5 +1,4 @@
 import React, { useMemo, useState } from "react";
-import { MapPin } from "lucide-react";
 import WeatherWidget from "@/components/weather-widget-pro";
 import BottomNav from "@/components/bottom-nav";
 import { log } from "@/lib/logging";
@@ -8,6 +7,7 @@ import { useUserLocation } from "@/hooks/queries";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import { Button } from "@/components/ui/button";
 import LocationModal from "@/components/location-modal";
+import LocationBtn from "@/components/location-btn";
 
 interface LocationData {
   latitude: number;
@@ -91,8 +91,14 @@ const WeatherPage: React.FC = () => {
               className="flex items-center gap-1 text-lishka-blue dark:text-lishka-blue hover:text-lishka-blue dark:hover:text-lishka-blue p-1 h-auto"
               onClick={() => setIsLocationModalOpen(true)}
             >
-              <span className="text-sm truncate font-semibold">{location}</span>
-              <MapPin className="h-4 w-4" />
+              <LocationBtn
+                useLocationContext={true}
+                location={{
+                  name: location,
+                  latitude: 0,
+                  longitude: 0,
+                }}
+              />
             </Button>
           </div>
         </div>

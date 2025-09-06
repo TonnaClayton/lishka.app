@@ -8,7 +8,6 @@ import { Textarea } from "@/components/ui/textarea";
 import FishCard from "@/components/fish-card";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { getImperialUnits } from "@/lib/unit-conversion";
 import BottomNav from "@/components/bottom-nav";
 import useDeviceSize from "@/hooks/use-device-size";
 import useIsMobile from "@/hooks/use-is-mobile";
@@ -28,6 +27,8 @@ import {
 } from "@/hooks/queries";
 import SearchPageSkeleton from "@/hooks/queries/search/skeleton";
 import { SearchHistorySheet } from "./search-history-sheet";
+import { useAuth } from "@/contexts/auth-context";
+import LocationBtn from "@/components/location-btn";
 
 interface Message {
   id: string;
@@ -60,6 +61,7 @@ const SearchPage: React.FC = () => {
   const navigate = useNavigate();
   const routerLocation = useLocation();
   const { location } = useUserLocation();
+  const { profile } = useAuth();
   const { id } = useParams<{ id?: string }>();
   const [isSuggestedQuestionClicked, setIsSuggestedQuestionClicked] =
     useState(false);
@@ -90,9 +92,6 @@ const SearchPage: React.FC = () => {
   const [suggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [imperialUnits, setImperialUnits] =
-    useState<boolean>(getImperialUnits());
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -109,6 +108,10 @@ const SearchPage: React.FC = () => {
   const mutation = useCreateSearchSession();
   // const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
   // const [followUpLoading, setFollowUpLoading] = useState(false);
+
+  const useImperialUnits = useMemo(() => {
+    return profile?.use_imperial_units || false;
+  }, [profile]);
 
   const deviceSize = useDeviceSize();
   const isMobile = useIsMobile();
@@ -191,7 +194,7 @@ const SearchPage: React.FC = () => {
         message: queryText,
         attachment: imageFile,
         use_location_context: useLocationContext,
-        use_imperial_units: imperialUnits,
+        use_imperial_units: useImperialUnits,
         session_id: id,
       });
 
@@ -369,17 +372,10 @@ const SearchPage: React.FC = () => {
           </h1>
         </div>
         <div className="flex items-center gap-2">
-          <MapPin
-            size={16}
-            className={
-              useLocationContext ? "text-lishka-blue" : "text-gray-400"
-            }
+          <LocationBtn
+            useLocationContext={useLocationContext}
+            location={location}
           />
-          <span className="text-sm text-lishka-blue truncate font-semibold">
-            {useLocationContext
-              ? location?.name || "Getting location..."
-              : "Global search"}
-          </span>
           <Switch
             checked={useLocationContext}
             onCheckedChange={setUseLocationContext}
@@ -418,8 +414,8 @@ const SearchPage: React.FC = () => {
                   key={`suggestion-${index}`}
                   variant="outline"
                   className={cn(
-                    "text-left h-fit py-3 px-2 dark:bg-gray-800 dark:border-gray-700 rounded-2xl border-0 bg-[#E6EFFF] text-lishka-blue justify-center items-center w-[48%] shadow-none whitespace-normal",
-                    isMobile && "px-6 py-6 h-auto",
+                    "text-left flex justify-start items-center h-fit py-3 px-4 dark:bg-gray-800 dark:border-gray-700 rounded-2xl border-0 bg-[#E6EFFF] text-lishka-blue w-[48%] shadow-none whitespace-normal",
+                    isMobile && "px-8 py-6 h-auto",
                   )}
                   onClick={() => handleSuggestionClick(suggestion)}
                 >

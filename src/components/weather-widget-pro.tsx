@@ -39,6 +39,7 @@ import { WeatherCard } from "./weather/weather-card";
 import { MarineCard } from "./weather/marine-card";
 import { FishingConditions } from "./weather/fishing-conditions";
 import LocationModal from "./location-modal";
+import LocationBtn from "./location-btn";
 
 const WeatherWidget: React.FC<{
   userLocation?: LocationData;
@@ -51,6 +52,10 @@ const WeatherWidget: React.FC<{
   const [activeTab, setActiveTab] = useState("inshore");
   const { user, profile } = useAuth();
   const { isLoading: isLoadingProfile } = useProfile(user?.id);
+
+  const useImperialUnits = useMemo(() => {
+    return profile?.use_imperial_units || false;
+  }, [profile]);
 
   // Use React Query location hook
   const {
@@ -285,12 +290,11 @@ const WeatherWidget: React.FC<{
             onClick={() => setShowLocationModal(true)}
             className="flex items-center text-lishka-blue px-0  hover:bg-blue-50"
           >
-            <MapPin className="h-5 w-5 mr-1" />
-            <span className="font-semibold">
-              {typeof location?.name === "string"
-                ? location.name.replace(/^"|"$/g, "")
-                : "Unknown Location"}
-            </span>
+            <LocationBtn
+              useLocationContext={true}
+              location={location}
+              iconClassName="ml-1"
+            />
           </Button>
           <Button
             variant="ghost"
@@ -715,7 +719,10 @@ const WeatherWidget: React.FC<{
                                   (sum, speed) => sum + speed,
                                   0,
                                 ) / validSpeeds.length;
-                              return formatSpeed(avgWindSpeed).split(" ")[0];
+                              return formatSpeed(
+                                useImperialUnits,
+                                avgWindSpeed,
+                              ).split(" ")[0];
                             }
                           }
                           return "-";

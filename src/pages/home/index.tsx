@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { MapPin } from "lucide-react";
 import BottomNav from "@/components/bottom-nav";
 import FishCard from "@/components/fish-card";
 import { Button } from "@/components/ui/button";
@@ -19,6 +18,7 @@ import { DEFAULT_LOCATION } from "@/lib/const";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { OnboardingDialog } from "./onboarding-dialog";
+import LocationBtn from "@/components/location-btn";
 
 interface HomePageProps {
   location?: string;
@@ -178,10 +178,14 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
               className="flex items-center gap-1 text-lishka-blue dark:text-lishka-blue hover:text-lishka-blue dark:hover:text-lishka-blue p-1 h-auto"
               onClick={() => setIsLocationModalOpen(true)}
             >
-              <span className="text-sm truncate font-semibold">
-                {userLocation}
-              </span>
-              <MapPin className="h-4 w-4" />
+              <LocationBtn
+                useLocationContext={true}
+                location={{
+                  name: userLocation,
+                  latitude: 0,
+                  longitude: 0,
+                }}
+              />
             </Button>
           </div>
         </div>
