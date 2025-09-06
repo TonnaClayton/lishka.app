@@ -210,6 +210,7 @@ export type Database = {
           preferred_language: string | null;
           preferred_units: string | null;
           updated_at: string | null;
+          use_imperial_units: boolean | null;
           username: string | null;
         };
         Insert: {
@@ -228,6 +229,7 @@ export type Database = {
           preferred_language?: string | null;
           preferred_units?: string | null;
           updated_at?: string | null;
+          use_imperial_units?: boolean | null;
           username?: string | null;
         };
         Update: {
@@ -246,6 +248,7 @@ export type Database = {
           preferred_language?: string | null;
           preferred_units?: string | null;
           updated_at?: string | null;
+          use_imperial_units?: boolean | null;
           username?: string | null;
         };
         Relationships: [];

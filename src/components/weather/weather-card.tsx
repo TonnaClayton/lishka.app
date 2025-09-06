@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { Card } from "../ui/card";
 import { Sun, Moon, Wind, Umbrella, Gauge } from "lucide-react";
 import { formatTemperature } from "@/lib/unit-conversion";
 import { getWeatherIcon } from "@/lib/weather-icons";
+import { useAuth } from "@/contexts/auth-context";
 
 interface WeatherCardProps {
   weatherData: any;
@@ -17,17 +18,26 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
   precipitationForecast,
   getWeatherCondition,
 }) => {
+  const { profile } = useAuth();
+  const useImperialUnits = useMemo(() => {
+    return profile?.use_imperial_units || false;
+  }, [profile]);
+
   const getCurrentTemperature = () => {
     if (
       weatherData?.current?.temperature_2m !== undefined &&
       weatherData.current.temperature_2m !== null
     ) {
-      return formatTemperature(weatherData.current.temperature_2m).split(
-        " ",
-      )[0];
+      return formatTemperature(
+        useImperialUnits,
+        weatherData.current.temperature_2m,
+      ).split(" ")[0];
     }
     if (currentConditions.temperature !== null) {
-      return formatTemperature(currentConditions.temperature).split(" ")[0];
+      return formatTemperature(
+        useImperialUnits,
+        currentConditions.temperature,
+      ).split(" ")[0];
     }
     return "-";
   };
@@ -37,12 +47,16 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
       weatherData?.current?.apparent_temperature !== undefined &&
       weatherData.current.apparent_temperature !== null
     ) {
-      return formatTemperature(weatherData.current.apparent_temperature).split(
-        " ",
-      )[0];
+      return formatTemperature(
+        useImperialUnits,
+        weatherData.current.apparent_temperature,
+      ).split(" ")[0];
     }
     if (currentConditions.temperature !== null) {
-      return formatTemperature(currentConditions.temperature).split(" ")[0];
+      return formatTemperature(
+        useImperialUnits,
+        currentConditions.temperature,
+      ).split(" ")[0];
     }
     return "-";
   };
@@ -54,7 +68,7 @@ export const WeatherCard: React.FC<WeatherCardProps> = ({
       weatherData.daily.temperature_2m_max[0] !== null &&
       weatherData.daily.temperature_2m_min[0] !== null
     ) {
-      return `Today: ${formatTemperature(weatherData.daily.temperature_2m_min[0]).split(" ")[0]} to ${formatTemperature(weatherData.daily.temperature_2m_max[0]).split(" ")[0]}`;
+      return `Today: ${formatTemperature(useImperialUnits, weatherData.daily.temperature_2m_min[0]).split(" ")[0]} to ${formatTemperature(useImperialUnits, weatherData.daily.temperature_2m_max[0]).split(" ")[0]}`;
     }
     return "Today: - to -";
   };
