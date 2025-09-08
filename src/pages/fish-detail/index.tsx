@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, AlertCircle } from "lucide-react";
+import { ChevronLeft, AlertCircle, MapPin } from "lucide-react";
 import BottomNav, { SideNav } from "@/components/bottom-nav";
 import WeatherWidgetPro from "@/components/weather-widget-pro";
 import { FishingGear, FishingSeasons, useFishDetails } from "@/hooks/queries";
@@ -1276,28 +1276,10 @@ const FishDetailPage = () => {
                     Fishing Season
                   </h2>
                   <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
-                    <svg
-                      className="w-4 h-4 mr-1"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                      />
-                    </svg>
                     {fishDetailsData.fishing_location ||
                       profile.location ||
                       "Location not specified"}
+                    <MapPin size={16} className="w-4 h-4 ml-1" />
                   </div>
                 </div>
                 <div className="mt-4">
@@ -1694,28 +1676,10 @@ const FishDetailPage = () => {
                       Fishing Regulations
                     </h2>
                     <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
-                      <svg
-                        className="w-4 h-4 mr-1"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"
-                        />
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"
-                        />
-                      </svg>
                       {fishDetailsData.fishing_location ||
                         profile.location ||
                         "Location not specified"}
+                      <MapPin size={16} className="w-4 h-4 ml-1" />
                     </div>
                   </div>
 
@@ -1836,6 +1800,8 @@ const FishDetailPage = () => {
                 </p>
               </div>
             </div>
+
+            <div className="h-[80px] lg:hidden"></div>
           </div>
 
           {/* Weather Widget - Desktop only */}

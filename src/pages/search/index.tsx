@@ -42,12 +42,13 @@ interface Message {
 interface Fish {
   id: string;
   name: string;
-  scientificName?: string;
+  scientific_name?: string;
   image?: string;
   habitat: string;
+  slug: string;
   difficulty: "Easy" | "Intermediate" | "Hard" | "Advanced" | "Expert";
   season: string;
-  toxic: boolean;
+  is_toxic: boolean;
 }
 
 const DEFAULT_SUGGESTIONS = [
@@ -494,16 +495,15 @@ const SearchPage: React.FC = () => {
                                 <FishCard
                                   key={fish.id}
                                   name={fish.name}
-                                  scientificName={fish.scientificName}
+                                  scientificName={fish.scientific_name}
                                   habitat={fish.habitat}
                                   difficulty={fish.difficulty}
-                                  isToxic={fish.toxic}
+                                  isToxic={fish.is_toxic}
                                   className="w-[200px] min-h-[250px] flex-shrink-0"
                                   onClick={() => {
-                                    navigate(
-                                      `/fish/${encodeURIComponent(fish.scientificName || fish.name)}`,
-                                      { state: { fish } },
-                                    );
+                                    navigate(`/fish/${fish.slug}`, {
+                                      state: { fish },
+                                    });
                                   }}
                                 />
                               ))}
@@ -563,7 +563,7 @@ const SearchPage: React.FC = () => {
       )}
       {/* Input Form - Fixed at bottom on mobile, static on desktop */}
 
-      <div className="fixed bottom-16 left-0 right-0 z-20 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 md:static md:bottom-auto md:border-t md:w-full md:mx-auto md:mb-4">
+      <div className="fixed bottom-16 left-0 right-0 z-20 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 lg:static lg:bottom-auto lg:border-t md:w-full md:mx-auto md:mb-4">
         {/* Follow-up questions chips or loading skeleton */}
 
         {!isMobile && !isSuggestedQuestionClicked && (
