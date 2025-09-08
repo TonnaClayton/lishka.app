@@ -397,14 +397,12 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                       variant="outline"
                       onClick={handleLoadMore}
                       disabled={isFetchingNextPage}
-                      className="w-full max-w-xs"
+                      className="w-fit bg-[#025DFB1A] text-lishka-blue hover:bg-[#025DFB33] hover:text-lishka-blue rounded-[24px] h-[39px] py-3 px-4 font-semibold text-xs shadow-none"
                     >
                       {isFetchingNextPage ? (
-                        <div className="flex flex-col items-center">
+                        <div className="flex items-center gap-2">
                           <LoadingDots />
-                          <p className="text-sm text-muted-foreground mt-2">
-                            Loading...
-                          </p>
+                          <p className="">Loading...</p>
                         </div>
                       ) : (
                         "Load More Fish"
