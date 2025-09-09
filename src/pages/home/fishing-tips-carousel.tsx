@@ -493,7 +493,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
               {/* Weather icon based on condition */}
               <div className="flex items-center gap-x-[4px]">
                 {weatherSummary.condition === "Clear" && (
-                  <Sun className="w-8 h-8 text-yellow-500" />
+                  <Sun className="w-8 h-8 text-[#FFBF00]" />
                 )}
                 {weatherSummary.condition === "Partly cloudy" && (
                   <Cloud className="w-8 h-8 text-lishka-blue" />
