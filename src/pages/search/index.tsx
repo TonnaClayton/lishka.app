@@ -66,6 +66,7 @@ const SearchPage: React.FC = () => {
   const { id } = useParams<{ id?: string }>();
   const [isSuggestedQuestionClicked, setIsSuggestedQuestionClicked] =
     useState(false);
+  const [hasGeneratedFollowUp, setHasGeneratedFollowUp] = useState(false);
 
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -102,7 +103,7 @@ const SearchPage: React.FC = () => {
   const {
     data: followUpQuestions,
     isLoading: followUpLoading,
-    // refetch: refetchFollowUpQuestions,
+    refetch: refetchFollowUpQuestions,
     isRefetching: isRefetchingFollowUpQuestions,
   } = useGetSearchSessionFollowQuestions(id);
   const { refetch: refetchSessions } = useGetSearchSessions();
@@ -325,18 +326,23 @@ const SearchPage: React.FC = () => {
     }
   };
 
-  // Update follow-up questions after each assistant message
+  // Generate follow-up questions only once after the first assistant message
   useEffect(() => {
     if (
+      !hasGeneratedFollowUp &&
       messagesMemo.length > 0 &&
       messagesMemo[messagesMemo.length - 1].user_role === "assistant"
     ) {
-      //fetchFollowUpQuestions(messages);
-      //refetchFollowUpQuestions();
-    } else if (messagesMemo.length === 0) {
-      //setFollowUpQuestions([]);
+      refetchFollowUpQuestions();
+      setHasGeneratedFollowUp(true);
     }
-  }, []);
+  }, [messagesMemo, hasGeneratedFollowUp, refetchFollowUpQuestions]);
+
+  // Reset follow-up generation state when session ID changes
+  useEffect(() => {
+    setHasGeneratedFollowUp(false);
+    setIsSuggestedQuestionClicked(false);
+  }, [id]);
 
   // Show skeleton while loading session only if we don't have messages from router state
   if (isLoadingSession && messages.length === 0) {
@@ -358,6 +364,7 @@ const SearchPage: React.FC = () => {
               onClick={() => {
                 setMessages([]);
                 setError(null);
+                setHasGeneratedFollowUp(false);
                 navigate("/search");
               }}
               className="mr-1"
@@ -415,7 +422,7 @@ const SearchPage: React.FC = () => {
                   key={`suggestion-${index}`}
                   variant="outline"
                   className={cn(
-                    "text-left flex justify-start items-center h-fit py-3 px-4 dark:bg-gray-800 dark:border-gray-700 rounded-2xl border-0 bg-[#E6EFFF] text-lishka-blue w-[48%] shadow-none whitespace-normal",
+                    "text-left flex justify-start items-center h-fit py-3 px-4 rounded-2xl border-0 bg-[#E6EFFF] text-lishka-blue w-[48%] shadow-none whitespace-normal hover:text-lishka-blue hover:bg-[#E6EFFF]",
                     isMobile && "px-8 py-6 h-auto",
                   )}
                   onClick={() => handleSuggestionClick(suggestion)}
