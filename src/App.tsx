@@ -19,6 +19,7 @@ import AuthCallback from "./pages/auth/callback";
 import ProtectedRoute from "./components/auth/protected-route";
 import SafariScrollFix from "./components/safari-scroll-fix";
 import { AuthProvider } from "./contexts/auth-context";
+import { UploadProvider } from "./contexts/upload-context";
 import { config } from "@/lib/config";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
@@ -458,7 +459,9 @@ function AppContent() {
 function AppWithAuth() {
   return (
     <AuthProvider>
-      <AppContent />
+      <UploadProvider>
+        <AppContent />
+      </UploadProvider>
     </AuthProvider>
   );
 }

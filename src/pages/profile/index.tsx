@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
+import { useUpload } from "@/contexts/upload-context";
 import { motion } from "framer-motion";
 import { ImageMetadata } from "@/lib/image-metadata";
 import ReactCrop, { Crop, PixelCrop } from "react-image-crop";
@@ -61,10 +62,10 @@ import {
 } from "@/components/ui/form";
 import FishImageCard from "./fish-image-card";
 import { ROUTES } from "@/lib/routing";
-import { useStream } from "@/hooks/use-stream";
-import PhotoUploadBar, { UploadPhotoStreamData } from "./photo-upload-bar";
+import PhotoUploadBar from "./photo-upload-bar";
 import GearItemUploadBar from "./gear-item-upload-bar";
 import { toImageMetadataItem } from "@/lib/gallery-photo";
+import UploadedInfoMsg from "./uploaded-info-msg";
 
 // Zod schema for profile form validation
 const profileSchema = z.object({
@@ -172,7 +173,19 @@ const MapClickHandler = ({
 
 const ProfilePage: React.FC = () => {
   const navigate = useNavigate();
-  const { user, profile, loading: authLoading, refreshProfile } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
+
+  const {
+    uploadPhotoStreamData,
+    uploadGearItemStreamData,
+    classifyingImage,
+    identifyGearMessage,
+    showUploadedInfoMsg,
+    uploadedInfoMsg,
+    isUploading,
+    handlePhotoUpload,
+    closeUploadedInfoMsg,
+  } = useUpload();
 
   // React Query hooks - always call them, let React Query handle the enabled state
 
@@ -231,61 +244,12 @@ const ProfilePage: React.FC = () => {
   const [tempLocationData, setTempLocationData] = useState<LocationData | null>(
     null,
   );
-  const [uploadPhotoStreamData, setUploadPhotoStreamData] =
-    useState<UploadPhotoStreamData | null>(null);
-
-  const [uploadGearItemStreamData, setUploadGearItemStreamData] =
-    useState<UploadPhotoStreamData | null>(null);
-
-  const uploadPhotoStream = useStream({
-    path: "user/gallery-photos/stream",
-    onData: (chunk) => {
-      console.log("[STREAM] Received chunk:", chunk);
-
-      const data = JSON.parse(chunk);
-      setUploadPhotoStreamData(data);
-    },
-    onError: (error) => {
-      console.error("[STREAM] Error uploading photo:", error);
-    },
-    onComplete: () => {
-      console.log("[STREAM] Photo uploaded successfully!");
-
-      refreshProfile();
-
-      setTimeout(() => {
-        setUploadPhotoStreamData(null);
-      }, 3000);
-    },
-  });
-
-  const uploadGearItemStream = useStream({
-    path: "user/gear-items/stream",
-    onData: (chunk) => {
-      console.log("[STREAM] Received chunk:", chunk);
-
-      const data = JSON.parse(chunk);
-      setUploadGearItemStreamData(data);
-    },
-    onError: (error) => {
-      console.error("[STREAM] Error uploading photo:", error);
-    },
-    onComplete: () => {
-      console.log("[STREAM] Photo uploaded successfully!");
-
-      refreshProfile();
-
-      setTimeout(() => {
-        setUploadGearItemStreamData(null);
-      }, 3000);
-    },
-  });
 
   const galleryPhotos = useMemo(() => {
     if (!profile?.gallery_photos) return [];
 
     return profile?.gallery_photos.map(toImageMetadataItem);
-  }, [profile, uploadPhotoStream.isStreaming, uploadPhotoStreamData]);
+  }, [profile, isUploading, uploadPhotoStreamData]);
 
   // React Hook Form setup
   const form = useForm<ProfileFormData>({
@@ -376,43 +340,10 @@ const ProfilePage: React.FC = () => {
     }
 
     try {
-      // Get user location if available
-      let userLocation: { latitude: number; longitude: number } | null = null;
-      try {
-        const { getCurrentLocation } = await import("@/lib/image-metadata");
-        userLocation = await Promise.race([
-          getCurrentLocation(),
-          new Promise<never>((_, reject) => {
-            setTimeout(() => {
-              log("Location request timeout - continuing without location");
-              reject(new Error("Location request timeout"));
-            }, 10000);
-          }),
-        ]);
-      } catch (locationError) {
-        log("Location not available:", locationError);
-      }
-
-      console.log("[ProfilePage] User location:", userLocation);
-
       setLoading(true);
-      const formData = new FormData();
-      formData.append("file", file);
-
-      uploadPhotoStream.startStream({
-        options: {
-          method: "POST",
-          body: formData,
-        },
-        isFormData: true,
+      await handlePhotoUpload(file, {
+        type: "photo",
       });
-
-      // if (metadata.fishInfo && metadata.fishInfo.name !== "Unknown") {
-      //   const successMsg = `Photo uploaded! Identified: ${metadata.fishInfo.name} (${Math.round(metadata.fishInfo.confidence * 100)}% confident)`;
-      //   setSuccess(successMsg);
-      // } else {
-      //   setSuccess("Photo uploaded successfully!");
-      // }
       setTimeout(() => setSuccess(null), 5000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload photo");
@@ -439,26 +370,9 @@ const ProfilePage: React.FC = () => {
     if (!file) return;
 
     try {
-      // const { metadata } = await uploadGear.mutateAsync(file);
-
-      const formData = new FormData();
-      formData.append("file", file);
-
-      uploadGearItemStream.startStream({
-        options: {
-          method: "POST",
-          body: formData,
-        },
-        isFormData: true,
-      });
-
-      // if (metadata.gearInfo && metadata.gearInfo.name !== "Unknown Gear") {
-      //   const successMsg = `Gear uploaded! Identified: ${metadata.gearInfo.name} (${Math.round((metadata.gearInfo.confidence || 0) * 100)}% confident)`;
-      //   setSuccess(successMsg);
-      // } else {
-      //   setSuccess("Gear uploaded successfully!");
-      // }
-      // setTimeout(() => setSuccess(null), 5000);
+      await handlePhotoUpload(file, {
+        type: "gear",
+      }); // The context handles both photo and gear uploads
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload gear");
     } finally {
@@ -471,8 +385,8 @@ const ProfilePage: React.FC = () => {
     form.handleSubmit(onSubmit)();
   };
 
-  const handlePhotoUpload = () => {
-    if (uploadPhotoStream.isStreaming) {
+  const handlePhotoUploadClick = () => {
+    if (isUploading) {
       return;
     }
 
@@ -965,7 +879,16 @@ const ProfilePage: React.FC = () => {
       </header>
 
       <PhotoUploadBar uploadPhotoStreamData={uploadPhotoStreamData} />
-      <GearItemUploadBar uploadGearItemStreamData={uploadGearItemStreamData} />
+      <GearItemUploadBar
+        uploadGearItemStreamData={uploadGearItemStreamData}
+        identifyGearMessage={identifyGearMessage}
+      />
+      {showUploadedInfoMsg && uploadedInfoMsg && (
+        <UploadedInfoMsg
+          message={uploadedInfoMsg}
+          onClose={closeUploadedInfoMsg}
+        />
+      )}
 
       {/* Main Content */}
       <main className="flex-1 p-4 w-full overflow-y-auto">
@@ -1161,13 +1084,13 @@ const ProfilePage: React.FC = () => {
               </Button>
               <Button
                 variant="outline"
-                disabled={uploadGearItemStream.isStreaming}
+                disabled={isUploading || classifyingImage}
                 className={cn(
                   "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-10 flex items-center justify-center gap-2 rounded-[8px]",
                 )}
                 style={{ backgroundColor: "#0251FB0D" }}
                 onClick={() => {
-                  if (uploadGearItemStream.isStreaming) {
+                  if (isUploading || classifyingImage) {
                     return;
                   }
 
@@ -1249,8 +1172,8 @@ const ProfilePage: React.FC = () => {
                 >
                   {/* Add Photo button - always first item in grid, smaller in single column */}
                   <button
-                    onClick={handlePhotoUpload}
-                    disabled={uploadPhotoStream.isStreaming}
+                    onClick={handlePhotoUploadClick}
+                    disabled={isUploading || classifyingImage}
                     className={cn(
                       "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex-col relative transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation",
                       isSingleColumn ? "h-20 rounded-lg mb-2" : "aspect-square",
@@ -1260,7 +1183,7 @@ const ProfilePage: React.FC = () => {
                       touchAction: "manipulation",
                     }}
                   >
-                    {uploadPhotoStream.isStreaming ? (
+                    {isUploading || classifyingImage ? (
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600 dark:border-gray-300" />
                     ) : (
                       <>
@@ -1307,7 +1230,7 @@ const ProfilePage: React.FC = () => {
                   accept="image/*"
                   onChange={handlePhotoChange}
                   className="hidden"
-                  disabled={uploadPhotoStream.isStreaming}
+                  disabled={isUploading || classifyingImage}
                   key="photo-input"
                   style={{
                     position: "absolute",
@@ -1324,7 +1247,7 @@ const ProfilePage: React.FC = () => {
                   capture="environment"
                   onChange={handlePhotoChange}
                   className="hidden"
-                  disabled={uploadPhotoStream.isStreaming}
+                  disabled={isUploading || classifyingImage}
                   key="camera-input"
                 />
               </TabsContent>
@@ -1402,7 +1325,7 @@ const ProfilePage: React.FC = () => {
               accept="image/*"
               onChange={handleGearUpload}
               className="hidden"
-              disabled={uploadGearItemStream.isStreaming}
+              disabled={isUploading || classifyingImage}
             />
           </div>
         </div>

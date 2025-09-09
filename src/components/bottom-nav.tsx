@@ -12,77 +12,33 @@ import {
   Camera,
 } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
+import { useUpload } from "@/contexts/upload-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { log } from "@/lib/logging";
 import { ROUTES } from "@/lib/routing";
 import { cn } from "@/lib/utils";
-import { useStream } from "@/hooks/use-stream";
-import PhotoUploadBar, {
-  UploadPhotoStreamData,
-} from "@/pages/profile/photo-upload-bar";
-import { useClassifyPhoto } from "@/hooks/queries";
+import PhotoUploadBar from "@/pages/profile/photo-upload-bar";
 import GearItemUploadBar from "@/pages/profile/gear-item-upload-bar";
+import UploadedInfoMsg from "@/pages/profile/uploaded-info-msg";
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
   const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
-  const [classifyingImage, setClassifyingImage] = useState(false);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
-  const { refreshProfile } = useAuth();
 
-  const classifyPhotoMutation = useClassifyPhoto();
-
-  const [uploadPhotoStreamData, setUploadPhotoStreamData] =
-    useState<UploadPhotoStreamData | null>(null);
-
-  const [uploadGearItemStreamData, setUploadGearItemStreamData] =
-    useState<UploadPhotoStreamData | null>(null);
-
-  const uploadPhotoStream = useStream({
-    path: "user/gallery-photos/stream",
-    onData: (chunk) => {
-      console.log("[STREAM] Received chunk:", chunk);
-
-      const data = JSON.parse(chunk);
-      setUploadPhotoStreamData(data);
-    },
-    onError: (error) => {
-      console.error("[STREAM] Error uploading photo:", error);
-    },
-    onComplete: () => {
-      console.log("[STREAM] Photo uploaded successfully!");
-
-      refreshProfile();
-
-      setTimeout(() => {
-        setUploadPhotoStreamData(null);
-      }, 3000);
-    },
-  });
-
-  const uploadGearItemStream = useStream({
-    path: "user/gear-items/stream",
-    onData: (chunk) => {
-      console.log("[STREAM] Received chunk:", chunk);
-
-      const data = JSON.parse(chunk);
-      setUploadGearItemStreamData(data);
-    },
-    onError: (error) => {
-      console.error("[STREAM] Error uploading photo:", error);
-    },
-    onComplete: () => {
-      console.log("[STREAM] Photo uploaded successfully!");
-
-      refreshProfile();
-
-      setTimeout(() => {
-        setUploadGearItemStreamData(null);
-      }, 3000);
-    },
-  });
+  const {
+    uploadPhotoStreamData,
+    uploadGearItemStreamData,
+    identifyGearMessage,
+    showUploadedInfoMsg,
+    uploadedInfoMsg,
+    classifyingImage,
+    isUploading,
+    handlePhotoUpload,
+    closeUploadedInfoMsg,
+  } = useUpload();
 
   useEffect(() => {
     const handleResize = () => {
@@ -99,7 +55,7 @@ const BottomNav: React.FC = () => {
   };
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (uploadPhotoStream.isStreaming || uploadGearItemStream.isStreaming) {
+    if (isUploading) {
       return;
     }
 
@@ -107,38 +63,10 @@ const BottomNav: React.FC = () => {
     if (!file) return;
 
     try {
-      setClassifyingImage(true);
-      const classification = await classifyPhotoMutation.mutateAsync(file);
-
-      setClassifyingImage(false);
-
-      if (classification.type === "gear") {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        uploadGearItemStream.startStream({
-          options: {
-            method: "POST",
-            body: formData,
-          },
-          isFormData: true,
-        });
-      } else {
-        const formData = new FormData();
-        formData.append("file", file);
-
-        uploadPhotoStream.startStream({
-          options: {
-            method: "POST",
-            body: formData,
-          },
-          isFormData: true,
-        });
-      }
+      await handlePhotoUpload(file);
     } catch (error: any) {
       console.error("❌ [BOTTOMNAV] Smart upload failed:", error);
       alert(error?.message || "Failed to process photo. Please try again.");
-      setClassifyingImage(false);
     }
 
     // Reset file input
@@ -154,7 +82,15 @@ const BottomNav: React.FC = () => {
       <GearItemUploadBar
         className="z-[60] top-[58px] absolute md:hidden"
         uploadGearItemStreamData={uploadGearItemStreamData}
+        identifyGearMessage={identifyGearMessage}
       />
+      {showUploadedInfoMsg && uploadedInfoMsg && (
+        <UploadedInfoMsg
+          className="z-[60] top-[58px] absolute md:hidden"
+          message={uploadedInfoMsg}
+          onClose={closeUploadedInfoMsg}
+        />
+      )}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 z-50 w-full shadow-md">
         <div className="flex justify-around items-center h-16">
           <Link
@@ -182,11 +118,7 @@ const BottomNav: React.FC = () => {
           {/* Camera button */}
           <button
             onClick={handleCameraClick}
-            disabled={
-              uploadPhotoStream.isStreaming ||
-              uploadGearItemStream.isStreaming ||
-              classifyingImage
-            }
+            disabled={isUploading || classifyingImage}
             className="flex items-center text-[#191B1F] hover:text-lishka-blue disabled:opacity-50 relative"
           >
             {classifyingImage ? (
@@ -231,11 +163,7 @@ const BottomNav: React.FC = () => {
         capture="environment"
         onChange={handlePhotoChange}
         className="hidden"
-        disabled={
-          uploadPhotoStream.isStreaming ||
-          uploadGearItemStream.isStreaming ||
-          classifyingImage
-        }
+        disabled={isUploading || classifyingImage}
       />
       <input
         ref={galleryInputRef}
@@ -243,11 +171,7 @@ const BottomNav: React.FC = () => {
         accept="image/*"
         onChange={handlePhotoChange}
         className="hidden"
-        disabled={
-          uploadPhotoStream.isStreaming ||
-          uploadGearItemStream.isStreaming ||
-          classifyingImage
-        }
+        disabled={isUploading || classifyingImage}
       />
     </>
   );
