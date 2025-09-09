@@ -164,7 +164,12 @@ const SearchPage: React.FC = () => {
   // Scroll to bottom of messages when new messages are added
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messagesMemo]);
+  }, [
+    messagesMemo,
+    followUpQuestions,
+    isRefetchingFollowUpQuestions,
+    followUpLoading,
+  ]);
 
   // Listen for units changes from settings
   useEffect(() => {
