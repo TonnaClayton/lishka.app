@@ -5,7 +5,7 @@ import React, {
   useEffect,
   useState,
 } from "react";
-import { User, Session } from "@supabase/supabase-js";
+import { User, Session, OAuthResponse } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { supabase, authService, profileService } from "@/lib/supabase";
 import {
@@ -19,6 +19,7 @@ type AuthUser = {
   email: string;
   full_name?: string;
   email_verified?: boolean;
+  avatar_url?: string;
   needs_email_confirmation?: boolean;
 };
 
@@ -75,6 +76,7 @@ interface AuthContextType {
     fullName: string,
   ) => Promise<{ error: any; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<OAuthResponse>;
   signOut: () => Promise<{ error: any }>;
   forgotPassword: (email: string) => Promise<{ error: any }>;
   resetPassword: (password: string) => Promise<{ error: any }>;
@@ -120,6 +122,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return {
       id: supabaseUser.id,
       email: supabaseUser.email || "",
+      avatar_url: supabaseUser.user_metadata?.avatar_url || null,
       full_name: supabaseUser.user_metadata?.full_name || null,
       email_verified: supabaseUser.user_metadata.email_verified,
       needs_email_confirmation: !supabaseUser.email_confirmed_at,
@@ -128,11 +131,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Create profile when it doesn't exist
   const handleCreateProfile = useCallback(
-    async (userId: string, userFullName?: string) => {
+    async (userId: string, userFullName?: string, userAvatarUrl?: string) => {
       const profileData = {
         full_name:
           userFullName && userFullName.trim() ? userFullName.trim() : null,
         preferred_units: "metric",
+        avatar_url: userAvatarUrl || null,
         preferred_language: "en",
         has_seen_onboarding_flow: false,
         favorite_fish_species: [],
@@ -182,7 +186,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   useEffect(() => {
     if (user?.id && profileData === undefined && !profileLoading) {
       // Profile query returned but no data found - create profile
-      handleCreateProfile(user.id, user.full_name);
+      handleCreateProfile(user.id, user.full_name, user.avatar_url);
     }
   }, [user, profileData, profileLoading, handleCreateProfile]);
 
@@ -357,6 +361,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         error: { message: "An unexpected error occurred during signin" },
       };
     }
+  };
+
+  const signInWithGoogle = async () => {
+    return authService.signInWithGoogle();
   };
 
   const signOut = async () => {
@@ -1026,6 +1034,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     loading: loading || profileLoading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     resetPassword,
     forgotPassword,

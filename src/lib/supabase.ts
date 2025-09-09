@@ -113,6 +113,20 @@ export const authService = {
     }
   },
 
+  // Sign in with Google OAuth
+  async signInWithGoogle() {
+    return supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: `${window.location.origin}/auth/callback`,
+        queryParams: {
+          access_type: "offline",
+          prompt: "consent",
+        },
+      },
+    });
+  },
+
   // Sign out user
   async signOut() {
     try {

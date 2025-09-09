@@ -4,6 +4,28 @@ import { render } from "@/test/test-utils";
 import LoginPage from "../login";
 import React from "react";
 
+// Mock the auth context
+vi.mock("@/contexts/auth-context", () => ({
+  useAuth: () => ({
+    user: null,
+    profile: null,
+    session: null,
+    loading: false,
+    signIn: vi.fn(),
+    signUp: vi.fn(),
+    signOut: vi.fn(),
+    resendConfirmation: vi.fn(),
+    forgotPassword: vi.fn(),
+    resetPassword: vi.fn(),
+    updateProfile: vi.fn(),
+    deleteAccount: vi.fn(),
+    refreshProfile: vi.fn(),
+    uploadAvatar: vi.fn(),
+    confirmEmail: vi.fn(),
+    signInWithGoogle: vi.fn(),
+  }),
+}));
+
 // Mock useIsMobile hook
 vi.mock("@/hooks/use-is-mobile", () => ({
   default: vi.fn(() => false),
