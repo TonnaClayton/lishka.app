@@ -1,49 +1,41 @@
 import { CheckIcon, LoaderIcon, XIcon } from "lucide-react";
-import { UploadPhotoStreamData, UploadStepStatus } from "./photo-upload-bar";
+import {
+  UploadPhotoStreamData,
+  UploadStepStatus,
+} from "@/contexts/upload-context";
 import { cn } from "@/lib/utils";
 
 export default function GearItemUploadBar({
   uploadGearItemStreamData,
+  identifyGearMessage,
   className,
 }: {
   uploadGearItemStreamData: UploadPhotoStreamData | null;
+  identifyGearMessage: string | null;
   className?: string;
 }) {
   if (uploadGearItemStreamData == null) {
     return null;
   }
 
-  const getStepIcon = () => {
-    if (
-      uploadGearItemStreamData.data.analyzing === UploadStepStatus.COMPLETED &&
-      uploadGearItemStreamData.data.uploading === UploadStepStatus.COMPLETED &&
-      uploadGearItemStreamData.data.saved === UploadStepStatus.COMPLETED
-    ) {
+  const getStepIcon = (step: UploadStepStatus) => {
+    if (step === UploadStepStatus.COMPLETED) {
       return <CheckIcon className="w-5 h-5 text-white" />;
     }
-    if (
-      uploadGearItemStreamData.data.analyzing === UploadStepStatus.FAILED ||
-      uploadGearItemStreamData.data.uploading === UploadStepStatus.FAILED ||
-      uploadGearItemStreamData.data.saved === UploadStepStatus.FAILED
-    ) {
+    if (step === UploadStepStatus.FAILED) {
       return <XIcon className="w-5 h-5 text-white" />;
     }
 
-    if (
-      uploadGearItemStreamData.data.analyzing === UploadStepStatus.PROCESSING ||
-      uploadGearItemStreamData.data.uploading === UploadStepStatus.PROCESSING ||
-      uploadGearItemStreamData.data.saved === UploadStepStatus.PROCESSING
-    ) {
+    if (step === UploadStepStatus.PROCESSING) {
       return <LoaderIcon className="w-5 h-5 text-white animate-spin" />;
     }
-
     return null;
   };
 
   return (
     <div
       className={cn(
-        "size-full bg-lishka-blue py-3 px-4 flex flex-col gap-y-2 h-fit z-20 sticky top-[69px]",
+        "w-full py-3 px-4  bg-lishka-blue flex flex-col gap-2 h-fit z-20 sticky top-[69px]",
         className,
       )}
     >
@@ -54,10 +46,34 @@ export default function GearItemUploadBar({
             UploadStepStatus.PENDING && "opacity-50",
         )}
       >
-        <p className="leading-snug text-white text-base">
-          {uploadGearItemStreamData.data.message}
+        <p className="leading-snug text-white text-sm md:text-base">
+          {identifyGearMessage || "AI Analyzing Photo"}
         </p>
-        {getStepIcon()}
+        {getStepIcon(uploadGearItemStreamData.data.analyzing)}
+      </div>
+      <div
+        className={cn(
+          "h-[26px] w-full flex items-center justify-between",
+          uploadGearItemStreamData.data.uploading ===
+            UploadStepStatus.PENDING && "opacity-50",
+        )}
+      >
+        <p className="leading-snug text-white text-sm md:text-base">
+          Photo Uploading
+        </p>
+        {getStepIcon(uploadGearItemStreamData.data.uploading)}
+      </div>
+      <div
+        className={cn(
+          "h-[26px] w-full flex items-center justify-between",
+          uploadGearItemStreamData.data.saved === UploadStepStatus.PENDING &&
+            "opacity-50",
+        )}
+      >
+        <p className="leading-snug text-white text-sm md:text-base">
+          Gear uploaded successfully!
+        </p>
+        {getStepIcon(uploadGearItemStreamData.data.saved)}
       </div>
     </div>
   );

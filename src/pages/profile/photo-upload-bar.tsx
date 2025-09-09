@@ -1,22 +1,9 @@
+import {
+  UploadPhotoStreamData,
+  UploadStepStatus,
+} from "@/contexts/upload-context";
 import { cn } from "@/lib/utils";
 import { CheckIcon, LoaderIcon, XIcon } from "lucide-react";
-import React from "react";
-
-export enum UploadStepStatus {
-  PENDING = "pending",
-  PROCESSING = "processing",
-  COMPLETED = "completed",
-  FAILED = "failed",
-}
-
-export type UploadPhotoStreamData = {
-  data: {
-    message: string;
-    analyzing: UploadStepStatus;
-    uploading: UploadStepStatus;
-    saved: UploadStepStatus;
-  };
-};
 
 export default function PhotoUploadBar({
   uploadPhotoStreamData,
@@ -57,7 +44,9 @@ export default function PhotoUploadBar({
             "opacity-50",
         )}
       >
-        <p className="leading-snug text-white text-base">AI Analyzing Photo</p>
+        <p className="leading-snug text-white text-sm md:text-base">
+          AI Analyzing Photo
+        </p>
         {getStepIcon(uploadPhotoStreamData.data.analyzing)}
       </div>
       <div
@@ -67,7 +56,9 @@ export default function PhotoUploadBar({
             "opacity-50",
         )}
       >
-        <p className="leading-snug text-white text-base">Photo Uploading</p>
+        <p className="leading-snug text-white text-sm md:text-base">
+          Photo Uploading
+        </p>
         {getStepIcon(uploadPhotoStreamData.data.uploading)}
       </div>
       <div
@@ -77,7 +68,9 @@ export default function PhotoUploadBar({
             "opacity-50",
         )}
       >
-        <p className="leading-snug text-white text-base">Photo Saved</p>
+        <p className="leading-snug text-white text-sm md:text-base">
+          Photo Saved
+        </p>
         {getStepIcon(uploadPhotoStreamData.data.saved)}
       </div>
     </div>
