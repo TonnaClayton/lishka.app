@@ -25,6 +25,7 @@ import { useAuth } from "@/contexts/auth-context";
 import BottomNav from "../../components/bottom-nav";
 import { toGearItem } from "@/lib/gear";
 import { Json } from "@/types/supabase";
+import { log, error as logError } from "@/lib/logging";
 
 // Gear categories as specified
 export const GEAR_CATEGORIES = [
@@ -143,7 +144,7 @@ const MyGearPage: React.FC = () => {
       setSuccess("Gear updated successfully!");
       setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
-      console.error("[MyGearPage] Error updating gear:", error);
+      logError("[MyGearPage] Error updating gear:", error);
       setError("Failed to update gear. Please try again.");
     } finally {
       setLoading(false);
@@ -164,7 +165,7 @@ const MyGearPage: React.FC = () => {
       setSuccess("Gear deleted successfully!");
       setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
-      console.error("[MyGearPage] Error deleting gear:", error);
+      logError("[MyGearPage] Error deleting gear:", error);
       setError("Failed to delete gear. Please try again.");
     } finally {
       setLoading(false);
@@ -177,7 +178,7 @@ const MyGearPage: React.FC = () => {
       return gearItems;
     }
 
-    console.log("[MyGearPage] categoryId:", categoryId, gearItems);
+    log("[MyGearPage] categoryId:", categoryId, gearItems);
     return gearItems.filter((item) => item.category === categoryId);
   };
 

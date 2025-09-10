@@ -5,7 +5,7 @@ import { getLocalFishName } from "@/lib/fishbase-api";
 import { getFishImageUrl } from "@/lib/fish-image-service";
 import { OPENAI_DISABLED_MESSAGE, OPENAI_ENABLED } from "@/lib/openai-toggle";
 import { config } from "@/lib/config";
-import { log } from "@/lib/logging";
+import { log, error } from "@/lib/logging";
 import { api } from "../api";
 import { fishSchema } from "./type";
 import z from "zod";
@@ -321,14 +321,14 @@ IMPORTANT: Each scientific name must be a specific, real species with both genus
       try {
         imageUrl = await getFishImageUrl(fish.name, fish.scientificName);
       } catch (e) {
-        console.error(`Error fetching image for ${fish.name}:`, e);
+        error(`Error fetching image for ${fish.name}:`, e);
       }
 
       try {
         const browserLang = navigator.language.split("-")[0] || "en";
         localName = await getLocalFishName(fish.scientificName, browserLang);
       } catch (e) {
-        console.error(`Error fetching local name for ${fish.name}:`, e);
+        error(`Error fetching local name for ${fish.name}:`, e);
       }
 
       if (imageUrl || localName) {
@@ -420,7 +420,7 @@ export const useFishingTips = (query: {
         method: "GET",
       });
 
-      console.log("[FISHING TIPS]", data);
+      log("[FISHING TIPS]", data);
 
       return data.data;
       //return fetchToxicFishData(location, userLatitude, userLongitude);

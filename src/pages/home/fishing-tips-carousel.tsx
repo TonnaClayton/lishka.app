@@ -309,8 +309,8 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
   //       log("Cleaned fishing tips JSON:", jsonStr);
   //       const parsedTips = JSON.parse(jsonStr);
   //       fishingTips = Array.isArray(parsedTips) ? parsedTips : [];
-  //     } catch (e) {
-  //       console.error("Error parsing fishing tips:", e);
+  //     } error
+  //       error("Error parsing fishing tips:", e);
   //       console.error("Raw response:", content);
 
   //       // Fallback tips
@@ -355,7 +355,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
   //     setTips(fishingTips);
   //     // Cache for 6 hours
   //     cacheApiResponse(cacheKey, fishingTips, 6 * 60 * 60 * 1000);
-  //   } catch (err) {
+  //   } error
   //     console.error("Error fetching fishing tips:", err);
   //     setError(
   //       err instanceof Error ? err.message : "Failed to fetch fishing tips"

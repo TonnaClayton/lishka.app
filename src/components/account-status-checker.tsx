@@ -7,7 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle, Mail, RefreshCw } from "lucide-react";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/auth-context";
-import { log } from "@/lib/logging";
+import { error as logError, log } from "@/lib/logging";
 
 interface AccountStatus {
   exists: boolean;
@@ -83,7 +83,7 @@ const AccountStatusChecker: React.FC = () => {
 
       setStatus(accountStatus);
     } catch (err) {
-      console.error("Account status check error:", err);
+      logError("Account status check error:", err);
       setError("Failed to check account status. Please try again.");
     } finally {
       setLoading(false);
@@ -111,7 +111,7 @@ const AccountStatusChecker: React.FC = () => {
         );
       }
     } catch (err) {
-      console.error("Resend verification error:", err);
+      logError("Resend verification error:", err);
       setError("Failed to resend verification email. Please try again.");
     } finally {
       setResendingEmail(false);

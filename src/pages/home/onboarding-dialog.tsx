@@ -50,7 +50,7 @@ export const OnboardingDialog = React.memo(
         });
         setIsOpen(false);
       } catch (error) {
-        console.error(error);
+        error(error);
       } finally {
         setIsLoading(false);
       }

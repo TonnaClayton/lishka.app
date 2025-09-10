@@ -1,27 +1,23 @@
 import { createClient } from "@supabase/supabase-js";
 import { Database } from "@/types/supabase";
 import { config } from "@/lib/config";
-import { log } from "./logging";
+import { error, log, warn as warnLog } from "./logging";
 
 // Initialize Supabase client with proper configuration
 const supabaseUrl = config.VITE_SUPABASE_URL;
 const supabaseKey = config.VITE_SUPABASE_ANON_KEY || config.VITE_SUPABASE_KEY;
 
 if (!supabaseUrl) {
-  console.error(
-    "Missing Supabase URL. Please check your environment variables.",
-  );
-  console.error("Available env vars:", {
+  error("Missing Supabase URL. Please check your environment variables.");
+  error("Available env vars:", {
     VITE_SUPABASE_URL: config.VITE_SUPABASE_URL,
     SUPABASE_URL: config.SUPABASE_URL,
   });
 }
 
 if (!supabaseKey) {
-  console.error(
-    "Missing Supabase key. Please check your environment variables.",
-  );
-  console.error("Available env vars:", {
+  error("Missing Supabase key. Please check your environment variables.");
+  error("Available env vars:", {
     VITE_SUPABASE_ANON_KEY: config.VITE_SUPABASE_ANON_KEY,
     VITE_SUPABASE_KEY: config.VITE_SUPABASE_KEY,
     SUPABASE_ANON_KEY: config.SUPABASE_ANON_KEY,
@@ -56,7 +52,7 @@ export const authService = {
 
       return response;
     } catch (err) {
-      console.error("SignUp error:", err);
+      error("SignUp error:", err);
       return {
         data: null,
         error: {
@@ -102,7 +98,7 @@ export const authService = {
 
       return { data, error };
     } catch (err) {
-      console.error("SignIn error:", err);
+      error("SignIn error:", err);
       return {
         data: null,
         error: {
@@ -133,7 +129,7 @@ export const authService = {
       const { error } = await supabase.auth.signOut();
       return { error };
     } catch (err) {
-      console.error("SignOut error:", err);
+      error("SignOut error:", err);
       return {
         error: {
           message:
@@ -152,7 +148,7 @@ export const authService = {
       } = await supabase.auth.getUser();
       return { user, error };
     } catch (err) {
-      console.error("GetCurrentUser error:", err);
+      error("GetCurrentUser error:", err);
       return {
         user: null,
         error: {
@@ -171,7 +167,7 @@ export const authService = {
       });
       return { data, error };
     } catch (err) {
-      console.error("ResetPassword error:", err);
+      error("ResetPassword error:", err);
       return {
         data: null,
         error: {
@@ -190,7 +186,7 @@ export const authService = {
       });
       return { data, error };
     } catch (err) {
-      console.error("ResetPassword error:", err);
+      error("ResetPassword error:", err);
       return {
         data: null,
         error: {
@@ -214,7 +210,7 @@ export const authService = {
       log("Resend confirmation response:", { data, error });
       return { data, error };
     } catch (err) {
-      console.error("ResendConfirmation error:", err);
+      error("ResendConfirmation error:", err);
       return {
         data: null,
         error: {
@@ -234,7 +230,7 @@ export const authService = {
       });
       return { data, error };
     } catch (err) {
-      console.error("ConfirmEmail error:", err);
+      error("ConfirmEmail error:", err);
       return {
         data: null,
         error: {
@@ -274,7 +270,7 @@ export const profileService = {
 
       return { data, error };
     } catch (err) {
-      console.error("GetProfile error:", err);
+      error("GetProfile error:", err);
       return {
         data: null,
         error: {
@@ -453,7 +449,7 @@ export const profileService = {
         const expectedCount = updates.gallery_photos.length;
         const actualCount = data.gallery_photos?.length || 0;
         if (expectedCount !== actualCount) {
-          console.warn("[ProfileService] Gallery photos count mismatch!", {
+          warnLog("[ProfileService] Gallery photos count mismatch!", {
             expected: expectedCount,
             actual: actualCount,
           });
@@ -467,7 +463,7 @@ export const profileService = {
           ? data.gear_items.length
           : 0;
         if (expectedCount !== actualCount) {
-          console.warn("[ProfileService] Gear items count mismatch!", {
+          warnLog("[ProfileService] Gear items count mismatch!", {
             expected: expectedCount,
             actual: actualCount,
             expectedItems: updates.gear_items.map((item) => ({
@@ -487,7 +483,7 @@ export const profileService = {
       return { data, error };
     } catch (err) {
       const totalTime = Date.now() - startTime;
-      console.error("[ProfileService] 💥 UpdateProfile exception:", {
+      error("[ProfileService] 💥 UpdateProfile exception:", {
         error: err instanceof Error ? err.message : String(err),
         errorType: err instanceof Error ? err.constructor.name : typeof err,
         totalTime: `${totalTime}ms`,
@@ -537,7 +533,7 @@ export const profileService = {
 
   async createProfile(userId: string, profileData: any) {
     try {
-      console.log("[ProfileService] Creating profile with data:", {
+      log("[ProfileService] Creating profile with data:", {
         userId,
         profileData,
       });
@@ -553,7 +549,7 @@ export const profileService = {
 
       return { data, error };
     } catch (err) {
-      console.error("CreateProfile error:", err);
+      error("CreateProfile error:", err);
       return {
         data: null,
         error: {

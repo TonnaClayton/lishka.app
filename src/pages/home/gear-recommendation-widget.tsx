@@ -8,6 +8,7 @@ import { useGetWeatherSummary } from "@/hooks/queries";
 import GearRecommendationSkeleton from "./gear-recommendation-skeleton";
 import { useGetGearRecommendation } from "@/hooks/queries/gear/use-gear-recommendation";
 import { GearItem } from "@/lib/gear";
+import { log } from "@/lib/logging";
 
 // interface WeatherConditions {
 //   temperature: number;
@@ -45,7 +46,7 @@ const GearRecommendationWidget: React.FC = () => {
   // });
 
   const { data: weatherData } = useGetWeatherSummary();
-  console.log("[WEATHER DATA]", weatherData);
+  log("[WEATHER DATA]", weatherData);
   const {
     data: gearRecommendation,
     refetch,

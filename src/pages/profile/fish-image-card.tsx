@@ -1,4 +1,4 @@
-import { log } from "@/lib/logging";
+import { log, error, warn as warnLog } from "@/lib/logging";
 import React, { useState, useMemo } from "react";
 import { useLazyLoading } from "@/hooks/use-lazy-loading";
 import { useDualRef } from "@/hooks/use-dual-ref";
@@ -53,7 +53,7 @@ function FishImageCard({
 
   // Handle legacy data that might still be strings
   if (typeof photo === "string") {
-    console.warn(`[ProfilePage] Legacy string photo detected at index:`, photo);
+    warnLog(`[ProfilePage] Legacy string photo detected at index:`, photo);
     // Check if it's a JSON string that needs parsing
     const photoString = photo as string;
     if (photoString.startsWith("{") && photoString.includes('"url"')) {
@@ -63,7 +63,7 @@ function FishImageCard({
         metadata = parsed;
         log(`[ProfilePage] Parsed legacy metadata for photo:`, metadata);
       } catch (parseError) {
-        console.warn(
+        warnLog(
           `[ProfilePage] Failed to parse legacy photo metadata at index:`,
           parseError,
         );
@@ -145,10 +145,7 @@ function FishImageCard({
 
       // Simplified extraction - all photos should be ImageMetadata objects now
       if (typeof photo === "string") {
-        console.warn(
-          `[ProfilePage] Legacy string photo in share function:`,
-          photo,
-        );
+        warnLog(`[ProfilePage] Legacy string photo in share function:`, photo);
         const photoString = photo as string;
         if (photoString.startsWith("{") && photoString.includes('"url"')) {
           try {
@@ -216,10 +213,7 @@ function FishImageCard({
                 }
               }
             } catch (exportError) {
-              console.error(
-                "[ProfilePage] Error exporting overlay:",
-                exportError,
-              );
+              error("[ProfilePage] Error exporting overlay:", exportError);
               // Fallback to original image
               const response = await fetch(photoUrl);
               const blob = await response.blob();
@@ -244,7 +238,7 @@ function FishImageCard({
           );
           setTimeout(() => setSuccess(null), 5000);
         } catch (shareError) {
-          console.error("[ProfilePage] Error sharing photo:", shareError);
+          error("[ProfilePage] Error sharing photo:", shareError);
           // Fallback to copying URL
           await navigator.clipboard.writeText(photoUrl);
           setSuccess("Photo URL copied to clipboard!");
@@ -257,15 +251,12 @@ function FishImageCard({
           setSuccess("Photo URL copied to clipboard!");
           setTimeout(() => setSuccess(null), 3000);
         } catch (clipboardError) {
-          console.error(
-            "[ProfilePage] Error copying to clipboard:",
-            clipboardError,
-          );
+          error("[ProfilePage] Error copying to clipboard:", clipboardError);
           setError("Unable to share photo. Please try again.");
         }
       }
     } catch (err) {
-      console.error("[ProfilePage] Error sharing photo:", err);
+      error("[ProfilePage] Error sharing photo:", err);
       setError("Failed to share photo. Please try again.");
     }
   };
@@ -340,7 +331,7 @@ function FishImageCard({
                 setImageError(false);
               }}
               onError={(e) => {
-                console.error(`[ProfilePage] Error loading image :`, {
+                error(`[ProfilePage] Error loading image :`, {
                   url: photoUrl,
                   error: e,
                   isHttps: photoUrl.startsWith("https://"),
@@ -360,17 +351,14 @@ function FishImageCard({
                 // Try to get more details about the error
                 fetch(photoUrl, { method: "HEAD" })
                   .then((response) => {
-                    console.error(
-                      `[ProfilePage] HTTP status for failed image:`,
-                      {
-                        status: response.status,
-                        statusText: response.statusText,
-                        url: photoUrl,
-                      },
-                    );
+                    error(`[ProfilePage] HTTP status for failed image:`, {
+                      status: response.status,
+                      statusText: response.statusText,
+                      url: photoUrl,
+                    });
                   })
                   .catch((fetchError) => {
-                    console.error(`[ProfilePage] Network error for image:`, {
+                    error(`[ProfilePage] Network error for image:`, {
                       error: fetchError.message,
                       url: photoUrl,
                     });

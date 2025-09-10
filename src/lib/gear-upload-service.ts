@@ -4,7 +4,7 @@ import {
   uploadImageToSupabase,
 } from "./supabase-storage";
 import { OPENAI_ENABLED, validateOpenAIConfig } from "./openai-toggle";
-import { log } from "./logging";
+import { error as logError, log, warn as warnLog } from "./logging";
 import { config } from "@/lib/config";
 
 export interface GearInfo {
@@ -97,7 +97,7 @@ export const identifyGearFromImage = async (
   try {
     // Check OpenAI configuration
     if (!OPENAI_ENABLED || !validateOpenAIConfig()) {
-      console.error("❌ [GEAR ID] OpenAI not available");
+      logError("❌ [GEAR ID] OpenAI not available");
       return {
         name: "Unknown Gear",
         type: "unknown",
@@ -109,7 +109,7 @@ export const identifyGearFromImage = async (
 
     const apiKey = config.VITE_OPENAI_API_KEY;
     if (!apiKey) {
-      console.error("❌ [GEAR ID] No API key");
+      logError("❌ [GEAR ID] No API key");
       return {
         name: "Unknown Gear",
         type: "unknown",
@@ -650,7 +650,7 @@ Analyze the image carefully and provide detailed, specific information for every
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error("❌ [GEAR ID] API error:", response.status, errorText);
+      logError("❌ [GEAR ID] API error:", response.status, errorText);
       throw new Error(`OpenAI API error: ${response.status}`);
     }
 
@@ -664,7 +664,7 @@ Analyze the image carefully and provide detailed, specific information for every
     });
 
     if (!content) {
-      console.error("❌ [GEAR ID] Empty response");
+      logError("❌ [GEAR ID] Empty response");
       return {
         name: "Unknown Gear",
         type: "unknown",
@@ -693,8 +693,8 @@ Analyze the image carefully and provide detailed, specific information for every
       gearInfo = JSON.parse(cleanContent);
       log("✅ [GEAR ID] Parsed successfully:", gearInfo);
     } catch (parseError) {
-      console.error("❌ [GEAR ID] Parse failed:", parseError.message);
-      console.error("❌ [GEAR ID] Content was:", content);
+      logError("❌ [GEAR ID] Parse failed:", parseError.message);
+      logError("❌ [GEAR ID] Content was:", content);
 
       return {
         name: "Unknown Gear",
@@ -824,7 +824,7 @@ Analyze the image carefully and provide detailed, specific information for every
     return finalGearInfo;
   } catch (error) {
     const totalTime = Date.now() - startTime;
-    console.error("💥 [GEAR ID] Failed:", {
+    logError("💥 [GEAR ID] Failed:", {
       error: error instanceof Error ? error.message : String(error),
       totalTime,
     });
@@ -892,7 +892,7 @@ export const uploadGearImage = async (
         photoUrl = await uploadImageToSupabase(file, "gear-images");
         log("✅ [GEAR UPLOAD] Supabase upload successful:", photoUrl);
       } catch (supabaseError) {
-        console.warn(
+        warnLog(
           "⚠️ [GEAR UPLOAD] Supabase failed, trying Vercel Blob fallback:",
           supabaseError,
         );
@@ -936,7 +936,7 @@ export const uploadGearImage = async (
     log("🤖 [GEAR UPLOAD] Identifying gear...");
     const gearInfo = await identifyGearFromImage(file, userLocation).catch(
       (error) => {
-        console.warn("⚠️ [GEAR UPLOAD] AI failed, using fallback:", error);
+        warnLog("⚠️ [GEAR UPLOAD] AI failed, using fallback:", error);
         return {
           name: "Unknown Gear",
           type: "unknown",
@@ -972,7 +972,7 @@ export const uploadGearImage = async (
       url: photoUrl,
     };
   } catch (error) {
-    console.error("❌ [GEAR UPLOAD] Failed:", {
+    error("❌ [GEAR UPLOAD] Failed:", {
       error: error instanceof Error ? error.message : String(error),
       errorType: error instanceof Error ? error.constructor.name : typeof error,
       fileName: file.name,
@@ -1018,7 +1018,7 @@ export const uploadGearImage = async (
       }
     }
 
-    console.error("[GEAR UPLOAD] 🏷️ Error categorized as:", {
+    error("[GEAR UPLOAD] 🏷️ Error categorized as:", {
       category: errorCategory,
       message: errorMsg,
     });

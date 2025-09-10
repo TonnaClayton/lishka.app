@@ -9,7 +9,7 @@ import {
 } from "@/lib/api-helpers";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { log } from "@/lib/logging";
+import { error as logError, log } from "@/lib/logging";
 import { useUserLocation } from "@/hooks/queries";
 
 interface Coordinates {
@@ -159,7 +159,7 @@ const OffshoreFishingLocations: React.FC<
         };
         cacheApiResponse(cacheKey, cacheData, 2 * 60 * 60 * 1000);
       } catch (err) {
-        console.error("❌ Error generating fishing locations:", err);
+        logError("❌ Error generating fishing locations:", err);
         setError(
           err instanceof Error
             ? err.message

@@ -57,7 +57,7 @@ import {
 } from "@/lib/supabase-storage";
 import { supabase } from "@/lib/supabase";
 import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
-import { log } from "@/lib/logging";
+import { log, error as logError, warn as warnLog } from "@/lib/logging";
 
 interface LocationData {
   latitude: number;
@@ -133,7 +133,7 @@ const MapClickHandler = ({
 
         onLocationSelect(lat, lng, locationName);
       } catch (error) {
-        console.error("Error getting location name:", error);
+        logError("Error getting location name:", error);
         // Display coordinates as fallback
         const formattedLat = lat.toFixed(6);
         const formattedLng = lng.toFixed(6);
@@ -256,7 +256,7 @@ const ProfilePage: React.FC = () => {
                 // Clear localStorage after successful migration
                 localStorage.removeItem(`user_photos_${user?.id}`);
               } catch (migrationError) {
-                console.error(
+                logError(
                   "[ProfilePage] Error migrating photos to database:",
                   migrationError,
                 );
@@ -265,7 +265,7 @@ const ProfilePage: React.FC = () => {
           }
         }
       } catch (error) {
-        console.error("[ProfilePage] Error loading photos:", error);
+        logError("[ProfilePage] Error loading photos:", error);
       } finally {
         setPhotosLoaded(true);
       }
@@ -299,10 +299,7 @@ const ProfilePage: React.FC = () => {
             log("[ProfilePage] Photos saved to database successfully");
           }
         } catch (error) {
-          console.error(
-            "[ProfilePage] Error saving photos to database:",
-            error,
-          );
+          logError("[ProfilePage] Error saving photos to database:", error);
           // Fallback to localStorage if database save fails
           try {
             localStorage.setItem(
@@ -311,7 +308,7 @@ const ProfilePage: React.FC = () => {
             );
             log("[ProfilePage] Photos saved to localStorage as fallback");
           } catch (localError) {
-            console.error(
+            logError(
               "[ProfilePage] Error saving to localStorage fallback:",
               localError,
             );
@@ -445,7 +442,7 @@ const ProfilePage: React.FC = () => {
             setBorderStyle({ left, width });
           }
         } catch (error) {
-          console.warn("Error calculating border position:", error);
+          warnLog("Error calculating border position:", error);
         }
       }
     }
@@ -595,7 +592,7 @@ const ProfilePage: React.FC = () => {
       });
 
       if (error) {
-        console.error("Error checking username uniqueness:", error);
+        logError("Error checking username uniqueness:", error);
         setValidationErrors((prev) => ({
           ...prev,
           username: "Error checking username availability",
@@ -616,7 +613,7 @@ const ProfilePage: React.FC = () => {
       setValidationErrors((prev) => ({ ...prev, username: undefined }));
       return true;
     } catch (err) {
-      console.error("Username uniqueness check failed:", err);
+      logError("Username uniqueness check failed:", err);
       setValidationErrors((prev) => ({
         ...prev,
         username: "Error checking username availability",
@@ -766,7 +763,7 @@ const ProfilePage: React.FC = () => {
       ])) as any;
 
       if (error) {
-        console.error("Avatar upload failed:", error);
+        logError("Avatar upload failed:", error);
         setError(error.message || "Failed to upload avatar");
       } else {
         log("Avatar upload successful");
@@ -785,7 +782,7 @@ const ProfilePage: React.FC = () => {
         setCompletedCrop(undefined);
       }
     } catch (err) {
-      console.error("Crop and upload error:", err);
+      logError("Crop and upload error:", err);
 
       // Handle timeout errors specifically
       if (err instanceof Error && err.message.includes("taking too long")) {
@@ -854,10 +851,10 @@ const ProfilePage: React.FC = () => {
 
         log("[ProfilePage] File input click triggered successfully");
       } catch (error) {
-        console.error("[ProfilePage] Error clicking file input:", error);
+        logError("[ProfilePage] Error clicking file input:", error);
       }
     } else {
-      console.error("[ProfilePage] photoInputRef.current is null");
+      logError("[ProfilePage] photoInputRef.current is null");
     }
   };
 
@@ -949,7 +946,7 @@ const ProfilePage: React.FC = () => {
       });
 
       if (updateError) {
-        console.error(
+        logError(
           "[ProfilePage] Error updating profile with gear:",
           updateError,
         );
@@ -971,7 +968,7 @@ const ProfilePage: React.FC = () => {
       }
       setTimeout(() => setSuccess(null), 5000);
     } catch (err) {
-      console.error("[ProfilePage] Gear upload failed:", err);
+      logError("[ProfilePage] Gear upload failed:", err);
       if (err instanceof Error) {
         setError(err.message);
       } else {
@@ -1027,10 +1024,7 @@ const ProfilePage: React.FC = () => {
 
       // Simplified extraction - all photos should be ImageMetadata objects now
       if (typeof photo === "string") {
-        console.warn(
-          `[ProfilePage] Legacy string photo in share function:`,
-          photo,
-        );
+        warnLog(`[ProfilePage] Legacy string photo in share function:`, photo);
         const photoString = photo as string;
         if (photoString.startsWith("{") && photoString.includes('"url"')) {
           try {
@@ -1091,7 +1085,7 @@ const ProfilePage: React.FC = () => {
           //       }
           //     }
           //   } catch (exportError) {
-          //     console.error(
+          //     logError(
           //       "[ProfilePage] Error exporting overlay:",
           //       exportError,
           //     );
@@ -1115,7 +1109,7 @@ const ProfilePage: React.FC = () => {
 
           log("[ProfilePage] Photo with overlay shared successfully");
         } catch (shareError) {
-          console.error("[ProfilePage] Error sharing photo:", shareError);
+          logError("[ProfilePage] Error sharing photo:", shareError);
           // Fallback to copying URL
           await navigator.clipboard.writeText(photoUrl);
           setSuccess("Photo URL copied to clipboard!");
@@ -1128,10 +1122,7 @@ const ProfilePage: React.FC = () => {
           setSuccess("Photo URL copied to clipboard!");
           setTimeout(() => setSuccess(null), 3000);
         } catch (clipboardError) {
-          console.error(
-            "[ProfilePage] Error copying to clipboard:",
-            clipboardError,
-          );
+          logError("[ProfilePage] Error copying to clipboard:", clipboardError);
           setError("Unable to share photo. Please try again.");
         }
       }
@@ -1139,7 +1130,7 @@ const ProfilePage: React.FC = () => {
       // Close the menu
       setOpenMenuIndex(null);
     } catch (err) {
-      console.error("[ProfilePage] Error sharing photo:", err);
+      logError("[ProfilePage] Error sharing photo:", err);
       setError("Failed to share photo. Please try again.");
       setOpenMenuIndex(null);
     }
@@ -1151,10 +1142,7 @@ const ProfilePage: React.FC = () => {
 
     // Simplified extraction - all photos should be ImageMetadata objects now
     if (typeof photo === "string") {
-      console.warn(
-        `[ProfilePage] Legacy string photo in edit function:`,
-        photo,
-      );
+      warnLog(`[ProfilePage] Legacy string photo in edit function:`, photo);
       const photoString = photo as string;
       if (photoString.startsWith("{") && photoString.includes('"url"')) {
         try {
@@ -1232,7 +1220,7 @@ const ProfilePage: React.FC = () => {
       });
 
       if (error) {
-        console.error("[ProfilePage] Error updating AI info:", error);
+        logError("[ProfilePage] Error updating AI info:", error);
         setError("Failed to update AI info. Please try again.");
         return;
       }
@@ -1247,7 +1235,7 @@ const ProfilePage: React.FC = () => {
       setEditingMetadata(null);
       setTempLocationData(null);
     } catch (err) {
-      console.error("[ProfilePage] Error saving edited AI info:", err);
+      logError("[ProfilePage] Error saving edited AI info:", err);
       setError("Failed to update AI info. Please try again.");
     } finally {
       setLoading(false);
@@ -1279,10 +1267,7 @@ const ProfilePage: React.FC = () => {
       });
 
       if (error) {
-        console.error(
-          "[ProfilePage] Error deleting photo from database:",
-          error,
-        );
+        logError("[ProfilePage] Error deleting photo from database:", error);
         // Revert the local state if database update fails
         setUploadedPhotos(originalPhotos);
         setError("Failed to delete photo. Please try again.");
@@ -1295,7 +1280,7 @@ const ProfilePage: React.FC = () => {
       // Close the menu
       setOpenMenuIndex(null);
     } catch (err) {
-      console.error("[ProfilePage] Error deleting photo:", err);
+      logError("[ProfilePage] Error deleting photo:", err);
       setError("Failed to delete photo. Please try again.");
       // Revert the local state on error
       const originalPhotos = uploadedPhotos.filter((_, i) => i !== index);
@@ -1411,14 +1396,11 @@ const ProfilePage: React.FC = () => {
           newSizeUnder2MB: processedFile.size < 2 * 1024 * 1024,
         });
       } catch (compressionError) {
-        console.error(
-          "❌ [PROFILE PAGE] Image compression failed for large file:",
-          {
-            error: compressionError.message,
-            originalSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
-            willTryOriginalButMayTimeout: true,
-          },
-        );
+        logError("❌ [PROFILE PAGE] Image compression failed for large file:", {
+          error: compressionError.message,
+          originalSize: `${(file.size / (1024 * 1024)).toFixed(2)}MB`,
+          willTryOriginalButMayTimeout: true,
+        });
         // Continue with original file but warn that AI processing may timeout
         setError(
           "Image compression failed. Large images may take longer to process.",
@@ -1455,7 +1437,7 @@ const ProfilePage: React.FC = () => {
 
         if (!storageStatus.configured) {
           const errorMessage = "Supabase storage is not properly configured";
-          console.error(
+          logError(
             "[ProfilePage] Supabase storage not configured:",
             errorMessage,
           );
@@ -1489,7 +1471,7 @@ const ProfilePage: React.FC = () => {
           processImageUpload(processedFile, userLocation),
           new Promise<ImageMetadata>((_, reject) => {
             setTimeout(() => {
-              console.error(
+              logError(
                 "⏰ [PROFILE DEBUG] Image processing timeout (60s) - even with compression",
                 {
                   processedFileSize: `${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`,
@@ -1570,7 +1552,7 @@ const ProfilePage: React.FC = () => {
         }
         setTimeout(() => setSuccess(null), 5000);
       } catch (err) {
-        console.error("[ProfilePage] Photo upload error:", err);
+        logError("[ProfilePage] Photo upload error:", err);
         throw err;
       }
     };
@@ -1578,7 +1560,7 @@ const ProfilePage: React.FC = () => {
     try {
       await Promise.race([uploadProcess(), uploadTimeout]);
     } catch (err) {
-      console.error("[ProfilePage] Photo upload failed:", err);
+      logError("[ProfilePage] Photo upload failed:", err);
 
       if (err instanceof Error) {
         if (
@@ -1633,7 +1615,7 @@ const ProfilePage: React.FC = () => {
       log("Update profile result:", { error });
 
       if (error) {
-        console.error("Profile update error:", error);
+        logError("Profile update error:", error);
         setError(error.message || "Failed to update profile");
       } else {
         setSuccess("Profile updated successfully!");
@@ -1642,7 +1624,7 @@ const ProfilePage: React.FC = () => {
         setTimeout(() => setSuccess(null), 5000);
       }
     } catch (err) {
-      console.error("Profile save error:", err);
+      logError("Profile save error:", err);
       setError("Failed to update profile");
     } finally {
       setLoading(false);
@@ -1657,7 +1639,7 @@ const ProfilePage: React.FC = () => {
       // Navigation is now handled by the AuthContext signOut method
       log("[ProfilePage] Sign out completed");
     } catch (err) {
-      console.error("[ProfilePage] Sign out error:", err);
+      logError("[ProfilePage] Sign out error:", err);
       setError("Failed to sign out");
       // Force redirect even if signOut fails
       navigate("/login", { replace: true });
@@ -2085,7 +2067,7 @@ const ProfilePage: React.FC = () => {
 
                     // Handle legacy data that might still be strings
                     if (typeof photo === "string") {
-                      console.warn(
+                      warnLog(
                         `[ProfilePage] Legacy string photo detected at index ${index}:`,
                         photo,
                       );
@@ -2104,7 +2086,7 @@ const ProfilePage: React.FC = () => {
                             metadata,
                           );
                         } catch (parseError) {
-                          console.warn(
+                          warnLog(
                             `[ProfilePage] Failed to parse legacy photo metadata at index ${index}:`,
                             parseError,
                           );
@@ -2237,7 +2219,7 @@ const ProfilePage: React.FC = () => {
                               }));
                             }}
                             onError={(e) => {
-                              console.error(
+                              logError(
                                 `[ProfilePage] Error loading image ${index + 1}:`,
                                 {
                                   url: photoUrl,
@@ -2261,7 +2243,7 @@ const ProfilePage: React.FC = () => {
                               // Try to get more details about the error
                               fetch(photoUrl, { method: "HEAD" })
                                 .then((response) => {
-                                  console.error(
+                                  logError(
                                     `[ProfilePage] HTTP status for failed image ${index + 1}:`,
                                     {
                                       status: response.status,
@@ -2271,7 +2253,7 @@ const ProfilePage: React.FC = () => {
                                   );
                                 })
                                 .catch((fetchError) => {
-                                  console.error(
+                                  logError(
                                     `[ProfilePage] Network error for image ${index + 1}:`,
                                     {
                                       error: fetchError.message,

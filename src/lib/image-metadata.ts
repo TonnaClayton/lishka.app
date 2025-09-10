@@ -1,6 +1,6 @@
 import EXIF from "exif-js";
 import { OPENAI_ENABLED, validateOpenAIConfig } from "./openai-toggle";
-import { log } from "./logging";
+import { error as logError, log, warn as warnLog } from "./logging";
 import { config } from "@/lib/config";
 
 export interface ImageMetadata {
@@ -190,7 +190,7 @@ export const extractGPSFromEXIF = (
     });
     return { latitude, longitude };
   } catch (error) {
-    console.error("[ImageMetadata] Error extracting GPS from EXIF:", error);
+    logError("[ImageMetadata] Error extracting GPS from EXIF:", error);
     return null;
   }
 };
@@ -216,7 +216,7 @@ export const getCurrentLocation = (): Promise<{
         });
       },
       (error) => {
-        console.error("[ImageMetadata] Geolocation error:", error);
+        logError("[ImageMetadata] Geolocation error:", error);
         reject(error);
       },
       {
@@ -262,10 +262,7 @@ export const coordinatesToAddress = async (
 
     return locationParts.join(", ") || "Unknown Location";
   } catch (error) {
-    console.error(
-      "[ImageMetadata] Error converting coordinates to address:",
-      error,
-    );
+    logError("[ImageMetadata] Error converting coordinates to address:", error);
     return `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`;
   }
 };
@@ -343,13 +340,10 @@ export const identifyFishFromImage = async (
     });
 
     if (!OPENAI_ENABLED) {
-      console.error(
-        "❌ [MOBILE OPENAI DEBUG] OpenAI is disabled in configuration",
-        {
-          isMobile,
-          deviceType: isMobile ? "mobile" : "desktop",
-        },
-      );
+      logError("❌ [MOBILE OPENAI DEBUG] OpenAI is disabled in configuration", {
+        isMobile,
+        deviceType: isMobile ? "mobile" : "desktop",
+      });
       debugInfo.processingSteps.push("OpenAI disabled in configuration");
       return {
         name: "Unknown",
@@ -362,7 +356,7 @@ export const identifyFishFromImage = async (
 
     const apiKey = config.VITE_OPENAI_API_KEY;
     if (!apiKey) {
-      console.error("❌ [MOBILE OPENAI DEBUG] OpenAI API key is missing", {
+      logError("❌ [MOBILE OPENAI DEBUG] OpenAI API key is missing", {
         isMobile,
         deviceType: isMobile ? "mobile" : "desktop",
       });
@@ -377,7 +371,7 @@ export const identifyFishFromImage = async (
     }
 
     if (!validateOpenAIConfig()) {
-      console.error(
+      logError(
         "❌ [MOBILE OPENAI DEBUG] OpenAI configuration validation failed",
         {
           isMobile,
@@ -456,7 +450,7 @@ export const identifyFishFromImage = async (
         resolve(reader.result as string);
       };
       reader.onerror = (error) => {
-        console.error("❌ [MOBILE OPENAI DEBUG] Base64 conversion failed:", {
+        logError("❌ [MOBILE OPENAI DEBUG] Base64 conversion failed:", {
           error,
           isMobile,
           deviceType: isMobile ? "mobile" : "desktop",
@@ -487,7 +481,7 @@ export const identifyFishFromImage = async (
     const controller = new AbortController();
     const timeoutDuration = isMobile ? 90000 : 60000; // Much longer timeout for larger files
     const timeoutId = setTimeout(() => {
-      console.error("⏰ [MOBILE OPENAI DEBUG] OpenAI request timeout", {
+      logError("⏰ [MOBILE OPENAI DEBUG] OpenAI request timeout", {
         isMobile,
         timeoutDuration,
         deviceType: isMobile ? "mobile" : "desktop",
@@ -620,7 +614,7 @@ CRITICAL REQUIREMENTS:
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("❌ [MOBILE OPENAI DEBUG] OpenAI API error response", {
+        logError("❌ [MOBILE OPENAI DEBUG] OpenAI API error response", {
           status: response.status,
           statusText: response.statusText,
           errorBody: errorText,
@@ -654,7 +648,7 @@ CRITICAL REQUIREMENTS:
       });
 
       if (!content) {
-        console.error("❌ [OPENAI DEBUG] No content in OpenAI response", {
+        logError("❌ [OPENAI DEBUG] No content in OpenAI response", {
           choices: data.choices,
           choicesLength: data.choices?.length || 0,
           firstChoice: data.choices?.[0] || null,
@@ -707,7 +701,7 @@ CRITICAL REQUIREMENTS:
         fishInfo = JSON.parse(cleanContent);
         log("✅ [OPENAI DEBUG] Successfully parsed JSON response", fishInfo);
       } catch (parseError) {
-        console.error("❌ [OPENAI DEBUG] Failed to parse JSON response", {
+        logError("❌ [OPENAI DEBUG] Failed to parse JSON response", {
           content,
           parseError: parseError.message,
           contentType: typeof content,
@@ -751,7 +745,7 @@ CRITICAL REQUIREMENTS:
             rawJsonResponse: content,
           };
         } catch (manualError) {
-          console.error(
+          logError(
             "❌ [OPENAI DEBUG] Manual extraction also failed:",
             manualError,
           );
@@ -822,7 +816,7 @@ CRITICAL REQUIREMENTS:
           rawJsonResponse: content,
         };
       } else {
-        console.warn(
+        warnLog(
           "⚠️ [OPENAI DEBUG] Invalid fish identification response structure, attempting to fix",
           {
             fishInfo,
@@ -863,13 +857,10 @@ CRITICAL REQUIREMENTS:
       const totalTime = Date.now() - startTime;
 
       if (fetchError.name === "AbortError") {
-        console.error(
-          "⏰ [OPENAI DEBUG] Fish identification request timed out",
-          {
-            totalTime,
-            timeout: "30 seconds",
-          },
-        );
+        logError("⏰ [OPENAI DEBUG] Fish identification request timed out", {
+          totalTime,
+          timeout: "30 seconds",
+        });
         debugInfo.processingSteps.push(`Request timed out (${totalTime}ms)`);
         return {
           name: "Unknown",
@@ -883,7 +874,7 @@ CRITICAL REQUIREMENTS:
         };
       }
 
-      console.error("❌ [OPENAI DEBUG] Network/fetch error", {
+      logError("❌ [OPENAI DEBUG] Network/fetch error", {
         error: fetchError.message,
         errorName: fetchError.name,
         totalTime,
@@ -904,7 +895,7 @@ CRITICAL REQUIREMENTS:
     }
   } catch (error) {
     const totalTime = Date.now() - startTime;
-    console.error("💥 [OPENAI DEBUG] Complete fish identification failure", {
+    logError("💥 [OPENAI DEBUG] Complete fish identification failure", {
       error: error.message,
       errorType: error.constructor.name,
       totalTime,
@@ -997,7 +988,7 @@ export const processImageUpload = async (
         extractImageMetadata(file),
         new Promise((_, reject) => {
           setTimeout(() => {
-            console.error("⏰ [TWO-STAGE AI] EXIF extraction timeout", {
+            logError("⏰ [TWO-STAGE AI] EXIF extraction timeout", {
               isMobile,
               fileName: file.name,
               timeoutAfter: 5000,
@@ -1062,7 +1053,7 @@ export const processImageUpload = async (
             getCurrentLocation(),
             new Promise<never>((_, reject) => {
               setTimeout(() => {
-                console.error("⏰ [TWO-STAGE AI] Current location timeout", {
+                logError("⏰ [TWO-STAGE AI] Current location timeout", {
                   isMobile,
                   timeoutAfter: 10000,
                 });
@@ -1099,7 +1090,7 @@ export const processImageUpload = async (
             coordinatesToAddress(location.latitude, location.longitude),
             new Promise<string>((_, reject) => {
               setTimeout(() => {
-                console.error("⏰ [TWO-STAGE AI] Geocoding timeout", {
+                logError("⏰ [TWO-STAGE AI] Geocoding timeout", {
                   isMobile,
                   coordinates: location,
                   timeoutAfter: 10000,
@@ -1120,7 +1111,7 @@ export const processImageUpload = async (
             location: metadata.location,
           });
         } catch (error) {
-          console.error("❌ [TWO-STAGE AI] Error getting address:", {
+          logError("❌ [TWO-STAGE AI] Error getting address:", {
             isMobile,
             error: error.message,
             coordinates: location,
@@ -1222,7 +1213,7 @@ export const processImageUpload = async (
               },
             );
           } catch (detailedError) {
-            console.error(
+            logError(
               "❌ [TWO-STAGE AI] Stage 2: Detailed fish identification failed",
               {
                 isMobile,
@@ -1283,7 +1274,7 @@ export const processImageUpload = async (
           deviceType: isMobile ? "mobile" : "desktop",
         });
       } catch (error) {
-        console.error("❌ [TWO-STAGE AI] Complete AI process failed", {
+        logError("❌ [TWO-STAGE AI] Complete AI process failed", {
           isMobile,
           error: error.message,
           errorType: error.constructor.name,
@@ -1328,18 +1319,15 @@ export const processImageUpload = async (
           estimatedWeight: "Unknown",
           confidence: 0,
         };
-        console.warn(
-          "⚠️ [TWO-STAGE AI] Created emergency fallback fish info:",
-          {
-            isMobile,
-            fishInfo: metadata.fishInfo,
-            reason: "fishInfo was unexpectedly null",
-            deviceType: isMobile ? "mobile" : "desktop",
-          },
-        );
+        warnLog("⚠️ [TWO-STAGE AI] Created emergency fallback fish info:", {
+          isMobile,
+          fishInfo: metadata.fishInfo,
+          reason: "fishInfo was unexpectedly null",
+          deviceType: isMobile ? "mobile" : "desktop",
+        });
       }
     } catch (error) {
-      console.error("❌ [TWO-STAGE AI] Error processing image metadata:", {
+      logError("❌ [TWO-STAGE AI] Error processing image metadata:", {
         isMobile,
         error: error.message,
         errorType: error.constructor.name,
@@ -1374,20 +1362,17 @@ export const processImageUpload = async (
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
         navigator.userAgent,
       );
-    console.error(
-      "❌ [TWO-STAGE AI] Metadata processing failed or timed out:",
-      {
-        isMobile,
-        error: error.message,
-        errorType: error.constructor.name,
-        deviceType: isMobile ? "mobile" : "desktop",
-        fileInfo: {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-        },
+    logError("❌ [TWO-STAGE AI] Metadata processing failed or timed out:", {
+      isMobile,
+      error: error.message,
+      errorType: error.constructor.name,
+      deviceType: isMobile ? "mobile" : "desktop",
+      fileInfo: {
+        name: file.name,
+        size: file.size,
+        type: file.type,
       },
-    );
+    });
     // Return basic metadata if processing fails
     return metadata;
   }

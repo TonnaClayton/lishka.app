@@ -638,7 +638,7 @@ export function cacheApiResponse(
     };
     localStorage.setItem(key, JSON.stringify(cacheItem));
   } catch (error) {
-    console.error("Error caching API response:", error);
+    error("Error caching API response:", error);
   }
 }
 
@@ -656,7 +656,7 @@ export function getCachedApiResponse(key: string): any {
 
     return data;
   } catch (error) {
-    console.error("Error retrieving cached API response:", error);
+    error("Error retrieving cached API response:", error);
     return null;
   }
 }
@@ -678,7 +678,7 @@ export function clearOffshoreFishingCache(): void {
 
     log(`Cleared ${keysToRemove.length} offshore fishing cache entries`);
   } catch (error) {
-    console.error("Error clearing offshore fishing cache:", error);
+    error("Error clearing offshore fishing cache:", error);
   }
 }
 

@@ -1,4 +1,4 @@
-import { log } from "./logging";
+import { error as logError, log, warn as warnLog } from "./logging";
 
 // Data validation function to check for potentially inaccurate AI responses
 export const validateFishingData = (
@@ -69,10 +69,10 @@ export const validateFishingData = (
 
   // Log validation results
   if (errors.length > 0) {
-    console.error("❌ Data validation errors:", errors);
+    logError("❌ Data validation errors:", errors);
   }
   if (warnings.length > 0) {
-    console.warn("⚠️ Data validation warnings:", warnings);
+    warnLog("⚠️ Data validation warnings:", warnings);
   }
   if (errors.length === 0 && warnings.length === 0) {
     log("✅ Data validation passed");
@@ -214,7 +214,7 @@ export const validateAndSanitizeRegulations = (
     }
 
     if (wasModified) {
-      console.warn(
+      warnLog(
         `⚠️ Regulation validation: Modified ${fieldName} due to suspicious content`,
         { original: entry, modified: { value, source, confidence } },
       );
@@ -269,7 +269,7 @@ export const validateAndSanitizeRegulations = (
     validationFlags.genericSourcesReplaced ||
     validationFlags.confidenceDowngraded
   ) {
-    console.warn(
+    warnLog(
       "🛡️ Regulation validation detected and corrected potential AI hallucination:",
       validationFlags,
     );

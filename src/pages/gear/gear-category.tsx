@@ -281,7 +281,7 @@ const GearCategoryPage: React.FC = () => {
       //     );
       //     setExpandedCardIndex(gearIndex);
       //   } else {
-      //     console.warn(
+      //     warnLog(
       //       `[GearCategoryPage] Gear with ID ${gearId} not found in category ${categoryId}`
       //     );
       //   }
@@ -301,7 +301,7 @@ const GearCategoryPage: React.FC = () => {
       setSuccess("Gear deleted successfully!");
       setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
-      console.error("[GearCategoryPage] Error deleting gear:", error);
+      error("[GearCategoryPage] Error deleting gear:", error);
       setError("Failed to delete gear. Please try again.");
     } finally {
       setLoading(false);

@@ -14,7 +14,7 @@ import {
 import { useAuth } from "@/contexts/auth-context";
 import { useUpload } from "@/contexts/upload-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { log } from "@/lib/logging";
+import { log, error, warn as warnLog } from "@/lib/logging";
 import { ROUTES } from "@/lib/routing";
 import { cn } from "@/lib/utils";
 import PhotoUploadBar from "@/pages/profile/photo-upload-bar";
@@ -65,7 +65,7 @@ const BottomNav: React.FC = () => {
     try {
       await handlePhotoUpload(file);
     } catch (error: any) {
-      console.error("❌ [BOTTOMNAV] Smart upload failed:", error);
+      error("❌ [BOTTOMNAV] Smart upload failed:", error);
       alert(error?.message || "Failed to process photo. Please try again.");
     }
 
@@ -198,7 +198,7 @@ export const SideNav: React.FC = () => {
     hasRouterContext = true;
   } catch {
     // Component is rendered outside Router context
-    console.warn("SideNav rendered outside Router context");
+    warnLog("SideNav rendered outside Router context");
     hasRouterContext = false;
   }
 
@@ -211,7 +211,7 @@ export const SideNav: React.FC = () => {
     hasAuthContext = true;
   } catch {
     // Component is rendered outside AuthProvider, use default values
-    console.warn("SideNav rendered outside AuthProvider context");
+    warnLog("SideNav rendered outside AuthProvider context");
     hasAuthContext = false;
   }
 
@@ -409,7 +409,7 @@ export const SideNav: React.FC = () => {
                   }
                   log("[SideNav] Sign out completed");
                 } catch (err) {
-                  console.error("[SideNav] Sign out error:", err);
+                  error("[SideNav] Sign out error:", err);
                   // Fallback on error: clear everything and redirect
                   localStorage.clear();
                   sessionStorage.clear();

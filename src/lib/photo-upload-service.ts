@@ -3,7 +3,7 @@ import {
   uploadImageToSupabase,
 } from "./supabase-storage";
 import { ImageMetadata, processImageUpload } from "./image-metadata";
-import { log } from "./logging";
+import { error as logError, log } from "./logging";
 
 export interface PhotoUploadResult {
   success: boolean;
@@ -129,7 +129,7 @@ export class PhotoUploadService {
           file.size /
           (1024 * 1024)
         ).toFixed(1)}MB)`;
-        console.error("❌ [PHOTO UPLOAD SERVICE] File too large:", {
+        logError("❌ [PHOTO UPLOAD SERVICE] File too large:", {
           isMobile,
           fileSize: file.size,
           fileSizeInMB: (file.size / (1024 * 1024)).toFixed(2),
@@ -143,7 +143,7 @@ export class PhotoUploadService {
       // Validate file type
       if (!file.type.startsWith("image/")) {
         const errorMsg = "Please select an image file";
-        console.error("❌ [PHOTO UPLOAD SERVICE] Invalid file type:", {
+        logError("❌ [PHOTO UPLOAD SERVICE] Invalid file type:", {
           isMobile,
           fileType: file.type,
           fileName: file.name,
@@ -173,16 +173,13 @@ export class PhotoUploadService {
 
       if (!storageStatus.configured) {
         const errorMessage = "Supabase storage is not properly configured";
-        console.error(
-          "❌ [PHOTO UPLOAD SERVICE] Supabase storage not configured:",
-          {
-            errorMessage,
-            isMobile,
-            deviceType: isMobile ? "mobile" : "desktop",
-            storageStatus,
-            source,
-          },
-        );
+        logError("❌ [PHOTO UPLOAD SERVICE] Supabase storage not configured:", {
+          errorMessage,
+          isMobile,
+          deviceType: isMobile ? "mobile" : "desktop",
+          storageStatus,
+          source,
+        });
         this.notifyCallbacks("onError", errorMessage);
         return { success: false, error: errorMessage };
       }
@@ -205,7 +202,7 @@ export class PhotoUploadService {
 
       const metadata = await Promise.race([
         processImageUpload(file, null).catch((error) => {
-          console.error("❌ [PHOTO UPLOAD SERVICE] Image processing error:", {
+          logError("❌ [PHOTO UPLOAD SERVICE] Image processing error:", {
             error: error.message,
             isMobile,
             deviceType: isMobile ? "mobile" : "desktop",
@@ -217,7 +214,7 @@ export class PhotoUploadService {
         new Promise<ImageMetadata>((_, reject) => {
           setTimeout(() => {
             const timeoutError = new Error("Image processing timed out");
-            console.error(
+            logError(
               "⏰ [PHOTO UPLOAD SERVICE] Image processing timeout (45s)",
               {
                 isMobile,
@@ -336,7 +333,7 @@ export class PhotoUploadService {
         });
       } catch (uploadError) {
         const uploadTime = Date.now() - uploadStart;
-        console.error("❌ [PHOTO UPLOAD SERVICE] Photo upload failed:", {
+        logError("❌ [PHOTO UPLOAD SERVICE] Photo upload failed:", {
           error:
             uploadError instanceof Error
               ? uploadError.message
@@ -505,10 +502,7 @@ export class PhotoUploadService {
         source,
       };
 
-      console.error(
-        "❌ [PHOTO UPLOAD SERVICE] Photo upload error:",
-        errorDetails,
-      );
+      logError("❌ [PHOTO UPLOAD SERVICE] Photo upload error:", errorDetails);
 
       let errorMsg = "Failed to upload photo. Please try again.";
       if (err instanceof Error) {

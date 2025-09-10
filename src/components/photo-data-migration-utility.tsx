@@ -7,6 +7,7 @@ import { ImageMetadata } from "@/lib/image-metadata";
 import { Database, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
 import { toImageMetadataItem } from "@/lib/gallery-photo";
 import { Json } from "@/types/supabase";
+import { error as logError } from "@/lib/logging";
 
 interface MigrationResult {
   totalPhotos: number;
@@ -104,7 +105,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
         errors,
       });
     } catch (err) {
-      console.error("Migration error:", err);
+      logError("Migration error:", err);
       setError(err instanceof Error ? err.message : "Migration failed");
     } finally {
       setMigrating(false);

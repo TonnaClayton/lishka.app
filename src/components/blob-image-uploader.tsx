@@ -61,7 +61,7 @@ const BlobImageUploader = () => {
         message: `Image uploaded successfully! It will be available for fish with scientific name: ${scientificName}`,
       });
     } catch (error) {
-      console.error("Error uploading image:", error);
+      error("Error uploading image:", error);
       setStatus({
         type: "destructive",
         message: `Upload failed: ${error instanceof Error ? error.message : String(error)}`,

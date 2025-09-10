@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/lib/supabase";
-import { log } from "@/lib/logging";
+import { log, error as logError } from "@/lib/logging";
 import { ROUTES } from "@/lib/routing";
 
 export function AuthCallback() {
@@ -27,7 +27,7 @@ export function AuthCallback() {
         });
 
         if (error) {
-          console.error("[AuthCallback] OAuth callback error:", error);
+          logError("[AuthCallback] OAuth callback error:", error);
           navigate(ROUTES.LOGIN, {
             replace: true,
             state: { error: "Authentication failed. Please try again." },
@@ -45,7 +45,7 @@ export function AuthCallback() {
           navigate(ROUTES.LOGIN, { replace: true });
         }
       } catch (err) {
-        console.error("[AuthCallback] Unexpected error:", err);
+        logError("[AuthCallback] Unexpected error:", err);
         navigate(ROUTES.LOGIN, {
           replace: true,
           state: {

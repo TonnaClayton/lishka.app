@@ -33,7 +33,7 @@ const BlobConnectionTest = () => {
           setMessage("Connected to Vercel Blob. No images found.");
         }
       } catch (error) {
-        console.error("Vercel Blob connection test failed:", error);
+        error("Vercel Blob connection test failed:", error);
         setStatus("error");
         setMessage(
           `Connection error: ${error instanceof Error ? error.message : String(error)}`,

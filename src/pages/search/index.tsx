@@ -12,6 +12,7 @@ import BottomNav from "@/components/bottom-nav";
 import useDeviceSize from "@/hooks/use-device-size";
 import useIsMobile from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
+import { error as logError } from "@/lib/logging";
 import {
   Tooltip,
   TooltipTrigger,
@@ -246,7 +247,7 @@ const SearchPage: React.FC = () => {
         });
       }
     } catch (err) {
-      console.error("Error fetching response:", err);
+      logError("Error fetching response:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
 
       // Add a fallback message when an error occurs
@@ -293,7 +294,7 @@ const SearchPage: React.FC = () => {
         currentImageFile || undefined,
       );
     } catch (err) {
-      console.error("Error in handleSubmit:", err);
+      logError("Error in handleSubmit:", err);
       setLoading(false);
       setError("Failed to process your search. Please try again.");
     }
@@ -325,7 +326,7 @@ const SearchPage: React.FC = () => {
     try {
       await processQuery(suggestion, userMessage);
     } catch (err) {
-      console.error("Error in handleSuggestionClick:", err);
+      logError("Error in handleSuggestionClick:", err);
       setLoading(false);
       setError("Failed to process your search. Please try again.");
     }

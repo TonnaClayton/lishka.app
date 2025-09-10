@@ -43,7 +43,7 @@ import {
 } from "@/components/ui/dialog";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { log } from "@/lib/logging";
+
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -66,6 +66,7 @@ import PhotoUploadBar from "./photo-upload-bar";
 import GearItemUploadBar from "./gear-item-upload-bar";
 import { toImageMetadataItem } from "@/lib/gallery-photo";
 import UploadedInfoMsg from "./uploaded-info-msg";
+import { error as logError, log, warn as warnLog } from "@/lib/logging";
 
 // Zod schema for profile form validation
 const profileSchema = z.object({
@@ -159,7 +160,7 @@ const MapClickHandler = ({
 
         onLocationSelect(lat, lng, locationName);
       } catch (error) {
-        console.error("Error getting location name:", error);
+        logError("getting location name:", error);
         // Display coordinates as fallback
         const formattedLat = lat.toFixed(6);
         const formattedLng = lng.toFixed(6);
@@ -357,7 +358,7 @@ const ProfilePage: React.FC = () => {
     try {
       await deletePhoto.mutateAsync(index);
     } catch (err) {
-      console.error("[ProfilePage] Error deleting photo:", err);
+      logError("[ProfilePage] Error deleting photo:", err);
       setError("Failed to delete photo. Please try again.");
     } finally {
       setLoading(false);
@@ -412,10 +413,10 @@ const ProfilePage: React.FC = () => {
           photoInputRef.current.click();
         }
       } catch (error) {
-        console.error("[ProfilePage] Error clicking file input:", error);
+        logError("[ProfilePage] Error clicking file input:", error);
       }
     } else {
-      console.error("[ProfilePage] photoInputRef.current is null");
+      logError("[ProfilePage] photoInputRef.current is null");
     }
   };
 
@@ -517,7 +518,7 @@ const ProfilePage: React.FC = () => {
       });
       setCompletedCrop(undefined);
     } catch (err) {
-      console.error("Crop and upload error:", err);
+      logError("[ProfilePage] upload error:", err);
 
       // Handle timeout errors specifically
       if (err instanceof Error && err.message.includes("taking too long")) {
@@ -573,7 +574,7 @@ const ProfilePage: React.FC = () => {
       setEditingMetadata(null);
       setTempLocationData(null);
     } catch (err) {
-      console.error("[ProfilePage] Error saving edited AI info:", err);
+      logError("[ProfilePage] Error saving edited AI info:", err);
       setError("Failed to update AI info. Please try again.");
     } finally {
       setLoading(false);
@@ -639,10 +640,7 @@ const ProfilePage: React.FC = () => {
 
     // Simplified extraction - all photos should be ImageMetadata objects now
     if (typeof photo === "string") {
-      console.warn(
-        `[ProfilePage] Legacy string photo in edit function:`,
-        photo,
-      );
+      warnLog(`[ProfilePage] Legacy string photo in edit function:`, photo);
       const photoString = photo as string;
       if (photoString.startsWith("{") && photoString.includes('"url"')) {
         try {
@@ -718,7 +716,7 @@ const ProfilePage: React.FC = () => {
             setBorderStyle({ left, width });
           }
         } catch (error) {
-          console.warn("Error calculating border position:", error);
+          warnLog("Error calculating border position:", error);
         }
       }
     }

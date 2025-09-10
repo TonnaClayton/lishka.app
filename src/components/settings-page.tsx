@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
-import { log } from "@/lib/logging";
+import { log, error as logError } from "@/lib/logging";
 
 import BottomNav from "./bottom-nav";
 import { useAuth } from "@/contexts/auth-context";
@@ -40,11 +40,11 @@ const SettingsPage: React.FC = () => {
     })
       .then((res) => {
         if (res.error) {
-          console.error("[SettingsPage] Units update error:", res.error);
+          logError("[SettingsPage] Units update error:", res.error);
         }
       })
       .catch((err) => {
-        console.error("[SettingsPage] Units update error:", err);
+        logError("[SettingsPage] Units update error:", err);
       })
       .finally(() => {
         setIsUpdating(false);
@@ -57,7 +57,7 @@ const SettingsPage: React.FC = () => {
       await signOut();
       log("[SettingsPage] Sign out completed");
     } catch (err) {
-      console.error("[SettingsPage] Sign out error:", err);
+      logError("[SettingsPage] Sign out error:", err);
       // Force redirect even if signOut fails
       navigate(ROUTES.LOGIN, { replace: true });
     }
@@ -70,11 +70,11 @@ const SettingsPage: React.FC = () => {
       const { error } = await deleteAccount();
 
       if (error) {
-        console.error("[SettingsPage] Account deletion error:", error);
+        logError("[SettingsPage] Account deletion error:", error);
         alert("Failed to delete account. Please try again or contact support.");
       }
     } catch (err) {
-      console.error("[SettingsPage] Account deletion error:", err);
+      logError("[SettingsPage] Account deletion error:", err);
       alert("Failed to delete account. Please try again or contact support.");
     } finally {
       setIsDeleting(false);

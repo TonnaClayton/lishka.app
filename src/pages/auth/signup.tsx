@@ -17,6 +17,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
 import { ROUTES } from "@/lib/routing";
+import { error as logError } from "@/lib/logging";
 
 const signupSchema = z
   .object({
@@ -113,7 +114,7 @@ const SignupPage: React.FC = () => {
         }
       }
     } catch (err) {
-      console.error("Signup error:", err);
+      logError("Signup error:", err);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);

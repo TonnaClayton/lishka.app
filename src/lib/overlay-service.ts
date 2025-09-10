@@ -1,5 +1,5 @@
 import { ImageMetadata } from "./image-metadata";
-import { log } from "./logging";
+import { log, warn as warnLog } from "./logging";
 
 /**
  * Unified overlay service that handles overlay rendering decisions consistently
@@ -178,7 +178,7 @@ export class OverlayService {
           });
           return parsed;
         } catch (parseError) {
-          console.warn("🔍 [OVERLAY SERVICE] Failed to parse JSON string:", {
+          warnLog("🔍 [OVERLAY SERVICE] Failed to parse JSON string:", {
             error: parseError.message,
             photoString: photo.substring(0, 200),
             isMobile,
