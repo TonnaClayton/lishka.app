@@ -25,4 +25,14 @@ export const fishSchema = z.object({
   season: z.string().optional().nullable(),
   slug: z.string().optional().nullable(),
   updated_at: z.string().optional().nullable(),
+
+  toxicity_mechanism: z.string().optional().nullable(),
+  region_supported: z.boolean().optional().nullable(),
+  evidence_summary: z.string().optional().nullable(),
+  evidence_sources: z.array(z.string()).optional().nullable(),
+  habitat_score: z.number().optional().nullable(),
+  season_score: z.number().optional().nullable(),
+  region_evidence_score: z.number().optional().nullable(),
+  mechanism_score: z.number().optional().nullable(),
+  is_detailed: z.boolean().optional().nullable(),
 });
