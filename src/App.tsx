@@ -26,6 +26,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { cn } from "./lib/utils";
 import { ROUTES } from "./lib/routing";
 import ErrorBoundary from "./components/error-boundary";
+import LandingPage from "./pages/landing";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./pages/home"));
@@ -79,6 +80,10 @@ const router = createBrowserRouter(
       element: <AppWithAuth />,
       children: [
         // Public routes
+        {
+          path: "/home",
+          element: <LandingPage />,
+        },
         {
           path: ROUTES.LOGIN,
           element: (
@@ -376,6 +381,7 @@ function AppContent() {
     ROUTES.FORGOT_PASSWORD,
     ROUTES.LOGIN_EMAIL,
     ROUTES.RESET_PASSWORD,
+    "/home",
   ].includes(location.pathname);
 
   // Set initial sidebar width CSS variable and handle resize
