@@ -31,222 +31,222 @@ const GearCategoryPage: React.FC = () => {
   const currentCategory = GEAR_CATEGORIES.find((cat) => cat.id === categoryId);
 
   // Mock data for testing different categories
-  const getMockDataForCategory = (categoryId: string): GearItem[] => {
-    const baseImageUrl =
-      "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80";
+  // const getMockDataForCategory = (categoryId: string): GearItem[] => {
+  //   const baseImageUrl =
+  //     "https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400&q=80";
 
-    switch (categoryId) {
-      case "rods-reels":
-        return [
-          {
-            id: "rod-1",
-            name: "Shimano Stradic CI4+ Spinning Reel",
-            category: "rods-reels",
-            brand: "Shimano",
-            model: "Stradic CI4+",
+  //   switch (categoryId) {
+  //     case "rods-reels":
+  //       return [
+  //         {
+  //           id: "rod-1",
+  //           name: "Shimano Stradic CI4+ Spinning Reel",
+  //           category: "rods-reels",
+  //           brand: "Shimano",
+  //           model: "Stradic CI4+",
 
-            imageUrl: baseImageUrl,
-            timestamp: new Date().toISOString(),
-            gearType: "Spinning Reel",
-            size: "3000 Series",
-            weight: "7.4 oz",
-            targetFish: "Bass, Trout, Walleye",
-            fishingTechnique: "Spinning, Finesse fishing",
-            gearRatio: "6.0:1",
-            bearings: "6+1 Ball Bearings",
-            dragSystem: "Front Drag",
-            lineCapacity: "8lb/140yd, 10lb/120yd",
-            construction: "CI4+ Body Material",
-            features: "X-Ship Technology, Hagane Gear",
-          },
-          {
-            id: "rod-2",
-            name: "St. Croix Bass X Casting Rod",
-            category: "rods-reels",
-            brand: "St. Croix",
-            model: "Bass X",
+  //           imageUrl: baseImageUrl,
+  //           timestamp: new Date().toISOString(),
+  //           gearType: "Spinning Reel",
+  //           size: "3000 Series",
+  //           weight: "7.4 oz",
+  //           targetFish: "Bass, Trout, Walleye",
+  //           fishingTechnique: "Spinning, Finesse fishing",
+  //           gearRatio: "6.0:1",
+  //           bearings: "6+1 Ball Bearings",
+  //           dragSystem: "Front Drag",
+  //           lineCapacity: "8lb/140yd, 10lb/120yd",
+  //           construction: "CI4+ Body Material",
+  //           features: "X-Ship Technology, Hagane Gear",
+  //         },
+  //         {
+  //           id: "rod-2",
+  //           name: "St. Croix Bass X Casting Rod",
+  //           category: "rods-reels",
+  //           brand: "St. Croix",
+  //           model: "Bass X",
 
-            imageUrl: baseImageUrl,
-            timestamp: new Date().toISOString(),
-            gearType: "Casting Rod",
-            size: "7'0\"",
-            weight: "4.2 oz",
-            targetFish: "Bass, Pike",
-            fishingTechnique: "Baitcasting, Heavy lures",
-            action: "Medium Heavy",
-            power: "Fast Action",
-            lineWeight: "12-20 lb",
-            lureWeight: "1/4 - 3/4 oz",
-            construction: "Premium SCII Graphite",
-            handle: "Premium Cork Handle",
-          },
-        ];
+  //           imageUrl: baseImageUrl,
+  //           timestamp: new Date().toISOString(),
+  //           gearType: "Casting Rod",
+  //           size: "7'0\"",
+  //           weight: "4.2 oz",
+  //           targetFish: "Bass, Pike",
+  //           fishingTechnique: "Baitcasting, Heavy lures",
+  //           action: "Medium Heavy",
+  //           power: "Fast Action",
+  //           lineWeight: "12-20 lb",
+  //           lureWeight: "1/4 - 3/4 oz",
+  //           construction: "Premium SCII Graphite",
+  //           handle: "Premium Cork Handle",
+  //         },
+  //       ];
 
-      case "accessories":
-        return [
-          {
-            id: "acc-1",
-            name: "Plano 3700 Tackle Box",
-            category: "accessories",
-            brand: "Plano",
-            model: "3700",
+  //     case "accessories":
+  //       return [
+  //         {
+  //           id: "acc-1",
+  //           name: "Plano 3700 Tackle Box",
+  //           category: "accessories",
+  //           brand: "Plano",
+  //           model: "3700",
 
-            imageUrl: baseImageUrl,
-            timestamp: new Date().toISOString(),
-            gearType: "Tackle Storage",
-            size: '14" x 9" x 2"',
-            weight: "1.5 lbs",
-            capacity: "Multiple compartments",
-            material: "Durable Plastic",
-            features: "Adjustable dividers, Secure latches",
-            waterResistant: "Yes",
-            compartments: "4-24 adjustable compartments",
-            usage: "Lure and tackle organization",
-          },
-          {
-            id: "acc-2",
-            name: "Berkley Braid Scissors",
-            category: "accessories",
-            brand: "Berkley",
+  //           imageUrl: baseImageUrl,
+  //           timestamp: new Date().toISOString(),
+  //           gearType: "Tackle Storage",
+  //           size: '14" x 9" x 2"',
+  //           weight: "1.5 lbs",
+  //           capacity: "Multiple compartments",
+  //           material: "Durable Plastic",
+  //           features: "Adjustable dividers, Secure latches",
+  //           waterResistant: "Yes",
+  //           compartments: "4-24 adjustable compartments",
+  //           usage: "Lure and tackle organization",
+  //         },
+  //         {
+  //           id: "acc-2",
+  //           name: "Berkley Braid Scissors",
+  //           category: "accessories",
+  //           brand: "Berkley",
 
-            imageUrl: baseImageUrl,
-            timestamp: new Date().toISOString(),
-            gearType: "Cutting Tool",
-            size: "4 inches",
-            weight: "2 oz",
-            material: "Stainless Steel",
-            features: "Serrated edge, Ergonomic grip",
-            usage: "Cutting braid and mono lines",
-            sharpness: "Precision cutting edge",
-            durability: "Corrosion resistant",
-          },
-        ];
+  //           imageUrl: baseImageUrl,
+  //           timestamp: new Date().toISOString(),
+  //           gearType: "Cutting Tool",
+  //           size: "4 inches",
+  //           weight: "2 oz",
+  //           material: "Stainless Steel",
+  //           features: "Serrated edge, Ergonomic grip",
+  //           usage: "Cutting braid and mono lines",
+  //           sharpness: "Precision cutting edge",
+  //           durability: "Corrosion resistant",
+  //         },
+  //       ];
 
-      case "bait-chum":
-        return [
-          {
-            id: "bait-1",
-            name: "Berkley PowerBait Trout Nuggets",
-            category: "bait-chum",
-            brand: "Berkley",
-            model: "PowerBait",
+  //     case "bait-chum":
+  //       return [
+  //         {
+  //           id: "bait-1",
+  //           name: "Berkley PowerBait Trout Nuggets",
+  //           category: "bait-chum",
+  //           brand: "Berkley",
+  //           model: "PowerBait",
 
-            imageUrl: baseImageUrl,
-            timestamp: new Date().toISOString(),
-            gearType: "Artificial Bait",
-            size: "1.75 oz jar",
-            targetFish: "Trout, Salmon",
-            baitType: "Dough Bait",
-            scent: "Garlic scented",
-            color: "Rainbow",
-            waterType: "Freshwater",
-            season: "Year-round",
-            technique: "Still fishing, Bottom fishing",
-          },
-          {
-            id: "bait-2",
-            name: "Gulp! Saltwater Shrimp",
-            category: "bait-chum",
-            brand: "Berkley",
-            model: "Gulp!",
+  //           imageUrl: baseImageUrl,
+  //           timestamp: new Date().toISOString(),
+  //           gearType: "Artificial Bait",
+  //           size: "1.75 oz jar",
+  //           targetFish: "Trout, Salmon",
+  //           baitType: "Dough Bait",
+  //           scent: "Garlic scented",
+  //           color: "Rainbow",
+  //           waterType: "Freshwater",
+  //           season: "Year-round",
+  //           technique: "Still fishing, Bottom fishing",
+  //         },
+  //         {
+  //           id: "bait-2",
+  //           name: "Gulp! Saltwater Shrimp",
+  //           category: "bait-chum",
+  //           brand: "Berkley",
+  //           model: "Gulp!",
 
-            imageUrl: baseImageUrl,
-            timestamp: new Date().toISOString(),
-            gearType: "Soft Plastic Bait",
-            size: "3 inch",
-            targetFish: "Redfish, Snook, Trout",
-            baitType: "Soft Plastic",
-            scent: "Natural shrimp scent",
-            color: "New Penny",
-            waterType: "Saltwater",
-            season: "Year-round",
-            technique: "Jigging, Carolina rig",
-          },
-        ];
+  //           imageUrl: baseImageUrl,
+  //           timestamp: new Date().toISOString(),
+  //           gearType: "Soft Plastic Bait",
+  //           size: "3 inch",
+  //           targetFish: "Redfish, Snook, Trout",
+  //           baitType: "Soft Plastic",
+  //           scent: "Natural shrimp scent",
+  //           color: "New Penny",
+  //           waterType: "Saltwater",
+  //           season: "Year-round",
+  //           technique: "Jigging, Carolina rig",
+  //         },
+  //       ];
 
-      case "electronics":
-        return [
-          {
-            id: "elec-1",
-            name: "Garmin Striker 4 Fish Finder",
-            category: "electronics",
-            brand: "Garmin",
-            model: "Striker 4",
+  //     case "electronics":
+  //       return [
+  //         {
+  //           id: "elec-1",
+  //           name: "Garmin Striker 4 Fish Finder",
+  //           category: "electronics",
+  //           brand: "Garmin",
+  //           model: "Striker 4",
 
-            imageUrl: baseImageUrl,
-            timestamp: new Date().toISOString(),
-            gearType: "Fish Finder",
-            screenSize: "3.5 inch",
-            frequency: "77/200 kHz",
-            maxDepth: "1,600 ft freshwater",
-            gps: "Built-in GPS",
-            transducer: "Dual-beam transducer",
-            features: "CHIRP sonar, Waypoint marking",
-            powerSource: "12V DC",
-            mounting: "Tilt/swivel mount included",
-          },
-          {
-            id: "elec-2",
-            name: "Piscifun Fishing Scale",
-            category: "electronics",
-            brand: "Piscifun",
+  //           imageUrl: baseImageUrl,
+  //           timestamp: new Date().toISOString(),
+  //           gearType: "Fish Finder",
+  //           screenSize: "3.5 inch",
+  //           frequency: "77/200 kHz",
+  //           maxDepth: "1,600 ft freshwater",
+  //           gps: "Built-in GPS",
+  //           transducer: "Dual-beam transducer",
+  //           features: "CHIRP sonar, Waypoint marking",
+  //           powerSource: "12V DC",
+  //           mounting: "Tilt/swivel mount included",
+  //         },
+  //         {
+  //           id: "elec-2",
+  //           name: "Piscifun Fishing Scale",
+  //           category: "electronics",
+  //           brand: "Piscifun",
 
-            imageUrl: baseImageUrl,
-            timestamp: new Date().toISOString(),
-            gearType: "Digital Scale",
-            capacity: "110 lb / 50 kg",
-            accuracy: "±0.2 lb",
-            display: "LCD with backlight",
-            features: "Data lock, Tare function",
-            battery: "2 AAA batteries",
-            material: "Stainless steel hook",
-            waterResistant: "Yes",
-          },
-        ];
+  //           imageUrl: baseImageUrl,
+  //           timestamp: new Date().toISOString(),
+  //           gearType: "Digital Scale",
+  //           capacity: "110 lb / 50 kg",
+  //           accuracy: "±0.2 lb",
+  //           display: "LCD with backlight",
+  //           features: "Data lock, Tare function",
+  //           battery: "2 AAA batteries",
+  //           material: "Stainless steel hook",
+  //           waterResistant: "Yes",
+  //         },
+  //       ];
 
-      case "other":
-        return [
-          {
-            id: "other-1",
-            name: "Yeti Hopper Flip 12 Cooler",
-            category: "other",
-            brand: "Yeti",
-            model: "Hopper Flip 12",
+  //     case "other":
+  //       return [
+  //         {
+  //           id: "other-1",
+  //           name: "Yeti Hopper Flip 12 Cooler",
+  //           category: "other",
+  //           brand: "Yeti",
+  //           model: "Hopper Flip 12",
 
-            imageUrl: baseImageUrl,
-            timestamp: new Date().toISOString(),
-            gearType: "Soft Cooler",
-            capacity: "12 cans",
-            weight: "3.1 lbs",
-            insulation: "ColdCell Insulation",
-            exterior: "DryHide Shell",
-            features: "Leakproof, HydroLok Zipper",
-            iceRetention: "24+ hours",
-            portability: "Carry handle and shoulder strap",
-          },
-          {
-            id: "other-2",
-            name: "Patagonia Fishing Vest",
-            category: "other",
-            brand: "Patagonia",
+  //           imageUrl: baseImageUrl,
+  //           timestamp: new Date().toISOString(),
+  //           gearType: "Soft Cooler",
+  //           capacity: "12 cans",
+  //           weight: "3.1 lbs",
+  //           insulation: "ColdCell Insulation",
+  //           exterior: "DryHide Shell",
+  //           features: "Leakproof, HydroLok Zipper",
+  //           iceRetention: "24+ hours",
+  //           portability: "Carry handle and shoulder strap",
+  //         },
+  //         {
+  //           id: "other-2",
+  //           name: "Patagonia Fishing Vest",
+  //           category: "other",
+  //           brand: "Patagonia",
 
-            imageUrl: baseImageUrl,
-            timestamp: new Date().toISOString(),
-            gearType: "Fishing Vest",
-            size: "Large",
-            material: "Recycled polyester",
-            pockets: "15 pockets total",
-            features: "Quick-dry, UPF 50+",
-            waterResistant: "DWR finish",
-            season: "All seasons",
-            fit: "Regular fit",
-          },
-        ];
+  //           imageUrl: baseImageUrl,
+  //           timestamp: new Date().toISOString(),
+  //           gearType: "Fishing Vest",
+  //           size: "Large",
+  //           material: "Recycled polyester",
+  //           pockets: "15 pockets total",
+  //           features: "Quick-dry, UPF 50+",
+  //           waterResistant: "DWR finish",
+  //           season: "All seasons",
+  //           fit: "Regular fit",
+  //         },
+  //       ];
 
-      default:
-        return [];
-    }
-  };
+  //     default:
+  //       return [];
+  //   }
+  // };
 
   const gearItems = useMemo(() => {
     const gearItems =
@@ -257,10 +257,6 @@ const GearCategoryPage: React.FC = () => {
     const categoryGear = gearItems.filter(
       (item: GearItem) => item.category === categoryId,
     );
-
-    if (categoryGear.length === 0 && categoryId) {
-      return getMockDataForCategory(categoryId);
-    }
 
     return categoryGear;
   }, [profile?.gear_items]);

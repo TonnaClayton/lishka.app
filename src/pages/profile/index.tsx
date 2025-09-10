@@ -179,7 +179,6 @@ const ProfilePage: React.FC = () => {
     uploadPhotoStreamData,
     uploadGearItemStreamData,
     classifyingImage,
-    identifyGearMessage,
     showUploadedInfoMsg,
     uploadedInfoMsg,
     isUploading,
@@ -879,10 +878,7 @@ const ProfilePage: React.FC = () => {
       </header>
 
       <PhotoUploadBar uploadPhotoStreamData={uploadPhotoStreamData} />
-      <GearItemUploadBar
-        uploadGearItemStreamData={uploadGearItemStreamData}
-        identifyGearMessage={identifyGearMessage}
-      />
+      <GearItemUploadBar uploadGearItemStreamData={uploadGearItemStreamData} />
       {showUploadedInfoMsg && uploadedInfoMsg && (
         <UploadedInfoMsg
           message={uploadedInfoMsg}
