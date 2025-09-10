@@ -7,11 +7,10 @@ import { cn } from "@/lib/utils";
 
 export default function GearItemUploadBar({
   uploadGearItemStreamData,
-  identifyGearMessage,
+
   className,
 }: {
   uploadGearItemStreamData: UploadPhotoStreamData | null;
-  identifyGearMessage: string | null;
   className?: string;
 }) {
   if (uploadGearItemStreamData == null) {
@@ -47,7 +46,7 @@ export default function GearItemUploadBar({
         )}
       >
         <p className="leading-snug text-white text-sm md:text-base">
-          {identifyGearMessage || "AI Analyzing Photo"}
+          AI Analyzing Photo
         </p>
         {getStepIcon(uploadGearItemStreamData.data.analyzing)}
       </div>

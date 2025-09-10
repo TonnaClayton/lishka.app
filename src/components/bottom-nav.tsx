@@ -31,7 +31,6 @@ const BottomNav: React.FC = () => {
   const {
     uploadPhotoStreamData,
     uploadGearItemStreamData,
-    identifyGearMessage,
     showUploadedInfoMsg,
     uploadedInfoMsg,
     classifyingImage,
@@ -82,7 +81,6 @@ const BottomNav: React.FC = () => {
       <GearItemUploadBar
         className="z-[60] top-[58px] absolute md:hidden"
         uploadGearItemStreamData={uploadGearItemStreamData}
-        identifyGearMessage={identifyGearMessage}
       />
       {showUploadedInfoMsg && uploadedInfoMsg && (
         <UploadedInfoMsg
@@ -251,7 +249,6 @@ export const SideNav: React.FC = () => {
       {/* Desktop Side Nav */}
       <div
         className={`hidden lg:flex lg:flex-col h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 fixed left-0 top-0 z-50 ${isCollapsed ? "w-16 px-2 py-4 cursor-pointer" : "w-64 p-4"}`}
-        onClick={isCollapsed ? toggleSidebar : undefined}
       >
         <div
           className={`flex items-center ${isCollapsed ? "justify-center" : "justify-between"} h-16`}

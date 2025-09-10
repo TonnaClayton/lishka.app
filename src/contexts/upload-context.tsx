@@ -11,6 +11,7 @@ import React, {
 import { useAuth } from "@/contexts/auth-context";
 import { useStream } from "@/hooks/use-stream";
 import { useClassifyPhoto } from "@/hooks/queries";
+import { log } from "@/lib/logging";
 
 // Constants for timeout values and configuration
 const UPLOAD_TIMEOUTS = {
@@ -297,7 +298,10 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
 
       timeoutRefs.current.message = setTimeout(() => {
         setShowUploadedInfoMsg(true);
-        setUploadedInfoMsg("Gear Item Uploaded and Saved to Inventory");
+        setUploadedInfoMsg(
+          identifyGearMessage || "Gear item uploaded and saved to gallery",
+        );
+        setIdentifyGearMessage(null);
         timeoutRefs.current.message = null;
 
         // Auto-hide after configured time
@@ -453,27 +457,33 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       try {
         let imageType: "photo" | "gear";
 
-        if (!options) {
-          setClassifyingImage(true);
-          clearError();
+        log("[UPLOAD] Uploading photo", {
+          file: file.name,
+          size: file.size,
+          type: file.type,
+          options,
+        });
 
-          try {
-            const classification =
-              await classifyPhotoMutation.mutateAsync(file);
-            imageType = classification.type as "photo" | "gear";
-          } catch (classificationError: any) {
-            setClassifyingImage(false);
-            setError("Failed to classify image", "classification", true);
-            throw new Error(
-              classificationError?.message ||
-                "Failed to classify image. Please try again.",
-            );
-          }
+        // if (!options) {
+        setClassifyingImage(true);
+        clearError();
 
+        try {
+          const classification = await classifyPhotoMutation.mutateAsync(file);
+          imageType = classification.type as "photo" | "gear";
+        } catch (classificationError: any) {
           setClassifyingImage(false);
-        } else {
-          imageType = options.type;
+          setError("Failed to classify image", "classification", true);
+          throw new Error(
+            classificationError?.message ||
+              "Failed to classify image. Please try again.",
+          );
         }
+
+        setClassifyingImage(false);
+        // } else {
+        //   imageType = options.type;
+        // }
 
         // Add to queue for tracking
         const queueId = addToQueue(file, imageType);
