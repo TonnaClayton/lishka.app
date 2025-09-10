@@ -282,37 +282,44 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       setError("Failed to upload gear item", "upload", true);
     },
     onComplete: () => {
-      console.log("[STREAM] Gear item uploaded successfully!");
-      refreshProfile();
-      setIsUploadLocked(false);
-      clearError();
-
-      // Clear any existing timeouts
-      clearAllTimeouts();
-
-      timeoutRefs.current.cleanup = setTimeout(() => {
-        setUploadGearItemStreamData(null);
-        setIdentifyGearMessage(null);
-        timeoutRefs.current.cleanup = null;
-      }, UPLOAD_TIMEOUTS.CLEANUP);
-
-      timeoutRefs.current.message = setTimeout(() => {
-        setShowUploadedInfoMsg(true);
-        setUploadedInfoMsg(
-          identifyGearMessage || "Gear item uploaded and saved to gallery",
-        );
-        setIdentifyGearMessage(null);
-        timeoutRefs.current.message = null;
-
-        // Auto-hide after configured time
-        timeoutRefs.current.autoHide = setTimeout(() => {
-          setShowUploadedInfoMsg(false);
-          setUploadedInfoMsg(null);
-          timeoutRefs.current.autoHide = null;
-        }, UPLOAD_TIMEOUTS.AUTO_HIDE);
-      }, UPLOAD_TIMEOUTS.MESSAGE_DELAY);
+      uploadGearItemCompleteCallBack();
     },
   });
+
+  const uploadGearItemCompleteCallBack = useCallback(() => {
+    console.log("[STREAM] Gear item uploaded successfully!");
+    refreshProfile();
+    setIsUploadLocked(false);
+    clearError();
+
+    // Clear any existing timeouts
+    clearAllTimeouts();
+
+    timeoutRefs.current.cleanup = setTimeout(() => {
+      setUploadGearItemStreamData(null);
+      timeoutRefs.current.cleanup = null;
+    }, UPLOAD_TIMEOUTS.CLEANUP);
+
+    timeoutRefs.current.message = setTimeout(() => {
+      setShowUploadedInfoMsg(true);
+      // Use a ref to access the current identifyGearMessage value
+      setIdentifyGearMessage((currentGearMessage) => {
+        setUploadedInfoMsg(
+          currentGearMessage || "Gear item uploaded and saved to gallery",
+        );
+        return currentGearMessage; // Don't clear it here, clear it later
+      });
+      timeoutRefs.current.message = null;
+
+      // Auto-hide after configured time
+      timeoutRefs.current.autoHide = setTimeout(() => {
+        setShowUploadedInfoMsg(false);
+        setUploadedInfoMsg(null);
+        setIdentifyGearMessage(null);
+        timeoutRefs.current.autoHide = null;
+      }, UPLOAD_TIMEOUTS.AUTO_HIDE);
+    }, UPLOAD_TIMEOUTS.MESSAGE_DELAY);
+  }, [refreshProfile, clearError, clearAllTimeouts]);
 
   // Queue management functions
   const addToQueue = useCallback(
