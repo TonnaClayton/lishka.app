@@ -178,7 +178,10 @@ const BottomNav: React.FC = () => {
 };
 
 export const SideNav: React.FC = () => {
-  const [isCollapsed, setIsCollapsed] = useState(false);
+  const [isCollapsed, setIsCollapsed] = useState(() => {
+    const saved = localStorage.getItem("sideNav-isCollapsed");
+    return saved ? JSON.parse(saved) : false;
+  });
 
   // Handle cases where component is rendered outside proper context (like in storyboards)
   let currentPath = "/";
@@ -221,7 +224,12 @@ export const SideNav: React.FC = () => {
   }, [isCollapsed]);
 
   const toggleSidebar = () => {
-    setIsCollapsed(!isCollapsed);
+    const newCollapsedState = !isCollapsed;
+    setIsCollapsed(newCollapsedState);
+    localStorage.setItem(
+      "sideNav-isCollapsed",
+      JSON.stringify(newCollapsedState),
+    );
   };
 
   const getInitials = (name: string) => {

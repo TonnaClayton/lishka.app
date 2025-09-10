@@ -1218,28 +1218,14 @@ const FishDetailPage = () => {
                   <div className="absolute inset-0 bg-black/30 rounded-xl"></div>
 
                   {/* Content */}
-                  <div className="relative z-10 flex flex-col gap-2">
+                  <div className="relative flex flex-col gap-2">
                     {/* Title - On its own line */}
-                    <h2
-                      className="text-white text-left"
-                      style={{
-                        fontFamily: "Inter, sans-serif",
-                        fontStyle: "normal",
-                        fontWeight: 900,
-                        fontSize: "28px",
-                        lineHeight: "34px",
-                      }}
-                    >
+                    <h2 className="text-white text-left font-bold font-inter text-[28px] leading-[34px]">
                       Respect the ocean.
                     </h2>
 
                     {/* Subtitle and Logo grouped together */}
-                    <div
-                      className="flex flex-row justify-between items-end"
-                      style={{
-                        gap: "40px",
-                      }}
-                    >
+                    <div className="flex flex-row justify-between items-end gap-10">
                       <p
                         className="text-white text-left"
                         style={{
