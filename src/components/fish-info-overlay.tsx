@@ -1,5 +1,5 @@
 import React from "react";
-import { Fish, Ruler, Weight, MapPin } from "lucide-react";
+import { Fish, Ruler, Weight } from "lucide-react";
 import { ImageMetadata } from "@/lib/image-metadata";
 import { log } from "@/lib/logging";
 import { cn } from "@/lib/utils";
@@ -8,12 +8,13 @@ interface FishInfoOverlayProps {
   metadata: ImageMetadata;
   className?: string;
   isSingleColumn?: boolean;
+  isMobile?: boolean;
 }
 
 const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
   metadata,
   className = "",
-  isSingleColumn = true,
+  isMobile = false,
 }) => {
   // Debug logging for metadata
   log("🔍 [FishInfoOverlay] Received metadata:", {
@@ -41,11 +42,15 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
               No Metadata
             </span>
           </div>
-          <div className="pt-1">
+          <div className="">
             <img
               src="/images/Logo.png"
               alt="Lishka Logo"
-              style={{ height: "32px", width: "auto", objectFit: "contain" }}
+              style={{
+                height: isMobile == true ? "24px" : "32px",
+                width: "auto",
+                objectFit: "contain",
+              }}
               onError={(e) => {
                 const parent = e.currentTarget.parentElement;
                 if (parent) {
@@ -62,7 +67,7 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
 
   // Extract fish information directly from the AI JSON response
   const fishInfo = metadata.fishInfo;
-  const location = metadata.location;
+  // const location = metadata.location;
 
   // Check if we have any valid fish data from the AI response
   const fishName = fishInfo?.name;
@@ -86,7 +91,7 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
     fishWeight !== "Unknown" &&
     fishWeight.trim() !== "" &&
     fishWeight.toLowerCase() !== "unknown";
-  const hasValidLocation = location?.address && location.address.trim() !== "";
+  // const hasValidLocation = location?.address && location.address.trim() !== "";
 
   // Check if we have ANY useful fish data from the AI
   const hasAnyFishData =
@@ -120,23 +125,23 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
           style={{ textShadow: "0 2px 4px rgba(0,0,0,0.8)" }}
         >
           {/* Fish Information Section */}
-          <div className="space-y-3 mb-4">
+          <div
+            className={cn(
+              "flex flex-col mb-4",
+              isMobile === true ? "gap-0.5" : "gap-3",
+            )}
+          >
             {hasAnyFishData ? (
               <>
                 {/* Fish Name with Confidence */}
                 {hasValidFishName ? (
-                  <div className="flex items-start gap-3 flex-wrap">
+                  <div className="flex items-start gap-3 flex-wrap justify-between sm:justify-start">
                     <div className="flex items-center gap-2 min-h-[24px]">
                       <Fish className="w-4 h-4 text-white flex-shrink-0" />
-                      <span className="font-semibold text-lg text-white leading-tight">
+                      <span className="font-semibold text-lg text-white leading-tight text-left">
                         {fishName}
                       </span>
                     </div>
-                    {shouldShowConfidence && (
-                      <div className="bg-white/20 text-white border border-white/30 text-xs px-2 py-1 rounded-md flex items-center justify-center h-6">
-                        {Math.round(confidence * 100)}% confident
-                      </div>
-                    )}
                   </div>
                 ) : (
                   /* Show "Fish Detected" when we have size/weight but no name */
@@ -149,11 +154,16 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
                 )}
 
                 {/* Size and Weight Details */}
-                <div className="space-y-2 text-sm">
+                <div
+                  className={cn(
+                    "flex flex-col text-sm",
+                    isMobile === true ? "gap-0.5" : "gap-2",
+                  )}
+                >
                   {hasValidFishSize && (
                     <div className="flex items-center gap-2 min-h-[20px]">
                       <Ruler className="w-4 h-4 text-white flex-shrink-0" />
-                      <span className="text-white leading-tight">
+                      <span className="text-white text-sm leading-tight">
                         Size: {fishSize}
                       </span>
                     </div>
@@ -162,7 +172,7 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
                   {hasValidFishWeight && (
                     <div className="flex items-center gap-2 min-h-[20px]">
                       <Weight className="w-4 h-4 text-white flex-shrink-0" />
-                      <span className="text-white leading-tight">
+                      <span className="text-white text-sm leading-tight">
                         Weight: {fishWeight}
                       </span>
                     </div>
@@ -171,24 +181,23 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
               </>
             ) : (
               /* Show "AI Analysis Failed" when fishInfo exists but contains no valid data */
-              <div className="space-y-2">
-                <div className="flex items-center gap-2 min-h-[24px]">
-                  <Fish className="w-4 h-4 text-white flex-shrink-0" />
-                  <span className="font-semibold text-lg text-white leading-tight">
-                    {fishInfo ? "AI Analysis Failed" : "AI Info Missing"}
-                  </span>
-                </div>
+
+              <div className="flex items-center gap-2 min-h-[24px]">
+                <Fish className="w-4 h-4 text-white flex-shrink-0" />
+                <span className="font-semibold text-lg text-white leading-tight">
+                  {fishInfo ? "AI Analysis Failed" : "AI Info Missing"}
+                </span>
               </div>
             )}
           </div>
 
           {/* Logo */}
-          <div className="pt-1 relative z-20">
+          <div className="relative z-20 flex justify-between">
             <img
               src="/images/Logo.png"
               alt="Lishka Logo"
               style={{
-                height: "32px",
+                height: isMobile == true ? "24px" : "32px",
                 width: "auto",
                 objectFit: "contain",
               }}
@@ -200,6 +209,16 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
                 }
               }}
             />
+            {shouldShowConfidence && (
+              <div className="flex flex-col items-end text-white">
+                <p className="text-sm font-bold">
+                  {Math.round(confidence * 100)}%
+                </p>
+                <p className="text-[10px] font-normal leading-[12px]">
+                  AI Confidence
+                </p>
+              </div>
+            )}
           </div>
         </div>
       </div>

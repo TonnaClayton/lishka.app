@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -6,7 +6,7 @@ import {
   getPlaceholderFishImage,
   getFishImageUrl,
 } from "@/lib/fish-image-service";
-import { Waves, Trophy, Target, AlertTriangle } from "lucide-react";
+import { Waves, Target } from "lucide-react";
 import { log } from "@/lib/logging";
 import { cn } from "@/lib/utils";
 
@@ -17,7 +17,7 @@ interface FishCardProps {
   localName?: string;
 
   habitat?: string;
-  difficulty?: "Easy" | "Intermediate" | "Hard" | "Advanced" | "Expert";
+  difficulty?: string;
   isToxic?: boolean;
   dangerType?: string;
   className?: string;
@@ -29,8 +29,6 @@ const FishCard = ({
   image = "https://images.unsplash.com/photo-1545816250-3ea6e37da790?w=400&q=80",
   name = "Atlantic Salmon",
   scientificName = "Salmo salar",
-  localName,
-
   habitat = "Freshwater, Coastal",
   difficulty = "Intermediate",
   isToxic = false,
@@ -73,7 +71,7 @@ const FishCard = ({
     <Card
       className={cn(
         "overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full border-0 shadow bg-white rounded-xl",
-        className
+        className,
       )}
       onClick={onClick}
     >
@@ -100,7 +98,7 @@ const FishCard = ({
         {isToxic && (
           <Badge
             variant="destructive"
-            className="absolute bottom-2 right-2 text-xs py-0 shadow-lg rounded-[32px]"
+            className="absolute bottom-2 right-2 text-xs py-0 shadow-lg rounded-[32px] bg-[#FF004D] text-white"
           >
             Toxic
           </Badge>
@@ -128,14 +126,14 @@ const FishCard = ({
             // For non-toxic fish, show habitat and difficulty as before
             <>
               <div className="flex items-center">
-                <Waves className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-blue-500 dark:text-blue-400 mr-1 sm:mr-1.5 shrink-0" />
+                <Waves className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-lishka-blue mr-1 sm:mr-1.5 shrink-0" />
                 <span className="text-foreground line-clamp-1 text-xs">
                   {habitat}
                 </span>
               </div>
 
               <div className="flex items-center">
-                <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-orange-500 dark:text-orange-400 mr-1 sm:mr-1.5 shrink-0" />
+                <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#F97316] mr-1 sm:mr-1.5 shrink-0" />
                 <span className="text-foreground line-clamp-1 text-xs">
                   {difficulty}
                 </span>

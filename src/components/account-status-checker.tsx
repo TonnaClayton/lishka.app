@@ -43,7 +43,7 @@ const AccountStatusChecker: React.FC = () => {
           password: "dummy_password_to_check_user_existence_12345",
         });
 
-      let accountStatus: AccountStatus = {
+      const accountStatus: AccountStatus = {
         exists: false,
         email_confirmed: false,
       };
@@ -197,7 +197,7 @@ const AccountStatusChecker: React.FC = () => {
                         onClick={handleResendVerification}
                         disabled={resendingEmail}
                         size="sm"
-                        className="bg-blue-600 hover:bg-blue-700 text-white"
+                        className="bg-lishka-blue hover:bg-lishka-blue text-white"
                       >
                         {resendingEmail ? (
                           <>

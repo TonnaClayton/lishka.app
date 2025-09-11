@@ -1,41 +1,69 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
-import { User, Session } from "@supabase/supabase-js";
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
+import { User, Session, OAuthResponse } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 import { supabase, authService, profileService } from "@/lib/supabase";
 import {
   uploadAvatar as uploadAvatarToBlob,
   getBlobStorageStatus,
 } from "@/lib/blob-storage";
+import { Database } from "@/types/supabase";
 
 type AuthUser = {
   id: string;
   email: string;
   full_name?: string;
   email_verified?: boolean;
+  avatar_url?: string;
   needs_email_confirmation?: boolean;
 };
 
-import { ImageMetadata } from "@/lib/image-metadata";
 import { log } from "@/lib/logging";
-import { useProfile } from "@/hooks/queries";
+import {
+  useProfile,
+  useCreateProfile,
+  profileQueryKeys,
+} from "@/hooks/queries";
+import { useQueryClient } from "@tanstack/react-query";
+import { ROUTES } from "@/lib/routing";
 
-type Profile = {
+type Profile = Database["public"]["Tables"]["profiles"]["Row"];
+
+interface GearItem {
   id: string;
-  username?: string;
-  full_name?: string;
-  avatar_url?: string;
-  location?: string;
-  location_coordinates?: any;
-  preferred_units?: string;
-  preferred_language?: string;
-  fishing_experience?: string;
-  favorite_fish_species?: string[];
-  bio?: string;
-  gallery_photos?: ImageMetadata[]; // Standardize to always be ImageMetadata objects
-  gear_items?: any[]; // Add gear_items field
-  created_at: string;
-  updated_at: string;
-};
+  name: string;
+  category: string;
+  imageUrl: string;
+  timestamp?: string;
+  description?: string;
+  brand?: string;
+  model?: string;
+  price?: string | number;
+  condition?: string;
+  gearType?: string;
+  estimatedValue?: string | number;
+  aiConfidence?: number;
+  userConfirmed?: boolean;
+  rawJsonResponse?: string;
+  openaiPrompt?: string;
+  size?: string;
+  weight?: string;
+  targetFish?: string;
+  fishingTechnique?: string;
+  weatherConditions?: string;
+  waterConditions?: string;
+  seasonalUsage?: string;
+  colorPattern?: string;
+  actionType?: string;
+  depthRange?: string;
+  versatility?: string;
+  compatibleGear?: string;
+}
 
 interface AuthContextType {
   user: AuthUser | null;
@@ -45,9 +73,10 @@ interface AuthContextType {
   signUp: (
     email: string,
     password: string,
-    fullName: string
+    fullName: string,
   ) => Promise<{ error: any; needsConfirmation?: boolean }>;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
+  signInWithGoogle: () => Promise<OAuthResponse>;
   signOut: () => Promise<{ error: any }>;
   forgotPassword: (email: string) => Promise<{ error: any }>;
   resetPassword: (password: string) => Promise<{ error: any }>;
@@ -60,7 +89,7 @@ interface AuthContextType {
 }
 
 export const AuthContext = createContext<AuthContextType | undefined>(
-  undefined
+  undefined,
 );
 
 export const useAuth = () => {
@@ -75,11 +104,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
-  const {} = useProfile(user?.id);
+  const {
+    data: profileData,
+    isLoading: profileLoading,
+    refetch: refetchProfile,
+  } = useProfile(user?.id);
+  const createProfile = useCreateProfile();
+  const queryClient = useQueryClient();
 
   // Convert Supabase User to AuthUser
   const convertUser = (supabaseUser: User | null): AuthUser | null => {
@@ -88,153 +122,83 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     return {
       id: supabaseUser.id,
       email: supabaseUser.email || "",
+      avatar_url: supabaseUser.user_metadata?.avatar_url || null,
       full_name: supabaseUser.user_metadata?.full_name || null,
-      email_verified: !!supabaseUser.email_confirmed_at,
+      email_verified: supabaseUser.user_metadata.email_verified,
       needs_email_confirmation: !supabaseUser.email_confirmed_at,
     };
   };
 
-  // Load user profile
-  const loadProfile = async (userId: string, userFullName?: string) => {
-    try {
-      log(
-        "[AuthContext] Loading profile for user:",
-        userId,
-        "with full name:",
-        userFullName
-      );
+  // Create profile when it doesn't exist
+  const handleCreateProfile = useCallback(
+    async (userId: string, userFullName?: string, userAvatarUrl?: string) => {
+      const profileData = {
+        full_name:
+          userFullName && userFullName.trim() ? userFullName.trim() : null,
+        preferred_units: "metric",
+        avatar_url: userAvatarUrl || null,
+        preferred_language: "en",
+        has_seen_onboarding_flow: false,
+        favorite_fish_species: [],
+      };
 
-      const { data, error } = await profileService.getProfile(userId);
+      try {
+        await createProfile.mutateAsync({ userId, profileData });
+        log("[AuthContext] Profile created successfully");
+      } catch (error) {
+        console.error("[AuthContext] Error creating profile:", error);
 
-      log("[AuthContext] Profile fetch result:", {
-        hasData: !!data,
-        error: error?.message || error,
-        userId,
-        galleryPhotosCount: data?.gallery_photos?.length || 0,
-      });
-
-      if (data && !error) {
-        log("[AuthContext] Profile loaded successfully:", {
-          id: data.id,
-          full_name: data.full_name,
-          hasAvatar: !!data.avatar_url,
-          avatarLength: data.avatar_url?.length || 0,
-          galleryPhotosCount: data.gallery_photos?.length || 0,
-          galleryPhotosPreview: data.gallery_photos?.slice(0, 2) || [],
-        });
-        setProfile(data);
-      } else if (
-        error &&
-        (error.message?.includes("No rows") ||
-          error.message?.includes("PGRST116") ||
-          error.code === "PGRST116")
-      ) {
-        // Profile doesn't exist, create one
-        log(
-          "[AuthContext] Creating new profile for user:",
-          userId,
-          "with full name:",
-          userFullName
-        );
-        const profileData = {
-          full_name:
-            userFullName && userFullName.trim() ? userFullName.trim() : null,
-          preferred_units: "metric",
-          preferred_language: "en",
-          favorite_fish_species: [],
-        };
-        log("[AuthContext] Profile data to create:", profileData);
-        const { data: newProfile, error: createError } =
-          await profileService.createProfile(userId, profileData);
-        if (newProfile && !createError) {
-          setProfile(newProfile);
-          log("[AuthContext] Profile created successfully:", newProfile);
-        } else {
-          console.error("[AuthContext] Error creating profile:", createError);
-          // Set a minimal profile to prevent loading state from getting stuck
-          const fallbackProfile = {
-            id: userId,
-            full_name: userFullName || null,
-            preferred_units: "metric",
-            preferred_language: "en",
-            favorite_fish_species: [],
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          } as Profile;
-          log("[AuthContext] Setting fallback profile:", fallbackProfile);
-          setProfile(fallbackProfile);
-        }
-      } else {
-        console.error("[AuthContext] Error loading profile:", error);
-        // Set a minimal profile to prevent loading state from getting stuck
-        const fallbackProfile = {
+        // Create a minimal fallback profile in memory for app stability
+        // This prevents components from crashing due to missing profile data
+        const fallbackProfile: Profile = {
           id: userId,
           full_name: userFullName || null,
           preferred_units: "metric",
           preferred_language: "en",
+          has_seen_onboarding_flow: false,
           favorite_fish_species: [],
+          avatar_url: null,
+          bio: null,
+          fishing_experience: null,
+          location: null,
+          location_coordinates: null,
+          username: null,
+          gallery_photos: null,
+          gear_items: null,
+          use_imperial_units: false,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
-        } as Profile;
-        log(
-          "[AuthContext] Setting fallback profile due to error:",
-          fallbackProfile
+        };
+
+        // Set fallback profile in cache temporarily
+        queryClient.setQueryData(
+          profileQueryKeys.useProfile(userId),
+          fallbackProfile,
         );
-        setProfile(fallbackProfile);
-      }
-    } catch (err) {
-      console.error("[AuthContext] Exception in loadProfile:", err);
-      // Set a minimal profile to prevent loading state from getting stuck
-      const fallbackProfile = {
-        id: userId,
-        full_name: userFullName || null,
-        preferred_units: "metric",
-        preferred_language: "en",
-        favorite_fish_species: [],
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as Profile;
-      log(
-        "[AuthContext] Setting fallback profile due to exception:",
-        fallbackProfile
-      );
-      setProfile(fallbackProfile);
-    }
-  };
 
-  // Listen for profile update events from other components
+        log("[AuthContext] Set fallback profile due to creation failure");
+      }
+    },
+    [createProfile],
+  );
+
+  // Handle profile creation when user exists but profile doesn't
   useEffect(() => {
-    const handleProfileUpdate = (event: CustomEvent) => {
-      log("[AuthContext] Received profileUpdated event:", event.detail);
-      if (event.detail?.updatedProfile) {
-        log("[AuthContext] Updating profile state from event");
-        setProfile(event.detail.updatedProfile);
-      }
-    };
-
-    window.addEventListener(
-      "profileUpdated",
-      handleProfileUpdate as EventListener
-    );
-
-    return () => {
-      window.removeEventListener(
-        "profileUpdated",
-        handleProfileUpdate as EventListener
-      );
-    };
-  }, []);
+    if (user?.id && profileData === undefined && !profileLoading) {
+      // Profile query returned but no data found - create profile
+      handleCreateProfile(user.id, user.full_name, user.avatar_url);
+    }
+  }, [user, profileData, profileLoading, handleCreateProfile]);
 
   // Initialize auth state
   useEffect(() => {
     let mounted = true;
-    let timeoutId: NodeJS.Timeout;
 
     // Set a timeout to prevent infinite loading
-    timeoutId = setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       if (mounted) {
         console.warn(
-          "[AuthContext] Auth initialization timeout, forcing loading to false"
+          "[AuthContext] Auth initialization timeout, forcing loading to false",
         );
         setLoading(false);
       }
@@ -264,19 +228,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
             // Set loading to false immediately for faster UI response
             setLoading(false);
-
-            // Load profile in background - non-blocking
-            if (authUser) {
-              loadProfile(
-                authUser.id,
-                session.user.user_metadata?.full_name
-              ).catch((err) => {
-                console.warn(
-                  "[AuthContext] Background profile load failed:",
-                  err
-                );
-              });
-            }
           } else {
             log("[AuthContext] No initial session found");
             setLoading(false);
@@ -303,48 +254,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (!mounted) return;
 
-      log("[AuthContext] Auth state changed:", {
-        event,
-        userEmail: session?.user?.email,
-        hasSession: !!session,
-        hasUser: !!session?.user,
-        isMobile:
-          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-            navigator.userAgent
-          ),
-      });
+      try {
+        log("[AuthContext] Auth state changed:", {
+          event,
+          userEmail: session?.user?.email,
+          hasSession: !!session,
+          hasUser: !!session?.user,
+          isMobile:
+            /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+              navigator.userAgent,
+            ),
+        });
 
-      if (session?.user) {
-        const authUser = convertUser(session.user);
-        log("[AuthContext] Setting user from session:", authUser);
-        setUser(authUser);
-        setSession(session);
+        if (session?.user) {
+          const authUser = convertUser(session.user);
+          log("[AuthContext] Setting user from session:", authUser);
+          setUser(authUser);
+          setSession(session);
+        } else {
+          log("[AuthContext] Clearing user session");
+          setUser(null);
+          setSession(null);
 
-        // Load profile in background for faster auth state resolution
-        if (authUser) {
-          loadProfile(authUser.id, session.user.user_metadata?.full_name).catch(
-            (err) => {
-              console.warn(
-                "[AuthContext] Background profile load failed:",
-                err
-              );
-            }
-          );
+          // Handle logout events - redirect to login if user was previously authenticated
+          if (event === "SIGNED_OUT") {
+            log("[AuthContext] User signed out, redirecting to login");
+            // Small delay to ensure state is cleared
+            setTimeout(() => {
+              navigate(ROUTES.LOGIN, { replace: true });
+            }, 100);
+          }
         }
-      } else {
-        log("[AuthContext] Clearing user session");
-        setUser(null);
-        setSession(null);
-        setProfile(null);
-
-        // Handle logout events - redirect to login if user was previously authenticated
-        if (event === "SIGNED_OUT") {
-          log("[AuthContext] User signed out, redirecting to login");
-          // Small delay to ensure state is cleared
-          setTimeout(() => {
-            navigate("/login", { replace: true });
-          }, 100);
-        }
+      } catch (e) {
+        console.error("[AuthContext] Error in auth state change:", e);
       }
 
       setLoading(false);
@@ -360,40 +302,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   // Auth methods
   const signUp = async (email: string, password: string, fullName: string) => {
     try {
-      setLoading(true);
       const { data, error } = await authService.signUp(
         email,
         password,
-        fullName
+        fullName,
       );
 
       if (error) {
-        return { error };
+        return { error, needsConfirmation: false };
       }
 
-      // If user is created but needs email confirmation
-      if (data?.user && !data.session) {
+      if (data?.user && data.session) {
         // Set user data for email verification banner
         const authUser = convertUser(data.user);
         setUser(authUser);
+        // Profile will be created automatically via useEffect when user is set
+      }
 
-        // Create profile even for unconfirmed users so the full name is stored
-        if (authUser) {
-          await loadProfile(authUser.id, fullName);
-        }
-
+      // If user is created but needs email confirmation
+      if (data?.user && data.session == null) {
         return { error: null, needsConfirmation: true };
       }
 
       // User will be automatically set via onAuthStateChange if session exists
-      return { error: null };
+      return { error: null, needsConfirmation: false };
     } catch (err) {
-      console.error("SignUp error:", err);
       return {
-        error: { message: "An unexpected error occurred during signup" },
+        error: { message: "An unexpected error occurred during signup", err },
+        needsConfirmation: false,
       };
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -426,23 +363,57 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
+  const signInWithGoogle = async () => {
+    return authService.signInWithGoogle();
+  };
+
   const signOut = async () => {
     try {
       log("[AuthContext] Starting signOut process");
 
+      // Store user ID for cache cleanup before clearing state
+      const userIdForCleanup = user?.id;
+
       // Clear local state first to ensure immediate UI update
       setUser(null);
-      setProfile(null);
       setSession(null);
       setLoading(false);
 
       // Call the auth service to sign out from Supabase
       const { error } = await authService.signOut();
 
+      // Selectively clear user-specific cache data while preserving shared data
+      if (userIdForCleanup) {
+        // Clear user-specific profile data
+        queryClient.removeQueries({
+          queryKey: profileQueryKeys.useProfile(userIdForCleanup),
+        });
+        queryClient.removeQueries({
+          queryKey: profileQueryKeys.useUserPhotos(userIdForCleanup),
+        });
+        queryClient.removeQueries({
+          queryKey: profileQueryKeys.useUserGear(userIdForCleanup),
+        });
+
+        // Clear any other user-specific queries (add more as needed)
+        queryClient.removeQueries({
+          queryKey: ["userLocation", userIdForCleanup],
+        });
+
+        log(
+          "[AuthContext] User-specific cache cleared for user:",
+          userIdForCleanup,
+        );
+      } else {
+        // Fallback to clearing all cache if no user ID available
+        queryClient.clear();
+        log("[AuthContext] All cache cleared as fallback");
+      }
+
       if (error) {
         console.warn(
           "[AuthContext] SignOut API error (but continuing):",
-          error
+          error,
         );
       }
 
@@ -450,21 +421,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       log("[AuthContext] Redirecting to login after signOut");
 
       // Use window.location for more reliable redirect
-      window.location.href = "/login";
+      window.location.href = ROUTES.LOGIN;
 
       return { error };
     } catch (err) {
       console.error("[AuthContext] SignOut error:", err);
 
+      // Store user ID before clearing state
+      const userIdForCleanup = user?.id;
+
       // Still clear local state even if there's an error
       setUser(null);
-      setProfile(null);
       setSession(null);
       setLoading(false);
 
+      // Clear user-specific cache even on error
+      if (userIdForCleanup) {
+        queryClient.removeQueries({
+          queryKey: profileQueryKeys.useProfile(userIdForCleanup),
+        });
+        queryClient.removeQueries({
+          queryKey: profileQueryKeys.useUserPhotos(userIdForCleanup),
+        });
+        queryClient.removeQueries({
+          queryKey: profileQueryKeys.useUserGear(userIdForCleanup),
+        });
+        queryClient.removeQueries({
+          queryKey: ["userLocation", userIdForCleanup],
+        });
+      } else {
+        queryClient.clear();
+      }
+
       // Force redirect to login page even on error
       log("[AuthContext] Redirecting to login after signOut error");
-      window.location.href = "/login";
+      window.location.href = ROUTES.LOGIN;
 
       return {
         error: { message: "An unexpected error occurred during signout" },
@@ -474,7 +465,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const forgotPassword = async (email: string) => {
     try {
-      const { data, error } = await authService.forgotPassword(email);
+      const { error } = await authService.forgotPassword(email);
       return { error };
     } catch (err) {
       console.error("ForgotPassword error:", err);
@@ -484,7 +475,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const resetPassword = async (password: string) => {
     try {
-      const { data, error } = await authService.resetPassword(password);
+      const { error } = await authService.resetPassword(password);
       return { error };
     } catch (err) {
       console.error("ResetPassword error:", err);
@@ -499,9 +490,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (!error && data?.user) {
         const authUser = convertUser(data.user);
         setUser(authUser);
-        if (authUser) {
-          await loadProfile(authUser.id, data.user.user_metadata?.full_name);
-        }
+        // Profile will be created automatically via useEffect when user is set
       }
 
       return { error };
@@ -513,7 +502,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const resendConfirmation = async (email: string) => {
     try {
-      const { data, error } = await authService.resendConfirmation(email);
+      const { error } = await authService.resendConfirmation(email);
       return { error };
     } catch (err) {
       console.error("ResendConfirmation error:", err);
@@ -534,37 +523,45 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           ? `${updates.gallery_photos.length} photos`
           : "not updating",
         gear_items: updates.gear_items
-          ? `${updates.gear_items.length} gear items`
+          ? `${Array.isArray(updates.gear_items) ? updates.gear_items.length : 0} gear items`
           : "not updating",
         timestamp: new Date().toISOString(),
       });
 
       // Validate gear_items structure if present
       if (updates.gear_items) {
+        const gearItems = Array.isArray(updates.gear_items)
+          ? (updates.gear_items as unknown[])
+          : [];
         log("[AuthContext] 🔍 Validating gear_items structure:", {
-          isArray: Array.isArray(updates.gear_items),
-          count: updates.gear_items.length,
-          sampleItem: updates.gear_items[0]
-            ? {
-                id: updates.gear_items[0].id,
-                name: updates.gear_items[0].name,
-                category: updates.gear_items[0].category,
-                hasImageUrl: !!updates.gear_items[0].imageUrl,
-              }
-            : null,
+          isArray: Array.isArray(gearItems),
+          count: gearItems.length,
+          sampleItem:
+            gearItems[0] && typeof gearItems[0] === "object"
+              ? {
+                  id: (gearItems[0] as Partial<GearItem>).id,
+                  name: (gearItems[0] as Partial<GearItem>).name,
+                  category: (gearItems[0] as Partial<GearItem>).category,
+                  hasImageUrl: !!(gearItems[0] as Partial<GearItem>).imageUrl,
+                }
+              : null,
         });
 
+        // Type guard to check if item is a valid gear item
+        const isValidGearItem = (item: unknown): item is Partial<GearItem> => {
+          return (
+            item != null &&
+            typeof item === "object" &&
+            "id" in item &&
+            "name" in item &&
+            "category" in item &&
+            "imageUrl" in item
+          );
+        };
+
         // Ensure all gear items have required fields and clean up data
-        const validGearItems = updates.gear_items
-          .filter(
-            (item) =>
-              item &&
-              typeof item === "object" &&
-              item.id &&
-              item.name &&
-              item.category &&
-              item.imageUrl
-          )
+        const validGearItems = gearItems
+          .filter(isValidGearItem)
           .map((item) => ({
             // Core required fields
             id: item.id,
@@ -608,14 +605,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             compatibleGear: item.compatibleGear || "",
           }));
 
-        if (validGearItems.length !== updates.gear_items.length) {
+        if (validGearItems.length !== gearItems.length) {
           console.warn(
             "[AuthContext] ⚠️ Some gear items were invalid and filtered out:",
             {
-              original: updates.gear_items.length,
+              original: gearItems.length,
               valid: validGearItems.length,
-              filtered: updates.gear_items.length - validGearItems.length,
-            }
+              filtered: gearItems.length - validGearItems.length,
+            },
           );
         }
 
@@ -623,11 +620,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       // Check if gear_items column exists before attempting update
-      if (updates.gear_items && !profile?.hasOwnProperty("gear_items")) {
+
+      if (updates.gear_items && !profileData?.hasOwnProperty("gear_items")) {
         console.warn(
-          "[AuthContext] ⚠️ gear_items column may not exist in database schema"
+          "[AuthContext] ⚠️ gear_items column may not exist in database schema",
         );
         // Try to save without gear_items to avoid schema errors
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         const { gear_items, ...otherUpdates } = updates;
         if (Object.keys(otherUpdates).length > 0) {
           updates = otherUpdates;
@@ -648,7 +647,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       log("[AuthContext] 🚀 Starting database update operation:", {
         userId: user.id,
         updateKeys: Object.keys(updates),
-        gearItemsCount: updates.gear_items?.length || 0,
+        gearItemsCount: Array.isArray(updates.gear_items)
+          ? updates.gear_items.length
+          : 0,
         timestamp: new Date().toISOString(),
       });
 
@@ -661,15 +662,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               elapsedTime: `${elapsedTime}ms`,
               userId: user.id,
               updateKeys: Object.keys(updates),
-              gearItemsCount: updates.gear_items?.length || 0,
+              gearItemsCount: Array.isArray(updates.gear_items)
+                ? updates.gear_items.length
+                : 0,
             });
             reject(
               new Error(
-                `Database timeout after ${elapsedTime}ms - operation took too long. This suggests a database connection or performance issue.`
-              )
+                `Database timeout after ${elapsedTime}ms - operation took too long. This suggests a database connection or performance issue.`,
+              ),
             );
           }, 20000); // Increased to 20 seconds to better differentiate from network timeouts
-        }
+        },
       );
 
       const { data, error } = await Promise.race([
@@ -690,28 +693,39 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         errorCode: error?.code,
         errorDetails: error?.details,
         errorHint: error?.hint,
-        galleryPhotosCount: data?.gallery_photos?.length || 0,
-        gearItemsCount: data?.gear_items?.length || 0,
+        galleryPhotosCount: Array.isArray(data?.gallery_photos)
+          ? data.gallery_photos.length
+          : 0,
+        gearItemsCount: Array.isArray(data?.gear_items)
+          ? data.gear_items.length
+          : 0,
         dataKeys: data ? Object.keys(data) : [],
         userId: user.id,
       });
 
       if (data && !error) {
-        log("[AuthContext] ✅ Updating profile state with new data");
-        setProfile(data);
+        log("[AuthContext] ✅ Profile updated successfully");
 
         // Additional verification for gear_items
         if (updates.gear_items) {
-          const expectedCount = updates.gear_items.length;
+          const expectedCount = Array.isArray(updates.gear_items)
+            ? updates.gear_items.length
+            : 0;
           const actualCount = data.gear_items?.length || 0;
           log("[AuthContext] 🔍 Gear items verification:", {
             expected: expectedCount,
             actual: actualCount,
             match: expectedCount === actualCount,
-            gearWithAI:
-              data.gear_items?.filter(
-                (item: any) => item.gearType && item.gearType !== "unknown"
-              ).length || 0,
+            gearWithAI: Array.isArray(data.gear_items)
+              ? data.gear_items.filter(
+                  (item): item is GearItem =>
+                    typeof item === "object" &&
+                    item != null &&
+                    "gearType" in item &&
+                    (item as GearItem).gearType &&
+                    (item as GearItem).gearType !== "unknown",
+                ).length
+              : 0,
           });
         }
 
@@ -723,22 +737,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             expected: expectedCount,
             actual: actualCount,
             match: expectedCount === actualCount,
-            photosWithFishInfo:
-              data.gallery_photos?.filter((photo: any) => {
-                // All photos should now be ImageMetadata objects
-                return (
-                  photo && photo.fishInfo && photo.fishInfo.name !== "Unknown"
-                );
-              }).length || 0,
-            samplePhotoStructure: data.gallery_photos?.[0]
-              ? {
-                  hasUrl: !!data.gallery_photos[0].url,
-                  hasFishInfo: !!data.gallery_photos[0].fishInfo,
-                  fishName: data.gallery_photos[0].fishInfo?.name,
-                  hasLocation: !!data.gallery_photos[0].location,
-                  timestamp: data.gallery_photos[0].timestamp,
-                }
-              : null,
+            photosWithFishInfo: Array.isArray(data.gallery_photos)
+              ? data.gallery_photos.filter((photo): photo is string => {
+                  // Photos are now stored as string URLs in the database
+                  return typeof photo === "string" && photo.length > 0;
+                }).length
+              : 0,
+            samplePhotoStructure:
+              Array.isArray(data.gallery_photos) && data.gallery_photos[0]
+                ? {
+                    photoUrl: data.gallery_photos[0],
+                    isString: typeof data.gallery_photos[0] === "string",
+                  }
+                : null,
           });
         }
 
@@ -752,7 +763,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           userId: user.id,
           updateKeys: Object.keys(updates),
           isGearUpdate: !!updates.gear_items,
-          gearCount: updates.gear_items?.length || 0,
+          gearCount: Array.isArray(updates.gear_items)
+            ? updates.gear_items.length
+            : 0,
           totalTime: `${Date.now() - startTime}ms`,
         });
 
@@ -910,7 +923,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           storageStatus.error || "Blob storage is not properly configured";
         console.error(
           "[AuthContext] Blob storage not configured:",
-          errorMessage
+          errorMessage,
         );
         return { error: { message: errorMessage } };
       }
@@ -937,8 +950,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       }
 
       if (data) {
-        log("[AuthContext] Avatar upload successful, updating profile state");
-        setProfile(data);
+        log("[AuthContext] Avatar upload successful");
         return { error: null };
       }
 
@@ -959,8 +971,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const refreshProfile = async () => {
-    if (user) {
-      await loadProfile(user.id);
+    if (user?.id) {
+      await refetchProfile();
     }
   };
 
@@ -985,7 +997,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Delete the user's auth account
       const { error: authError } = await supabase.auth.admin.deleteUser(
-        user.id
+        user.id,
       );
 
       if (authError) {
@@ -995,14 +1007,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Clear local state
       setUser(null);
-      setProfile(null);
       setSession(null);
       setLoading(false);
 
       log("[AuthContext] Account deleted successfully");
 
       // Redirect to login page
-      window.location.href = "/login";
+      window.location.href = ROUTES.LOGIN;
 
       return { error: null };
     } catch (err) {
@@ -1018,11 +1029,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const value = {
     user,
-    profile,
+    profile: profileData,
     session,
-    loading,
+    loading: loading || profileLoading,
     signUp,
     signIn,
+    signInWithGoogle,
     signOut,
     resetPassword,
     forgotPassword,

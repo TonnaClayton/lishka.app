@@ -13,7 +13,7 @@ const WeatherWidgetProSkeleton: React.FC = () => {
       </div>
 
       {/* Weather Card Skeleton */}
-      <Card className="p-6 bg-gradient-to-br from-[#0251FB] to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
+      <Card className="p-6 bg-gradient-to-br from-lishka-blue to-[#1E40AF] text-white overflow-hidden relative shadow-md rounded-xl">
         <div className="flex justify-between items-start">
           <div>
             <Skeleton className="h-6 w-48 bg-white/20" />
@@ -149,7 +149,7 @@ const WeatherWidgetProSkeleton: React.FC = () => {
               {Array.from({ length: 12 }).map((_, index) => (
                 <div
                   key={`wave-skeleton-${index}`}
-                  className="flex flex-col items-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg min-w-[70px]"
+                  className="flex flex-col items-center p-3 bg-blue-50 /20 rounded-lg min-w-[70px]"
                 >
                   <Skeleton className="h-3 w-12 mb-1" />
                   <Skeleton className="h-6 w-8" />

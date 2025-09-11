@@ -56,7 +56,7 @@ const PasswordRecoveryEmail = (props: {
 
               <Button
                 href={recoveryLink}
-                className="bg-red-600 text-white px-[32px] py-[16px] rounded-[6px] text-[16px] font-medium no-underline box-border"
+                className="bg-lishka-blue text-white px-[32px] py-[12px] rounded-[24px] text-[16px] font-medium no-underline box-border"
               >
                 Reset Password
               </Button>

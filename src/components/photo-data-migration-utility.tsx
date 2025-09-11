@@ -5,6 +5,8 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
 import { ImageMetadata } from "@/lib/image-metadata";
 import { Database, RefreshCw, CheckCircle, AlertTriangle } from "lucide-react";
+import { toImageMetadataItem } from "@/lib/gallery-photo";
+import { Json } from "@/types/supabase";
 
 interface MigrationResult {
   totalPhotos: number;
@@ -31,56 +33,28 @@ const PhotoDataMigrationUtility: React.FC = () => {
       };
     }
 
-    let stringPhotos = 0;
-    let objectPhotos = 0;
     let validMetadata = 0;
     let invalidMetadata = 0;
     let photosWithFishInfo = 0;
 
-    profile.gallery_photos.forEach((photo, index) => {
-      if (typeof photo === "string") {
-        stringPhotos++;
-        // Try to parse if it's a JSON string
-        const photoString = photo as string;
-        if (photoString.startsWith("{") && photoString.includes('"url"')) {
-          try {
-            const parsed = JSON.parse(photoString);
-            if (parsed.url && parsed.timestamp) {
-              validMetadata++;
-              if (parsed.fishInfo && parsed.fishInfo.name !== "Unknown") {
-                photosWithFishInfo++;
-              }
-            } else {
-              invalidMetadata++;
-            }
-          } catch {
-            invalidMetadata++;
-          }
-        } else {
-          invalidMetadata++;
+    profile.gallery_photos.forEach((photo) => {
+      try {
+        const photoItem = toImageMetadataItem(photo);
+
+        if (photoItem.fishInfo && photoItem.fishInfo.name !== "Unknown") {
+          photosWithFishInfo++;
         }
-      } else {
-        objectPhotos++;
-        if (
-          photo &&
-          typeof photo === "object" &&
-          photo.url &&
-          photo.timestamp
-        ) {
-          validMetadata++;
-          if (photo.fishInfo && photo.fishInfo.name !== "Unknown") {
-            photosWithFishInfo++;
-          }
-        } else {
-          invalidMetadata++;
-        }
+
+        validMetadata++;
+      } catch {
+        invalidMetadata++;
       }
     });
 
     return {
       totalPhotos: profile.gallery_photos.length,
-      stringPhotos,
-      objectPhotos,
+      stringPhotos: 0,
+      objectPhotos: 0,
       validMetadata,
       invalidMetadata,
       photosWithFishInfo,
@@ -101,88 +75,12 @@ const PhotoDataMigrationUtility: React.FC = () => {
       const migratedPhotos: ImageMetadata[] = [];
       const errors: string[] = [];
       let migratedCount = 0;
-      let alreadyCorrectCount = 0;
 
       for (let i = 0; i < profile.gallery_photos.length; i++) {
-        const photo = profile.gallery_photos[i];
-
         try {
-          if (typeof photo === "string") {
-            // Handle string photos
-            const photoString = photo as string;
-            if (photoString.startsWith("{") && photoString.includes('"url"')) {
-              // Parse JSON string
-              try {
-                const parsed = JSON.parse(photoString);
-                // Ensure it has the correct structure
-                const migratedPhoto: ImageMetadata = {
-                  url: parsed.url || photo,
-                  timestamp: parsed.timestamp || new Date().toISOString(),
-                  originalFileName: parsed.originalFileName || undefined,
-                  fishInfo: parsed.fishInfo || {
-                    name: "Unknown",
-                    estimatedSize: "Unknown",
-                    estimatedWeight: "Unknown",
-                    confidence: 0,
-                  },
-                  location: parsed.location || undefined,
-                };
-                migratedPhotos.push(migratedPhoto);
-                migratedCount++;
-              } catch (parseError) {
-                // Create minimal metadata for unparseable JSON
-                const migratedPhoto: ImageMetadata = {
-                  url: photo,
-                  timestamp: new Date().toISOString(),
-                  fishInfo: {
-                    name: "Unknown",
-                    estimatedSize: "Unknown",
-                    estimatedWeight: "Unknown",
-                    confidence: 0,
-                  },
-                };
-                migratedPhotos.push(migratedPhoto);
-                migratedCount++;
-                errors.push(
-                  `Photo ${i + 1}: Failed to parse JSON, created minimal metadata`,
-                );
-              }
-            } else {
-              // Plain URL string - create metadata
-              const migratedPhoto: ImageMetadata = {
-                url: photo,
-                timestamp: new Date().toISOString(),
-                fishInfo: {
-                  name: "Unknown",
-                  estimatedSize: "Unknown",
-                  estimatedWeight: "Unknown",
-                  confidence: 0,
-                },
-              };
-              migratedPhotos.push(migratedPhoto);
-              migratedCount++;
-            }
-          } else {
-            // Already an object - validate and fix if needed
-            if (photo && typeof photo === "object" && photo.url) {
-              const migratedPhoto: ImageMetadata = {
-                url: photo.url,
-                timestamp: photo.timestamp || new Date().toISOString(),
-                originalFileName: photo.originalFileName || undefined,
-                fishInfo: photo.fishInfo || {
-                  name: "Unknown",
-                  estimatedSize: "Unknown",
-                  estimatedWeight: "Unknown",
-                  confidence: 0,
-                },
-                location: photo.location || undefined,
-              };
-              migratedPhotos.push(migratedPhoto);
-              alreadyCorrectCount++;
-            } else {
-              errors.push(`Photo ${i + 1}: Invalid object structure, skipped`);
-            }
-          }
+          const photoItem = toImageMetadataItem(profile.gallery_photos[i]);
+          migratedPhotos.push(photoItem);
+          migratedCount++;
         } catch (photoError) {
           errors.push(
             `Photo ${i + 1}: ${photoError instanceof Error ? photoError.message : String(photoError)}`,
@@ -192,7 +90,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
 
       // Update the profile with migrated data
       const { error: updateError } = await updateProfile({
-        gallery_photos: migratedPhotos,
+        gallery_photos: migratedPhotos as unknown as Json[],
       });
 
       if (updateError) {
@@ -202,7 +100,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
       setResult({
         totalPhotos: profile.gallery_photos.length,
         migratedPhotos: migratedCount,
-        alreadyCorrect: alreadyCorrectCount,
+        alreadyCorrect: 0,
         errors,
       });
     } catch (err) {
@@ -240,7 +138,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
           <CardContent>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="text-center">
-                <div className="text-2xl font-bold text-blue-600">
+                <div className="text-2xl font-bold text-lishka-blue">
                   {analysis.totalPhotos}
                 </div>
                 <div className="text-sm text-gray-600">Total Photos</div>
@@ -347,7 +245,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
             <CardContent>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-lishka-blue">
                     {result.totalPhotos}
                   </div>
                   <div className="text-sm text-gray-600">Total Photos</div>
@@ -359,7 +257,7 @@ const PhotoDataMigrationUtility: React.FC = () => {
                   <div className="text-sm text-gray-600">Migrated</div>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">
+                  <div className="text-2xl font-bold text-lishka-blue">
                     {result.alreadyCorrect}
                   </div>
                   <div className="text-sm text-gray-600">Already Correct</div>

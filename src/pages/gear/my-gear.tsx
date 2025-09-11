@@ -1,16 +1,9 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
 import {
-  ArrowLeft,
+  ChevronLeft,
   Plus,
   Package,
-  Upload,
-  Camera,
-  Image as ImageIcon,
-  Trash2,
-  Edit3,
-  MoreVertical,
   Check,
   X,
   Loader2,
@@ -19,8 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Dialog,
@@ -29,24 +20,14 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import GearDetailModal from "./gear-detail-modal";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import GearDetailModal from "../../components/gear-detail-modal";
 import { useAuth } from "@/contexts/auth-context";
-import {
-  uploadGearImage,
-  GearUploadResult,
-  GearMetadata,
-} from "@/lib/gear-upload-service";
-import BottomNav from "./bottom-nav";
-import { log } from "@/lib/logging";
+import BottomNav from "../../components/bottom-nav";
+import { toGearItem } from "@/lib/gear";
+import { Json } from "@/types/supabase";
 
 // Gear categories as specified
-const GEAR_CATEGORIES = [
+export const GEAR_CATEGORIES = [
   { id: "rods-reels", name: "Rods & Reels", icon: "🎣" },
   { id: "lures-jigs", name: "Lures and Jigs", icon: "🪝" },
   { id: "bait-chum", name: "Bait & Chum", icon: "🐟" },
@@ -55,47 +36,20 @@ const GEAR_CATEGORIES = [
   { id: "other", name: "Other", icon: "📦" },
 ];
 
-// Gear item interface
-interface GearItem {
-  id: string;
-  name: string;
-  category: string;
-  description?: string;
-  brand?: string;
-  model?: string;
-  price?: string;
-  purchaseDate?: string;
-  imageUrl: string;
-  timestamp: string;
-  userConfirmed?: boolean;
-  gearType?: string;
-  aiConfidence?: number;
-  // Enhanced fields for detailed gear information
-  size?: string;
-  weight?: string;
-  targetFish?: string;
-  fishingTechnique?: string;
-  weatherConditions?: string;
-  waterConditions?: string;
-  seasonalUsage?: string;
-  colorPattern?: string;
-  actionType?: string;
-  depthRange?: string;
-}
-
 const MyGearPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, updateProfile } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const cameraInputRef = useRef<HTMLInputElement>(null);
+  // const fileInputRef = useRef<HTMLInputElement>(null);
+  // const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const [uploadingGear, setUploadingGear] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [gearLoaded, setGearLoaded] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [editingGearIndex, setEditingGearIndex] = useState<number | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
   const [selectedGearId, setSelectedGearId] = useState<string | null>(null);
   const [editFormData, setEditFormData] = useState({
@@ -109,49 +63,11 @@ const MyGearPage: React.FC = () => {
   });
 
   // Get gear items directly from profile (no local state)
-  const gearItems =
-    profile?.gear_items && Array.isArray(profile.gear_items)
-      ? profile.gear_items
+  const gearItems = useMemo(() => {
+    return profile?.gear_items && Array.isArray(profile.gear_items)
+      ? profile.gear_items.map(toGearItem)
       : [];
-
-  // Load gear items from profile on component mount
-  useEffect(() => {
-    const loadGearItems = async () => {
-      try {
-        log("[MyGearPage] Loading gear items:", {
-          hasUser: !!user?.id,
-          hasProfile: !!profile,
-          profileGearItems: profile?.gear_items,
-        });
-
-        if (!profile && user?.id) {
-          log("[MyGearPage] Profile not loaded yet, waiting...");
-          return;
-        }
-
-        if (profile?.gear_items && Array.isArray(profile.gear_items)) {
-          log("[MyGearPage] Loading gear from database:", {
-            gearCount: profile.gear_items.length,
-          });
-        } else {
-          log("[MyGearPage] No gear items found");
-        }
-      } catch (error) {
-        console.error("[MyGearPage] Error loading gear items:", error);
-      } finally {
-        setGearLoaded(true);
-      }
-    };
-
-    if (user?.id) {
-      loadGearItems();
-    } else {
-      setGearLoaded(true);
-    }
-  }, [user?.id, profile?.gear_items, profile?.id]);
-
-  // Removed automatic save - gear is now only saved from ProfilePage
-  // This page is now view-only for gear items
+  }, [profile?.gear_items]);
 
   // Get ranking text based on gear count
   const getRankingText = (count: number): string => {
@@ -169,9 +85,9 @@ const MyGearPage: React.FC = () => {
   };
 
   // Handle gear click to show detail modal - store only the ID to ensure we always get fresh data
-  const handleGearClick = (gear: GearItem) => {
-    setSelectedGearId(gear.id);
-  };
+  // const handleGearClick = (gear: GearItem) => {
+  //   setSelectedGearId(gear.id);
+  // };
 
   // Close gear modal
   const closeGearModal = () => {
@@ -184,6 +100,7 @@ const MyGearPage: React.FC = () => {
     : null;
 
   // Handle gear editing
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleEditGear = (index: number) => {
     const gear = gearItems[index];
     setEditFormData({
@@ -220,7 +137,7 @@ const MyGearPage: React.FC = () => {
       };
 
       // Update profile with new gear data
-      await updateProfile({ gear_items: updatedGear });
+      await updateProfile({ gear_items: updatedGear as unknown as Json[] });
       setShowEditDialog(false);
       setEditingGearIndex(null);
       setSuccess("Gear updated successfully!");
@@ -233,6 +150,7 @@ const MyGearPage: React.FC = () => {
     }
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleDeleteGear = async (index: number) => {
     try {
       setLoading(true);
@@ -241,7 +159,7 @@ const MyGearPage: React.FC = () => {
       const updatedGear = gearItems.filter((_, i) => i !== index);
 
       // Update profile with new gear data
-      await updateProfile({ gear_items: updatedGear });
+      await updateProfile({ gear_items: updatedGear as unknown as Json[] });
       setOpenMenuIndex(null);
       setSuccess("Gear deleted successfully!");
       setTimeout(() => setSuccess(null), 3000);
@@ -254,7 +172,12 @@ const MyGearPage: React.FC = () => {
   };
 
   // Get gear items by category
-  const getGearByCategory = (categoryId: string) => {
+  const getGearByCategory = (categoryId: string | null) => {
+    if (categoryId == null) {
+      return gearItems;
+    }
+
+    console.log("[MyGearPage] categoryId:", categoryId, gearItems);
     return gearItems.filter((item) => item.category === categoryId);
   };
 
@@ -284,7 +207,7 @@ const MyGearPage: React.FC = () => {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-6 w-6" />
+              <ChevronLeft className="h-6 w-6" />
             </Button>
             <h1 className="text-xl font-bold ml-2 dark:text-white">My Gear</h1>
           </div>
@@ -319,7 +242,7 @@ const MyGearPage: React.FC = () => {
               <Button
                 onClick={() => navigate("/profile")}
                 className="mt-4 border-none shadow-none text-gray-800 font-medium py-3 px-6"
-                style={{ backgroundColor: "#025DFB0D" }}
+                style={{ backgroundColor: "#0251FB0D" }}
               >
                 Add Your First Gear
                 <Plus className="w-4 h-4 ml-2" />
@@ -352,7 +275,7 @@ const MyGearPage: React.FC = () => {
                           {categoryGear.length}
                         </span>
                       )}
-                      <ChevronRight className="w-5 h-5 text-blue-600" />
+                      <ChevronRight className="w-5 h-5 text-[#191B1F]" />
                     </div>
                   </div>
                 </div>
@@ -365,7 +288,6 @@ const MyGearPage: React.FC = () => {
       <div className="lg:hidden">
         <BottomNav />
       </div>
-
       {/* Edit Gear Dialog */}
       <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
         <DialogContent className="w-[calc(100vw-2rem)] max-w-md px-6 py-6">
@@ -503,7 +425,6 @@ const MyGearPage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Gear Detail Modal */}
       <GearDetailModal
         isOpen={!!selectedGearId}

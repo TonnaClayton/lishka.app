@@ -3,7 +3,6 @@ import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
 import { getBlobStorageStatus } from "@/lib/blob-storage";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
-import { Label } from "./ui/label";
 import { Separator } from "./ui/separator";
 import { Badge } from "./ui/badge";
 import { Alert, AlertDescription } from "./ui/alert";
@@ -16,8 +15,6 @@ import {
   Image as ImageIcon,
   Fish,
   MapPin,
-  Clock,
-  User,
 } from "lucide-react";
 import { config } from "@/lib/config";
 import { log } from "@/lib/logging";
@@ -183,10 +180,7 @@ const ImageDebugTest = () => {
     }
   };
 
-  const renderImageResult = (
-    result: ImageDebugResult | null,
-    title: string,
-  ) => {
+  const renderImageResult = (result: ImageDebugResult | null) => {
     if (!result) {
       return (
         <div className="text-center py-8 text-gray-500">
@@ -322,7 +316,7 @@ const ImageDebugTest = () => {
           {/* Raw Metadata */}
           <Separator />
           <details className="space-y-2">
-            <summary className="font-medium cursor-pointer hover:text-blue-600">
+            <summary className="font-medium cursor-pointer hover:text-lishka-blue">
               Raw Metadata (Click to expand)
             </summary>
             <pre className="text-xs bg-gray-100 p-3 rounded overflow-auto max-h-40">
@@ -515,7 +509,7 @@ const ImageDebugTest = () => {
                     className="hidden"
                   />
                 </div>
-                {renderImageResult(workingImage, "Working Image")}
+                {renderImageResult(workingImage)}
               </div>
 
               {/* Non-Working Image */}
@@ -545,7 +539,7 @@ const ImageDebugTest = () => {
                     className="hidden"
                   />
                 </div>
-                {renderImageResult(nonWorkingImage, "Non-Working Image")}
+                {renderImageResult(nonWorkingImage)}
               </div>
             </div>
           </TabsContent>

@@ -1,21 +1,58 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/auth-context";
-import { useProfile, useUpdateProfile, useUploadAvatar, useUploadPhoto, useDeletePhoto, useUploadGear, useUsernameValidation } from "@/hooks/queries";
+import { useUpload } from "@/contexts/upload-context";
+import {
+  useUpdateProfile,
+  useUploadAvatar,
+  useDeletePhoto,
+  useUsernameValidation,
+} from "@/hooks/queries";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
+import {
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Plus, X, Save, Check, ArrowLeft, Edit3, Trophy, MapPin as MapIcon, Fish, User, Mail, Camera, Crop as CropIcon } from "lucide-react";
+import {
+  Plus,
+  X,
+  Save,
+  Check,
+  ArrowLeft,
+  Edit3,
+  Trophy,
+  MapPin as MapIcon,
+  Fish,
+  User,
+  Mail,
+  Camera,
+  Crop as CropIcon,
+  Menu,
+} from "lucide-react";
 import { motion } from "framer-motion";
 import ReactCrop, { Crop, PixelCrop } from "react-image-crop";
 import "react-image-crop/dist/ReactCrop.css";
@@ -23,13 +60,11 @@ import { z } from "zod";
 import FishImageCard from "./fish-image-card";
 import BottomNav from "@/components/bottom-nav";
 import { log } from "@/lib/logging";
-
-// Type definitions
-interface ProfileFormData {
-  full_name: string;
-  username: string;
-  bio: string;
-}
+import { ROUTES } from "@/lib/routing";
+import PhotoUploadBar from "./photo-upload-bar";
+import GearItemUploadBar from "./gear-item-upload-bar";
+import { toImageMetadataItem } from "@/lib/gallery-photo";
+import UploadedInfoMsg from "./uploaded-info-msg";
 
 interface ImageMetadata {
   url: string;
@@ -53,26 +88,132 @@ interface LocationData {
   name: string;
 }
 
-// Schema for form validation
+// Zod schema for profile form validation
 const profileSchema = z.object({
-  full_name: z.string().min(1, "Full name is required"),
-  username: z.string().min(3, "Username must be at least 3 characters").optional().or(z.literal("")),
-  bio: z.string().optional(),
+  full_name: z
+    .string()
+    .min(1, "Full name is required")
+    .min(2, "Full name must be at least 2 characters")
+    .max(50, "Full name must be less than 50 characters"),
+  username: z
+    .string()
+    .min(3, "Username must be at least 3 characters")
+    .max(30, "Username must be less than 30 characters")
+    .regex(
+      /^[a-z0-9._]+$/,
+      "Username can only contain lowercase letters, numbers, dots (.) and underscores (_)",
+    )
+    .refine((val) => !val.includes("..") && !val.includes("__"), {
+      message: "Username cannot have consecutive dots or underscores",
+    }),
+  bio: z.string().max(500, "Bio must be less than 500 characters").optional(),
 });
+
+type ProfileFormData = z.infer<typeof profileSchema>;
+
+interface LocationData {
+  latitude: number;
+  longitude: number;
+  name: string;
+  countryCode?: string;
+}
+
+// Fix Leaflet icon issue with proper CDN URLs
+if (typeof window !== "undefined") {
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+    iconUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+    shadowUrl:
+      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+  });
+}
+
+// Map Click Handler Component for Edit Dialog
+const MapClickHandler = ({
+  onLocationSelect,
+}: {
+  onLocationSelect: (lat: number, lng: number, name: string) => void;
+}) => {
+  useMapEvents({
+    click: async (e) => {
+      const { lat, lng } = e.latlng;
+
+      // Attempt to get location name via reverse geocoding
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
+        );
+        const data = await response.json();
+
+        // Extract city/town and country from address details
+        const city =
+          data.address?.city ||
+          data.address?.town ||
+          data.address?.village ||
+          data.address?.hamlet ||
+          "";
+        const country = data.address?.country || "";
+
+        // Format as "city, country"
+        const name = [city, country].filter(Boolean).join(", ");
+
+        // Check if location is on sea or water
+        const isSeaLocation =
+          !city || // No city means likely on water
+          data.address?.sea ||
+          data.address?.ocean ||
+          data.address?.water ||
+          data.address?.bay;
+
+        let locationName;
+        if (isSeaLocation) {
+          // For sea locations, display only coordinates
+          const formattedLat = lat.toFixed(6);
+          const formattedLng = lng.toFixed(6);
+          locationName = `${formattedLat}, ${formattedLng}`;
+        } else {
+          locationName = name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        }
+
+        onLocationSelect(lat, lng, locationName);
+      } catch (error) {
+        console.error("Error getting location name:", error);
+        // Display coordinates as fallback
+        const formattedLat = lat.toFixed(6);
+        const formattedLng = lng.toFixed(6);
+        const locationName = `${formattedLat}, ${formattedLng}`;
+        onLocationSelect(lat, lng, locationName);
+      }
+    },
+  });
+  return null;
+};
 
 export default function ProfilePage() {
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading } = useAuth();
+
+  const {
+    uploadPhotoStreamData,
+    uploadGearItemStreamData,
+    classifyingImage,
+    showUploadedInfoMsg,
+    uploadedInfoMsg,
+    isUploading,
+    handlePhotoUpload,
+    closeUploadedInfoMsg,
+  } = useUpload();
 
   // React Query hooks - always call them, let React Query handle the enabled state
-  const { data: profile, isLoading: profileLoading } = useProfile(
-    user?.id ?? "",
-  );
+
   const updateProfile = useUpdateProfile();
   const uploadAvatar = useUploadAvatar();
-  const uploadPhoto = useUploadPhoto();
+  // const uploadPhoto = useUploadPhoto();
+
   const deletePhoto = useDeletePhoto();
-  const uploadGear = useUploadGear();
   const usernameValidation = useUsernameValidation();
 
   // Local state
@@ -109,12 +250,8 @@ export default function ProfilePage() {
     }
     return false;
   });
-  const [imageLoadingStates, setImageLoadingStates] = useState<
-    Record<string, boolean>
-  >({});
-  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+
   const [borderStyle, setBorderStyle] = useState({ left: 0, width: 0 });
-  const [openMenuIndex, setOpenMenuIndex] = useState<number | null>(null);
   const [loading, setLoading] = useState(false);
 
   const [showEditAIDialog, setShowEditAIDialog] = useState(false);
@@ -127,6 +264,12 @@ export default function ProfilePage() {
   const [tempLocationData, setTempLocationData] = useState<LocationData | null>(
     null,
   );
+
+  const galleryPhotos = useMemo(() => {
+    if (!profile?.gallery_photos) return [];
+
+    return profile?.gallery_photos.map(toImageMetadataItem);
+  }, [profile, isUploading, uploadPhotoStreamData]);
 
   // React Hook Form setup
   const form = useForm<ProfileFormData>({
@@ -218,14 +361,9 @@ export default function ProfilePage() {
 
     try {
       setLoading(true);
-      const metadata = await uploadPhoto.mutateAsync(file);
-
-      if (metadata.fishInfo && metadata.fishInfo.name !== "Unknown") {
-        const successMsg = `Photo uploaded! Identified: ${metadata.fishInfo.name} (${Math.round(metadata.fishInfo.confidence * 100)}% confident)`;
-        setSuccess(successMsg);
-      } else {
-        setSuccess("Photo uploaded successfully!");
-      }
+      await handlePhotoUpload(file, {
+        type: "photo",
+      });
       setTimeout(() => setSuccess(null), 5000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload photo");
@@ -261,21 +399,24 @@ export default function ProfilePage() {
     const results: string[] = [];
 
     try {
+      // await handlePhotoUpload(file, {
+      //   type: "gear",
+      // }); // The context handles both photo and gear uploads
       // Process files sequentially to avoid overwhelming the API
       for (let i = 0; i < fileArray.length; i++) {
-        const file = fileArray[i];
+        //const file = fileArray[i];
 
         try {
-          setSuccess(`Processing gear ${i + 1} of ${totalFiles}...`);
-          const { metadata } = await uploadGear.mutateAsync(file);
+          // setSuccess(`Processing gear ${i + 1} of ${totalFiles}...`);
+          // const { metadata } = await uploadGear.mutateAsync(file);
 
-          if (metadata.gearInfo && metadata.gearInfo.name !== "Unknown Gear") {
-            results.push(
-              `${metadata.gearInfo.name} (${Math.round((metadata.gearInfo.confidence || 0) * 100)}% confident)`,
-            );
-          } else {
-            results.push(`Gear item ${i + 1}`);
-          }
+          // if (metadata.gearInfo && metadata.gearInfo.name !== "Unknown Gear") {
+          //   results.push(
+          //     `${metadata.gearInfo.name} (${Math.round((metadata.gearInfo.confidence || 0) * 100)}% confident)`
+          //   );
+          // } else {
+          //   results.push(`Gear item ${i + 1}`);
+          // }
           successCount++;
         } catch (err) {
           console.error(`Failed to upload gear ${i + 1}:`, err);
@@ -310,33 +451,22 @@ export default function ProfilePage() {
     }
   };
 
-  // Handle single gear upload (legacy support)
+  // Handle gear upload
   const handleGearUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     if (files.length === 1) {
-      // Single file upload
-      const file = files[0];
       try {
-        setLoading(true);
-        const { metadata } = await uploadGear.mutateAsync(file);
-
-        if (metadata.gearInfo && metadata.gearInfo.name !== "Unknown Gear") {
-          const successMsg = `Gear uploaded! Identified: ${metadata.gearInfo.name} (${Math.round((metadata.gearInfo.confidence || 0) * 100)}% confident)`;
-          setSuccess(successMsg);
-        } else {
-          setSuccess("Gear uploaded successfully!");
-        }
-        setTimeout(() => setSuccess(null), 5000);
+        await handlePhotoUpload(files[0], {
+          type: "gear",
+        }); // The context handles both photo and gear uploads
       } catch (err) {
         setError(err instanceof Error ? err.message : "Failed to upload gear");
       } finally {
-        setLoading(false);
         e.target.value = "";
       }
     } else {
-      // Multiple files upload
       await handleMultipleGearUpload(files);
       e.target.value = "";
     }
@@ -347,16 +477,10 @@ export default function ProfilePage() {
     form.handleSubmit(onSubmit)();
   };
 
-  const handlePhotoUpload = () => {
-    log("[ProfilePage] Add photo button clicked - mobile optimized");
-    log("[ProfilePage] photoInputRef.current:", photoInputRef.current);
-    log("[ProfilePage] User agent:", navigator.userAgent);
-    log(
-      "[ProfilePage] Is mobile:",
-      /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
-        navigator.userAgent,
-      ),
-    );
+  const handlePhotoUploadClick = () => {
+    if (isUploading) {
+      return;
+    }
 
     if (photoInputRef.current) {
       try {
@@ -367,8 +491,6 @@ export default function ProfilePage() {
           );
 
         if (isMobile) {
-          log("[ProfilePage] Mobile device detected - using direct click");
-          // Reset the input value first to ensure change event fires
           photoInputRef.current.value = "";
           // Use setTimeout to ensure the click happens after any event bubbling
           setTimeout(() => {
@@ -381,8 +503,6 @@ export default function ProfilePage() {
           log("[ProfilePage] Desktop device - using standard click");
           photoInputRef.current.click();
         }
-
-        log("[ProfilePage] File input click triggered successfully");
       } catch (error) {
         console.error("[ProfilePage] Error clicking file input:", error);
       }
@@ -669,7 +789,6 @@ export default function ProfilePage() {
     setEditingPhotoIndex(index);
     setEditingMetadata(metadata);
     setShowEditAIDialog(true);
-    setOpenMenuIndex(null);
   };
 
   // Update border position when active tab changes
@@ -782,12 +901,12 @@ export default function ProfilePage() {
   // Redirect to login if no user
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate("/login", { replace: true });
+      navigate(ROUTES.LOGIN, { replace: true });
     }
   }, [user, authLoading, navigate]);
 
   // Early returns after all hooks
-  if (authLoading || profileLoading) {
+  if (authLoading) {
     return (
       <div className="flex flex-col min-h-screen bg-[#F7F7F7] dark:bg-background">
         <div className="flex items-center justify-center flex-1">
@@ -807,7 +926,7 @@ export default function ProfilePage() {
   }
 
   return (
-    <div className="flex flex-col h-full dark:bg-background bg-[#ffffff]">
+    <div className="flex flex-col h-full relative dark:bg-background bg-[#ffffff]">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-white dark:bg-gray-800 p-4 w-full border-b">
         <div className="flex items-center justify-between">
@@ -819,13 +938,22 @@ export default function ProfilePage() {
           </div>
           <div className="flex items-center gap-2">
             {!isEditing ? (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsEditing(true)}
-              >
-                <Edit3 className="h-5 w-5" />
-              </Button>
+              <>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setIsEditing(true)}
+                >
+                  <Edit3 className="h-5 w-5" />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => navigate("/menu")}
+                >
+                  <Menu className="h-5 w-5" />
+                </Button>
+              </>
             ) : (
               <div className="flex gap-2">
                 <Button
@@ -855,6 +983,16 @@ export default function ProfilePage() {
           </div>
         </div>
       </header>
+
+      <PhotoUploadBar uploadPhotoStreamData={uploadPhotoStreamData} />
+      <GearItemUploadBar uploadGearItemStreamData={uploadGearItemStreamData} />
+      {showUploadedInfoMsg && uploadedInfoMsg && (
+        <UploadedInfoMsg
+          message={uploadedInfoMsg}
+          onClose={closeUploadedInfoMsg}
+        />
+      )}
+
       {/* Main Content */}
       <main className="flex-1 p-4 w-full overflow-y-auto">
         <div className="max-w-2xl mx-auto w-full">
@@ -892,7 +1030,7 @@ export default function ProfilePage() {
                     </Avatar>
                     {isEditing && (
                       <div
-                        className="absolute -bottom-2 -right-2 bg-blue-600 rounded-full p-2 cursor-pointer hover:bg-blue-700 transition-colors shadow-lg"
+                        className="absolute -bottom-2 -right-2 bg-lishka-blue rounded-full p-2 cursor-pointer hover:bg-lishka-blue transition-colors shadow-lg"
                         onClick={() => fileInputRef.current?.click()}
                       >
                         <Camera className="w-4 h-4 text-white" />
@@ -1029,9 +1167,9 @@ export default function ProfilePage() {
               <Button
                 variant="outline"
                 className={cn(
-                  "flex-1 border-none shadow-none text-gray-800 font-medium h-10 flex items-center justify-center gap-2 py-1.5",
+                  "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-10 flex items-center justify-center gap-2 rounded-[8px]",
                 )}
-                style={{ backgroundColor: "#025DFB0D" }}
+                style={{ backgroundColor: "#0251FB0D" }}
                 onClick={() => navigate("/my-gear")}
               >
                 My gear
@@ -1040,7 +1178,7 @@ export default function ProfilePage() {
                   profile.gear_items.length > 0 && (
                     <Badge
                       className={cn(
-                        "bg-blue-600 hover:bg-blue-600 text-white rounded-full min-w-[24px] h-6 flex items-center justify-center text-sm font-medium",
+                        "bg-lishka-blue hover:bg-lishka-blue text-white rounded-full min-w-[24px] h-6 flex items-center justify-center text-sm font-medium",
                       )}
                     >
                       {profile.gear_items.length}
@@ -1049,12 +1187,25 @@ export default function ProfilePage() {
               </Button>
               <Button
                 variant="outline"
+                disabled={isUploading || classifyingImage}
                 className={cn(
-                  "flex-1 border-none shadow-none text-gray-800 font-medium py-4 h-10 flex items-center justify-center gap-2",
+                  "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-10 flex items-center justify-center gap-2 rounded-[8px]",
                 )}
                 style={{ backgroundColor: "#025DFB0D" }}
-                onClick={() => navigate('/gear-upload')}
-                disabled={loading}
+                onClick={() => navigate("/gear-upload")}
+                // style={{ backgroundColor: "#0251FB0D" }}
+                // onClick={() => {
+                //   if (isUploading || classifyingImage) {
+                //     return;
+                //   }
+
+                //   // Trigger file input for gear upload
+                //   const gearInput = document.createElement("input");
+                //   gearInput.type = "file";
+                //   gearInput.accept = "image/*";
+                //   gearInput.onchange = (e) => handleGearUpload(e as any);
+                //   gearInput.click();
+                // }}
               >
                 {loading ? "Processing..." : "Add gear"}
                 <Plus className="w-5 h-5" />
@@ -1126,8 +1277,8 @@ export default function ProfilePage() {
                 >
                   {/* Add Photo button - always first item in grid, smaller in single column */}
                   <button
-                    onClick={handlePhotoUpload}
-                    disabled={uploadPhoto.isPending}
+                    onClick={handlePhotoUploadClick}
+                    disabled={isUploading || classifyingImage}
                     className={cn(
                       "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex-col relative transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation",
                       isSingleColumn ? "h-20 rounded-lg mb-2" : "aspect-square",
@@ -1137,7 +1288,7 @@ export default function ProfilePage() {
                       touchAction: "manipulation",
                     }}
                   >
-                    {uploadPhoto.isPending ? (
+                    {isUploading || classifyingImage ? (
                       <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600 dark:border-gray-300" />
                     ) : (
                       <>
@@ -1160,23 +1311,21 @@ export default function ProfilePage() {
                   </button>
 
                   {/* Show uploaded photos */}
-                  {profile?.gallery_photos &&
-                    Array.isArray(profile.gallery_photos) &&
-                    profile.gallery_photos.map((photo: any, index) => {
-                      return (
-                        <FishImageCard
-                          key={index}
-                          handleImageClick={handleImageClick}
-                          isSingleColumn={isSingleColumn}
-                          loading={loading}
-                          handleDeletePhoto={() => handleDeletePhoto(index)}
-                          handleEditAIInfo={() => handleEditAIInfo(index)}
-                          setSuccess={setSuccess}
-                          setError={setError}
-                          photo={photo}
-                        />
-                      );
-                    })}
+                  {galleryPhotos.map((photo, index) => {
+                    return (
+                      <FishImageCard
+                        key={index}
+                        handleImageClick={handleImageClick}
+                        isSingleColumn={isSingleColumn}
+                        loading={loading}
+                        handleDeletePhoto={() => handleDeletePhoto(index)}
+                        handleEditAIInfo={() => handleEditAIInfo(index)}
+                        setSuccess={setSuccess}
+                        setError={setError}
+                        photo={photo}
+                      />
+                    );
+                  })}
                 </div>
 
                 {/* Gallery input for selecting existing photos */}
@@ -1186,7 +1335,7 @@ export default function ProfilePage() {
                   accept="image/*"
                   onChange={handlePhotoChange}
                   className="hidden"
-                  disabled={uploadPhoto.isPending}
+                  disabled={isUploading || classifyingImage}
                   key="photo-input"
                   style={{
                     position: "absolute",
@@ -1203,16 +1352,15 @@ export default function ProfilePage() {
                   capture="environment"
                   onChange={handlePhotoChange}
                   className="hidden"
-                  disabled={uploadPhoto.isPending}
+                  disabled={isUploading || classifyingImage}
                   key="camera-input"
                 />
               </TabsContent>
 
               <TabsContent value="achievements" className="mt-4">
-                <Card className="bg-white dark:bg-gray-800">
+                <Card className="bg-white dark:bg-gray-800 border-[#191B1F1A]">
                   <CardHeader className="text-center">
-                    <CardTitle className="flex items-center justify-center gap-2">
-                      <Trophy className="w-5 h-5" />
+                    <CardTitle className="flex items-center justify-center gap-2 text-base">
                       Achievements
                     </CardTitle>
                   </CardHeader>
@@ -1222,7 +1370,7 @@ export default function ProfilePage() {
                       <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
                         Coming Soon!
                       </h3>
-                      <p className="text-gray-500 dark:text-gray-400">
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">
                         Track your fishing milestones and unlock achievements
                       </p>
                     </div>
@@ -1231,10 +1379,9 @@ export default function ProfilePage() {
               </TabsContent>
 
               <TabsContent value="trips" className="mt-4">
-                <Card className="bg-white dark:bg-gray-800">
+                <Card className="bg-white dark:bg-gray-800 border-[#191B1F1A]">
                   <CardHeader className="text-center">
-                    <CardTitle className="flex items-center justify-center gap-2">
-                      <MapIcon className="w-5 h-5" />
+                    <CardTitle className="flex items-center justify-center gap-2 text-base">
                       Fishing Trips
                     </CardTitle>
                   </CardHeader>
@@ -1244,7 +1391,7 @@ export default function ProfilePage() {
                       <h3 className="text-lg font-semibold text-gray-600 dark:text-gray-300 mb-2">
                         Coming Soon!
                       </h3>
-                      <p className="text-gray-500 dark:text-gray-400">
+                      <p className="text-gray-500 dark:text-gray-400 text-sm">
                         Log and track your fishing adventures
                       </p>
                     </div>
@@ -1284,7 +1431,7 @@ export default function ProfilePage() {
               multiple
               onChange={handleGearUpload}
               className="hidden"
-              disabled={uploadGear.isPending || loading}
+              disabled={isUploading || classifyingImage}
             />
           </div>
         </div>
@@ -1366,7 +1513,6 @@ export default function ProfilePage() {
         <DialogContent className="sm:max-w-[425px] w-[95%] mx-auto rounded-lg max-h-[90vh] overflow-y-auto [&>button]:hidden">
           <DialogHeader className="pb-2">
             <DialogTitle className="flex items-center gap-2 text-lg font-semibold">
-              <Fish className="w-5 h-5" />
               Edit Fish Information
             </DialogTitle>
           </DialogHeader>
@@ -1542,8 +1688,8 @@ export default function ProfilePage() {
           </div>
 
           <div className="mt-4">
-            <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-2">
-              <p className="text-xs text-blue-800 dark:text-blue-200">
+            <div className="bg-blue-50 /20 border border-blue-200  rounded-lg p-2">
+              <p className="text-xs text-lishka-blue">
                 <strong>Note:</strong> Updating this information will remove the
                 AI confidence indicator.
               </p>

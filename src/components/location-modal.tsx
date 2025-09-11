@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { MapPin, Navigation, Check } from "lucide-react";
-import LoadingDots from "./loading-dots";
+// import { MapPin } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -13,14 +12,17 @@ import {
   MapContainer,
   TileLayer,
   Marker,
-  useMapEvents,
+  // useMapEvents,
   LayersControl,
+  useMapEvents,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { log } from "@/lib/logging";
-import { useUpdateProfile, useUserLocation } from "@/hooks/queries";
+import { useUserLocation } from "@/hooks/queries";
 import { DEFAULT_LOCATION } from "@/lib/const";
+import useDeviceSize from "@/hooks/use-device-size";
+import { cn } from "@/lib/utils";
 
 interface LocationData {
   latitude: number;
@@ -53,7 +55,6 @@ L.Icon.Default.mergeOptions({
 
 // Map Selection Component
 const MapSelection = ({
-  onLocationSelect,
   currentLocation,
 }: {
   onLocationSelect: (location: LocationData) => void;
@@ -64,6 +65,7 @@ const MapSelection = ({
   >(null);
   const [locationName, setLocationName] = useState("");
   const [map, setMap] = useState<L.Map | null>(null);
+  const [isSeaLocation, setIsSeaLocation] = useState(false);
 
   // Make selectedPosition and locationName available to parent component
   React.useEffect(() => {
@@ -71,6 +73,7 @@ const MapSelection = ({
     (window as any).mapSelectionState = {
       selectedPosition,
       locationName,
+      isSeaLocation,
     };
   }, [selectedPosition, locationName, currentLocation]);
 
@@ -98,7 +101,7 @@ const MapSelection = ({
       const lat = currentLocation.latitude;
       const lng = currentLocation.longitude;
       log(
-        `Map created, centering on: ${lat}, ${lng} (${currentLocation.name})`
+        `Map created, centering on: ${lat}, ${lng} (${currentLocation.name})`,
       );
       map.setView([lat, lng], 15);
     }
@@ -106,6 +109,7 @@ const MapSelection = ({
 
   // Function to handle map click and set marker
   const MapClickHandler = () => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const map = useMapEvents({
       click: async (e) => {
         const { lat, lng } = e.latlng;
@@ -114,7 +118,7 @@ const MapSelection = ({
         // Attempt to get location name via reverse geocoding
         try {
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
           );
           const data = await response.json();
 
@@ -147,14 +151,17 @@ const MapSelection = ({
             lng,
           });
 
-          if (isSeaLocation) {
-            // For sea locations, display only coordinates
-            const formattedLat = lat.toFixed(6);
-            const formattedLng = lng.toFixed(6);
-            setLocationName(`${formattedLat}, ${formattedLng}`);
-          } else {
-            setLocationName(name);
-          }
+          setIsSeaLocation(isSeaLocation);
+
+          // if (isSeaLocation) {
+          //   // For sea locations, display only coordinates
+          //   const formattedLat = lat.toFixed(6);
+          //   const formattedLng = lng.toFixed(6);
+          //   setLocationName(`${formattedLat}, ${formattedLng}`);
+          // } else {
+
+          // }
+          setLocationName(name);
         } catch (error) {
           console.error("Error getting location name:", error);
           // Display coordinates as fallback
@@ -212,8 +219,8 @@ const LocationModal = ({
   trigger,
 }: LocationModalProps) => {
   const [loading, setLoading] = useState(false);
-  const [isPending, startTransition] = React.useTransition();
   const { updateLocationAsync } = useUserLocation();
+  const { height } = useDeviceSize();
 
   const handleLocationUpdate = async (newLocation: LocationData) => {
     //startTransition(async () => {
@@ -265,11 +272,12 @@ const LocationModal = ({
           const lng = position.coords.longitude;
           let locationName = "Current Location";
           let countryCode = "";
+          let isSeaLocation = false;
 
           // Attempt to get location name via reverse geocoding
           try {
             const response = await fetch(
-              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`
+              `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
             );
             const data = await response.json();
             log("Reverse geocoding data:", data);
@@ -288,21 +296,21 @@ const LocationModal = ({
             const name = [city, country].filter(Boolean).join(", ");
 
             // Check if location is on sea or water
-            const isSeaLocation =
+            isSeaLocation =
               !city || // No city means likely on water
               data.address?.sea ||
               data.address?.ocean ||
               data.address?.water ||
               data.address?.bay;
 
-            if (isSeaLocation) {
-              // For sea locations, display only coordinates
-              const formattedLat = lat.toFixed(6);
-              const formattedLng = lng.toFixed(6);
-              locationName = `${formattedLat}, ${formattedLng}`;
-            } else {
-              locationName = name || "Current Location";
-            }
+            // if (isSeaLocation) {
+            //   // For sea locations, display only coordinates
+            //   const formattedLat = lat.toFixed(6);
+            //   const formattedLng = lng.toFixed(6);
+            //   locationName = `${formattedLat}, ${formattedLng}`;
+            // } else {
+            locationName = name || "Current Location";
+            // }
           } catch (error) {
             console.error("Error getting location name:", error);
           }
@@ -312,6 +320,7 @@ const LocationModal = ({
             longitude: lng,
             name: locationName,
             countryCode: countryCode,
+            isSeaLocation: isSeaLocation,
           };
 
           log("Setting new location:", newLocation);
@@ -323,34 +332,17 @@ const LocationModal = ({
           setLoading(false);
 
           // If geolocation fails, set a default location instead of showing an alert
-          const defaultLocation = {
-            latitude: 35.8997,
-            longitude: 14.5146,
-            name: "Malta",
-          };
 
-          log("Setting default location after error:", defaultLocation);
-          handleLocationUpdate(defaultLocation);
+          handleLocationUpdate(DEFAULT_LOCATION);
         },
         {
           enableHighAccuracy: true,
           timeout: 10000,
           maximumAge: 0,
-        }
+        },
       );
     } else {
-      // If geolocation is not supported, set a default location
-      const defaultLocation = {
-        latitude: 35.8997,
-        longitude: 14.5146,
-        name: "Malta",
-      };
-
-      log(
-        "Setting default location (no geolocation support):",
-        defaultLocation
-      );
-      handleLocationUpdate(defaultLocation);
+      handleLocationUpdate(DEFAULT_LOCATION);
       setLoading(false);
     }
   };
@@ -358,6 +350,7 @@ const LocationModal = ({
   const handleMapLocationSelect = () => {
     // Access the stored map selection state
     const mapState = (window as any).mapSelectionState;
+    console.log("mapState", mapState);
     if (mapState && mapState.selectedPosition) {
       const [lat, lng] = mapState.selectedPosition;
       const newLocation = {
@@ -375,7 +368,13 @@ const LocationModal = ({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       {trigger && <DialogTrigger asChild>{trigger}</DialogTrigger>}
-      <DialogContent className="sm:max-w-[600px] w-[90%] rounded-[16px] max-h-[80vh] shadow-xl dark:bg-card dark:border-border/30 [&>button]:hidden p-4">
+      <DialogContent
+        className={cn(
+          "sm:max-w-[600px] w-[90%] rounded-[16px] shadow-xl dark:bg-card dark:border-border/30 [&>button]:hidden p-4",
+          height > 768 ? "max-h-[80vh]" : "max-h-auto",
+          height < 600 && "max-h-full rounded-none w-full overflow-y-auto",
+        )}
+      >
         <DialogHeader className="flex flex-row items-center justify-between space-y-0">
           <DialogTitle className="dark:text-white">{title}</DialogTitle>
           <button
@@ -409,18 +408,18 @@ const LocationModal = ({
             <Button
               onClick={handleDetectLocation}
               variant="outline"
-              className="w-full h-12 border-none shadow-none bg-[#0251FB] hover:bg-[#0251FB] text-white hover:text-white rounded-full"
-              disabled={isPending || loading}
+              className="w-full h-12 border-none shadow-none bg-lishka-blue hover:bg-lishka-blue text-white hover:text-white rounded-full"
+              disabled={loading}
             >
-              <MapPin className="mr-2" />
+              {/* <MapPin className="mr-2" /> */}
               {loading ? "Detecting..." : "Detect my location"}
             </Button>
 
             <Button
               onClick={handleMapLocationSelect}
-              disabled={isPending}
+              disabled={loading}
               variant="default"
-              className="confirm-location-button w-full bg-[#025DFB1A] h-12 text-[#0251FB] hover:bg-[#025DFB33] hover:text-[#0251FB] rounded-full shadow-none border-none"
+              className="confirm-location-button w-full bg-[#0251FB1A] h-12 text-lishka-blue hover:bg-[#0251FB33] hover:text-lishka-blue rounded-full shadow-none border-none"
             >
               Set this location
             </Button>

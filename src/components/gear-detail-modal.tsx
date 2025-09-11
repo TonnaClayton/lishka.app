@@ -1,36 +1,7 @@
 import React from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Package, X, Brain } from "lucide-react";
-
-interface GearItem {
-  id: string;
-  name: string;
-  category: string;
-  imageUrl?: string;
-  description?: string;
-  brand?: string;
-  model?: string;
-  price?: string;
-  gearType?: string;
-  size?: string;
-  weight?: string;
-  targetFish?: string;
-  fishingTechnique?: string;
-  weatherConditions?: string;
-  waterConditions?: string;
-  seasonalUsage?: string;
-  colorPattern?: string;
-  actionType?: string;
-  depthRange?: string;
-  versatility?: string;
-  compatibleGear?: string;
-}
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { Package, X } from "lucide-react";
+import { GearItem } from "@/lib/gear";
 
 interface AIRecommendation {
   gearId: string;
@@ -108,13 +79,13 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
             {/* AI Recommendation - Only show if available */}
             {recommendation && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl">
-                <h3 className="text-blue-600 dark:text-blue-300 text-sm font-medium mb-3">
+              <div className="bg-blue-50 /20 p-6 rounded-xl">
+                <h3 className="text-lishka-blue  text-sm font-medium mb-3">
                   AI Analysis for Current Conditions
                 </h3>
                 <div className="space-y-3">
                   <div>
-                    <h4 className="text-blue-600 dark:text-blue-300 text-xs font-medium mb-1">
+                    <h4 className="text-lishka-blue  text-xs font-medium mb-1">
                       Reasoning:
                     </h4>
                     <p className="text-gray-700 dark:text-gray-300 text-sm">
@@ -122,7 +93,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
                     </p>
                   </div>
                   <div>
-                    <h4 className="text-blue-600 dark:text-blue-300 text-xs font-medium mb-1">
+                    <h4 className="text-lishka-blue  text-xs font-medium mb-1">
                       Suitability:
                     </h4>
                     <p className="text-gray-700 dark:text-gray-300 text-sm">
@@ -134,14 +105,14 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
             )}
 
             {/* Basic Information */}
-            <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl">
-              <h3 className="text-blue-600 dark:text-blue-300 text-sm font-medium mb-4">
+            <div className="bg-blue-50 /20 p-6 rounded-xl">
+              <h3 className="text-lishka-blue  text-sm font-medium mb-4">
                 Basic Information
               </h3>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">
+                    <span className="text-lishka-blue  text-xs font-medium">
                       Category:
                     </span>
                     <span className="text-gray-700 dark:text-gray-300 text-sm">
@@ -151,7 +122,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
                   {gear.gearType && (
                     <div className="flex justify-between">
-                      <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">
+                      <span className="text-lishka-blue  text-xs font-medium">
                         Type:
                       </span>
                       <span className="text-gray-700 dark:text-gray-300 text-sm">
@@ -162,7 +133,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
                   {gear.brand && (
                     <div className="flex justify-between">
-                      <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">
+                      <span className="text-lishka-blue  text-xs font-medium">
                         Brand:
                       </span>
                       <span className="text-gray-700 dark:text-gray-300 text-sm">
@@ -174,7 +145,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
                 <div className="space-y-3">
                   {gear.model && (
                     <div className="flex justify-between">
-                      <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">
+                      <span className="text-lishka-blue  text-xs font-medium">
                         Model:
                       </span>
                       <span className="text-gray-700 dark:text-gray-300 text-sm">
@@ -185,7 +156,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
                   {gear.price && (
                     <div className="flex justify-between">
-                      <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">
+                      <span className="text-lishka-blue  text-xs font-medium">
                         Price:
                       </span>
                       <span className="text-gray-700 dark:text-gray-300 text-sm">
@@ -202,15 +173,15 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
               gear.weight ||
               gear.colorPattern ||
               gear.actionType) && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl">
-                <h3 className="text-blue-600 dark:text-blue-300 text-sm font-medium mb-4">
+              <div className="bg-blue-50 /20 p-6 rounded-xl">
+                <h3 className="text-lishka-blue  text-sm font-medium mb-4">
                   Specifications
                 </h3>
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   <div className="space-y-3">
                     {gear.size && (
                       <div className="flex justify-between">
-                        <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">
+                        <span className="text-lishka-blue  text-xs font-medium">
                           Size:
                         </span>
                         <span className="text-gray-700 dark:text-gray-300 text-sm">
@@ -221,7 +192,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
                     {gear.weight && (
                       <div className="flex justify-between">
-                        <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">
+                        <span className="text-lishka-blue  text-xs font-medium">
                           Weight:
                         </span>
                         <span className="text-gray-700 dark:text-gray-300 text-sm">
@@ -233,7 +204,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
                   <div className="space-y-3">
                     {gear.colorPattern && (
                       <div className="flex justify-between">
-                        <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">
+                        <span className="text-lishka-blue  text-xs font-medium">
                           Color:
                         </span>
                         <span className="text-gray-700 dark:text-gray-300 text-sm">
@@ -244,7 +215,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
                     {gear.actionType && (
                       <div className="flex justify-between">
-                        <span className="text-blue-600 dark:text-blue-300 text-xs font-medium">
+                        <span className="text-lishka-blue  text-xs font-medium">
                           Action:
                         </span>
                         <span className="text-gray-700 dark:text-gray-300 text-sm">
@@ -259,14 +230,14 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
             {/* Fishing Details */}
             {(gear.targetFish || gear.fishingTechnique || gear.depthRange) && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl">
-                <h3 className="text-blue-600 dark:text-blue-300 text-sm font-medium mb-4">
+              <div className="bg-blue-50 /20 p-6 rounded-xl">
+                <h3 className="text-lishka-blue  text-sm font-medium mb-4">
                   Fishing Details
                 </h3>
                 <div className="space-y-4">
                   {gear.targetFish && (
                     <div>
-                      <span className="text-blue-600 dark:text-blue-300 text-xs font-medium block mb-1">
+                      <span className="text-lishka-blue  text-xs font-medium block mb-1">
                         Target Fish:
                       </span>
                       <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
@@ -277,7 +248,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
                   {gear.fishingTechnique && (
                     <div>
-                      <span className="text-blue-600 dark:text-blue-300 text-xs font-medium block mb-1">
+                      <span className="text-lishka-blue  text-xs font-medium block mb-1">
                         Technique:
                       </span>
                       <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
@@ -288,7 +259,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
                   {gear.depthRange && (
                     <div>
-                      <span className="text-blue-600 dark:text-blue-300 text-xs font-medium block mb-1">
+                      <span className="text-lishka-blue  text-xs font-medium block mb-1">
                         Depth Range:
                       </span>
                       <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
@@ -304,14 +275,14 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
             {(gear.weatherConditions ||
               gear.waterConditions ||
               gear.seasonalUsage) && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl">
-                <h3 className="text-blue-600 dark:text-blue-300 text-sm font-medium mb-4">
+              <div className="bg-blue-50 /20 p-6 rounded-xl">
+                <h3 className="text-lishka-blue  text-sm font-medium mb-4">
                   Conditions
                 </h3>
                 <div className="space-y-4">
                   {gear.weatherConditions && (
                     <div>
-                      <span className="text-blue-600 dark:text-blue-300 text-xs font-medium block mb-1">
+                      <span className="text-lishka-blue  text-xs font-medium block mb-1">
                         Weather:
                       </span>
                       <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
@@ -322,7 +293,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
                   {gear.waterConditions && (
                     <div>
-                      <span className="text-blue-600 dark:text-blue-300 text-xs font-medium block mb-1">
+                      <span className="text-lishka-blue  text-xs font-medium block mb-1">
                         Water:
                       </span>
                       <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
@@ -333,7 +304,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
                   {gear.seasonalUsage && (
                     <div>
-                      <span className="text-blue-600 dark:text-blue-300 text-xs font-medium block mb-1">
+                      <span className="text-lishka-blue  text-xs font-medium block mb-1">
                         Season:
                       </span>
                       <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
@@ -347,14 +318,14 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
             {/* Additional Details */}
             {(gear.versatility || gear.compatibleGear) && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl">
-                <h3 className="text-blue-600 dark:text-blue-300 text-sm font-medium mb-4">
+              <div className="bg-blue-50 /20 p-6 rounded-xl">
+                <h3 className="text-lishka-blue  text-sm font-medium mb-4">
                   Additional Information
                 </h3>
                 <div className="space-y-4">
                   {gear.versatility && (
                     <div>
-                      <span className="text-blue-600 dark:text-blue-300 text-xs font-medium block mb-1">
+                      <span className="text-lishka-blue  text-xs font-medium block mb-1">
                         Versatility:
                       </span>
                       <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
@@ -365,7 +336,7 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
                   {gear.compatibleGear && (
                     <div>
-                      <span className="text-blue-600 dark:text-blue-300 text-xs font-medium block mb-1">
+                      <span className="text-lishka-blue  text-xs font-medium block mb-1">
                         Compatible Gear:
                       </span>
                       <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
@@ -379,8 +350,8 @@ const GearDetailModal: React.FC<GearDetailModalProps> = ({
 
             {/* Description */}
             {gear.description && (
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-xl">
-                <h3 className="text-blue-600 dark:text-blue-300 text-sm font-medium mb-4">
+              <div className="bg-blue-50 /20 p-6 rounded-xl">
+                <h3 className="text-lishka-blue  text-sm font-medium mb-4">
                   Description
                 </h3>
                 <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">

@@ -7,7 +7,9 @@ import { OPENAI_DISABLED_MESSAGE, OPENAI_ENABLED } from "@/lib/openai-toggle";
 import { config } from "@/lib/config";
 import { log } from "@/lib/logging";
 import { FishData, fishQueryKeys } from "./use-fish-data";
-import { useUserLocation } from "../location";
+import { api } from "../api";
+import z from "zod";
+import { fishSchema } from "./type";
 
 // Helper functions
 const getCurrentMonth = () => {
@@ -127,7 +129,7 @@ const getLocationToSeaMapping = (location: string) => {
       const parts = parsed.name.split(/[,\s]+/);
       normalizedLocation = parts[parts.length - 1].toLowerCase();
     }
-  } catch (e) {
+  } catch {
     const parts = location.split(/[,\s]+/);
     normalizedLocation = parts[parts.length - 1].toLowerCase();
   }
@@ -143,7 +145,7 @@ const getCleanLocationName = (location: string) => {
       return parts[parts.length - 1];
     }
     return parsed.name || location;
-  } catch (e) {
+  } catch {
     const parts = location.split(/[,\s]+/);
     return parts[parts.length - 1];
   }
@@ -185,7 +187,7 @@ export interface ToxicFishResponse {
 }
 
 // Toxic fish data fetching function
-const fetchToxicFishData = async (
+export const fetchToxicFishData = async (
   location: string,
   userLatitude?: number,
   userLongitude?: number,
@@ -213,8 +215,8 @@ const fetchToxicFishData = async (
   const seaOcean = getLocationToSeaMapping(location);
 
   // Get coordinates from localStorage
-  let latitude = userLatitude || 35.8997; // Default Malta coordinates
-  let longitude = userLongitude || 14.5146;
+  const latitude = userLatitude || 35.8997; // Default Malta coordinates
+  const longitude = userLongitude || 14.5146;
 
   // Use month-year instead of exact date for better cache persistence
   const cacheKey = `toxic_fish_data_v5_${cleanLocation}_${seaOcean}_${currentMonthYear}_${latitude.toFixed(
@@ -364,8 +366,8 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
     }
 
     // Debug: Log the original count (no filtering)
-    let originalCount = toxicFishData.length;
-    let filteredOut: { name: string; scientificName: string }[] = [];
+    const originalCount = toxicFishData.length;
+    const filteredOut: { name: string; scientificName: string }[] = [];
 
     log(`DEBUG: Original toxic fish count from OpenAI: ${originalCount}`);
     log(
@@ -386,6 +388,7 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
 
     log(
       `DEBUG: Final toxic fish count (no filtering): ${toxicFishData.length}`,
+      debugInfo,
     );
 
     // Ensure each fish has required fields, clean scientific names, and is marked as toxic
@@ -535,7 +538,16 @@ export const useToxicFishData = (
       userLatitude,
       userLongitude,
     ),
-    queryFn: () => fetchToxicFishData(location, userLatitude, userLongitude),
+    queryFn: async () => {
+      const data = await api<{
+        data: z.infer<typeof fishSchema>[];
+      }>("fish/toxic", {
+        method: "GET",
+      });
+
+      return data.data;
+      //return fetchToxicFishData(location, userLatitude, userLongitude);
+    },
     enabled: !!location,
     staleTime: 24 * 60 * 60 * 1000, // 24 hours
     gcTime: 48 * 60 * 60 * 1000, // 48 hours

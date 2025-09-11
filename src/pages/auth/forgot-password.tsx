@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
+import { ROUTES } from "@/lib/routing";
 
 const forgotPasswordSchema = z.object({
   email: z
@@ -55,7 +56,7 @@ const ForgotPasswordPage: React.FC = () => {
         setSubmittedEmail(data.email);
         setSuccess(true);
       }
-    } catch (err) {
+    } catch {
       setError("An unexpected error occurred");
     } finally {
       setLoading(false);
@@ -66,8 +67,8 @@ const ForgotPasswordPage: React.FC = () => {
     return (
       <div className="min-h-screen bg-white dark:bg-gray-900 flex items-center justify-center p-6">
         <div className="w-full max-w-sm mx-auto text-center">
-          <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mx-auto mb-6">
-            <Mail className="w-8 h-8 text-blue-600 dark:text-blue-400" />
+          <div className="w-16 h-16 bg-blue-100  rounded-full flex items-center justify-center mx-auto mb-6">
+            <Mail className="w-8 h-8 text-lishka-blue " />
           </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             Check Your Email
@@ -78,8 +79,8 @@ const ForgotPasswordPage: React.FC = () => {
           </p>
           <div className="space-y-3">
             <Button
-              onClick={() => navigate("/login")}
-              className="w-full h-14 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-xl"
+              onClick={() => navigate(ROUTES.LOGIN)}
+              className="w-full h-14 bg-lishka-blue hover:bg-lishka-blue text-white text-base font-medium rounded-xl"
             >
               Back to Sign In
             </Button>
@@ -144,14 +145,14 @@ const ForgotPasswordPage: React.FC = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Email
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         placeholder="Enter your email address"
-                        className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
+                        className="text-sm text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 rounded-[12px] bg-gray-50 focus:bg-white px-3 py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />
@@ -164,7 +165,7 @@ const ForgotPasswordPage: React.FC = () => {
               <div className="pt-4">
                 <Button
                   type="submit"
-                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-[46px] bg-lishka-blue hover:bg-lishka-blue text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? "Sending..." : "Send Reset Link"}
@@ -178,8 +179,8 @@ const ForgotPasswordPage: React.FC = () => {
           <p className="text-base text-gray-600 dark:text-gray-300">
             Remember your password?{" "}
             <Link
-              to="/login"
-              className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"
+              to={ROUTES.LOGIN}
+              className="text-lishka-blue hover:text-lishka-blue  font-medium"
             >
               Sign in
             </Link>

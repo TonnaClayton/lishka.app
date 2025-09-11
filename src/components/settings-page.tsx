@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Ruler, LogOut, Trash2 } from "lucide-react";
 
 import { Button } from "./ui/button";
 import { Separator } from "./ui/separator";
-import { Switch } from "./ui/switch";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,32 +19,36 @@ import { log } from "@/lib/logging";
 
 import BottomNav from "./bottom-nav";
 import { useAuth } from "@/contexts/auth-context";
+import { ROUTES } from "@/lib/routing";
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
-  const { signOut, deleteAccount } = useAuth();
-  const [useImperialUnits, setUseImperialUnits] = useState<boolean>(false);
+  const { signOut, deleteAccount, updateProfile, profile } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
-  // Get units preference from localStorage
-  useEffect(() => {
-    // Get units preference (default to metric/false if not set)
-    const unitsPreference = localStorage.getItem("useImperialUnits");
-    if (unitsPreference !== null) {
-      setUseImperialUnits(unitsPreference === "true");
-    } else {
-      // Default to metric units (cm and grams)
-      localStorage.setItem("useImperialUnits", "false");
-    }
-  }, []);
+  const useImperialUnits = useMemo(() => {
+    return profile?.use_imperial_units || false;
+  }, [profile]);
 
   const handleUnitsChange = (checked: boolean) => {
-    log(`Changing units to: ${checked ? "imperial" : "metric"}`);
-    setUseImperialUnits(checked);
-    localStorage.setItem("useImperialUnits", checked.toString());
-
-    // Dispatch a custom event to notify other components about the units change
-    window.dispatchEvent(new Event("unitsChanged"));
+    if (isUpdating) return;
+    setIsUpdating(true);
+    updateProfile({
+      preferred_units: checked ? "imperial" : "metric",
+      use_imperial_units: checked,
+    })
+      .then((res) => {
+        if (res.error) {
+          console.error("[SettingsPage] Units update error:", res.error);
+        }
+      })
+      .catch((err) => {
+        console.error("[SettingsPage] Units update error:", err);
+      })
+      .finally(() => {
+        setIsUpdating(false);
+      });
   };
 
   const handleSignOut = async () => {
@@ -56,7 +59,7 @@ const SettingsPage: React.FC = () => {
     } catch (err) {
       console.error("[SettingsPage] Sign out error:", err);
       // Force redirect even if signOut fails
-      navigate("/login", { replace: true });
+      navigate(ROUTES.LOGIN, { replace: true });
     }
   };
 

@@ -49,9 +49,9 @@ interface OffshoreFishingLocationsProps {
   userCoordinates?: Coordinates;
 }
 
-const OffshoreFishingLocations: React.FC<OffshoreFishingLocationsProps> = ({
-  userCoordinates,
-}) => {
+const OffshoreFishingLocations: React.FC<
+  OffshoreFishingLocationsProps
+> = () => {
   const { location: userLocation } = useUserLocation();
   const [locations, setLocations] = useState<OffshoreFishingLocation[]>([]);
   const [loading, setLoading] = useState(false);
@@ -306,14 +306,14 @@ const OffshoreFishingLocations: React.FC<OffshoreFishingLocationsProps> = ({
 
       {/* Debug Section */}
       {showDebug && debugInfo && (
-        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div className="mb-4 p-3 bg-blue-50 /20 border border-blue-200 dark:border-blue-800 rounded-lg">
           <div className="flex items-center gap-2 mb-2">
             <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-            <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
+            <span className="text-sm font-medium text-lishka-blue ">
               🎣 Fishing Locations Debug Info
             </span>
           </div>
-          <div className="space-y-1 text-xs text-blue-600 dark:text-blue-300">
+          <div className="space-y-1 text-xs text-lishka-blue ">
             <div className="font-mono">
               📍 Your Location: {userLocation?.latitude.toFixed(6)}°,{" "}
               {userLocation?.longitude.toFixed(6)}°

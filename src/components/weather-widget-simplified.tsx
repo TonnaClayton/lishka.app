@@ -17,6 +17,7 @@ import { useUserLocation } from "@/hooks/queries";
 // which includes both weather and marine data combined
 
 const WeatherWidgetSimplified: React.FC = () => {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [currentIndex, setCurrentIndex] = useState(0);
 
   // Use the location hook to get the current location
@@ -67,7 +68,7 @@ const WeatherWidgetSimplified: React.FC = () => {
   if (loading) {
     return (
       <div className="flex flex-col justify-center items-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0251FB] night-mode:text-red-500 mb-4" />
+        <Loader2 className="h-8 w-8 animate-spin text-lishka-blue night-mode:text-red-500 mb-4" />
         <p className="text-sm text-gray-600 night-mode:text-red-400">
           Loading weather data...
         </p>
@@ -305,7 +306,7 @@ const WeatherWidgetSimplified: React.FC = () => {
           <button
             onClick={() => refreshWeather()}
             disabled={isRefreshing}
-            className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 px-3 py-1 text-sm bg-blue-500 text-white rounded-md hover:bg-lishka-blue disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isRefreshing ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -318,7 +319,7 @@ const WeatherWidgetSimplified: React.FC = () => {
         <div className="grid grid-cols-2 gap-4">
           {/* Weather data */}
           <div className="flex items-center">
-            <Thermometer className="h-5 w-5 mr-2 text-[#0251FB] night-mode:text-red-500" />
+            <Thermometer className="h-5 w-5 mr-2 text-lishka-blue night-mode:text-red-500" />
             <div>
               <p className="text-sm text-gray-500 night-mode:text-red-400">
                 Temperature
@@ -334,7 +335,7 @@ const WeatherWidgetSimplified: React.FC = () => {
 
           {weatherAvailable && (
             <div className="flex items-center">
-              <Cloud className="h-5 w-5 mr-2 text-[#0251FB] night-mode:text-red-500" />
+              <Cloud className="h-5 w-5 mr-2 text-lishka-blue night-mode:text-red-500" />
               <div>
                 <p className="text-sm text-gray-500 night-mode:text-red-400">
                   Weather
@@ -348,7 +349,7 @@ const WeatherWidgetSimplified: React.FC = () => {
 
           {weatherAvailable && (
             <div className="flex items-center">
-              <Umbrella className="h-5 w-5 mr-2 text-[#0251FB] night-mode:text-red-500" />
+              <Umbrella className="h-5 w-5 mr-2 text-lishka-blue night-mode:text-red-500" />
               <div>
                 <p className="text-sm text-gray-500 night-mode:text-red-400">
                   Precipitation
@@ -363,7 +364,7 @@ const WeatherWidgetSimplified: React.FC = () => {
 
           {weatherAvailable && (
             <div className="flex items-center">
-              <Sun className="h-5 w-5 mr-2 text-[#0251FB] night-mode:text-red-500" />
+              <Sun className="h-5 w-5 mr-2 text-lishka-blue night-mode:text-red-500" />
               <div>
                 <p className="text-sm text-gray-500 night-mode:text-red-400">
                   Cloud Cover
@@ -386,7 +387,7 @@ const WeatherWidgetSimplified: React.FC = () => {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex items-center">
-                <Waves className="h-5 w-5 mr-2 text-[#0251FB] night-mode:text-red-500" />
+                <Waves className="h-5 w-5 mr-2 text-lishka-blue night-mode:text-red-500" />
                 <div>
                   <p className="text-sm text-gray-500 night-mode:text-red-400">
                     Wave Height
@@ -399,7 +400,7 @@ const WeatherWidgetSimplified: React.FC = () => {
               </div>
 
               <div className="flex items-center">
-                <Wind className="h-5 w-5 mr-2 text-[#0251FB] night-mode:text-red-500" />
+                <Wind className="h-5 w-5 mr-2 text-lishka-blue night-mode:text-red-500" />
                 <div>
                   <p className="text-sm text-gray-500 night-mode:text-red-400">
                     Wind
@@ -413,7 +414,7 @@ const WeatherWidgetSimplified: React.FC = () => {
               </div>
 
               <div className="flex items-center">
-                <Droplets className="h-5 w-5 mr-2 text-[#0251FB] night-mode:text-red-500" />
+                <Droplets className="h-5 w-5 mr-2 text-lishka-blue night-mode:text-red-500" />
                 <div>
                   <p className="text-sm text-gray-500 night-mode:text-red-400">
                     Wave Period
@@ -433,12 +434,12 @@ const WeatherWidgetSimplified: React.FC = () => {
             <span
               className={`ml-2 ${
                 currentConditions.fishingConditions === "Excellent"
-                  ? "text-green-600 night-mode:text-green-400"
+                  ? "text-green-600"
                   : currentConditions.fishingConditions === "Good"
-                    ? "text-blue-600 night-mode:text-blue-400"
+                    ? "text-lishka-blue "
                     : currentConditions.fishingConditions === "Fair"
-                      ? "text-yellow-600 night-mode:text-yellow-400"
-                      : "text-red-600 night-mode:text-red-400"
+                      ? "text-yellow-600 "
+                      : "text-red-600 "
               }`}
             >
               {currentConditions.fishingConditions}

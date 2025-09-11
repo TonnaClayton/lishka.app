@@ -10,18 +10,11 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { uploadGearImage } from "@/lib/gear-upload-service";
 import { useProfile } from "@/hooks/queries";
 import { useAuth } from "@/contexts/auth-context";
 
-interface GearUploadScreenProps {
-  onUpload?: (files: FileList) => Promise<void>;
-}
-
-export default function GearUploadScreen({
-  onUpload,
-}: GearUploadScreenProps = {}) {
+export default function GearUploadScreen() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: profile } = useProfile(user?.id);
@@ -40,21 +33,21 @@ export default function GearUploadScreen({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileSelect = (files: FileList | null) => {
-    if (!files) return;
+  // const handleFileSelect = (files: FileList | null) => {
+  //   if (!files) return;
 
-    const fileArray = Array.from(files);
-    const totalFiles = selectedFiles.length + fileArray.length;
+  //   const fileArray = Array.from(files);
+  //   const totalFiles = selectedFiles.length + fileArray.length;
 
-    if (totalFiles > 10) {
-      alert(
-        `You can only select up to 10 items. Currently selected: ${selectedFiles.length}`,
-      );
-      return;
-    }
+  //   if (totalFiles > 10) {
+  //     alert(
+  //       `You can only select up to 10 items. Currently selected: ${selectedFiles.length}`
+  //     );
+  //     return;
+  //   }
 
-    setSelectedFiles((prev) => [...prev, ...fileArray]);
-  };
+  //   setSelectedFiles((prev) => [...prev, ...fileArray]);
+  // };
 
   const handleChoosePhotos = () => {
     fileInputRef.current?.click();
@@ -286,8 +279,8 @@ export default function GearUploadScreen({
           </h3>
           <div className="space-y-4">
             {selectedFiles.map((file, index) => {
-              const isProcessing =
-                isUploading && uploadProgress && index < uploadProgress.current;
+              // const isProcessing =
+              //   isUploading && uploadProgress && index < uploadProgress.current;
               const isCurrentlyProcessing =
                 isUploading &&
                 uploadProgress &&

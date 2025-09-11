@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Button } from "./ui/button";
-import { MapPin, Navigation, Map, Check } from "lucide-react";
+import { MapPin, Navigation, Check } from "lucide-react";
 import LoadingDots from "./loading-dots";
 import { useNavigate } from "react-router-dom";
 import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
@@ -30,6 +30,7 @@ const LocationSetup = ({
     lng: number;
     name: string;
   } | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [countdown, setCountdown] = useState<number | null>(null);
   const updateProfile = useUpdateProfile();
 
@@ -264,7 +265,7 @@ const LocationSetup = ({
               <Button
                 onClick={handleDetectLocation}
                 disabled={isDetecting}
-                className="w-full bg-blue-600 text-white hover:bg-blue-700 rounded-full flex items-center justify-center gap-2 transition-all duration-300 border-0 py-6"
+                className="w-full bg-lishka-blue text-white hover:bg-lishka-blue rounded-full flex items-center justify-center gap-2 transition-all duration-300 border-0 py-6"
               >
                 {isDetecting ? (
                   <>
@@ -289,7 +290,7 @@ const LocationSetup = ({
               {/* Select on map link */}
               <button
                 onClick={handleMapSelection}
-                className="w-full text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 text-sm font-medium flex items-center justify-center gap-2 transition-colors border-0"
+                className="w-full text-lishka-blue  hover:text-lishka-blue text-sm font-medium flex items-center justify-center gap-2 transition-colors border-0"
               >
                 <Navigation className="h-4 w-4" />
                 Select on map
@@ -316,7 +317,7 @@ const LocationSetup = ({
 };
 
 // Fix Leaflet icon issue
-// @ts-ignore
+// @ts-expect-error - Leaflet types are not compatible with TypeScript
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl:
@@ -360,10 +361,8 @@ const MapSelection: React.FC<MapSelectionProps> = ({
 
   // Function to handle map click and set marker
   const MapClickHandler = () => {
-    let map: any = null;
-
     try {
-      map = useMapEvents({
+      useMapEvents({
         click: async (e) => {
           try {
             const { lat, lng } = e.latlng;

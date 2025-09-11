@@ -83,7 +83,6 @@ const OffshoreFishingCard = ({
   structures = ["Artificial reef", "Drop-off"],
   probabilityScore = 0.85,
   description = "Prime fishing location with excellent structure",
-  mapImageUrl,
   searchRadius = 10,
   actualDepth = null,
   aiAnalysis,
@@ -313,7 +312,7 @@ const OffshoreFishingCard = ({
         <div className="space-y-2 mb-2">
           {/* Depth */}
           <div className="flex items-center text-xs">
-            <Waves className="h-3 w-3 text-blue-500 mr-2 flex-shrink-0" />
+            <Waves className="h-3 w-3 text-lishka-lue mr-2 flex-shrink-0" />
             <div className="flex flex-col">
               <span className="text-foreground">{depth}</span>
               {actualDepth !== null && (
@@ -347,7 +346,7 @@ const OffshoreFishingCard = ({
                 <Badge
                   key={index}
                   variant="outline"
-                  className="text-xs px-2 py-0.5 rounded-full border-blue-200 text-blue-700 bg-blue-50"
+                  className="text-xs px-2 py-0.5 rounded-full border-blue-200 text-lishka-blue bg-blue-50"
                 >
                   {structure}
                 </Badge>
@@ -367,10 +366,10 @@ const OffshoreFishingCard = ({
         {/* AI Analysis (if available) */}
         {aiAnalysis && (
           <div className="mb-2">
-            <div className="text-xs font-medium text-blue-700 dark:text-blue-400 mb-1 flex items-center gap-1">
+            <div className="text-xs font-medium text-lishka-blue  mb-1 flex items-center gap-1">
               🤖 AI Analysis
             </div>
-            <p className="text-xs text-blue-600 dark:text-blue-300 line-clamp-2 bg-blue-50 dark:bg-blue-900/20 p-2 rounded">
+            <p className="text-xs text-lishka-blue  line-clamp-2 bg-blue-50 /20 p-2 rounded">
               {aiAnalysis}
             </p>
           </div>
@@ -416,7 +415,7 @@ const OffshoreFishingCard = ({
               <div className="text-xs">
                 <div className="flex items-center gap-1 mb-1">
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                  <span className="font-medium text-blue-600 dark:text-blue-400">
+                  <span className="font-medium text-lishka-blue ">
                     Your Location:
                   </span>
                 </div>

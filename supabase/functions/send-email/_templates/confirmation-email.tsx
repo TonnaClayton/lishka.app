@@ -11,6 +11,7 @@ import {
   Button,
   Hr,
   Tailwind,
+  Img,
 } from "npm:@react-email/components@0.0.22";
 
 const AccountConfirmationEmail = (props: {
@@ -30,10 +31,14 @@ const AccountConfirmationEmail = (props: {
         <Body className="bg-white font-sans pb-[40px]">
           <Container className="bg-[#f8fafc] border border-[#e2e8f0] rounded-b-[8px] shadow-sm max-w-[600px] mx-auto pb-[40px]">
             {/* Header */}
-            <Section className="text-center mb-[32px] bg-[#1d4ed8] rounded-t-[8px] p-[40px]">
-              <Heading className="text-[28px] font-bold text-white m-0 mb-[8px]">
-                🎣 Welcome to Lishka!
-              </Heading>
+            <Section className="text-center mb-[32px] bg-lishka-blue rounded-t-[8px] p-[40px]">
+              <Img
+                src="https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/logo.png"
+                alt="Lishka Logo"
+                width="168"
+                height="32"
+                className="mx-auto mb-[8px]"
+              />
               <Text className="text-[16px] text-white m-0">
                 Your AI Fishing Companion
               </Text>
@@ -55,7 +60,7 @@ const AccountConfirmationEmail = (props: {
 
               <Button
                 href={verificationLink}
-                className="bg-blue-600 text-white px-[32px] py-[16px] rounded-[6px] text-[16px] font-medium no-underline box-border"
+                className="bg-lishka-blue text-white px-[32px] py-[12px] rounded-[24px] text-[16px] font-medium no-underline box-border"
               >
                 Confirm Email Address
               </Button>

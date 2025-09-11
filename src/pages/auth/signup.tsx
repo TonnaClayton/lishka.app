@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/form";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
+import { ROUTES } from "@/lib/routing";
 
 const signupSchema = z
   .object({
@@ -93,12 +94,22 @@ const SignupPage: React.FC = () => {
         if (needsConfirmation) {
           setSuccess(true);
           // Redirect to homepage with email verification banner
-          setTimeout(() => {
-            navigate("/", { replace: true });
-          }, 2000);
+          // setTimeout(() => {
+          //   navigate("/login/email", {
+          //     replace: true,
+          //     state: {
+          //       hasSeenOnboardingFlow: false,
+          //     },
+          //   });
+          // }, 5000);
         } else {
           // User is already logged in, redirect immediately
-          navigate("/", { replace: true });
+          navigate("/", {
+            replace: true,
+            state: {
+              hasSeenOnboardingFlow: false,
+            },
+          });
         }
       }
     } catch (err) {
@@ -111,8 +122,8 @@ const SignupPage: React.FC = () => {
 
   if (success) {
     return (
-      <div className="h-full bg-white dark:bg-gray-900 flex items-center justify-center p-6">
-        <div className="w-full max-w-sm mx-auto h-full text-center">
+      <div className="h-full bg-white dark:bg-gray-900 p-6">
+        <div className="w-full max-w-sm flex flex-col justify-center items-center mx-auto h-full text-center">
           <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-6">
             <svg
               className="w-8 h-8 text-green-600 dark:text-green-400"
@@ -134,22 +145,22 @@ const SignupPage: React.FC = () => {
           <p className="text-gray-600 dark:text-gray-300 mb-4">
             Your account has been created successfully.
           </p>
-          <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+          <div className="bg-blue-50 /20 border border-blue-200  rounded-[12px] p-4 mb-6">
             <div className="flex items-center justify-center mb-2">
-              <Mail className="w-5 h-5 text-blue-600 dark:text-blue-400 mr-2" />
-              <span className="text-sm font-medium text-blue-800 dark:text-blue-200">
+              <Mail className="w-5 h-5 text-lishka-blue  mr-2" />
+              <span className="text-sm font-medium text-lishka-blue">
                 Check Your Email
               </span>
             </div>
-            <p className="text-xs text-blue-700 dark:text-blue-300">
+            <p className="text-xs text-lishka-blue ">
               We've sent a verification link to{" "}
               <strong>{submittedEmail}</strong>. Please check your email and
               click the link to verify your account.
             </p>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">
+          {/* <p className="text-sm text-gray-500 dark:text-gray-400">
             Redirecting you to the app...
-          </p>
+          </p> */}
         </div>
       </div>
     );
@@ -179,7 +190,7 @@ const SignupPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
             Create Account
           </h1>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-gray-400 text-sm">
             Join Lishka to fish smarter, connect deeper, and feel the adventure.
           </p>
         </div>
@@ -193,7 +204,7 @@ const SignupPage: React.FC = () => {
                   {error.includes("already exists") && (
                     <div className="mt-3">
                       <Link
-                        to="/login"
+                        to={ROUTES.LOGIN}
                         state={{ from: location.state?.from }}
                         className="inline-flex items-center text-sm font-medium text-red-700 hover:text-red-600 dark:text-red-300 dark:hover:text-red-200"
                       >
@@ -209,14 +220,14 @@ const SignupPage: React.FC = () => {
                 name="fullName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Full Name
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="text"
                         placeholder="Enter your full name"
-                        className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
+                        className="text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />
@@ -231,14 +242,14 @@ const SignupPage: React.FC = () => {
                 name="email"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Email
                     </FormLabel>
                     <FormControl>
                       <Input
                         type="email"
                         placeholder="Enter your email"
-                        className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700"
+                        className="text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200  bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                         disabled={loading}
                         {...field}
                       />
@@ -253,7 +264,7 @@ const SignupPage: React.FC = () => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Password
                     </FormLabel>
                     <FormControl>
@@ -261,7 +272,7 @@ const SignupPage: React.FC = () => {
                         <Input
                           type={showPassword ? "text" : "password"}
                           placeholder="Create a password (min. 6 characters)"
-                          className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700 pr-12"
+                          className="text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                           disabled={loading}
                           minLength={6}
                           {...field}
@@ -292,7 +303,7 @@ const SignupPage: React.FC = () => {
                 name="confirmPassword"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-base font-medium text-gray-700 dark:text-gray-300">
+                    <FormLabel className="text-[#191B1FCC] font-bold leading-snug text-xs">
                       Confirm Password
                     </FormLabel>
                     <FormControl>
@@ -300,7 +311,7 @@ const SignupPage: React.FC = () => {
                         <Input
                           type={showConfirmPassword ? "text" : "password"}
                           placeholder="Confirm your password"
-                          className="h-10 text-base border-gray-200 dark:border-gray-700 rounded-xl bg-gray-50 dark:bg-gray-800 focus:bg-white dark:focus:bg-gray-700 pr-12"
+                          className="text-[#191B1F] font-bold placeholder:font-normal placeholder:text-[#191B1F80] border-gray-200 bg-gray-50 focus:bg-white px-3 rounded-[12px] py-4 h-[48px]"
                           disabled={loading}
                           {...field}
                         />
@@ -330,7 +341,7 @@ const SignupPage: React.FC = () => {
               <div className="pt-4">
                 <Button
                   type="submit"
-                  className="w-full h-10 bg-blue-600 hover:bg-blue-700 text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full h-[46px] bg-lishka-blue hover:bg-lishka-blue text-white text-base font-medium rounded-[24px] disabled:opacity-50 disabled:cursor-not-allowed"
                   disabled={loading}
                 >
                   {loading ? "Creating Account..." : "Create Account"}
@@ -338,19 +349,18 @@ const SignupPage: React.FC = () => {
               </div>
             </form>
           </Form>
-        </div>
-
-        <div className="mt-auto pb-8 pt-8 text-center">
-          <p className="text-base text-gray-600 dark:text-gray-300">
-            Already have an account?{" "}
-            <Link
-              to="/login"
-              state={{ from: location.state?.from }}
-              className="text-blue-600 hover:text-blue-500 dark:text-blue-400 font-medium"
-            >
-              Sign in
-            </Link>
-          </p>
+          <div className="pb-8 pt-8 text-center">
+            <p className="text-base text-gray-600 dark:text-gray-300">
+              Already have an account?{" "}
+              <Link
+                to={ROUTES.LOGIN_EMAIL}
+                state={{ from: location.state?.from }}
+                className="text-lishka-blue hover:text-lishka-blue  font-medium"
+              >
+                Sign in
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>

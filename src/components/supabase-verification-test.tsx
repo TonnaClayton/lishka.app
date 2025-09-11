@@ -81,7 +81,7 @@ const SupabaseVerificationTest: React.FC = () => {
 
     try {
       // Test basic database connectivity
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("profiles")
         .select("count")
         .limit(1);
@@ -203,7 +203,7 @@ const SupabaseVerificationTest: React.FC = () => {
       case "warning":
         return <AlertCircle className="h-4 w-4 text-yellow-500" />;
       case "loading":
-        return <Loader2 className="h-4 w-4 animate-spin text-blue-500" />;
+        return <Loader2 className="h-4 w-4 animate-spin text-lishka-blue" />;
     }
   };
 

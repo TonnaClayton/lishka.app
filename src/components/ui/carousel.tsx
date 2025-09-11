@@ -26,6 +26,8 @@ type CarouselContextProps = {
   scrollNext: () => void;
   canScrollPrev: boolean;
   canScrollNext: boolean;
+  scrollTo: (scrollToIndex: number) => void;
+  selectedIndex: number;
 } & CarouselProps;
 
 const CarouselContext = React.createContext<CarouselContextProps | null>(null);
@@ -65,6 +67,7 @@ const Carousel = React.forwardRef<
     );
     const [canScrollPrev, setCanScrollPrev] = React.useState(false);
     const [canScrollNext, setCanScrollNext] = React.useState(false);
+    const [selectedIndex, setSelectedIndex] = React.useState(0);
 
     const onSelect = React.useCallback((api: CarouselApi) => {
       if (!api) {
@@ -73,6 +76,7 @@ const Carousel = React.forwardRef<
 
       setCanScrollPrev(api.canScrollPrev());
       setCanScrollNext(api.canScrollNext());
+      setSelectedIndex(api.selectedScrollSnap());
     }, []);
 
     const scrollPrev = React.useCallback(() => {
@@ -82,6 +86,14 @@ const Carousel = React.forwardRef<
     const scrollNext = React.useCallback(() => {
       api?.scrollNext();
     }, [api]);
+
+    const scrollTo = React.useCallback(
+      (scrollToIndex: number) => {
+        api?.scrollTo(scrollToIndex);
+        setSelectedIndex(scrollToIndex);
+      },
+      [api],
+    );
 
     const handleKeyDown = React.useCallback(
       (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -130,6 +142,8 @@ const Carousel = React.forwardRef<
           scrollNext,
           canScrollPrev,
           canScrollNext,
+          scrollTo,
+          selectedIndex,
         }}
       >
         <div
@@ -150,12 +164,17 @@ Carousel.displayName = "Carousel";
 
 const CarouselContent = React.forwardRef<
   HTMLDivElement,
-  React.HTMLAttributes<HTMLDivElement>
->(({ className, ...props }, ref) => {
+  React.HTMLAttributes<HTMLDivElement> & {
+    containerClassName?: string;
+  }
+>(({ className, containerClassName, ...props }, ref) => {
   const { carouselRef, orientation } = useCarousel();
 
   return (
-    <div ref={carouselRef} className="overflow-hidden">
+    <div
+      ref={carouselRef}
+      className={cn("overflow-hidden", containerClassName)}
+    >
       <div
         ref={ref}
         className={cn(
@@ -250,6 +269,47 @@ const CarouselNext = React.forwardRef<
 });
 CarouselNext.displayName = "CarouselNext";
 
+const CarouselDot = React.forwardRef<
+  HTMLButtonElement,
+  React.ComponentProps<typeof Button> & {
+    scrollToIndex: number;
+    selectedClassName?: string;
+  }
+>(
+  (
+    {
+      className,
+      scrollToIndex,
+      selectedClassName,
+      variant = "outline",
+      size = "icon",
+      ...props
+    },
+    ref,
+  ) => {
+    const { scrollTo, selectedIndex } = useCarousel();
+
+    return (
+      <Button
+        ref={ref}
+        variant={variant}
+        size={size}
+        className={cn(
+          "h-2 w-2 !bg-gray-300 rounded-full border-0 hover:!bg-gray-400",
+          scrollToIndex === selectedIndex ? "!bg-lishka-blue w-8" : "",
+          className,
+          scrollToIndex === selectedIndex ? selectedClassName : "",
+        )}
+        onClick={() => scrollTo(scrollToIndex)}
+        {...props}
+      >
+        <span className="sr-only">Slide {scrollToIndex}</span>
+      </Button>
+    );
+  },
+);
+CarouselDot.displayName = "CarouselDot";
+
 export {
   type CarouselApi,
   Carousel,
@@ -257,4 +317,5 @@ export {
   CarouselItem,
   CarouselPrevious,
   CarouselNext,
+  CarouselDot,
 };
