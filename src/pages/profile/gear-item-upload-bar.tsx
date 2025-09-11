@@ -70,7 +70,7 @@ export default function GearItemUploadBar({
         )}
       >
         <p className="leading-snug text-white text-sm md:text-base">
-          Gear uploaded successfully!
+          Photo Saved
         </p>
         {getStepIcon(uploadGearItemStreamData.data.saved)}
       </div>
