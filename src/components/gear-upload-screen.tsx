@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,14 +10,17 @@ import {
   CheckCircle,
   AlertCircle,
 } from "lucide-react";
-import { uploadGearImage } from "@/lib/gear-upload-service";
-import { useProfile } from "@/hooks/queries";
-import { useAuth } from "@/contexts/auth-context";
+import { useUpload } from "@/contexts/upload-context";
 
 export default function GearUploadScreen() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const { data: profile } = useProfile(user?.id);
+  const {
+    handlePhotoUpload,
+    uploadGearItemStreamData,
+    isUploading: contextIsUploading,
+    identifyGearMessage,
+    uploadError,
+  } = useUpload();
   const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<{
@@ -30,24 +33,93 @@ export default function GearUploadScreen() {
     failed: number;
     results: string[];
   }>({ success: 0, failed: 0, results: [] });
+  const [completedUploads, setCompletedUploads] = useState<number>(0);
+  const [totalUploadsStarted, setTotalUploadsStarted] = useState<number>(0);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
 
-  // const handleFileSelect = (files: FileList | null) => {
-  //   if (!files) return;
+  // Monitor stream completion and handle navigation
+  useEffect(() => {
+    if (!isUploading || totalUploadsStarted === 0) return;
 
-  //   const fileArray = Array.from(files);
-  //   const totalFiles = selectedFiles.length + fileArray.length;
+    const streamData = uploadGearItemStreamData?.data;
 
-  //   if (totalFiles > 10) {
-  //     alert(
-  //       `You can only select up to 10 items. Currently selected: ${selectedFiles.length}`
-  //     );
-  //     return;
-  //   }
+    // Handle successful completion
+    if (streamData?.saved === "completed") {
+      setCompletedUploads((prev) => {
+        const newCompleted = prev + 1;
 
-  //   setSelectedFiles((prev) => [...prev, ...fileArray]);
-  // };
+        // Extract gear name from stream data if available
+        if (identifyGearMessage?.includes("Identified:")) {
+          const gearName = identifyGearMessage.split("Identified:")[1]?.trim();
+          if (gearName) {
+            setUploadResults((prevResults) => ({
+              ...prevResults,
+              results: [...prevResults.results, gearName],
+              success: prevResults.success + 1,
+            }));
+          }
+        }
+
+        return newCompleted;
+      });
+    }
+
+    // Handle failed uploads
+    if (
+      streamData?.analyzing === "failed" ||
+      streamData?.uploading === "failed" ||
+      streamData?.saved === "failed"
+    ) {
+      setCompletedUploads((prev) => prev + 1);
+    }
+  }, [
+    uploadGearItemStreamData?.data,
+    identifyGearMessage,
+    isUploading,
+    totalUploadsStarted,
+  ]);
+
+  // Separate effect to handle final navigation check
+  useEffect(() => {
+    if (
+      isUploading &&
+      completedUploads >= totalUploadsStarted &&
+      totalUploadsStarted > 0
+    ) {
+      setIsUploading(false);
+      setUploadProgress(null);
+
+      // Show results and navigate after all uploads are truly complete
+      setTimeout(() => {
+        if (uploadResults.success > 0) {
+          navigate("/profile");
+        }
+      }, 2000);
+    }
+  }, [
+    completedUploads,
+    totalUploadsStarted,
+    isUploading,
+    uploadResults.success,
+    navigate,
+  ]);
+
+  const handleFileSelect = (files: FileList | null) => {
+    if (!files) return;
+
+    const fileArray = Array.from(files);
+    const totalFiles = selectedFiles.length + fileArray.length;
+
+    if (totalFiles > 10) {
+      alert(
+        `You can only select up to 10 items. Currently selected: ${selectedFiles.length}`,
+      );
+      return;
+    }
+
+    setSelectedFiles((prev) => [...prev, ...fileArray]);
+  };
 
   const handleChoosePhotos = () => {
     fileInputRef.current?.click();
@@ -60,16 +132,16 @@ export default function GearUploadScreen() {
   const handleUpload = async () => {
     if (selectedFiles.length === 0) return;
 
+    // Reset state for new upload batch
     setIsUploading(true);
     setUploadResults({ success: 0, failed: 0, results: [] });
+    setCompletedUploads(0);
+    setTotalUploadsStarted(selectedFiles.length);
 
-    const userLocation = profile?.location || "";
-    let successCount = 0;
     let failedCount = 0;
-    const results: string[] = [];
 
     try {
-      // Process files sequentially to avoid overwhelming the API
+      // Process files sequentially to work with the streaming API
       for (let i = 0; i < selectedFiles.length; i++) {
         const file = selectedFiles[i];
 
@@ -80,52 +152,41 @@ export default function GearUploadScreen() {
         });
 
         try {
-          const result = await uploadGearImage(file, userLocation);
-
-          if (result.success && result.metadata?.gearInfo) {
-            const gearInfo = result.metadata.gearInfo;
-            if (gearInfo.name !== "Unknown Gear") {
-              results.push(
-                `${gearInfo.name} (${Math.round((gearInfo.confidence || 0) * 100)}% confident)`,
-              );
-            } else {
-              results.push(`Gear item ${i + 1}`);
-            }
-            successCount++;
-          } else {
-            console.error(`Failed to upload gear ${i + 1}:`, result.error);
-            failedCount++;
-          }
+          // Use the upload context to handle gear uploads
+          // The context will handle streaming and provide real-time updates
+          // Stream completion will be monitored by the useEffect
+          await handlePhotoUpload(file);
         } catch (err) {
           console.error(`Failed to upload gear ${i + 1}:`, err);
           failedCount++;
+
+          // Update failed count immediately for failed uploads
+          setUploadResults((prev) => ({
+            ...prev,
+            failed: prev.failed + 1,
+          }));
         }
 
         // Small delay between uploads to respect rate limits
         if (i < selectedFiles.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 2000));
         }
       }
 
-      setUploadResults({ success: successCount, failed: failedCount, results });
-
-      // Auto-navigate back after successful upload
-      if (successCount > 0 && failedCount === 0) {
-        setTimeout(() => {
-          navigate("/profile");
-        }, 2000);
+      // If there were any failures, handle final state
+      if (failedCount > 0) {
+        setUploadResults((prev) => ({
+          ...prev,
+          failed: failedCount,
+        }));
       }
     } catch (err) {
       console.error("Upload process failed:", err);
-      setUploadResults({
-        success: successCount,
-        failed: failedCount + (selectedFiles.length - successCount),
-        results,
-      });
-    } finally {
       setIsUploading(false);
       setUploadProgress(null);
     }
+    // Note: setIsUploading(false) and navigation is now handled in useEffect
+    // when all streams are truly complete
   };
 
   const removeFile = (index: number) => {
@@ -135,6 +196,9 @@ export default function GearUploadScreen() {
   const resetUpload = () => {
     setSelectedFiles([]);
     setUploadResults({ success: 0, failed: 0, results: [] });
+    setCompletedUploads(0);
+    setTotalUploadsStarted(0);
+    setUploadProgress(null);
   };
 
   // Show results screen after upload
@@ -279,8 +343,6 @@ export default function GearUploadScreen() {
           </h3>
           <div className="space-y-4">
             {selectedFiles.map((file, index) => {
-              // const isProcessing =
-              //   isUploading && uploadProgress && index < uploadProgress.current;
               const isCurrentlyProcessing =
                 isUploading &&
                 uploadProgress &&
@@ -289,6 +351,14 @@ export default function GearUploadScreen() {
                 isUploading &&
                 uploadProgress &&
                 index < uploadProgress.current - 1;
+
+              // Get real-time status from upload stream
+              const streamStatus =
+                isCurrentlyProcessing && uploadGearItemStreamData?.data;
+              const isAnalyzing = streamStatus?.analyzing === "processing";
+              const isUploading_stream =
+                streamStatus?.uploading === "processing";
+              const isSaved = streamStatus?.saved === "completed";
 
               return (
                 <Card
@@ -309,18 +379,55 @@ export default function GearUploadScreen() {
                     <div className="flex-1 min-w-0">
                       {isCurrentlyProcessing ? (
                         <>
-                          <h4 className="text-lg font-semibold text-blue-600 mb-1">
-                            Identifying gear type...
-                          </h4>
-                          <p className="text-sm text-gray-500">40% complete</p>
+                          {isAnalyzing ? (
+                            <>
+                              <h4 className="text-lg font-semibold text-blue-600 mb-1">
+                                Analyzing image...
+                              </h4>
+                              <p className="text-sm text-gray-500">
+                                Identifying gear type
+                              </p>
+                            </>
+                          ) : isUploading_stream ? (
+                            <>
+                              <h4 className="text-lg font-semibold text-blue-600 mb-1">
+                                Uploading gear...
+                              </h4>
+                              <p className="text-sm text-gray-500">
+                                Processing upload
+                              </p>
+                            </>
+                          ) : isSaved ? (
+                            <>
+                              <h4 className="text-lg font-semibold text-green-600 mb-1">
+                                Upload complete!
+                              </h4>
+                              <p className="text-sm text-gray-500">
+                                Gear saved successfully
+                              </p>
+                            </>
+                          ) : (
+                            <>
+                              <h4 className="text-lg font-semibold text-blue-600 mb-1">
+                                Processing...
+                              </h4>
+                              <p className="text-sm text-gray-500">
+                                Preparing upload
+                              </p>
+                            </>
+                          )}
                         </>
                       ) : isCompleted ? (
                         <>
                           <h4 className="text-lg font-semibold text-gray-900 mb-1">
-                            Outdoor Backpack
+                            {identifyGearMessage?.includes("Identified:")
+                              ? identifyGearMessage
+                                  .split("Identified:")[1]
+                                  ?.trim() || "Gear Item"
+                              : "Gear Item"}
                           </h4>
                           <p className="text-sm text-gray-500">
-                            Patagonia • Bags
+                            Upload completed
                           </p>
                         </>
                       ) : (
@@ -339,13 +446,21 @@ export default function GearUploadScreen() {
                     <div className="flex-shrink-0">
                       {isCurrentlyProcessing ? (
                         <div className="w-10 h-10 bg-blue-50 rounded-full flex items-center justify-center">
-                          <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                          {streamStatus?.analyzing === "failed" ||
+                          streamStatus?.uploading === "failed" ||
+                          streamStatus?.saved === "failed" ? (
+                            <AlertCircle className="w-5 h-5 text-red-500" />
+                          ) : isSaved ? (
+                            <CheckCircle className="w-5 h-5 text-green-600" />
+                          ) : (
+                            <div className="w-5 h-5 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                          )}
                         </div>
                       ) : isCompleted ? (
                         <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
                           <CheckCircle className="w-5 h-5 text-green-600" />
                         </div>
-                      ) : !isUploading ? (
+                      ) : !(isUploading || contextIsUploading) ? (
                         <button
                           onClick={() => removeFile(index)}
                           className="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors"
@@ -371,101 +486,42 @@ export default function GearUploadScreen() {
           <div className="max-w-2xl mx-auto">
             <Button
               onClick={handleUpload}
-              disabled={isUploading}
+              disabled={isUploading || contextIsUploading}
               className="w-full py-4 text-lg font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-2xl border-0 shadow-sm"
               size="lg"
             >
-              {isUploading
+              {isUploading || contextIsUploading
                 ? `Processing ${uploadProgress?.current || 0} of ${uploadProgress?.total || selectedFiles.length}...`
                 : `Process ${selectedFiles.length} Item${selectedFiles.length > 1 ? "s" : ""}`}
             </Button>
+            {uploadError && (
+              <div className="mt-2 text-center text-red-600 text-sm">
+                {uploadError.message}
+              </div>
+            )}
           </div>
         </div>
       )}
       {/* Hidden file inputs */}
-      <div className="p-6 rounded-2xl px-[0px] py-[0px] bg-transparent">
-        <h3 className="text-2xl font-bold text-gray-900 mb-4">
-          Selected Items
-        </h3>
-
-        <div className="space-y-4">
-          {/* Completed Item */}
-          <Card className="p-4 bg-white rounded-2xl shadow-sm border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0">
-                <img
-                  src="https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&q=80"
-                  alt="Winter Jacket"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xl font-semibold text-gray-900 mb-1">
-                  Winter Jacket
-                </h4>
-                <p className="text-lg text-gray-500">
-                  The North Face • Outerwear
-                </p>
-              </div>
-
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
-                <CheckCircle className="w-6 h-6 text-green-600" />
-              </div>
-            </div>
-          </Card>
-
-          {/* Processing Item */}
-          <Card className="p-4 bg-white rounded-2xl shadow-sm border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0">
-                <img
-                  src="https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=400&q=80"
-                  alt="Processing Item"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xl font-semibold text-blue-600 mb-1">
-                  Identifying gear type...
-                </h4>
-                <p className="text-lg text-gray-500">40% complete</p>
-              </div>
-
-              <div className="w-12 h-12 bg-blue-50 rounded-full flex items-center justify-center">
-                <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
-              </div>
-            </div>
-          </Card>
-
-          {/* Removable Item */}
-          <Card className="p-4 bg-white rounded-2xl shadow-sm border border-gray-200">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 bg-gray-100 rounded-2xl overflow-hidden flex-shrink-0">
-                <img
-                  src="https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=400&q=80"
-                  alt="Sneakers"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <h4 className="text-xl font-semibold text-gray-900 mb-1">
-                  Running Shoes
-                </h4>
-                <p className="text-lg text-gray-500">Ready to upload</p>
-              </div>
-
-              <button className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center hover:bg-red-200 transition-colors">
-                <X className="w-6 h-6 text-red-600" />
-              </button>
-            </div>
-          </Card>
-        </div>
-      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={(e) => handleFileSelect(e.target.files)}
+        className="hidden"
+      />
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        multiple
+        onChange={(e) => handleFileSelect(e.target.files)}
+        className="hidden"
+      />
       {/* Processing Status Section */}
-      {isUploading && (
+      {(isUploading || contextIsUploading) && (
         <div className="max-w-2xl mx-auto text-center py-12">
           <h2 className="text-3xl font-bold text-gray-900 mb-4">
             Processing Your Items
@@ -474,29 +530,13 @@ export default function GearUploadScreen() {
             Our AI is analyzing each item through multiple steps to ensure
             accurate identification and categorization.
           </p>
+          {uploadGearItemStreamData?.data?.message && (
+            <div className="mt-4 text-sm text-blue-600 font-medium">
+              {uploadGearItemStreamData.data.message}
+            </div>
+          )}
         </div>
       )}
-      {/* Processing Status Section */}
-      {isUploading && (
-        <div className="max-w-2xl mx-auto text-center py-12">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Processing Your Items
-          </h2>
-          <p className="text-lg text-gray-600 leading-relaxed max-w-lg mx-auto">
-            Our AI is analyzing each item through multiple steps to ensure
-            accurate identification and categorization.
-          </p>
-        </div>
-      )}
-      <div className="max-w-2xl mx-auto text-center">
-        <h2 className="font-bold text-gray-900 text-[sm] mb-[2]">
-          Processing Your Items
-        </h2>
-        <p className="text-lg text-gray-600 leading-relaxed mx-auto text-[xs] h-[fit] text-[12px]">
-          Our AI is analyzing each item through multiple steps to ensure
-          accurate identification and categorization.
-        </p>
-      </div>
     </div>
   );
 }
