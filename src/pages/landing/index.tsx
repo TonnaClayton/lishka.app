@@ -16,7 +16,7 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className="flex-1 flex-col h-full w-full overflow-y-auto bg-black font-sans">
+    <div className="flex-1 flex-col h-full w-full overflow-y-auto bg-black">
       <div className="relative w-full flex flex-col overflow-hidden h-[1024px]">
         {/* Animated Particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-5">
@@ -36,6 +36,34 @@ export default function LandingPage() {
 
         {/* Glass navbar pill */}
         <div className="w-full bg-transparent flex justify-center items-center relative overflow-visible h-[150px]">
+          {/* Tiny luminous particles for navbar area */}
+          <div className="absolute inset-0 overflow-hidden pointer-events-none">
+            <div className="navbar-particle navbar-particle-1"></div>
+            <div className="navbar-particle navbar-particle-2"></div>
+            <div className="navbar-particle navbar-particle-3"></div>
+            <div className="navbar-particle navbar-particle-4"></div>
+            <div className="navbar-particle navbar-particle-5"></div>
+            <div className="navbar-particle navbar-particle-6"></div>
+            <div className="navbar-particle navbar-particle-7"></div>
+            <div className="navbar-particle navbar-particle-8"></div>
+            <div className="navbar-particle navbar-particle-9"></div>
+            <div className="navbar-particle navbar-particle-10"></div>
+            <div className="navbar-particle navbar-particle-11"></div>
+            <div className="navbar-particle navbar-particle-12"></div>
+            <div className="navbar-particle navbar-particle-13"></div>
+            <div className="navbar-particle navbar-particle-14"></div>
+            <div className="navbar-particle navbar-particle-15"></div>
+            <div className="navbar-particle navbar-particle-16"></div>
+            <div className="navbar-particle navbar-particle-17"></div>
+            <div className="navbar-particle navbar-particle-18"></div>
+            <div className="navbar-particle navbar-particle-19"></div>
+            <div className="navbar-particle navbar-particle-20"></div>
+            <div className="navbar-particle navbar-particle-21"></div>
+            <div className="navbar-particle navbar-particle-22"></div>
+            <div className="navbar-particle navbar-particle-23"></div>
+            <div className="navbar-particle navbar-particle-24"></div>
+          </div>
+
           <div className="flex items-center justify-center w-full max-w-2xl mx-auto backdrop-blur-md bg-white/10 border border-white/20 rounded-full px-8 py-3 shadow-lg h-[64px] relative z-10">
             <div className="flex items-center gap-8">
               <span className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light">
@@ -49,7 +77,7 @@ export default function LandingPage() {
                 <img
                   src="/logo-dark.svg"
                   alt="Lishka Logo"
-                  className="h-full w-auto object-contain"
+                  className="h-full object-contain lg:w-[250px] w-[120px]"
                 />
               </div>
               <span className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light">
@@ -66,19 +94,20 @@ export default function LandingPage() {
         {/* Main hero content */}
         <div className="w-full flex flex-col items-center justify-center text-center px-8 relative bg-transparent h-1/2">
           <div className="relative z-10 max-w-4xl mx-auto">
-            <h1 className="text-6xl md:text-7xl font-serif text-white mb-8 leading-tight lg:text-6xl">
+            <h1 className="md:text-7xl text-white leading-tight font-[serif] text-4xl mb-6 lg:text-6xl">
               Find the Right Spot
               <br />
               <span className="italic">Every Time</span>
             </h1>
 
-            <p className="text-xl text-gray-300 mb-12 max-w-3xl mx-auto leading-relaxed font-light md:text-lg">
+            <p className="text-gray-300 mx-auto leading-relaxed text-xs mb-10 flex font-normal md:text-base max-w-2xl">
               Get AI-powered insights on the best spots, times, and
               techniques—so you spend less time guessing and more time catching.
             </p>
 
-            <button className="bg-[#0251FB] hover:bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-medium transition-all duration-300 transform hover:scale-105 shadow-lg mx-auto">
-              Get Started
+            {/* CTA Button with glow effect */}
+            <button className="bg-[#0251FB] hover:bg-blue-600 text-white px-8 py-4 rounded-full font-medium shadow-lg mx-auto text-base transition-all duration-300 hover:shadow-[0_0_20px_rgba(2,81,251,0.6),0_0_40px_rgba(2,81,251,0.4),0_0_60px_rgba(2,81,251,0.2)] hover:scale-105 lg:text-lg">
+              <span>Get Started Today</span>
             </button>
           </div>
 
@@ -96,8 +125,8 @@ export default function LandingPage() {
 
         {/* Image Marquee */}
         <div className="w-full relative overflow-hidden flex gap-x-8 px-12 py-12 mt-0">
-          <div className="flex animate-marquee gap-8 min-w-full">
-            <div className="bg-white h-[220px] md:h-[260px] rounded-2xl min-w-[280px] md:min-w-[300px] flex items-center justify-center overflow-hidden">
+          <div className="flex animate-marquee gap-8">
+            <div className="bg-white h-[220px] md:h-[260px] rounded-2xl md:min-w-[300px] flex items-center justify-center overflow-hidden">
               <img
                 src="https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/image%20(5).png"
                 alt="Blue fish underwater"
@@ -151,6 +180,13 @@ export default function LandingPage() {
               75% { transform: translateY(-25px) translateX(5px); }
             }
             
+            @keyframes navbarFloat {
+              0%, 100% { transform: translateY(0px) translateX(0px) scale(1); opacity: 0.8; }
+              25% { transform: translateY(-15px) translateX(8px) scale(1.1); opacity: 1; }
+              50% { transform: translateY(-8px) translateX(-12px) scale(0.9); opacity: 0.6; }
+              75% { transform: translateY(-18px) translateX(6px) scale(1.05); opacity: 0.9; }
+            }
+            
             .particle {
               position: absolute;
               background: radial-gradient(circle, rgba(2, 81, 251, 0.8) 0%, rgba(2, 81, 251, 0.4) 50%, transparent 100%);
@@ -158,88 +194,96 @@ export default function LandingPage() {
               pointer-events: none;
             }
             
-            .particle-1 {
-              width: 4px;
-              height: 4px;
-              top: 15%;
-              left: 10%;
-              animation: float 8s ease-in-out infinite;
+            .navbar-particle {
+              position: absolute;
+              background: radial-gradient(circle, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0.6) 40%, rgba(2, 81, 251, 0.3) 70%, transparent 100%);
+              border-radius: 50%;
+              pointer-events: none;
+              box-shadow: 0 0 8px rgba(255, 255, 255, 0.4), 0 0 16px rgba(2, 81, 251, 0.2);
+            }
+            
+            .navbar-particle-1 {
+              width: 2px;
+              height: 2px;
+              top: 20%;
+              left: 15%;
+              animation: navbarFloat 6s ease-in-out infinite;
               animation-delay: 0s;
             }
             
-            .particle-2 {
+            .navbar-particle-2 {
               width: 3px;
               height: 3px;
-              top: 25%;
-              left: 80%;
-              animation: float 12s ease-in-out infinite;
-              animation-delay: -2s;
-            }
-            
-            .particle-3 {
-              width: 5px;
-              height: 5px;
-              top: 40%;
-              left: 20%;
-              animation: float 10s ease-in-out infinite;
-              animation-delay: -4s;
-            }
-            
-            .particle-4 {
-              width: 2px;
-              height: 2px;
-              top: 60%;
-              left: 70%;
-              animation: float 15s ease-in-out infinite;
+              top: 35%;
+              left: 85%;
+              animation: navbarFloat 8s ease-in-out infinite;
               animation-delay: -1s;
             }
             
-            .particle-5 {
-              width: 4px;
-              height: 4px;
-              top: 30%;
-              left: 50%;
-              animation: float 9s ease-in-out infinite;
-              animation-delay: -3s;
+            .navbar-particle-3 {
+              width: 1.5px;
+              height: 1.5px;
+              top: 60%;
+              left: 25%;
+              animation: navbarFloat 7s ease-in-out infinite;
+              animation-delay: -2s;
             }
             
-            .particle-6 {
-              width: 3px;
-              height: 3px;
-              top: 70%;
-              left: 15%;
-              animation: float 11s ease-in-out infinite;
-              animation-delay: -5s;
+            .navbar-particle-4 {
+              width: 2.5px;
+              height: 2.5px;
+              top: 15%;
+              left: 70%;
+              animation: navbarFloat 9s ease-in-out infinite;
+              animation-delay: -0.5s;
             }
             
-            .particle-7 {
-              width: 6px;
-              height: 6px;
-              top: 20%;
-              left: 90%;
-              animation: float 13s ease-in-out infinite;
-              animation-delay: -2.5s;
-            }
-            
-            .particle-8 {
+            .navbar-particle-5 {
               width: 2px;
               height: 2px;
-              top: 80%;
-              left: 40%;
-              animation: float 7s ease-in-out infinite;
+              top: 45%;
+              left: 50%;
+              animation: navbarFloat 5.5s ease-in-out infinite;
               animation-delay: -1.5s;
             }
             
-            .particle-9 {
-              width: 4px;
-              height: 4px;
-              top: 10%;
-              left: 60%;
-              animation: float 14s ease-in-out infinite;
-              animation-delay: -4.5s;
+            .navbar-particle-6 {
+              width: 1px;
+              height: 1px;
+              top: 75%;
+              left: 10%;
+              animation: navbarFloat 10s ease-in-out infinite;
+              animation-delay: -3s;
             }
             
-            .particle-10 {
+            .navbar-particle-7 {
+              width: 3px;
+              height: 3px;
+              top: 25%;
+              left: 90%;
+              animation: navbarFloat 6.5s ease-in-out infinite;
+              animation-delay: -2.5s;
+            }
+            
+            .navbar-particle-8 {
+              width: 1.5px;
+              height: 1.5px;
+              top: 80%;
+              left: 40%;
+              animation: navbarFloat 8.5s ease-in-out infinite;
+              animation-delay: -1.8s;
+            }
+            
+            .navbar-particle-9 {
+              width: 2px;
+              height: 2px;
+              top: 10%;
+              left: 60%;
+              animation: navbarFloat 7.5s ease-in-out infinite;
+              animation-delay: -4s;
+            }
+            
+            .navbar-particle-10 {
               width: 3px;
               height: 3px;
               top: 50%;
@@ -247,10 +291,70 @@ export default function LandingPage() {
               animation: float 16s ease-in-out infinite;
               animation-delay: -3.5s;
             }
+
+            @keyframes blobMorph {
+              0%, 100% {
+                border-radius: 50% 50% 50% 50% / 50% 50% 50% 50%;
+                transform: scale(1) rotate(0deg);
+              }
+              25% {
+                border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+                transform: scale(1.05) rotate(90deg);
+              }
+              50% {
+                border-radius: 30% 70% 70% 30% / 50% 60% 40% 50%;
+                transform: scale(1.1) rotate(180deg);
+              }
+              75% {
+                border-radius: 70% 30% 50% 50% / 30% 60% 40% 70%;
+                transform: scale(1.05) rotate(270deg);
+              }
+            }
+
+            .blob-morph {
+              animation: blobMorph 3s ease-in-out infinite;
+            }
+
+            @keyframes wave {
+              0% {
+                transform: translateX(-100%) skewX(-15deg);
+              }
+              50% {
+                transform: translateX(0%) skewX(0deg);
+              }
+              100% {
+                transform: translateX(100%) skewX(15deg);
+              }
+            }
+
+            .wave-animation {
+              animation: wave 0.8s ease-in-out;
+            }
+
+            @keyframes ripple {
+              0% {
+                box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4),
+                           0 0 0 10px rgba(255, 255, 255, 0.3),
+                           0 0 0 20px rgba(255, 255, 255, 0.2);
+              }
+              50% {
+                box-shadow: 0 0 0 15px rgba(255, 255, 255, 0.2),
+                           0 0 0 30px rgba(255, 255, 255, 0.15),
+                           0 0 0 45px rgba(255, 255, 255, 0.1);
+              }
+              100% {
+                box-shadow: 0 0 0 30px rgba(255, 255, 255, 0),
+                           0 0 0 60px rgba(255, 255, 255, 0),
+                           0 0 0 90px rgba(255, 255, 255, 0);
+              }
+            }
+
+            .ripple-animation {
+              animation: ripple 1.2s ease-out;
+            }
           `}</style>
         </div>
       </div>
-
       {/* Our Benefits Section */}
       <div className="bg-black w-full flex flex-col px-5 md:px-10 py-16 md:py-24 justify-center items-center">
         <div className="w-full max-w-6xl mx-auto">
@@ -265,10 +369,10 @@ export default function LandingPage() {
               <Sparkles className="h-4 w-4" />
               <span>Our Benefits</span>
             </div>
-            <h2 className="lg:text-6xl text-white font-serif text-6xl md:text-7xl leading-tight mb-4">
+            <h2 className="lg:text-6xl text-white md:text-7xl leading-tight mb-4 font-[serif] text-4xl">
               Discover Lishka's Benefits
             </h2>
-            <p className="mx-auto text-xl text-gray-300 mb-12 max-w-3xl leading-relaxed font-light md:text-lg">
+            <p className="mx-auto text-gray-300 mb-12 max-w-3xl leading-relaxed font-light md:text-lg text-xs">
               Unlock a world of meaningful connections, tailored experiences,
               and seamless social interaction.
             </p>
@@ -354,7 +458,7 @@ export default function LandingPage() {
               <Sparkles className="h-4 w-4" />
               <span>FAQ's</span>
             </div>
-            <h2 className="lg:text-6xl text-white font-serif text-6xl md:text-7xl leading-tight mb-4">
+            <h2 className="lg:text-6xl text-white md:text-7xl leading-tight mb-4 font-[serif] text-4xl">
               Frequently Asked Questions
             </h2>
           </div>
@@ -381,7 +485,7 @@ export default function LandingPage() {
                 value="item-2"
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
-                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6">
+                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
                   Can I customize my fishing preferences?
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
@@ -395,7 +499,7 @@ export default function LandingPage() {
                 value="item-3"
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
-                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6">
+                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
                   Is Lishka available on all devices?
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
@@ -409,7 +513,7 @@ export default function LandingPage() {
                 value="item-4"
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
-                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6">
+                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
                   What weather conditions does Lishka track?
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
@@ -423,7 +527,7 @@ export default function LandingPage() {
                 value="item-5"
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
-                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6">
+                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
                   How does the AI prediction system work?
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
@@ -438,7 +542,7 @@ export default function LandingPage() {
                 value="item-6"
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
-                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6">
+                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
                   Can I share my catches with other anglers?
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
@@ -452,7 +556,7 @@ export default function LandingPage() {
                 value="item-7"
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
-                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6">
+                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
                   What should I do if I encounter technical issues?
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
@@ -465,7 +569,7 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-      <div className="bg-black w-full flex px-5 py-16 z-1 md:py-0 flex-row  items-end justify-center pl-[120px] pr-[120px] gap-x-5 md:px-[120px] pt-[24px] h-[650px]">
+      <div className="bg-black w-full flex z-1 md:py-0 flex-row  items-end justify-center pl-[120px] pr-[120px] gap-x-5 lg:px-[120px] py-0 lg:h-[650px] xl:h-[650px]">
         <div className="w-full mx-auto h-4/5">
           <img
             src={
@@ -500,12 +604,12 @@ export default function LandingPage() {
           />
         </div>
       </div>
-      <div className="w-full relative z-10 rounded-tl-[200px] mt-[-100px] overflow-hidden rounded-tr-[200px] h-[800px] bg-black">
+      <div className="w-full relative z-10 overflow-hidden h-[800px] bg-black border-white/40 border-t lg:rounded-tl-[100px] rounded-tl-[40px] lg:rounded-tr-[100px] rounded-tr-[40px]">
         <div className="z-50  absolute h-full w-full">
           <div className="max-w-4xl mx-auto flex h-full justify-center items-center flex-col">
             <h1
               className={
-                "text-6xl md:text-7xl text-white mb-8 leading-tight text-center lg:text-7xl font-[serif] opacity-90"
+                "md:text-7xl text-white mb-8 leading-tight text-center lg:text-7xl font-[serif] opacity-90 rem] text-4xl"
               }
             >
               View Lishka App and Start
@@ -514,7 +618,7 @@ export default function LandingPage() {
             </h1>
             <p
               className={
-                "text-xl mb-12 max-w-3xl mx-auto leading-relaxed justify-center text-center md:text-xl font-light text-white opacity-90"
+                "mx-auto leading-relaxed text-gray-300 font-light md:text-lg mb-10 text-center w-4/5 text-base"
               }
             >
               Get AI-powered insights on the best spots, times, and
@@ -522,7 +626,7 @@ export default function LandingPage() {
             </p>
             <button
               className={
-                "bg-[#0251FB] hover:bg-blue-600 text-white px-8 py-4 rounded-full text-lg font-medium transition-all duration-300 transform hover:scale-105 shadow-lg mx-auto"
+                "bg-[#0251FB] hover:bg-blue-600 text-white px-8 py-4 rounded-full font-medium transition-all duration-300 transform shadow-lg mx-auto hover:shadow-[0_0_20px_rgba(2,81,251,0.6),0_0_40px_rgba(2,81,251,0.4),0_0_60px_rgba(2,81,251,0.2)] hover:scale-105 text-base lg:text-xl"
               }
             >
               Sign up
@@ -553,17 +657,21 @@ export default function LandingPage() {
           <img
             src={"/logo-dark.svg"}
             alt={"Lishka Logo"}
-            className={"w-auto object-contain"}
+            className={"w-auto object-contain h-[40px]"}
           />
           <p
             className={
-              "text-xl text-gray-300 mx-auto leading-relaxed justify-center items-start text-center mb-4 md:text-[0.8rem] max-w-xl font-extralight"
+              "text-gray-300 mx-auto leading-relaxed justify-center items-start text-center mb-4 max-w-xl font-extralight text-base md:text-base"
             }
           >
             Get AI-powered insights on the best spots, times, and techniques—so
             you spend less time guessing and more time catching.
           </p>
-          <div className={"flex items-center gap-8"}>
+          <div
+            className={
+              "flex gap-8 w-full flex-wrap items-start justify-center lg:gap-x-[32px] gap-x-[16px]"
+            }
+          >
             <span
               className={
                 "text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
@@ -598,17 +706,17 @@ export default function LandingPage() {
           </div>
         </div>
         <div className="flex justify-center items-center flex-col gap-y-4 h-px bg-white opacity-10 w-3/5"></div>
-        <div className="flex justify-between items-center px-8 w-3/5 py-0">
+        <div className="flex justify-between items-center py-0 w-full lg:w-3/5">
           <div className="text-white/60 text-sm">© 2025 Lishka App</div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer">
+              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center transition-colors cursor-pointer hover:bg-[#0251FB]">
                 <Linkedin className="w-5 h-5 text-white/80" />
               </div>
-              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer">
+              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center transition-colors cursor-pointer hover:bg-[#0251FB]">
                 <Twitter className="w-5 h-5 text-white/80" />
               </div>
-              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center hover:bg-white/20 transition-colors cursor-pointer">
+              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center transition-colors cursor-pointer hover:bg-[#0251FB]">
                 <Instagram className="w-5 h-5 text-white/80" />
               </div>
             </div>
