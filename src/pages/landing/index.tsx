@@ -1,3 +1,5 @@
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   User2,
   Globe2,
@@ -6,6 +8,8 @@ import {
   Linkedin,
   Twitter,
   Instagram,
+  Menu,
+  X,
 } from "lucide-react";
 import {
   Accordion,
@@ -15,6 +19,7 @@ import {
 } from "@/components/ui/accordion";
 
 export default function LandingPage() {
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   return (
     <div className="flex-1 flex-col h-full w-full overflow-y-auto bg-black">
       <div className="relative w-full flex flex-col overflow-hidden h-[1024px]">
@@ -65,7 +70,8 @@ export default function LandingPage() {
           </div>
 
           <div className="flex items-center justify-center w-full max-w-2xl mx-auto backdrop-blur-md bg-white/10 border border-white/20 rounded-full px-8 py-3 shadow-lg h-[64px] relative z-10">
-            <div className="flex items-center gap-8">
+            {/* Desktop Navigation */}
+            <div className="hidden md:flex items-center gap-8">
               <span className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light">
                 Home
               </span>
@@ -88,7 +94,104 @@ export default function LandingPage() {
                 Pricing
               </span>
             </div>
+
+            {/* Mobile Navigation */}
+            <div className="md:hidden flex items-center justify-between w-full">
+              <div className="flex items-center justify-center rounded-xl h-[48px]">
+                <img
+                  src="/logo-dark.svg"
+                  alt="Lishka Logo"
+                  className="h-full object-contain w-[120px]"
+                />
+              </div>
+              <motion.button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="text-white/90 hover:text-white transition-colors p-2"
+                aria-label="Toggle mobile menu"
+                whileTap={{ scale: 0.9 }}
+                whileHover={{ scale: 1.05 }}
+              >
+                <motion.div
+                  animate={{ rotate: isMobileMenuOpen ? 90 : 0 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  {isMobileMenuOpen ? (
+                    <X className="h-5 w-5" />
+                  ) : (
+                    <Menu className="h-5 w-5" />
+                  )}
+                </motion.div>
+              </motion.button>
+            </div>
           </div>
+
+          {/* Mobile Menu Overlay */}
+          <AnimatePresence>
+            {isMobileMenuOpen && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.3 }}
+                className="md:hidden fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center"
+              >
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  exit={{ scale: 0.8, opacity: 0 }}
+                  transition={{ duration: 0.3, delay: 0.1 }}
+                  className="flex flex-col items-center gap-8 text-center"
+                >
+                  <motion.button
+                    initial={{ rotate: -180 }}
+                    animate={{ rotate: 0 }}
+                    exit={{ rotate: 180 }}
+                    transition={{ duration: 0.3 }}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="absolute top-8 right-8 text-white/90 hover:text-white transition-colors p-2"
+                    aria-label="Close mobile menu"
+                  >
+                    <X className="h-6 w-6" />
+                  </motion.button>
+
+                  <motion.div
+                    initial={{ y: -20, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ duration: 0.4, delay: 0.2 }}
+                    className="flex items-center justify-center rounded-xl h-[48px] mb-8"
+                  >
+                    <img
+                      src="/logo-dark.svg"
+                      alt="Lishka Logo"
+                      className="h-full object-contain w-[150px]"
+                    />
+                  </motion.div>
+
+                  <nav className="flex flex-col items-center gap-6">
+                    {["Home", "Features", "Gallery", "Pricing"].map(
+                      (item, index) => (
+                        <motion.span
+                          key={item}
+                          initial={{ y: 20, opacity: 0 }}
+                          animate={{ y: 0, opacity: 1 }}
+                          transition={{
+                            duration: 0.3,
+                            delay: 0.3 + index * 0.1,
+                          }}
+                          className="text-white/90 hover:text-white transition-colors cursor-pointer text-lg font-light"
+                          onClick={() => setIsMobileMenuOpen(false)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
+                        >
+                          {item}
+                        </motion.span>
+                      ),
+                    )}
+                  </nav>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
         {/* Main hero content */}
@@ -112,20 +215,21 @@ export default function LandingPage() {
           </div>
 
           {/* Foreground hand image */}
-          <div className="flex flex-col items-center justify-center text-center px-8 bg-transparent w-fit h-fit absolute z-20 bottom-0 -translate-x-1/2 translate-y-[40%] md:translate-y-[20%] top-[285px] left-1/2">
-            <div className="flex items-center justify-center">
-              <img
-                src="/images/Hand.png"
-                alt="Hand"
-                className="w-auto object-contain h-[420px] md:h-[520px] lg:h-[600px]"
-              />
-            </div>
+        </div>
+
+        <div className="flex flex-col items-center justify-center text-center px-2 bg-transparent w-full max-w-[90vw] sm:max-w-[400px] md:max-w-none h-fit absolute z-20 -bottom-[80px] sm:-bottom-[140px] -translate-x-1/2 left-1/2">
+          <div className="flex items-center justify-center w-full">
+            <img
+              src="/images/Hand.png"
+              alt="Hand"
+              className="w-full max-w-[280px] sm:max-w-[350px] md:max-w-none object-contain h-[280px] sm:h-[380px] md:h-[520px] lg:h-[600px]"
+            />
           </div>
         </div>
 
         {/* Image Marquee */}
         <div className="w-full relative overflow-hidden flex gap-x-8 px-12 py-12 mt-0">
-          <div className="flex animate-marquee gap-8">
+          <div className="flex flex-shrink-0 animate-marquee gap-8">
             <div className="bg-white h-[220px] md:h-[260px] rounded-2xl md:min-w-[300px] flex items-center justify-center overflow-hidden">
               <img
                 src="https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/image%20(5).png"
@@ -569,38 +673,38 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-      <div className="bg-black w-full flex z-1 md:py-0 flex-row  items-end justify-center pl-[120px] pr-[120px] gap-x-5 lg:px-[120px] py-0 lg:h-[650px] xl:h-[650px]">
-        <div className="w-full mx-auto h-4/5">
+      <div className="bg-black w-full flex z-1 flex-col md:flex-row items-center md:items-end justify-center px-5 md:px-[120px] gap-5 md:gap-x-5 py-8 md:py-0 lg:h-[650px] xl:h-[650px]">
+        <div className="w-full max-w-[280px] md:max-w-none md:w-full mx-auto h-auto md:h-4/5">
           <img
             src={
               "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250910T125011482Z.png"
             }
-            alt={"Pasted Image"}
+            alt={"Mobile App Screenshot 1"}
             width={1296}
             height={2661}
-            className={"w-full h-fit"}
+            className={"w-full h-auto object-contain"}
           />
         </div>
-        <div className="w-full mx-auto h-full">
+        <div className="w-full max-w-[280px] md:max-w-none md:w-full mx-auto h-auto md:h-full">
           <img
             src={
               "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250910T124322811Z.png"
             }
-            alt={"Pasted Image"}
+            alt={"Mobile App Screenshot 2"}
             width={1335}
             height={2715}
-            className={" w-full"}
+            className={"w-full h-auto object-contain"}
           />
         </div>
-        <div className="w-full mx-auto h-4/5">
+        <div className="w-full max-w-[280px] md:max-w-none md:w-full mx-auto h-auto md:h-4/5">
           <img
             src={
               "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250910T124940011Z.png"
             }
-            alt={"Pasted Image"}
+            alt={"Mobile App Screenshot 3"}
             width={1335}
             height={2715}
-            className={"w-full h-fit"}
+            className={"w-full h-auto object-contain"}
           />
         </div>
       </div>
