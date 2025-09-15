@@ -10,17 +10,105 @@ import {
   X,
 } from "lucide-react";
 import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+} from "@/components/ui/carousel";
+import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import Autoplay from "embla-carousel-autoplay";
+import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
+import { ROUTES } from "@/lib/routing";
+
+const fishImages = [
+  {
+    image: "/images/Fish-1.png",
+    alt: "Blue fish underwater",
+  },
+  {
+    image: "/images/Fish-2.png",
+    alt: "Colorful tropical fish",
+  },
+  {
+    image: "/images/Fish-3.png",
+    alt: "Ocean coral reef",
+  },
+  {
+    image: "/images/Fish-4.png",
+    alt: "Sea turtle swimming",
+  },
+  {
+    image: "/images/Fish-5.png",
+    alt: "Jellyfish floating",
+  },
+  {
+    image: "/images/Fish-1.png",
+    alt: "Blue fish underwater",
+  },
+  {
+    image: "/images/Fish-2.png",
+    alt: "Colorful tropical fish",
+  },
+  {
+    image: "/images/Fish-3.png",
+    alt: "Ocean coral reef",
+  },
+  {
+    image: "/images/Fish-4.png",
+    alt: "Sea turtle swimming",
+  },
+  {
+    image: "/images/Fish-5.png",
+    alt: "Jellyfish floating",
+  },
+];
+
+const mobileAppScreenshots = [
+  {
+    src: "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250910T125011482Z.png",
+    alt: "Mobile App Screenshot 1",
+    width: 1296,
+    height: 2661,
+    heightClass: "md:h-4/5",
+  },
+  {
+    src: "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250910T124322811Z.png",
+    alt: "Mobile App Screenshot 2",
+    width: 1335,
+    height: 2715,
+    heightClass: "md:h-full",
+  },
+  {
+    src: "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250910T124940011Z.png",
+    alt: "Mobile App Screenshot 3",
+    width: 1335,
+    height: 2715,
+    heightClass: "md:h-4/5",
+  },
+];
 
 export default function LandingPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const scrollToSection = (sectionId: string) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      element.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+        inline: "nearest",
+      });
+    }
+    setIsMobileMenuOpen(false);
+  };
   return (
     <div className="flex-1 flex-col h-full w-full overflow-y-auto bg-black">
-      <div className="relative w-full flex flex-col overflow-hidden h-[1024px]">
+      <div className="relative w-full flex flex-col overflow-hidden h-[900px] md:h-[1024px]">
         {/* Animated Particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-5">
           <div className="particle particle-1"></div>
@@ -74,7 +162,10 @@ export default function LandingPage() {
                 Home
               </span>
               <span className="text-white/60">•</span>
-              <span className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light">
+              <span
+                className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
+                onClick={() => scrollToSection("features")}
+              >
                 Features
               </span>
               <div className="flex items-center justify-center rounded-xl h-[48px]">
@@ -84,13 +175,19 @@ export default function LandingPage() {
                   className="h-full object-contain lg:w-[250px] w-[120px]"
                 />
               </div>
-              <span className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light">
+              <span
+                className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
+                onClick={() => scrollToSection("faqs")}
+              >
                 FAQs
               </span>
               <span className="text-white/60">•</span>
-              <span className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light w-[55px]">
+              <Link
+                to={ROUTES.LOGIN}
+                className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light w-[55px]"
+              >
                 Log In
-              </span>
+              </Link>
             </div>
 
             {/* Mobile Navigation */}
@@ -166,25 +263,32 @@ export default function LandingPage() {
                   </motion.div>
 
                   <nav className="flex flex-col items-center gap-6">
-                    {["Home", "Features", "Gallery", "Pricing"].map(
-                      (item, index) => (
-                        <motion.span
-                          key={item}
-                          initial={{ y: 20, opacity: 0 }}
-                          animate={{ y: 0, opacity: 1 }}
-                          transition={{
-                            duration: 0.3,
-                            delay: 0.3 + index * 0.1,
-                          }}
-                          className="text-white/90 hover:text-white transition-colors cursor-pointer text-lg font-light"
-                          onClick={() => setIsMobileMenuOpen(false)}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                        >
-                          {item}
-                        </motion.span>
-                      ),
-                    )}
+                    {[
+                      { name: "Home", id: "home" },
+                      { name: "Features", id: "features" },
+                      { name: "Gallery", id: "gallery" },
+                      { name: "FAQs", id: "faqs" },
+                    ].map((item, index) => (
+                      <motion.span
+                        key={item.name}
+                        initial={{ y: 20, opacity: 0 }}
+                        animate={{ y: 0, opacity: 1 }}
+                        transition={{
+                          duration: 0.3,
+                          delay: 0.3 + index * 0.1,
+                        }}
+                        className="text-white/90 hover:text-white transition-colors cursor-pointer text-lg font-light"
+                        onClick={() =>
+                          item.id === "home"
+                            ? setIsMobileMenuOpen(false)
+                            : scrollToSection(item.id)
+                        }
+                        whileHover={{ scale: 1.05 }}
+                        whileTap={{ scale: 0.95 }}
+                      >
+                        {item.name}
+                      </motion.span>
+                    ))}
                   </nav>
                 </motion.div>
               </motion.div>
@@ -193,7 +297,7 @@ export default function LandingPage() {
         </div>
 
         {/* Main hero content */}
-        <div className="w-full flex flex-col items-center text-center px-8 relative bg-transparent h-1/2 justify-start py-[64px]">
+        <div className="w-full flex flex-col items-center text-center px-8 relative bg-transparent h-1/2 justify-start pt-[56px] md:py-[64px]">
           <div className="relative z-10 max-w-4xl mx-auto">
             <h1 className="md:text-7xl text-white leading-tight font-[serif] text-4xl mb-6 lg:text-6xl">
               Your AI Fishing
@@ -207,74 +311,64 @@ export default function LandingPage() {
             </p>
 
             {/* CTA Button with glow effect */}
-            <button className="bg-[#0251FB] hover:bg-blue-600 text-white px-8 py-4 rounded-full font-medium shadow-lg mx-auto text-base transition-all duration-300 hover:shadow-[0_0_20px_rgba(2,81,251,0.6),0_0_40px_rgba(2,81,251,0.4),0_0_60px_rgba(2,81,251,0.2)] hover:scale-105 lg:text-lg">
+            <Link
+              to={ROUTES.LOGIN}
+              className="bg-[#0251FB] hover:bg-blue-600 text-white px-8 py-4 rounded-full font-medium shadow-lg mx-auto text-base transition-all duration-300 hover:shadow-[0_0_20px_rgba(2,81,251,0.6),0_0_40px_rgba(2,81,251,0.4),0_0_60px_rgba(2,81,251,0.2)] hover:scale-105 lg:text-lg"
+            >
               <span>Get Started</span>
-            </button>
+            </Link>
           </div>
 
           {/* Foreground hand image */}
         </div>
 
-        <div className="flex flex-col items-center justify-center text-center px-2 bg-transparent w-full max-w-[90vw] sm:max-w-[400px] md:max-w-none h-fit absolute z-20 -bottom-[80px] -translate-x-1/2 sm:bottom-[-99px] left-[55%]">
+        <div className="flex flex-col items-center justify-center text-center px-2 bg-transparent w-full max-w-[90vw] sm:max-w-[400px] md:max-w-none h-fit absolute z-20 -bottom-[120px] -translate-x-1/2 sm:bottom-[-99px] sm:left-[55%] left-[68%]">
           <div className="flex items-center justify-center w-full">
             <img
               src="/images/HeroImage.png"
               alt="Hand"
-              className="w-full max-w-[280px] sm:max-w-[350px] md:max-w-none object-contain h-[280px] sm:h-[380px] md:h-[520px] lg:h-[600px]"
+              className="w-full object-contain h-[550px] lg:h-[600px]"
             />
           </div>
         </div>
 
-        {/* Image Marquee */}
-        <div className="w-full relative overflow-hidden flex gap-x-8 px-12 py-12 mt-0">
-          <div className="flex flex-shrink-0 animate-marquee gap-8">
-            <div className="bg-white h-[220px] md:h-[260px] rounded-2xl md:min-w-[300px] flex items-center justify-center overflow-hidden">
-              <img
-                src="/images/Fish-1.png"
-                alt="Blue fish underwater"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="bg-white h-[220px] md:h-[260px] rounded-2xl min-w-[280px] md:min-w-[300px] flex items-center justify-center overflow-hidden">
-              <img
-                src="/images/Fish-2.png"
-                alt="Colorful tropical fish"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="bg-white h-[220px] md:h-[260px] rounded-2xl min-w-[280px] md:min-w-[300px] flex items-center justify-center overflow-hidden">
-              <img
-                src="/images/Fish-3.png"
-                alt="Ocean coral reef"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="bg-white h-[220px] md:h-[260px] rounded-2xl min-w-[280px] md:min-w-[300px] flex items-center justify-center overflow-hidden">
-              <img
-                src="/images/Fish-4.png"
-                alt="Sea turtle swimming"
-                className="w-full h-full object-cover"
-              />
-            </div>
-            <div className="bg-white h-[220px] md:h-[260px] rounded-2xl min-w-[280px] md:min-w-[300px] flex items-center justify-center overflow-hidden">
-              <img
-                src="/images/Fish-5.png"
-                alt="Jellyfish floating"
-                className="w-full h-full object-cover"
-              />
-            </div>
-          </div>
+        {/* Fish Image Carousel */}
+        <div className="w-full py-12 mt-0">
+          <Carousel
+            opts={{
+              align: "start",
+              loop: true,
+            }}
+            plugins={[
+              Autoplay({
+                delay: 1000,
+                stopOnInteraction: false,
+                stopOnMouseEnter: false,
+              }),
+            ]}
+            className="w-full"
+          >
+            <CarouselContent className="-ml-4">
+              {fishImages.map((fish, index) => (
+                <CarouselItem
+                  key={index}
+                  className="pl-4 basis-[210px] sm:basis-[300px]"
+                >
+                  <div className="bg-white h-[220px] md:h-[260px] rounded-2xl flex items-center justify-center overflow-hidden">
+                    <img
+                      src={fish.image}
+                      alt={fish.alt}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
+        </div>
 
-          {/* CSS for marquee animation */}
-          <style>{`
-            @keyframes marquee {
-              0% { transform: translateX(0); }
-              100% { transform: translateX(-50%); }
-            }
-            .animate-marquee {
-              animation: marquee 20s linear infinite;
-            }
-            
+        {/* CSS for animations */}
+        <style>{`
             @keyframes float {
               0%, 100% { transform: translateY(0px) translateX(0px); }
               25% { transform: translateY(-20px) translateX(10px); }
@@ -455,10 +549,13 @@ export default function LandingPage() {
               animation: ripple 1.2s ease-out;
             }
           `}</style>
-        </div>
       </div>
+
       {/* Our Benefits Section */}
-      <div className="bg-black w-full flex flex-col px-5 md:px-10 py-16 md:py-24 justify-center items-center">
+      <div
+        id="features"
+        className="bg-black w-full flex flex-col px-5 md:px-10 py-16 md:py-24 justify-center items-center"
+      >
         <div className="w-full max-w-6xl mx-auto">
           {/* Header */}
           <div className="text-center relative">
@@ -546,7 +643,10 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-      <div className="bg-black w-full flex flex-col px-5 md:px-10 py-16 md:py-24 justify-center items-center z-20">
+      <div
+        id="faqs"
+        className="bg-black w-full flex flex-col px-5 md:px-10 py-16 md:py-24 justify-center items-center z-20"
+      >
         <div className="w-full max-w-6xl mx-auto">
           {}
           <div className="text-center relative">
@@ -686,39 +786,53 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
-      <div className="bg-black w-full flex z-1 flex-col md:flex-row items-center md:items-end justify-center px-5 md:px-[120px] gap-5 md:gap-x-5 py-8 md:py-0 lg:h-[650px] xl:h-[650px]">
-        <div className="w-full max-w-[280px] md:max-w-none md:w-full mx-auto h-auto md:h-4/5">
-          <img
-            src={
-              "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250910T125011482Z.png"
-            }
-            alt={"Mobile App Screenshot 1"}
-            width={1296}
-            height={2661}
-            className={"w-full h-auto object-contain"}
-          />
+      {/* Mobile App Screenshots - Carousel on mobile, side by side on desktop */}
+      <div
+        id="gallery"
+        className="bg-black w-full z-1 py-8 lg:h-[650px] xl:h-[650px]"
+      >
+        {/* Mobile Carousel (hidden on md+) */}
+        <div className="block md:hidden">
+          <Carousel opts={{ align: "start", startIndex: 0 }} className="w-full">
+            <CarouselContent className="ml-0">
+              {mobileAppScreenshots.map((screenshot, index) => (
+                <CarouselItem
+                  key={index}
+                  className={cn(
+                    index == 0 ? "basis-[190px] pl-[10px]" : "basis-[200px]",
+                  )}
+                >
+                  <div className="flex items-center justify-center">
+                    <img
+                      src={screenshot.src}
+                      alt={screenshot.alt}
+                      width={screenshot.width}
+                      height={screenshot.height}
+                      className="w-full h-auto object-contain"
+                    />
+                  </div>
+                </CarouselItem>
+              ))}
+            </CarouselContent>
+          </Carousel>
         </div>
-        <div className="w-full max-w-[280px] md:max-w-none md:w-full mx-auto h-auto md:h-full">
-          <img
-            src={
-              "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250910T124322811Z.png"
-            }
-            alt={"Mobile App Screenshot 2"}
-            width={1335}
-            height={2715}
-            className={"w-full h-auto object-contain"}
-          />
-        </div>
-        <div className="w-full max-w-[280px] md:max-w-none md:w-full mx-auto h-auto md:h-4/5">
-          <img
-            src={
-              "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250910T124940011Z.png"
-            }
-            alt={"Mobile App Screenshot 3"}
-            width={1335}
-            height={2715}
-            className={"w-full h-auto object-contain"}
-          />
+
+        {/* Desktop Layout (hidden on mobile) */}
+        <div className="hidden md:flex items-center md:items-end justify-center px-5 md:px-[120px] gap-5 md:gap-x-5 md:py-0 h-full">
+          {mobileAppScreenshots.map((screenshot, index) => (
+            <div
+              key={index}
+              className={`w-full mx-auto h-auto ${screenshot.heightClass}`}
+            >
+              <img
+                src={screenshot.src}
+                alt={screenshot.alt}
+                width={screenshot.width}
+                height={screenshot.height}
+                className="w-full h-auto object-contain"
+              />
+            </div>
+          ))}
         </div>
       </div>
       <div className="w-full relative z-10 overflow-hidden h-[800px] bg-black border-white/40 border-t lg:rounded-tl-[100px] rounded-tl-[40px] lg:rounded-tr-[100px] rounded-tr-[40px]">
@@ -739,13 +853,14 @@ export default function LandingPage() {
               Create your free account and unlock AI-powered fishing insights,
               smarter planning, and your personal fishing log.
             </p>
-            <button
+            <Link
+              to={ROUTES.LOGIN}
               className={
                 "bg-[#0251FB] hover:bg-blue-600 text-white px-8 py-4 rounded-full font-medium transition-all duration-300 transform shadow-lg mx-auto hover:shadow-[0_0_20px_rgba(2,81,251,0.6),0_0_40px_rgba(2,81,251,0.4),0_0_60px_rgba(2,81,251,0.2)] hover:scale-105 text-base lg:text-xl"
               }
             >
               Create free account
-            </button>
+            </Link>
           </div>
         </div>
         <video
@@ -784,36 +899,39 @@ export default function LandingPage() {
             }
           >
             <span
-              className={
-                "text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
-              }
+              className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
+              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             >
               Home
             </span>
-            <span className={"text-white/60"}>•</span>
+            <span className="text-white/60">•</span>
             <span
-              className={
-                "text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
-              }
+              className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
+              onClick={() => scrollToSection("features")}
             >
               Features
             </span>
-            <span className={"text-white/60"}>•</span>
+            <span className="text-white/60">•</span>
             <span
-              className={
-                "text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
-              }
+              className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
+              onClick={() => scrollToSection("gallery")}
             >
               Gallery
             </span>
-            <span className={"text-white/60"}>•</span>
+            <span className="text-white/60">•</span>
             <span
-              className={
-                "text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
-              }
+              className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
+              onClick={() => scrollToSection("faqs")}
+            >
+              FAQs
+            </span>
+            <span className="text-white/60">•</span>
+            <Link
+              className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
+              to={ROUTES.LOGIN}
             >
               Log In
-            </span>
+            </Link>
           </div>
         </div>
         <div className="flex justify-center items-center flex-col gap-y-4 h-px bg-white opacity-10 w-3/5"></div>
