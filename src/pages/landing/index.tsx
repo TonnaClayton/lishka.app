@@ -5,8 +5,6 @@ import {
   Globe2,
   Sparkles,
   Smile,
-  Linkedin,
-  Twitter,
   Instagram,
   Menu,
   X,
@@ -40,7 +38,7 @@ export default function LandingPage() {
         <div className="flex justify-center items-center w-[600px] h-[300px] absolute rounded-full top-[-105px] blur-3xl left-1/2 -translate-x-1/2 bg-[#0251FB] opacity-35" />
 
         {/* Glass navbar pill */}
-        <div className="w-full bg-transparent flex justify-center items-center relative overflow-visible h-[150px]">
+        <div className="w-full bg-transparent flex justify-center items-center relative overflow-visible h-[150px] px-5">
           {/* Tiny luminous particles for navbar area */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div className="navbar-particle navbar-particle-1"></div>
@@ -69,7 +67,7 @@ export default function LandingPage() {
             <div className="navbar-particle navbar-particle-24"></div>
           </div>
 
-          <div className="flex items-center justify-center w-full max-w-2xl mx-auto backdrop-blur-md bg-white/10 border border-white/20 rounded-full px-8 py-3 shadow-lg h-[64px] relative z-10">
+          <div className="flex items-center justify-center w-full max-w-2xl mx-auto border-white/20 rounded-full py-3 h-[64px] relative z-10 border-0 px-0">
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
               <span className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light">
@@ -87,11 +85,11 @@ export default function LandingPage() {
                 />
               </div>
               <span className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light">
-                Gallery
+                FAQs
               </span>
               <span className="text-white/60">•</span>
-              <span className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light">
-                Pricing
+              <span className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light w-[55px]">
+                Log In
               </span>
             </div>
 
@@ -195,12 +193,12 @@ export default function LandingPage() {
         </div>
 
         {/* Main hero content */}
-        <div className="w-full flex flex-col items-center justify-center text-center px-8 relative bg-transparent h-1/2">
+        <div className="w-full flex flex-col items-center text-center px-8 relative bg-transparent h-1/2 justify-start py-[64px]">
           <div className="relative z-10 max-w-4xl mx-auto">
             <h1 className="md:text-7xl text-white leading-tight font-[serif] text-4xl mb-6 lg:text-6xl">
-              Find the Right Spot
+              Your AI Fishing
               <br />
-              <span className="italic">Every Time</span>
+              <span className="italic">Companion</span>
             </h1>
 
             <p className="text-gray-300 mx-auto leading-relaxed text-xs mb-10 flex font-normal md:text-base max-w-2xl">
@@ -210,17 +208,17 @@ export default function LandingPage() {
 
             {/* CTA Button with glow effect */}
             <button className="bg-[#0251FB] hover:bg-blue-600 text-white px-8 py-4 rounded-full font-medium shadow-lg mx-auto text-base transition-all duration-300 hover:shadow-[0_0_20px_rgba(2,81,251,0.6),0_0_40px_rgba(2,81,251,0.4),0_0_60px_rgba(2,81,251,0.2)] hover:scale-105 lg:text-lg">
-              <span>Get Started Today</span>
+              <span>Get Started</span>
             </button>
           </div>
 
           {/* Foreground hand image */}
         </div>
 
-        <div className="flex flex-col items-center justify-center text-center px-2 bg-transparent w-full max-w-[90vw] sm:max-w-[400px] md:max-w-none h-fit absolute z-20 -bottom-[80px] sm:-bottom-[140px] -translate-x-1/2 left-1/2">
+        <div className="flex flex-col items-center justify-center text-center px-2 bg-transparent w-full max-w-[90vw] sm:max-w-[400px] md:max-w-none h-fit absolute z-20 -bottom-[80px] -translate-x-1/2 sm:bottom-[-99px] left-[55%]">
           <div className="flex items-center justify-center w-full">
             <img
-              src="/images/Hand.png"
+              src="/images/HeroImage.png"
               alt="Hand"
               className="w-full max-w-[280px] sm:max-w-[350px] md:max-w-none object-contain h-[280px] sm:h-[380px] md:h-[520px] lg:h-[600px]"
             />
@@ -232,35 +230,35 @@ export default function LandingPage() {
           <div className="flex flex-shrink-0 animate-marquee gap-8">
             <div className="bg-white h-[220px] md:h-[260px] rounded-2xl md:min-w-[300px] flex items-center justify-center overflow-hidden">
               <img
-                src="https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/image%20(5).png"
+                src="/images/Fish-1.png"
                 alt="Blue fish underwater"
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="bg-white h-[220px] md:h-[260px] rounded-2xl min-w-[280px] md:min-w-[300px] flex items-center justify-center overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600&q=70"
+                src="/images/Fish-2.png"
                 alt="Colorful tropical fish"
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="bg-white h-[220px] md:h-[260px] rounded-2xl min-w-[280px] md:min-w-[300px] flex items-center justify-center overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=600&q=70"
+                src="/images/Fish-3.png"
                 alt="Ocean coral reef"
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="bg-white h-[220px] md:h-[260px] rounded-2xl min-w-[280px] md:min-w-[300px] flex items-center justify-center overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1583212292454-1fe6229603b7?w=600&q=70"
+                src="/images/Fish-4.png"
                 alt="Sea turtle swimming"
                 className="w-full h-full object-cover"
               />
             </div>
             <div className="bg-white h-[220px] md:h-[260px] rounded-2xl min-w-[280px] md:min-w-[300px] flex items-center justify-center overflow-hidden">
               <img
-                src="https://images.unsplash.com/photo-1546026423-cc4642628d2b?w=600&q=70"
+                src="/images/Fish-5.png"
                 alt="Jellyfish floating"
                 className="w-full h-full object-cover"
               />
@@ -469,16 +467,12 @@ export default function LandingPage() {
                 "flex justify-center items-center absolute rounded-full -translate-x-1/2 bg-[#0251FB] w-[200px] left-1/2 opacity-95 blur-2xl h-[30px] z-1"
               }
             />
-            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white text-sm font-medium mb-8 backdrop-blur-md border border-white/20 shadow-lg z-10 bg-white/10">
-              <Sparkles className="h-4 w-4" />
-              <span>Our Benefits</span>
-            </div>
+
             <h2 className="lg:text-6xl text-white md:text-7xl leading-tight mb-4 font-[serif] text-4xl">
-              Discover Lishka's Benefits
+              Discover Lishka's <span className="italic">Edge</span>
             </h2>
-            <p className="mx-auto text-gray-300 mb-12 max-w-3xl leading-relaxed font-light md:text-lg text-xs">
-              Unlock a world of meaningful connections, tailored experiences,
-              and seamless social interaction.
+            <p className="mx-auto text-gray-300 mb-12 max-w-3xl leading-relaxed font-light md:text-lg text-xs -10">
+              Plan smarter, fish safer, and catch more with AI on your side.
             </p>
           </div>
 
@@ -491,7 +485,7 @@ export default function LandingPage() {
                   <User2 className="h-5 w-5 text-white/80" />
                 </div>
                 <h3 className="text-white text-xl font-semibold">
-                  AI-Powered Spot Predictions
+                  Search Any Fish
                 </h3>
                 <p className="mt-2 text-white/60 text-sm">
                   Get real-time suggestions on where the fish are most likely to
@@ -504,11 +498,12 @@ export default function LandingPage() {
                   <Globe2 className="h-5 w-5 text-white/80" />
                 </div>
                 <h3 className="text-white text-xl font-semibold">
-                  Perfect Timing Insights
+                  Your Fishing AI Agent
                 </h3>
                 <p className="mt-2 text-white/60 text-sm">
-                  Know the best times of day (and night) to fish so you never
-                  miss a great catch.
+                  Ask anything fishing-related, upload photos of fish or sonar
+                  scans, and let AI help you identify species, optimise sonar
+                  readings, and refine techniques.
                 </p>
               </div>
             </div>
@@ -525,11 +520,12 @@ export default function LandingPage() {
                   <Sparkles className="h-5 w-5 text-white/80" />
                 </div>
                 <h3 className="text-white text-xl font-semibold">
-                  Smarter Planning, Better Results
+                  Daily Tips & Forecasts
                 </h3>
                 <p className="mt-2 text-white/60 text-sm">
-                  Save time, reduce guesswork, and increase your success rate
-                  with data-driven fishing guidance.
+                  Receive AI-driven fishing tips based on weather, tides, and
+                  marine forecasts, plus see which species are active this month
+                  so you always come prepared.
                 </p>
               </div>
 
@@ -538,11 +534,12 @@ export default function LandingPage() {
                   <Smile className="h-5 w-5 text-white/80" />
                 </div>
                 <h3 className="text-white text-xl font-semibold">
-                  Personalized Tips & Techniques
+                  Gear & Catch Insights
                 </h3>
                 <p className="mt-2 text-white/60 text-sm">
-                  Receive tailored advice on lures, bait, and methods suited to
-                  your location and fishing style.
+                  Log your catches with AI-predicted size, weight, and species.
+                  Upload your gear, and Lishka will recommend the best setup for
+                  your location and conditions.
                 </p>
               </div>
             </div>
@@ -558,11 +555,8 @@ export default function LandingPage() {
                 "flex justify-center items-center absolute rounded-full -translate-x-1/2 bg-[#0251FB] w-[200px] left-1/2 opacity-95 blur-2xl h-[30px] z-1"
               }
             />
-            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-white text-sm font-medium mb-8 backdrop-blur-md border border-white/20 shadow-lg z-10 bg-white/10">
-              <Sparkles className="h-4 w-4" />
-              <span>FAQ's</span>
-            </div>
-            <h2 className="lg:text-6xl text-white md:text-7xl leading-tight mb-4 font-[serif] text-4xl">
+
+            <h2 className="lg:text-6xl text-white md:text-7xl leading-tight mb-4 font-[serif] text-4xl z-20">
               Frequently Asked Questions
             </h2>
           </div>
@@ -574,14 +568,14 @@ export default function LandingPage() {
                 value="item-1"
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
-                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6">
-                  How do I find the best fishing spots?
+                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
+                  What is Lishka and how does it help me fish better?
                 </AccordionTrigger>
-                <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
-                  Lishka uses AI to analyze weather patterns, water conditions,
-                  and historical data to recommend the most promising fishing
-                  locations near you. Simply open the app and check our spot
-                  predictions.
+                <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed text-left">
+                  Lishka is an AI-powered fishing app that gives you real-time
+                  insights on fish species, forecasts, sonar, and gear. It helps
+                  you plan smarter trips, catch more fish, and spend less time
+                  guessing.
                 </AccordionContent>
               </AccordionItem>
 
@@ -590,12 +584,12 @@ export default function LandingPage() {
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
                 <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
-                  Can I customize my fishing preferences?
+                  Can I search for any fish species in the app?
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
-                  Yes! You can set your preferred fish species, fishing methods,
-                  and experience level. Lishka will tailor recommendations
-                  specifically to your preferences and local conditions.
+                  Yes! You can search for any fish and instantly get details
+                  like the best fishing methods, recommended gear, and even
+                  safety information if the fish is toxic in your area.
                 </AccordionContent>
               </AccordionItem>
 
@@ -604,12 +598,12 @@ export default function LandingPage() {
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
                 <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
-                  Is Lishka available on all devices?
+                  Does Lishka give weather and marine forecasts?
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
-                  Lishka is available on iOS and Android devices. We're also
-                  working on a web version to make our fishing insights
-                  accessible from any device.
+                  Definitely. You’ll get detailed weather and marine forecasts,
+                  plus daily tips tailored to current conditions so you always
+                  know when and where to fish.
                 </AccordionContent>
               </AccordionItem>
 
@@ -618,12 +612,13 @@ export default function LandingPage() {
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
                 <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
-                  What weather conditions does Lishka track?
+                  How does the AI assistant work?
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
-                  We monitor temperature, barometric pressure, wind speed and
-                  direction, precipitation, moon phases, and water conditions to
-                  provide the most accurate fishing predictions.
+                  Think of it as your fishing buddy on demand. You can ask any
+                  fishing-related question, upload fish photos for instant ID,
+                  or even share sonar images for help with interpretation and
+                  optimisation.
                 </AccordionContent>
               </AccordionItem>
 
@@ -632,13 +627,12 @@ export default function LandingPage() {
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
                 <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
-                  How does the AI prediction system work?
+                  Can the app tell me which fish are active right now?
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
-                  Our AI analyzes millions of data points including weather
-                  patterns, fish behavior studies, seasonal trends, and user
-                  catch reports to predict the best fishing opportunities in
-                  real-time.
+                  Yes. Lishka shows you the active fish for the specific month
+                  in your location, so you know what to expect and can prepare
+                  the right gear.
                 </AccordionContent>
               </AccordionItem>
 
@@ -647,12 +641,13 @@ export default function LandingPage() {
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
                 <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
-                  Can I share my catches with other anglers?
+                  What happens when I log my catches?
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
-                  Absolutely! Share your catches, fishing spots, and tips with
-                  the Lishka community. Your contributions help improve our AI
-                  predictions for everyone.
+                  When you upload a catch, Lishka’s AI predicts the size,
+                  weight, and species. Over time, your profile becomes a
+                  personal fishing log with insights into your progress and
+                  habits.
                 </AccordionContent>
               </AccordionItem>
 
@@ -661,12 +656,30 @@ export default function LandingPage() {
                 className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
               >
                 <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
-                  What should I do if I encounter technical issues?
+                  How does Lishka help with my fishing gear?
                 </AccordionTrigger>
                 <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
-                  Contact our support team through the app's help section or
-                  email us at support@lishka.com. We're here to help you get
-                  back to fishing as quickly as possible.
+                  You can upload your gear into the app, and Lishka will analyse
+                  it. Based on your location, weather, and target fish, the AI
+                  recommends which gear setup gives you the best chance of
+                  success.
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem
+                value="item-8"
+                className="bg-white/5 border border-white/10 rounded-2xl px-6 py-2 hover:bg-white/10 transition-colors"
+              >
+                <AccordionTrigger className="text-white text-lg font-medium hover:no-underline py-6 text-left">
+                  Are there any upcoming features I should know about?
+                </AccordionTrigger>
+                <AccordionContent className="text-white/70 pb-6 text-base leading-relaxed">
+                  Yes! We’re actively building new tools to make Lishka even
+                  smarter. Soon you’ll get an AR camera for accurate fish size
+                  readings, bathymetric data for precise location predictions, a
+                  chat section with safety tracking, and community-based
+                  achievements to level up your fishing experience. And that’s
+                  just the start.
                 </AccordionContent>
               </AccordionItem>
             </Accordion>
@@ -716,24 +729,22 @@ export default function LandingPage() {
                 "md:text-7xl text-white mb-8 leading-tight text-center lg:text-7xl font-[serif] opacity-90 rem] text-4xl"
               }
             >
-              View Lishka App and Start
-              <br />
-              <span className={"italic"}>Fishing Today Time</span>
+              Join Lishka <span className={"italic"}>Today</span>
             </h1>
             <p
               className={
                 "mx-auto leading-relaxed text-gray-300 font-light md:text-lg mb-10 text-center w-4/5 text-base"
               }
             >
-              Get AI-powered insights on the best spots, times, and
-              techniques—so you spend less time guessing and more time catching.
+              Create your free account and unlock AI-powered fishing insights,
+              smarter planning, and your personal fishing log.
             </p>
             <button
               className={
                 "bg-[#0251FB] hover:bg-blue-600 text-white px-8 py-4 rounded-full font-medium transition-all duration-300 transform shadow-lg mx-auto hover:shadow-[0_0_20px_rgba(2,81,251,0.6),0_0_40px_rgba(2,81,251,0.4),0_0_60px_rgba(2,81,251,0.2)] hover:scale-105 text-base lg:text-xl"
               }
             >
-              Sign up
+              Create free account
             </button>
           </div>
         </div>
@@ -752,11 +763,6 @@ export default function LandingPage() {
         </video>
       </div>
       <div className="w-full flex flex-col px-5 md:px-10 items-center bg-black border-t border-white/20 z-5 justify-start gap-y-[40px] py-20">
-        <div
-          className={
-            "flex justify-center items-center absolute rounded-full left-1/2 -translate-x-1/2 opacity-35 bg-[#0251FB] top-[3877px] blur-sm w-full h-[6px]"
-          }
-        />
         <div className="w-full bg-transparent flex justify-center items-center h-[fit] flex-col gap-y-6">
           <img
             src={"/logo-dark.svg"}
@@ -765,11 +771,12 @@ export default function LandingPage() {
           />
           <p
             className={
-              "text-gray-300 mx-auto leading-relaxed justify-center items-start text-center mb-4 max-w-xl font-extralight text-base md:text-base"
+              "text-gray-300 mx-auto leading-relaxed justify-center items-start text-center mb-4 font-extralight text-base md:text-base max-w-2xl"
             }
           >
-            Get AI-powered insights on the best spots, times, and techniques—so
-            you spend less time guessing and more time catching.
+            Built for anglers, powered by AI. Lishka helps you fish smarter,
+            safer, and together. ”From beginner to builder, I made Lishka to be
+            the fishing companion I always needed.”
           </p>
           <div
             className={
@@ -805,7 +812,7 @@ export default function LandingPage() {
                 "text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-light"
               }
             >
-              Pricing
+              Log In
             </span>
           </div>
         </div>
@@ -814,15 +821,14 @@ export default function LandingPage() {
           <div className="text-white/60 text-sm">© 2025 Lishka App</div>
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center transition-colors cursor-pointer hover:bg-[#0251FB]">
-                <Linkedin className="w-5 h-5 text-white/80" />
-              </div>
-              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center transition-colors cursor-pointer hover:bg-[#0251FB]">
-                <Twitter className="w-5 h-5 text-white/80" />
-              </div>
-              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center transition-colors cursor-pointer hover:bg-[#0251FB]">
+              <a
+                href="https://www.instagram.com/lishka.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center transition-colors cursor-pointer hover:bg-[#0251FB]"
+              >
                 <Instagram className="w-5 h-5 text-white/80" />
-              </div>
+              </a>
             </div>
           </div>
           <div className="text-white/60 text-sm hover:text-white/80 transition-colors cursor-pointer">
