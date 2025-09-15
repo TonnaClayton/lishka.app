@@ -27,43 +27,53 @@ import { ROUTES } from "@/lib/routing";
 
 const fishImages = [
   {
-    image: "/images/Fish-1.png",
+    image:
+      "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/Fish-1.png",
     alt: "Blue fish underwater",
   },
   {
-    image: "/images/Fish-2.png",
+    image:
+      "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/Fish-2.png",
     alt: "Colorful tropical fish",
   },
   {
-    image: "/images/Fish-3.png",
+    image:
+      "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/Fish-3.png",
     alt: "Ocean coral reef",
   },
   {
-    image: "/images/Fish-4.png",
+    image:
+      "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/Fish-4.png",
     alt: "Sea turtle swimming",
   },
   {
-    image: "/images/Fish-5.png",
+    image:
+      "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/Fish-5.png",
     alt: "Jellyfish floating",
   },
   {
-    image: "/images/Fish-1.png",
+    image:
+      "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/Fish-1.png",
     alt: "Blue fish underwater",
   },
   {
-    image: "/images/Fish-2.png",
+    image:
+      "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/Fish-2.png",
     alt: "Colorful tropical fish",
   },
   {
-    image: "/images/Fish-3.png",
+    image:
+      "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/Fish-3.png",
     alt: "Ocean coral reef",
   },
   {
-    image: "/images/Fish-4.png",
+    image:
+      "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/Fish-4.png",
     alt: "Sea turtle swimming",
   },
   {
-    image: "/images/Fish-5.png",
+    image:
+      "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/Fish-5.png",
     alt: "Jellyfish floating",
   },
 ];
