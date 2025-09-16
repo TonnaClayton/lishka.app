@@ -11,7 +11,7 @@ import React, {
 import { useAuth } from "@/contexts/auth-context";
 import { useStream } from "@/hooks/use-stream";
 import { useClassifyPhoto } from "@/hooks/queries";
-import { log } from "@/lib/logging";
+import { log, error as errorLog } from "@/lib/logging";
 
 // Constants for timeout values and configuration
 const UPLOAD_TIMEOUTS = {
@@ -59,7 +59,7 @@ function isValidUploadPhotoStreamData(
 // Upload queue item type
 type UploadQueueItem = {
   id: string;
-  file: File;
+  files: File[];
   type: "photo" | "gear";
   retryCount: number;
   timestamp: number;
@@ -74,6 +74,9 @@ type UploadError = {
 };
 
 interface UploadContextType {
+  // Total gear items uploading
+  totalGearItemsUploading?: number;
+
   // Photo upload state
   uploadPhotoStreamData: UploadPhotoStreamData | null;
 
@@ -99,7 +102,7 @@ interface UploadContextType {
 
   // Methods
   handlePhotoUpload: (
-    file: File,
+    file: File[],
     options?: {
       type: "photo" | "gear";
     },
@@ -139,6 +142,12 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
   const [showUploadedInfoMsg, setShowUploadedInfoMsg] = useState(false);
   const [uploadedInfoMsg, setUploadedInfoMsg] = useState<string | null>(null);
   const [classifyingImage, setClassifyingImage] = useState(false);
+  const [totalGearItemsUploading, setTotalGearItemsUploading] = useState<
+    number | undefined
+  >(undefined);
+  const [totalPhotosUploading, setTotalPhotosUploading] = useState<
+    number | undefined
+  >(undefined);
 
   // Error and queue state
   const [uploadError, setUploadError] = useState<UploadError | null>(null);
@@ -159,9 +168,11 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
   });
 
   // Helper function to create FormData
-  const createFormData = useCallback((file: File): FormData => {
+  const createFormData = useCallback((files: File[]): FormData => {
     const formData = new FormData();
-    formData.append("file", file);
+    files.forEach((file) => {
+      formData.append("file", file);
+    });
     return formData;
   }, []);
 
@@ -250,6 +261,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
         timeoutRefs.current.autoHide = setTimeout(() => {
           setShowUploadedInfoMsg(false);
           setUploadedInfoMsg(null);
+          setTotalPhotosUploading(undefined);
           timeoutRefs.current.autoHide = null;
         }, UPLOAD_TIMEOUTS.AUTO_HIDE);
       }, UPLOAD_TIMEOUTS.MESSAGE_DELAY);
@@ -316,6 +328,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
         setShowUploadedInfoMsg(false);
         setUploadedInfoMsg(null);
         setIdentifyGearMessage(null);
+        setTotalGearItemsUploading(undefined);
         timeoutRefs.current.autoHide = null;
       }, UPLOAD_TIMEOUTS.AUTO_HIDE);
     }, UPLOAD_TIMEOUTS.MESSAGE_DELAY);
@@ -323,11 +336,11 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
 
   // Queue management functions
   const addToQueue = useCallback(
-    (file: File, type: "photo" | "gear"): string => {
+    (files: File[], type: "photo" | "gear"): string => {
       const id = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
       const queueItem: UploadQueueItem = {
         id,
-        file,
+        files,
         type,
         retryCount: 0,
         timestamp: Date.now(),
@@ -356,15 +369,19 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
 
   // Core upload logic with proper locking
   const executeUpload = useCallback(
-    async (file: File, type: "photo" | "gear") => {
+    async (files: File[], type: "photo" | "gear") => {
       setIsUploadLocked(true);
       clearError();
 
       try {
-        const formData = createFormData(file);
+        const formData = createFormData(files);
 
         if (type === "gear") {
           uploadGearItemStream.startStream({
+            path:
+              files.length > 1
+                ? "user/gear-items/batch-stream"
+                : "user/gear-items/stream",
             options: {
               method: "POST",
               body: formData,
@@ -423,7 +440,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       // Wait before retrying
       timeoutRefs.current.retry = setTimeout(async () => {
         try {
-          await executeUpload(queueItem.file, queueItem.type);
+          await executeUpload(queueItem.files, queueItem.type);
           removeFromQueue(itemId);
         } catch (error) {
           console.error("[UPLOAD] Retry failed:", error);
@@ -448,7 +465,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
 
   const handlePhotoUpload = useCallback(
     async (
-      file: File,
+      files: File[],
       options?: {
         type: "photo" | "gear";
       },
@@ -461,23 +478,33 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
         return;
       }
 
+      log("[UPLOAD] Starting upload:", {
+        files,
+        options,
+      });
+
+      let filesTypes: ("photo" | "gear")[] = [];
+
       try {
-        let imageType: "photo" | "gear";
-
-        log("[UPLOAD] Uploading photo", {
-          file: file.name,
-          size: file.size,
-          type: file.type,
-          options,
-        });
-
         // if (!options) {
         setClassifyingImage(true);
         clearError();
 
         try {
-          const classification = await classifyPhotoMutation.mutateAsync(file);
-          imageType = classification.type as "photo" | "gear";
+          const classificationPromises = files.map(async (file) => {
+            const classification =
+              await classifyPhotoMutation.mutateAsync(file);
+            return classification.type as "photo" | "gear";
+          });
+
+          const classifications = await Promise.allSettled(
+            classificationPromises,
+          );
+          filesTypes = classifications.map((classification) =>
+            classification.status === "fulfilled"
+              ? (classification.value as "photo" | "gear")
+              : "photo",
+          );
         } catch (classificationError: any) {
           setClassifyingImage(false);
           setError("Failed to classify image", "classification", true);
@@ -491,21 +518,46 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
         // } else {
         //   imageType = options.type;
         // }
+      } catch {
+        //
+      }
 
-        // Add to queue for tracking
-        const queueId = addToQueue(file, imageType);
+      try {
+        // Separate files by type
+        const gearFiles = files.filter(
+          (file, index) => filesTypes[index] === "gear",
+        );
+        const photoFiles = files.filter(
+          (file, index) => filesTypes[index] === "photo",
+        );
 
-        // eslint-disable-next-line no-useless-catch
-        try {
-          await executeUpload(file, imageType);
-          // Remove from queue on successful start (not completion)
-          removeFromQueue(queueId);
-        } catch (uploadError) {
-          // Keep in queue for potential retry
-          throw uploadError;
+        // Process gear files if any
+        if (gearFiles.length > 0) {
+          const gearQueueId = addToQueue(gearFiles, "gear");
+          // eslint-disable-next-line no-useless-catch
+          try {
+            setTotalGearItemsUploading(gearFiles.length);
+            await executeUpload(gearFiles, "gear");
+            removeFromQueue(gearQueueId);
+          } catch (uploadError) {
+            throw uploadError;
+          }
+        }
+
+        // Process photo files if any
+        if (photoFiles.length > 0) {
+          const photoQueueId = addToQueue(photoFiles, "photo");
+          // eslint-disable-next-line no-useless-catch
+          try {
+            setTotalPhotosUploading(photoFiles.length);
+            await executeUpload(photoFiles, "photo");
+            removeFromQueue(photoQueueId);
+          } catch (uploadError) {
+            throw uploadError;
+          }
         }
       } catch (error: any) {
-        console.error("❌ [UPLOAD] Smart upload failed:", error);
+        errorLog("❌ [UPLOAD] Smart upload failed:", error);
         setClassifyingImage(false);
         setIsUploadLocked(false);
 
@@ -528,8 +580,12 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       setError,
       addToQueue,
       executeUpload,
+      totalGearItemsUploading,
+      setTotalGearItemsUploading,
       removeFromQueue,
       uploadError,
+      totalPhotosUploading,
+      setTotalPhotosUploading,
     ],
   );
 
@@ -571,6 +627,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       clearError,
       uploadQueue,
       queueSize,
+      totalGearItemsUploading,
       handlePhotoUpload,
       retryUpload,
       cancelUpload,
@@ -585,6 +642,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       uploadedInfoMsg,
       classifyingImage,
       isUploading,
+      totalGearItemsUploading,
       uploadError,
       clearError,
       uploadQueue,
@@ -594,6 +652,8 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       cancelUpload,
       clearQueue,
       closeUploadedInfoMsg,
+      totalPhotosUploading,
+      setTotalPhotosUploading,
     ],
   );
 
