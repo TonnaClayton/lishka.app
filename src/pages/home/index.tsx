@@ -405,7 +405,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                           <p className="">Loading...</p>
                         </div>
                       ) : (
-                        "Load More Fish"
+                        "Load more fish"
                       )}
                     </Button>
                   </div>
