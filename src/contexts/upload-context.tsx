@@ -485,42 +485,43 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
 
       let filesTypes: ("photo" | "gear")[] = [];
 
+      // if (!options) {
+      setClassifyingImage(true);
+      clearError();
+
       try {
-        // if (!options) {
-        setClassifyingImage(true);
-        clearError();
+        const classificationPromises = files.map(async (file) => {
+          if (file.size > 15 * 1024 * 1024) {
+            throw new Error(`Photo must be less than 15MB`);
+          }
 
-        try {
-          const classificationPromises = files.map(async (file) => {
-            const classification =
-              await classifyPhotoMutation.mutateAsync(file);
-            return classification.type as "photo" | "gear";
-          });
+          if (!file.type.startsWith("image/")) {
+            throw new Error("Please select an image file");
+          }
 
-          const classifications = await Promise.allSettled(
-            classificationPromises,
-          );
-          filesTypes = classifications.map((classification) =>
-            classification.status === "fulfilled"
-              ? (classification.value as "photo" | "gear")
-              : "photo",
-          );
-        } catch (classificationError: any) {
-          setClassifyingImage(false);
-          setError("Failed to classify image", "classification", true);
-          throw new Error(
-            classificationError?.message ||
-              "Failed to classify image. Please try again.",
-          );
-        }
+          const classification = await classifyPhotoMutation.mutateAsync(file);
+          return classification.type as "photo" | "gear";
+        });
 
-        setClassifyingImage(false);
-        // } else {
-        //   imageType = options.type;
-        // }
+        const classifications = await Promise.allSettled(
+          classificationPromises,
+        );
+        filesTypes = classifications.map((classification) =>
+          classification.status === "fulfilled"
+            ? (classification.value as "photo" | "gear")
+            : "photo",
+        );
       } catch {
-        //
+        setClassifyingImage(false);
+        setError("Failed to classify image", "classification", true);
+
+        // throw new Error(
+        //   classificationError?.message ||
+        //     "Failed to classify image. Please try again."
+        // );
       }
+
+      setClassifyingImage(false);
 
       try {
         // Separate files by type
