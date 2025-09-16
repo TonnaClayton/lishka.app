@@ -879,6 +879,15 @@ export default function LandingPage() {
           muted
           loop
           playsInline
+          preload="auto"
+          disablePictureInPicture
+          onLoadedData={(e) => {
+            const video = e.currentTarget;
+            video.play().catch(() => {
+              // Fallback: Try to play again after a short delay
+              setTimeout(() => video.play().catch(() => {}), 100);
+            });
+          }}
         >
           <source
             src="https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/Fish.mp4"
