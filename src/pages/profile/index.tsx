@@ -1202,6 +1202,7 @@ export default function ProfilePage() {
                   const gearInput = document.createElement("input");
                   gearInput.type = "file";
                   gearInput.accept = "image/*";
+                  gearInput.multiple = true;
                   gearInput.onchange = (e) => handleGearUpload(e as any);
                   gearInput.click();
                 }}
