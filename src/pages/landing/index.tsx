@@ -161,7 +161,7 @@ export default function LandingPage() {
   };
   return (
     <div className="flex-1 flex-col h-full w-full overflow-y-auto bg-black">
-      <div className="relative w-full flex flex-col overflow-hidden h-[1000px] md:h-[1024px]">
+      <div className="relative w-full flex flex-col overflow-hidden h-[1000px] md:h-[1056px]">
         {/* Animated Particles */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none z-5">
           <div className="particle particle-1"></div>
@@ -804,7 +804,7 @@ export default function LandingPage() {
           ))}
         </div>
       </div>
-      <div className="w-full relative z-10 overflow-hidden h-[800px] bg-black border-white/40 border-t lg:rounded-tl-[100px] rounded-tl-[40px] lg:rounded-tr-[100px] rounded-tr-[40px]">
+      <div className="w-full relative z-10 overflow-hidden md:-mt-10 h-[600px] sm:h-[800px] bg-black border-white/40 border-t lg:rounded-tl-[100px] rounded-tl-[40px] lg:rounded-tr-[100px] rounded-tr-[40px]">
         <div className="z-50  absolute h-full w-full">
           <div className="max-w-4xl mx-auto flex h-full justify-center items-center flex-col">
             <h1
@@ -849,7 +849,7 @@ export default function LandingPage() {
           }}
         >
           <source
-            src="https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/Fish.mp4"
+            src="https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/landing-page-footer-video.mp4"
             type="video/mp4"
           />
           Your browser does not support the video tag.
