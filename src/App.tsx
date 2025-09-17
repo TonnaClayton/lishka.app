@@ -27,6 +27,7 @@ import { cn } from "./lib/utils";
 import { ROUTES } from "./lib/routing";
 import ErrorBoundary from "./components/error-boundary";
 import LandingPage from "./pages/landing";
+import Page404 from "./pages/404";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./pages/home"));
@@ -69,6 +70,7 @@ const GearDatabaseDebugger = lazy(
   () => import("./components/gear-database-debugger"),
 );
 const WhatsNewPage = lazy(() => import("./components/whats-new-page"));
+const GearUploadScreen = lazy(() => import("./components/gear-upload-screen"));
 
 // Create router with future flags
 const router = createBrowserRouter(
@@ -346,12 +348,25 @@ const router = createBrowserRouter(
           ),
         },
         {
+          path: "gear-upload",
+          element: (
+            <ProtectedRoute>
+              <GearUploadScreen />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: ROUTES.WHATS_NEW,
           element: (
             <ProtectedRoute>
               <WhatsNewPage />
             </ProtectedRoute>
           ),
+        },
+        // Catch-all route for 404 errors
+        {
+          path: "*",
+          element: <Page404 />,
         },
       ],
     },
@@ -384,6 +399,8 @@ function AppContent() {
     "/home",
   ].includes(location.pathname);
 
+  const is404Page = Object.values(ROUTES).includes(location.pathname) == false;
+
   // Set initial sidebar width CSS variable and handle resize
   // useEffect(() => {
   //   const handleResize = () => {
@@ -403,7 +420,7 @@ function AppContent() {
       {/* Use flexbox layout for desktop */}
       <div className="flex w-full h-full">
         {/* Side Navigation - flex-none (fixed width) - hidden on auth pages */}
-        {!isAuthPage && (
+        {!isAuthPage && !is404Page && (
           <Suspense
             fallback={
               <div className="w-64 bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800" />
@@ -417,7 +434,7 @@ function AppContent() {
         <div
           className={cn(
             "flex-1 max-w-full h-full flex flex-col overflow-hidden",
-            !isAuthPage ? "lg:ml-[var(--sidebar-width)]" : "",
+            !isAuthPage && !is404Page ? "lg:ml-[var(--sidebar-width)]" : "",
           )}
         >
           {/* Email verification banner - only show on non-auth pages */}

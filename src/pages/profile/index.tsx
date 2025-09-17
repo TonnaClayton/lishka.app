@@ -1,39 +1,34 @@
 import React, { useState, useRef, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
 import { useUpload } from "@/contexts/upload-context";
-import { motion } from "framer-motion";
-import { ImageMetadata } from "@/lib/image-metadata";
-import ReactCrop, { Crop, PixelCrop } from "react-image-crop";
 import {
   useUpdateProfile,
   useUploadAvatar,
   useDeletePhoto,
   useUsernameValidation,
 } from "@/hooks/queries";
+import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
+import L from "leaflet";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
-  ArrowLeft,
-  Camera,
-  User,
-  Mail,
-  Edit3,
-  Save,
-  X,
-  Plus,
-  MapIcon,
-  Trophy,
-  Fish,
-  CropIcon,
-  Check,
-  Menu,
-} from "lucide-react";
-import { Badge } from "../../components/ui/badge";
+  Form,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormControl,
+  FormMessage,
+} from "@/components/ui/form";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
   Dialog,
   DialogContent,
@@ -41,31 +36,57 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { log } from "@/lib/logging";
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
-import "leaflet/dist/leaflet.css";
-import L from "leaflet";
-import BottomNav from "../../components/bottom-nav";
-import { cn } from "@/lib/utils";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
+  Plus,
+  X,
+  Save,
+  Check,
+  ArrowLeft,
+  Edit3,
+  Trophy,
+  MapPin as MapIcon,
+  Fish,
+  User,
+  Mail,
+  Camera,
+  Crop as CropIcon,
+  Menu,
+} from "lucide-react";
+import { motion } from "framer-motion";
+import ReactCrop, { Crop, PixelCrop } from "react-image-crop";
+import "react-image-crop/dist/ReactCrop.css";
+import { z } from "zod";
 import FishImageCard from "./fish-image-card";
+import BottomNav from "@/components/bottom-nav";
+import { log } from "@/lib/logging";
 import { ROUTES } from "@/lib/routing";
 import PhotoUploadBar from "./photo-upload-bar";
 import GearItemUploadBar from "./gear-item-upload-bar";
 import { toImageMetadataItem } from "@/lib/gallery-photo";
 import UploadedInfoMsg from "./uploaded-info-msg";
+
+interface ImageMetadata {
+  url: string;
+  timestamp: string;
+  fishInfo?: {
+    name: string;
+    confidence: number;
+    estimatedSize: string;
+    estimatedWeight: string;
+  };
+  location?: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  };
+}
+
+interface LocationData {
+  latitude: number;
+  longitude: number;
+  name: string;
+}
 
 // Zod schema for profile form validation
 const profileSchema = z.object({
@@ -171,7 +192,7 @@ const MapClickHandler = ({
   return null;
 };
 
-const ProfilePage: React.FC = () => {
+export default function ProfilePage() {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading } = useAuth();
 
@@ -184,6 +205,7 @@ const ProfilePage: React.FC = () => {
     isUploading,
     handlePhotoUpload,
     closeUploadedInfoMsg,
+    totalGearItemsUploading,
   } = useUpload();
 
   // React Query hooks - always call them, let React Query handle the enabled state
@@ -340,7 +362,7 @@ const ProfilePage: React.FC = () => {
 
     try {
       setLoading(true);
-      await handlePhotoUpload(file, {
+      await handlePhotoUpload([file], {
         type: "photo",
       });
       setTimeout(() => setSuccess(null), 5000);
@@ -363,13 +385,88 @@ const ProfilePage: React.FC = () => {
     }
   };
 
+  // Handle multiple gear upload
+  // const handleMultipleGearUpload = async (files: FileList) => {
+  //   const fileArray = Array.from(files).slice(0, 10); // Limit to 10 files
+  //   const totalFiles = fileArray.length;
+
+  //   if (totalFiles === 0) return;
+
+  //   setLoading(true);
+  //   setError(null);
+
+  //   let successCount = 0;
+  //   let failedCount = 0;
+  //   const results: string[] = [];
+
+  //   try {
+  //     // await handlePhotoUpload(file, {
+  //     //   type: "gear",
+  //     // }); // The context handles both photo and gear uploads
+  //     // Process files sequentially to avoid overwhelming the API
+  //     for (let i = 0; i < fileArray.length; i++) {
+  //       //const file = fileArray[i];
+
+  //       try {
+  //         // setSuccess(`Processing gear ${i + 1} of ${totalFiles}...`);
+  //         // const { metadata } = await uploadGear.mutateAsync(file);
+
+  //         // if (metadata.gearInfo && metadata.gearInfo.name !== "Unknown Gear") {
+  //         //   results.push(
+  //         //     `${metadata.gearInfo.name} (${Math.round((metadata.gearInfo.confidence || 0) * 100)}% confident)`
+  //         //   );
+  //         // } else {
+  //         //   results.push(`Gear item ${i + 1}`);
+  //         // }
+  //         successCount++;
+  //       } catch (err) {
+  //         console.error(`Failed to upload gear ${i + 1}:`, err);
+  //         failedCount++;
+  //       }
+
+  //       // Small delay between uploads to respect rate limits
+  //       if (i < fileArray.length - 1) {
+  //         await new Promise((resolve) => setTimeout(resolve, 1000));
+  //       }
+  //     }
+
+  //     // Show final results
+  //     if (successCount > 0) {
+  //       const successMsg = `Successfully uploaded ${successCount} gear item${successCount > 1 ? "s" : ""}!${results.length > 0 ? ` Identified: ${results.join(", ")}` : ""}`;
+  //       setSuccess(successMsg);
+  //     }
+
+  //     if (failedCount > 0) {
+  //       setError(
+  //         `${failedCount} gear item${failedCount > 1 ? "s" : ""} failed to upload. Please try again.`
+  //       );
+  //     }
+  //   } catch (err) {
+  //     setError(err instanceof Error ? err.message : "Failed to upload gear");
+  //   } finally {
+  //     setLoading(false);
+  //     setTimeout(() => {
+  //       setSuccess(null);
+  //       setError(null);
+  //     }, 8000);
+  //   }
+  // };
+
   // Handle gear upload
   const handleGearUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+
+    if (files.length > 10) {
+      setError("Maximum 10 gear items can be uploaded at once.");
+      setTimeout(() => setError(null), 5000);
+      return;
+    }
+
+    if (!files || files.length === 0) return;
+    const fileArray = Array.from(files).slice(0, 10); // Limit to 10 files
 
     try {
-      await handlePhotoUpload(file, {
+      await handlePhotoUpload(fileArray, {
         type: "gear",
       }); // The context handles both photo and gear uploads
     } catch (err) {
@@ -556,8 +653,12 @@ const ProfilePage: React.FC = () => {
       setError(null);
 
       // Update the photo in the array
-      const updatedPhotos = [...(profile?.gallery_photos as any)];
-      updatedPhotos[editingPhotoIndex] = editingMetadata;
+      const updatedPhotos = Array.isArray(profile?.gallery_photos)
+        ? [...(profile.gallery_photos as any)]
+        : [];
+      if (editingPhotoIndex < updatedPhotos.length) {
+        updatedPhotos[editingPhotoIndex] = editingMetadata;
+      }
 
       // Update the database
       await updateProfile.mutateAsync({ gallery_photos: updatedPhotos });
@@ -598,7 +699,9 @@ const ProfilePage: React.FC = () => {
       if (photoUrl) {
         // Add to uploaded photos list (newest first)
 
-        const prev = [...(profile?.gallery_photos as any)];
+        const prev = Array.isArray(profile?.gallery_photos)
+          ? [...(profile.gallery_photos as any)]
+          : [];
 
         const newPhoto = metadata
           ? { ...metadata, url: photoUrl, cacheBuster: Date.now() }
@@ -633,7 +736,15 @@ const ProfilePage: React.FC = () => {
   }, [user?.id]);
 
   const handleEditAIInfo = (index: number) => {
-    const photo = (profile?.gallery_photos as any)[index];
+    if (
+      !profile?.gallery_photos ||
+      !Array.isArray(profile.gallery_photos) ||
+      index >= profile.gallery_photos.length
+    ) {
+      setError("Photo not found");
+      return;
+    }
+    const photo = (profile.gallery_photos as any)[index];
     let metadata: ImageMetadata | null = null;
 
     // Simplified extraction - all photos should be ImageMetadata objects now
@@ -878,7 +989,10 @@ const ProfilePage: React.FC = () => {
       </header>
 
       <PhotoUploadBar uploadPhotoStreamData={uploadPhotoStreamData} />
-      <GearItemUploadBar uploadGearItemStreamData={uploadGearItemStreamData} />
+      <GearItemUploadBar
+        totalGearItemsUploading={totalGearItemsUploading}
+        uploadGearItemStreamData={uploadGearItemStreamData}
+      />
       {showUploadedInfoMsg && uploadedInfoMsg && (
         <UploadedInfoMsg
           message={uploadedInfoMsg}
@@ -1084,7 +1198,9 @@ const ProfilePage: React.FC = () => {
                 className={cn(
                   "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-10 flex items-center justify-center gap-2 rounded-[8px]",
                 )}
-                style={{ backgroundColor: "#0251FB0D" }}
+                style={{ backgroundColor: "#025DFB0D" }}
+                //onClick={() => navigate("/gear-upload")}
+                // style={{ backgroundColor: "#0251FB0D" }}
                 onClick={() => {
                   if (isUploading || classifyingImage) {
                     return;
@@ -1094,11 +1210,12 @@ const ProfilePage: React.FC = () => {
                   const gearInput = document.createElement("input");
                   gearInput.type = "file";
                   gearInput.accept = "image/*";
+                  gearInput.multiple = true;
                   gearInput.onchange = (e) => handleGearUpload(e as any);
                   gearInput.click();
                 }}
               >
-                Add gear
+                {loading ? "Processing..." : "Add gear"}
                 <Plus className="w-5 h-5" />
               </Button>
             </div>
@@ -1319,6 +1436,7 @@ const ProfilePage: React.FC = () => {
               ref={gearInputRef}
               type="file"
               accept="image/*"
+              multiple
               onChange={handleGearUpload}
               className="hidden"
               disabled={isUploading || classifyingImage}
@@ -1398,7 +1516,6 @@ const ProfilePage: React.FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-
       {/* Edit AI Info Dialog */}
       <Dialog open={showEditAIDialog} onOpenChange={setShowEditAIDialog}>
         <DialogContent className="sm:max-w-[425px] w-[95%] mx-auto rounded-lg max-h-[90vh] overflow-y-auto [&>button]:hidden">
@@ -1620,6 +1737,4 @@ const ProfilePage: React.FC = () => {
       </Dialog>
     </div>
   );
-};
-
-export default ProfilePage;
+}
