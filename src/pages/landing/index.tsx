@@ -366,7 +366,7 @@ export default function LandingPage() {
         </div>
 
         {/* Main hero content */}
-        <div className="w-full flex flex-col items-center text-center px-8 relative bg-transparent h-1/2 justify-start pt-[26px] md:py-[64px]">
+        <div className="w-full flex flex-col items-center text-center px-8 relative bg-transparent h-1/2 justify-start md:py-[64px]">
           <div className="relative z-10 max-w-4xl mx-auto">
             <h1 className="md:text-7xl text-white leading-tight font-[serif] mb-6 text-6xl">
               Your AI Fishing
