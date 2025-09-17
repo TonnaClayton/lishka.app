@@ -68,6 +68,7 @@ const GearDatabaseDebugger = lazy(
   () => import("./components/gear-database-debugger"),
 );
 const WhatsNewPage = lazy(() => import("./components/whats-new-page"));
+const GearUploadScreen = lazy(() => import("./components/gear-upload-screen"));
 
 // Create router with future flags
 const router = createBrowserRouter(
@@ -337,6 +338,14 @@ const router = createBrowserRouter(
               <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4">
                 <GearDatabaseDebugger />
               </div>
+            </ProtectedRoute>
+          ),
+        },
+        {
+          path: "gear-upload",
+          element: (
+            <ProtectedRoute>
+              <GearUploadScreen />
             </ProtectedRoute>
           ),
         },

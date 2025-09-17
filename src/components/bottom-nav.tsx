@@ -35,6 +35,7 @@ const BottomNav: React.FC = () => {
     uploadedInfoMsg,
     classifyingImage,
     isUploading,
+    totalGearItemsUploading,
     handlePhotoUpload,
     closeUploadedInfoMsg,
   } = useUpload();
@@ -58,11 +59,10 @@ const BottomNav: React.FC = () => {
       return;
     }
 
-    const file = e.target.files?.[0];
-    if (!file) return;
-
+    const file = e.target.files;
+    const fileArray = Array.from(file);
     try {
-      await handlePhotoUpload(file);
+      await handlePhotoUpload(fileArray);
     } catch (error: any) {
       console.error("❌ [BOTTOMNAV] Smart upload failed:", error);
       alert(error?.message || "Failed to process photo. Please try again.");
@@ -81,6 +81,7 @@ const BottomNav: React.FC = () => {
       <GearItemUploadBar
         className="z-[60] top-[58px] absolute md:hidden"
         uploadGearItemStreamData={uploadGearItemStreamData}
+        totalGearItemsUploading={totalGearItemsUploading}
       />
       {showUploadedInfoMsg && uploadedInfoMsg && (
         <UploadedInfoMsg

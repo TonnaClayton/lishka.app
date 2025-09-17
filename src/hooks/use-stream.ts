@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { apiStreamed } from "./queries/api";
 
 interface StartStreamOptions {
+  path?: string;
   options?: RequestInit;
   isFormData?: boolean;
   enabled?: boolean;
@@ -54,7 +55,7 @@ export const useStream = ({
         abortControllerRef.current = new AbortController();
 
         const stream = await apiStreamed(
-          path,
+          payload.path || path,
           {
             ...(payload.options || options),
             signal: abortControllerRef.current.signal,

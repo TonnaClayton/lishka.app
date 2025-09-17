@@ -4,19 +4,17 @@ import {
   UploadStepStatus,
 } from "@/contexts/upload-context";
 import { cn } from "@/lib/utils";
+import { useMemo } from "react";
 
 export default function GearItemUploadBar({
   uploadGearItemStreamData,
-
+  totalGearItemsUploading,
   className,
 }: {
+  totalGearItemsUploading?: number;
   uploadGearItemStreamData: UploadPhotoStreamData | null;
   className?: string;
 }) {
-  if (uploadGearItemStreamData == null) {
-    return null;
-  }
-
   const getStepIcon = (step: UploadStepStatus) => {
     if (step === UploadStepStatus.COMPLETED) {
       return <CheckIcon className="w-5 h-5 text-white" />;
@@ -30,6 +28,18 @@ export default function GearItemUploadBar({
     }
     return null;
   };
+
+  const analyzingText = useMemo(() => {
+    if (totalGearItemsUploading && totalGearItemsUploading > 1) {
+      return `AI Analyzing ${totalGearItemsUploading} Photos`;
+    }
+
+    return "AI Analyzing Photo";
+  }, [totalGearItemsUploading]);
+
+  if (uploadGearItemStreamData == null) {
+    return null;
+  }
 
   return (
     <div
@@ -46,7 +56,7 @@ export default function GearItemUploadBar({
         )}
       >
         <p className="leading-snug text-white text-sm md:text-base">
-          AI Analyzing Photo
+          {analyzingText}
         </p>
         {getStepIcon(uploadGearItemStreamData.data.analyzing)}
       </div>
