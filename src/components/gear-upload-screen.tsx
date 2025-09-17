@@ -155,7 +155,7 @@ export default function GearUploadScreen() {
           // Use the upload context to handle gear uploads
           // The context will handle streaming and provide real-time updates
           // Stream completion will be monitored by the useEffect
-          await handlePhotoUpload(file);
+          await handlePhotoUpload([file], { type: "gear" });
         } catch (err) {
           console.error(`Failed to upload gear ${i + 1}:`, err);
           failedCount++;

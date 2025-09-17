@@ -59,8 +59,16 @@ const BottomNav: React.FC = () => {
       return;
     }
 
-    const file = e.target.files;
-    const fileArray = Array.from(file);
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (files.length > 10) {
+      alert("Maximum 10 gear items can be uploaded at once.");
+      return;
+    }
+
+    const fileArray = Array.from(files).slice(0, 10); // Limit to 10 files
+
     try {
       await handlePhotoUpload(fileArray);
     } catch (error: any) {

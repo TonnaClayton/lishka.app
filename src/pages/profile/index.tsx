@@ -455,8 +455,16 @@ export default function ProfilePage() {
   // Handle gear upload
   const handleGearUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
+
+    if (files.length > 10) {
+      setError("Maximum 10 gear items can be uploaded at once.");
+      setTimeout(() => setError(null), 5000);
+      return;
+    }
+
     if (!files || files.length === 0) return;
-    const fileArray = Array.from(files);
+    const fileArray = Array.from(files).slice(0, 10); // Limit to 10 files
+
     try {
       await handlePhotoUpload(fileArray, {
         type: "gear",
