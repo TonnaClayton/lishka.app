@@ -916,7 +916,7 @@ export default function LandingPage() {
             </Link>
           </div>
         </div>
-        <div className="flex justify-center items-center flex-col gap-y-4 h-px bg-white opacity-10 w-3/5"></div>
+        <div className="flex justify-center items-center flex-col gap-y-4 h-px bg-white opacity-10 md:w-3/5 w-full"></div>
         <div className="flex justify-between items-center py-0 w-full lg:w-3/5">
           <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-0">
             <div className="text-white/60 text-sm">© 2025 Lishka App</div>
