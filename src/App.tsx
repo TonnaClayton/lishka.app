@@ -26,6 +26,7 @@ import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { cn } from "./lib/utils";
 import { ROUTES } from "./lib/routing";
 import ErrorBoundary from "./components/error-boundary";
+import LandingPage from "./pages/landing";
 import Page404 from "./pages/404";
 
 // Lazy load heavy components for better initial loading performance
@@ -81,6 +82,10 @@ const router = createBrowserRouter(
       element: <AppWithAuth />,
       children: [
         // Public routes
+        {
+          path: "/home",
+          element: <LandingPage />,
+        },
         {
           path: ROUTES.LOGIN,
           element: (
@@ -391,6 +396,7 @@ function AppContent() {
     ROUTES.FORGOT_PASSWORD,
     ROUTES.LOGIN_EMAIL,
     ROUTES.RESET_PASSWORD,
+    "/home",
   ].includes(location.pathname);
 
   const is404Page = Object.values(ROUTES).includes(location.pathname) == false;
