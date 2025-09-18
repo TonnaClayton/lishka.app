@@ -82,23 +82,23 @@ const mobileAppScreenshots = [
   {
     src: "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250910T125011482Z.png",
     alt: "Mobile App Screenshot 1",
-    width: 1296,
-    height: 2661,
-    heightClass: "md:h-4/5",
+    width: 1335,
+    height: 2715,
+    heightClass: "md:h-[60%] xl:h-[85%]",
   },
   {
     src: "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250910T124322811Z.png",
     alt: "Mobile App Screenshot 2",
     width: 1335,
     height: 2715,
-    heightClass: "md:h-full",
+    heightClass: "md:h-[70%] lg:h-[80%] xl:h-[90%] 2xl:h-[100%]",
   },
   {
     src: "https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/tempo-image-20250910T124940011Z.png",
     alt: "Mobile App Screenshot 3",
     width: 1335,
     height: 2715,
-    heightClass: "md:h-4/5",
+    heightClass: "md:h-[60%] xl:h-[85%]",
   },
 ];
 
@@ -368,7 +368,7 @@ export default function LandingPage() {
         {/* Main hero content */}
         <div className="w-full flex flex-col items-center text-center px-8 relative bg-transparent h-1/2 justify-start md:py-[64px]">
           <div className="relative z-10 max-w-4xl mx-auto">
-            <h1 className="md:text-7xl text-white leading-tight font-[serif] mb-6 text-6xl">
+            <h1 className="md:text-7xl text-white  font-[serif] mb-6 text-6xl">
               Your AI Fishing
               <br />
               <span className="italic">Companion</span>
@@ -637,7 +637,7 @@ export default function LandingPage() {
               }
             />
 
-            <h2 className="text-6xl text-white md:text-7xl leading-tight mb-4 font-[serif]">
+            <h2 className="text-6xl text-white md:text-7xl  mb-4 font-[serif]">
               Discover Lishka's <span className="italic">Edge</span>
             </h2>
             <p className="mx-auto text-[#D1D5DB] mb-12 max-w-3xl leading-relaxed font-normal text-xl xl:text-lg">
@@ -729,7 +729,7 @@ export default function LandingPage() {
               }
             />
 
-            <h2 className="text-6xl text-white md:text-7xl leading-tight mb-4 font-[serif] z-20">
+            <h2 className="text-6xl text-white md:text-7xl mb-4 font-[serif] z-20">
               Frequently Asked <span className="italic">Questions</span>
             </h2>
           </div>
@@ -787,11 +787,14 @@ export default function LandingPage() {
         </div>
 
         {/* Desktop Layout (hidden on mobile) */}
-        <div className="hidden md:flex items-center md:items-end justify-center px-5 md:px-[120px] gap-5 md:gap-x-5 md:py-0 h-full">
+        <div className="hidden md:flex items-end justify-center px-10 gap-5 md:gap-x-5 h-[600px] 2xl:h-[690px] 2xl:-mt-10 overflow-hidden">
           {mobileAppScreenshots.map((screenshot, index) => (
             <div
               key={index}
-              className={`w-full mx-auto h-auto ${screenshot.heightClass}`}
+              className={cn(
+                `w-full mx-auto h-auto overflow-hidden`,
+                screenshot.heightClass,
+              )}
             >
               <img
                 src={screenshot.src}
@@ -804,12 +807,12 @@ export default function LandingPage() {
           ))}
         </div>
       </div>
-      <div className="w-full relative z-10 overflow-hidden md:-mt-10 h-[600px] sm:h-[800px] bg-black border-white/40 border-t lg:rounded-tl-[100px] rounded-tl-[40px] lg:rounded-tr-[100px] rounded-tr-[40px]">
+      <div className="w-full relative z-10 overflow-hidden -mt-10 h-[600px] sm:h-[800px] bg-black border-white/40 border-t lg:rounded-tl-[100px] rounded-tl-[40px] lg:rounded-tr-[100px] rounded-tr-[40px]">
         <div className="z-50  absolute h-full w-full">
           <div className="max-w-4xl mx-auto flex h-full justify-center items-center flex-col">
             <h1
               className={
-                "md:text-7xl text-white mb-8 leading-tight text-center font-[serif] opacity-90 text-6xl"
+                "md:text-7xl text-white mb-8  text-center font-[serif] opacity-90 text-6xl"
               }
             >
               Join Lishka <span className={"italic"}>Today</span>
