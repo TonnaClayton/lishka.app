@@ -286,8 +286,8 @@ const GearRecommendationWidget: React.FC = () => {
 
                 return (
                   <div
-                    key={`${gear.id}-${index}`}
-                    className="overflow-hidden flex flex-col h-full border-0 shadow bg-white dark:bg-gray-800 rounded-xl flex-shrink-0 w-[280px] relative cursor-pointer hover:shadow-lg transition-shadow"
+                    key={index}
+                    className="overflow-hidden flex flex-col border-0 shadow bg-white dark:bg-gray-800 rounded-xl flex-shrink-0 w-[280px] relative cursor-pointer hover:shadow-lg transition-shadow"
                     onClick={() => handleGearClick(gear)}
                   >
                     {/* Gear Image */}
