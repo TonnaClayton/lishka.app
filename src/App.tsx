@@ -393,7 +393,12 @@ function AppContent() {
     ROUTES.RESET_PASSWORD,
   ].includes(location.pathname);
 
-  const is404Page = Object.values(ROUTES).includes(location.pathname) == false;
+  const is404Page =
+    Object.values(ROUTES).includes(location.pathname) == false &&
+    location.pathname.includes("fish/") == false &&
+    location.pathname.includes("gear-detail/") == false &&
+    location.pathname.includes("gear-category/") == false &&
+    location.pathname.includes("search/") == false;
 
   // Set initial sidebar width CSS variable and handle resize
   // useEffect(() => {

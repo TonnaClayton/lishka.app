@@ -1155,6 +1155,10 @@ const FishDetailPage = () => {
                     <p className="text-white/80 text-xs italic">
                       {fishDetailsData.scientific_name}
                     </p>
+                    <p className="text-white/80 text-[8px] leading-[100%] italic">
+                      Our AI-created images give a close reference but may
+                      differ from real life.
+                    </p>
                   </div>
                   <div className="absolute -bottom-4 left-0 right-0 h-4 bg-red-600"></div>
                 </div>
