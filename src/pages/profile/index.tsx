@@ -61,8 +61,7 @@ import FishImageCard from "./fish-image-card";
 import BottomNav from "@/components/bottom-nav";
 import { log } from "@/lib/logging";
 import { ROUTES } from "@/lib/routing";
-import PhotoUploadBar from "./photo-upload-bar";
-import GearItemUploadBar from "./gear-item-upload-bar";
+import ItemUploadBar from "./item-upload-bar";
 import { toImageMetadataItem } from "@/lib/gallery-photo";
 import UploadedInfoMsg from "./uploaded-info-msg";
 
@@ -988,10 +987,10 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      <PhotoUploadBar uploadPhotoStreamData={uploadPhotoStreamData} />
-      <GearItemUploadBar
-        totalGearItemsUploading={totalGearItemsUploading}
-        uploadGearItemStreamData={uploadGearItemStreamData}
+      <ItemUploadBar streamData={uploadPhotoStreamData} />
+      <ItemUploadBar
+        totalItemsUploading={totalGearItemsUploading}
+        streamData={uploadGearItemStreamData}
       />
       {showUploadedInfoMsg && uploadedInfoMsg && (
         <UploadedInfoMsg

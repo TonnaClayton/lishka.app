@@ -24,6 +24,8 @@ const UPLOAD_TIMEOUTS = {
 const MAX_RETRY_ATTEMPTS = 3;
 const UPLOAD_QUEUE_SIZE = 5;
 
+type UploadType = "fish" | "gear" | "universal";
+
 export enum UploadStepStatus {
   PENDING = "pending",
   PROCESSING = "processing",
@@ -34,9 +36,21 @@ export enum UploadStepStatus {
 export type UploadPhotoStreamData = {
   data: {
     message: string;
+    type?: string;
+    confidence?: number;
+    classifying?: UploadStepStatus;
     analyzing: UploadStepStatus;
     uploading: UploadStepStatus;
     saved: UploadStepStatus;
+    errors: string[];
+    processedFiles: number;
+    totalFiles: number;
+    uploadStatus?: UploadStepStatus;
+    classificationResult?: {
+      type: "fish" | "gear";
+      confidence: number;
+      reasoning?: string;
+    };
   };
 };
 
@@ -60,7 +74,7 @@ function isValidUploadPhotoStreamData(
 type UploadQueueItem = {
   id: string;
   files: File[];
-  type: "photo" | "gear";
+  type: UploadType;
   retryCount: number;
   timestamp: number;
 };
@@ -227,10 +241,19 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
     onData: (chunk) => {
       console.log("[STREAM] Received chunk:", chunk);
       const data = parseUploadData(chunk);
-      if (data) {
-        setUploadPhotoStreamData(data);
-        clearError(); // Clear any previous errors on successful data
+      if (!data) return;
+
+      // Improved gear message detection with safer string checking
+      if (
+        data.data.analyzing === UploadStepStatus.COMPLETED &&
+        data.data.uploading === UploadStepStatus.PROCESSING &&
+        data.data.message?.includes?.("Gear uploaded! Identified:")
+      ) {
+        setIdentifyGearMessage(data.data.message);
       }
+
+      setUploadPhotoStreamData(data);
+      clearError(); // Clear any previous errors on successful data
     },
     onError: (error) => {
       console.error("[STREAM] Error uploading photo:", error);
@@ -239,32 +262,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       setError("Failed to upload photo", "upload", true);
     },
     onComplete: () => {
-      console.log("[STREAM] Photo uploaded successfully!");
-      refreshProfile();
-      setIsUploadLocked(false);
-      clearError();
-
-      // Clear any existing timeouts
-      clearAllTimeouts();
-
-      timeoutRefs.current.cleanup = setTimeout(() => {
-        setUploadPhotoStreamData(null);
-        timeoutRefs.current.cleanup = null;
-      }, UPLOAD_TIMEOUTS.CLEANUP);
-
-      timeoutRefs.current.message = setTimeout(() => {
-        setShowUploadedInfoMsg(true);
-        setUploadedInfoMsg("Fish Photo Uploaded and Saved to Gallery");
-        timeoutRefs.current.message = null;
-
-        // Auto-hide after configured time
-        timeoutRefs.current.autoHide = setTimeout(() => {
-          setShowUploadedInfoMsg(false);
-          setUploadedInfoMsg(null);
-          setTotalPhotosUploading(undefined);
-          timeoutRefs.current.autoHide = null;
-        }, UPLOAD_TIMEOUTS.AUTO_HIDE);
-      }, UPLOAD_TIMEOUTS.MESSAGE_DELAY);
+      uploadPhotoCompleteCallBack();
     },
   });
 
@@ -297,6 +295,42 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       uploadGearItemCompleteCallBack();
     },
   });
+
+  const uploadPhotoCompleteCallBack = useCallback(() => {
+    console.log("[STREAM] Photo uploaded successfully!");
+    refreshProfile();
+    setIsUploadLocked(false);
+    clearError();
+
+    // Clear any existing timeouts
+    clearAllTimeouts();
+
+    timeoutRefs.current.cleanup = setTimeout(() => {
+      setUploadPhotoStreamData(null);
+      timeoutRefs.current.cleanup = null;
+    }, UPLOAD_TIMEOUTS.CLEANUP);
+
+    timeoutRefs.current.message = setTimeout(() => {
+      setShowUploadedInfoMsg(true);
+      // Use a ref to access the current identifyGearMessage value
+      setIdentifyGearMessage((currentGearMessage) => {
+        setUploadedInfoMsg(
+          currentGearMessage || "Fish Photo Uploaded and Saved to Gallery",
+        );
+        return currentGearMessage; // Don't clear it here, clear it later
+      });
+      timeoutRefs.current.message = null;
+
+      // Auto-hide after configured time
+      timeoutRefs.current.autoHide = setTimeout(() => {
+        setShowUploadedInfoMsg(false);
+        setUploadedInfoMsg(null);
+        setIdentifyGearMessage(null);
+        setTotalPhotosUploading(undefined);
+        timeoutRefs.current.autoHide = null;
+      }, UPLOAD_TIMEOUTS.AUTO_HIDE);
+    }, UPLOAD_TIMEOUTS.MESSAGE_DELAY);
+  }, [refreshProfile, clearError]);
 
   const uploadGearItemCompleteCallBack = useCallback(() => {
     console.log("[STREAM] Gear item uploaded successfully!");
@@ -335,29 +369,26 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
   }, [refreshProfile, clearError, clearAllTimeouts]);
 
   // Queue management functions
-  const addToQueue = useCallback(
-    (files: File[], type: "photo" | "gear"): string => {
-      const id = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
-      const queueItem: UploadQueueItem = {
-        id,
-        files,
-        type,
-        retryCount: 0,
-        timestamp: Date.now(),
-      };
+  const addToQueue = useCallback((files: File[], type: UploadType): string => {
+    const id = `${Date.now()}-${Math.random().toString(36).substring(2, 11)}`;
+    const queueItem: UploadQueueItem = {
+      id,
+      files,
+      type,
+      retryCount: 0,
+      timestamp: Date.now(),
+    };
 
-      setUploadQueue((prev) => {
-        if (prev.length >= UPLOAD_QUEUE_SIZE) {
-          console.warn("[UPLOAD] Queue is full, removing oldest item");
-          return [...prev.slice(1), queueItem];
-        }
-        return [...prev, queueItem];
-      });
+    setUploadQueue((prev) => {
+      if (prev.length >= UPLOAD_QUEUE_SIZE) {
+        console.warn("[UPLOAD] Queue is full, removing oldest item");
+        return [...prev.slice(1), queueItem];
+      }
+      return [...prev, queueItem];
+    });
 
-      return id;
-    },
-    [],
-  );
+    return id;
+  }, []);
 
   const removeFromQueue = useCallback((id: string) => {
     setUploadQueue((prev) => prev.filter((item) => item.id !== id));
@@ -369,7 +400,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
 
   // Core upload logic with proper locking
   const executeUpload = useCallback(
-    async (files: File[], type: "photo" | "gear") => {
+    async (files: File[], type?: UploadType) => {
       setIsUploadLocked(true);
       clearError();
 
@@ -390,6 +421,10 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
           });
         } else {
           uploadPhotoStream.startStream({
+            path:
+              type === "universal"
+                ? "user/universal-upload/stream"
+                : "user/gallery-photos/stream",
             options: {
               method: "POST",
               body: formData,
@@ -483,94 +518,107 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
         options,
       });
 
-      let filesTypes: ("photo" | "gear")[] = [];
-
-      // if (!options) {
-      setClassifyingImage(true);
-      clearError();
-
-      try {
-        const classificationPromises = files.map(async (file) => {
-          if (file.size > 15 * 1024 * 1024) {
-            throw new Error(`Photo must be less than 15MB`);
-          }
-
-          if (!file.type.startsWith("image/")) {
-            throw new Error("Please select an image file");
-          }
-
-          const classification = await classifyPhotoMutation.mutateAsync(file);
-          return classification.type as "photo" | "gear";
-        });
-
-        const classifications = await Promise.allSettled(
-          classificationPromises,
-        );
-        filesTypes = classifications.map((classification) =>
-          classification.status === "fulfilled"
-            ? (classification.value as "photo" | "gear")
-            : "photo",
-        );
-      } catch {
-        setClassifyingImage(false);
-        setError("Failed to classify image", "classification", true);
-
-        // throw new Error(
-        //   classificationError?.message ||
-        //     "Failed to classify image. Please try again."
-        // );
-      }
-
-      setClassifyingImage(false);
-
-      try {
-        // Separate files by type
-        const gearFiles = files.filter(
-          (file, index) => filesTypes[index] === "gear",
-        );
-        const photoFiles = files.filter(
-          (file, index) => filesTypes[index] === "photo",
-        );
-
-        // Process gear files if any
-        if (gearFiles.length > 0) {
-          const gearQueueId = addToQueue(gearFiles, "gear");
-          // eslint-disable-next-line no-useless-catch
-          try {
-            setTotalGearItemsUploading(gearFiles.length);
-            await executeUpload(gearFiles, "gear");
-            removeFromQueue(gearQueueId);
-          } catch (uploadError) {
-            throw uploadError;
-          }
+      if (files.length == 1) {
+        const gearQueueId = addToQueue(files, "universal");
+        // eslint-disable-next-line no-useless-catch
+        try {
+          setTotalGearItemsUploading(files.length);
+          await executeUpload(files, "universal");
+          removeFromQueue(gearQueueId);
+        } catch (uploadError) {
+          throw uploadError;
         }
+      } else {
+        let filesTypes: UploadType[] = [];
 
-        // Process photo files if any
-        if (photoFiles.length > 0) {
-          const photoQueueId = addToQueue(photoFiles, "photo");
-          // eslint-disable-next-line no-useless-catch
-          try {
-            setTotalPhotosUploading(photoFiles.length);
-            await executeUpload(photoFiles, "photo");
-            removeFromQueue(photoQueueId);
-          } catch (uploadError) {
-            throw uploadError;
-          }
-        }
-      } catch (error: any) {
-        errorLog("❌ [UPLOAD] Smart upload failed:", error);
-        setClassifyingImage(false);
-        setIsUploadLocked(false);
+        // if (!options) {
+        setClassifyingImage(true);
+        clearError();
 
-        if (!uploadError) {
-          setError(
-            error?.message || "Failed to process photo. Please try again.",
-            "upload",
-            true,
+        try {
+          const classificationPromises = files.map(async (file) => {
+            if (file.size > 15 * 1024 * 1024) {
+              throw new Error(`Photo must be less than 15MB`);
+            }
+
+            if (!file.type.startsWith("image/")) {
+              throw new Error("Please select an image file");
+            }
+
+            const classification =
+              await classifyPhotoMutation.mutateAsync(file);
+            return classification.type as UploadType;
+          });
+
+          const classifications = await Promise.allSettled(
+            classificationPromises,
           );
+          filesTypes = classifications.map((classification) =>
+            classification.status === "fulfilled"
+              ? (classification.value as UploadType)
+              : "fish",
+          );
+        } catch {
+          setClassifyingImage(false);
+          setError("Failed to classify image", "classification", true);
+
+          // throw new Error(
+          //   classificationError?.message ||
+          //     "Failed to classify image. Please try again."
+          // );
         }
 
-        throw error;
+        setClassifyingImage(false);
+
+        try {
+          // Separate files by type
+          const gearFiles = files.filter(
+            (file, index) => filesTypes[index] == "gear",
+          );
+          const photoFiles = files.filter(
+            (file, index) => filesTypes[index] == "fish",
+          );
+
+          // Process gear files if any
+          if (gearFiles.length > 0) {
+            const gearQueueId = addToQueue(gearFiles, "gear");
+            // eslint-disable-next-line no-useless-catch
+            try {
+              setTotalGearItemsUploading(gearFiles.length);
+              await executeUpload(gearFiles, "gear");
+              removeFromQueue(gearQueueId);
+            } catch (uploadError) {
+              throw uploadError;
+            }
+          }
+
+          // Process photo files if any
+          if (photoFiles.length > 0) {
+            const photoQueueId = addToQueue(photoFiles, "fish");
+            // eslint-disable-next-line no-useless-catch
+            try {
+              setTotalPhotosUploading(photoFiles.length);
+              await executeUpload(photoFiles, "fish");
+              removeFromQueue(photoQueueId);
+            } catch (uploadError) {
+              throw uploadError;
+            }
+          }
+        } catch (error: any) {
+          errorLog("❌ [UPLOAD] Smart upload failed:", error);
+          setClassifyingImage(false);
+          setIsUploadLocked(false);
+
+          if (!uploadError) {
+            setError(
+              error?.message || "Failed to process photo. Please try again.",
+              "upload",
+              true,
+            );
+          }
+
+          throw error;
+        }
       }
     },
     [
