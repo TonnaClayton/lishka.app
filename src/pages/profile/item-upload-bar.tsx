@@ -6,13 +6,13 @@ import {
 import { cn } from "@/lib/utils";
 import { useMemo } from "react";
 
-export default function GearItemUploadBar({
-  uploadGearItemStreamData,
-  totalGearItemsUploading,
+export default function ItemUploadBar({
+  streamData,
+  totalItemsUploading,
   className,
 }: {
-  totalGearItemsUploading?: number;
-  uploadGearItemStreamData: UploadPhotoStreamData | null;
+  totalItemsUploading?: number;
+  streamData: UploadPhotoStreamData | null;
   className?: string;
 }) {
   const getStepIcon = (step: UploadStepStatus) => {
@@ -30,14 +30,14 @@ export default function GearItemUploadBar({
   };
 
   const analyzingText = useMemo(() => {
-    if (totalGearItemsUploading && totalGearItemsUploading > 1) {
-      return `AI Analyzing ${totalGearItemsUploading} Photos`;
+    if (totalItemsUploading && totalItemsUploading > 1) {
+      return `AI Analyzing ${totalItemsUploading} Photos`;
     }
 
     return "AI Analyzing Photo";
-  }, [totalGearItemsUploading]);
+  }, [totalItemsUploading]);
 
-  if (uploadGearItemStreamData == null) {
+  if (streamData == null) {
     return null;
   }
 
@@ -51,38 +51,37 @@ export default function GearItemUploadBar({
       <div
         className={cn(
           "h-[26px] w-full flex items-center justify-between",
-          uploadGearItemStreamData.data.analyzing ===
-            UploadStepStatus.PENDING && "opacity-50",
+          streamData.data.analyzing === UploadStepStatus.PENDING &&
+            "opacity-50",
         )}
       >
         <p className="leading-snug text-white text-sm md:text-base">
           {analyzingText}
         </p>
-        {getStepIcon(uploadGearItemStreamData.data.analyzing)}
+        {getStepIcon(streamData.data.analyzing)}
       </div>
       <div
         className={cn(
           "h-[26px] w-full flex items-center justify-between",
-          uploadGearItemStreamData.data.uploading ===
-            UploadStepStatus.PENDING && "opacity-50",
+          streamData.data.uploading === UploadStepStatus.PENDING &&
+            "opacity-50",
         )}
       >
         <p className="leading-snug text-white text-sm md:text-base">
           Photo Uploading
         </p>
-        {getStepIcon(uploadGearItemStreamData.data.uploading)}
+        {getStepIcon(streamData.data.uploading)}
       </div>
       <div
         className={cn(
           "h-[26px] w-full flex items-center justify-between",
-          uploadGearItemStreamData.data.saved === UploadStepStatus.PENDING &&
-            "opacity-50",
+          streamData.data.saved === UploadStepStatus.PENDING && "opacity-50",
         )}
       >
         <p className="leading-snug text-white text-sm md:text-base">
           Photo Saved
         </p>
-        {getStepIcon(uploadGearItemStreamData.data.saved)}
+        {getStepIcon(streamData.data.saved)}
       </div>
     </div>
   );

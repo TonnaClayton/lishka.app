@@ -17,8 +17,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { log } from "@/lib/logging";
 import { ROUTES } from "@/lib/routing";
 import { cn } from "@/lib/utils";
-import PhotoUploadBar from "@/pages/profile/photo-upload-bar";
-import GearItemUploadBar from "@/pages/profile/gear-item-upload-bar";
+import ItemUploadBar from "@/pages/profile/item-upload-bar";
 import UploadedInfoMsg from "@/pages/profile/uploaded-info-msg";
 
 const BottomNav: React.FC = () => {
@@ -82,14 +81,14 @@ const BottomNav: React.FC = () => {
 
   return (
     <>
-      <PhotoUploadBar
-        uploadPhotoStreamData={uploadPhotoStreamData}
+      <ItemUploadBar
+        streamData={uploadPhotoStreamData}
         className="z-[60] top-[58px] absolute md:hidden"
       />
-      <GearItemUploadBar
+      <ItemUploadBar
         className="z-[60] top-[58px] absolute md:hidden"
-        uploadGearItemStreamData={uploadGearItemStreamData}
-        totalGearItemsUploading={totalGearItemsUploading}
+        streamData={uploadGearItemStreamData}
+        totalItemsUploading={totalGearItemsUploading}
       />
       {showUploadedInfoMsg && uploadedInfoMsg && (
         <UploadedInfoMsg
