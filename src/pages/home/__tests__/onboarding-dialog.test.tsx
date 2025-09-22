@@ -104,6 +104,28 @@ vi.mock("@/hooks/queries", () => ({
   }),
 }));
 
+// Mock the auth context
+vi.mock("@/contexts/auth-context", () => ({
+  useAuth: () => ({
+    user: { id: "test-user-id" },
+    profile: null,
+    session: null,
+    loading: false,
+    signIn: vi.fn(),
+    signUp: vi.fn(),
+    signOut: vi.fn(),
+    resendConfirmation: vi.fn(),
+    forgotPassword: vi.fn(),
+    resetPassword: vi.fn(),
+    updateProfile: vi.fn(),
+    deleteAccount: vi.fn(),
+    refreshProfile: vi.fn(),
+    uploadAvatar: vi.fn(),
+    confirmEmail: vi.fn(),
+    signInWithGoogle: vi.fn(),
+  }),
+}));
+
 describe("OnboardingDialog", () => {
   const user = userEvent.setup();
 
