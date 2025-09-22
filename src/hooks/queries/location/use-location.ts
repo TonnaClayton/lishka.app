@@ -2,7 +2,6 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { log } from "@/lib/logging";
 import { LocationData, locationQueryKeys } from "./use-location-storage";
-import { useUpdateProfile } from "@/hooks/queries";
 import { useAuth } from "@/contexts/auth-context";
 
 // Default location (Malta)
@@ -17,8 +16,7 @@ export const useUserLocation = () => {
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(
     null,
   );
-  const updateProfile = useUpdateProfile();
-  const { profile, loading: isLoadingProfile } = useAuth();
+  const { profile, loading: isLoadingProfile, updateProfile } = useAuth();
   const userLocation = useMemo(() => {
     const locationCoordinates = profile?.location_coordinates as any;
 
@@ -72,8 +70,8 @@ export const useUserLocation = () => {
       }
 
       // Save to localStorage
-      await updateProfile.mutateAsync({
-        location_coordinates: newLocation,
+      await updateProfile({
+        location_coordinates: newLocation as any,
         location: newLocation.name,
       });
 
@@ -117,7 +115,7 @@ export const useUserLocation = () => {
 
   const clearLocation = useMutation({
     mutationFn: async () => {
-      await updateProfile.mutateAsync({
+      await updateProfile({
         location_coordinates: null,
         location: null,
       });

@@ -318,7 +318,7 @@ export default function ProfilePage() {
         }
       }
 
-      await updateProfile.mutateAsync(data);
+      await updateProfile.mutateAsync({ userId: user?.id, updates: data });
       setSuccess("Profile updated successfully!");
       setIsEditing(false);
       setTimeout(() => setSuccess(null), 5000);
@@ -660,7 +660,10 @@ export default function ProfilePage() {
       }
 
       // Update the database
-      await updateProfile.mutateAsync({ gallery_photos: updatedPhotos });
+      await updateProfile.mutateAsync({
+        userId: user?.id,
+        updates: { gallery_photos: updatedPhotos },
+      });
 
       log("[ProfilePage] AI info updated successfully");
       setSuccess("AI info updated successfully!");
@@ -714,10 +717,15 @@ export default function ProfilePage() {
         });
         const newPhotos = [newPhoto, ...prev];
 
-        updateProfile.mutateAsync({ gallery_photos: newPhotos }).then(() => {
-          setSuccess("Photo uploaded successfully!");
-          setTimeout(() => setSuccess(null), 3000);
-        });
+        updateProfile
+          .mutateAsync({
+            userId: user?.id,
+            updates: { gallery_photos: newPhotos },
+          })
+          .then(() => {
+            setSuccess("Photo uploaded successfully!");
+            setTimeout(() => setSuccess(null), 3000);
+          });
       }
     };
 
