@@ -95,7 +95,7 @@ export const useCreateSearchSession = () =>
       use_location_context?: boolean;
       use_imperial_units?: boolean;
       message: string;
-      attachment?: File;
+      attachments?: File[];
       session_id?: string;
     }) => {
       const formData = new FormData();
@@ -109,8 +109,10 @@ export const useCreateSearchSession = () =>
       );
       formData.append("message", payload.message);
 
-      if (payload.attachment) {
-        formData.append("attachment", payload.attachment);
+      if (payload.attachments) {
+        payload.attachments.forEach((attachment) => {
+          formData.append("attachments", attachment);
+        });
       }
 
       let path = "search-agent/sessions";

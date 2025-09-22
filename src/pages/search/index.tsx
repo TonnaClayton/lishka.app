@@ -35,6 +35,7 @@ interface Message {
   user_role: "user" | "assistant";
   content: string;
   timestamp: Date;
+  images?: string[];
   fish_results?: Fish[];
   image?: string;
 }
@@ -65,6 +66,9 @@ const SearchPage: React.FC = () => {
   const { profile } = useAuth();
   const { id } = useParams<{ id?: string }>();
   const [hasGeneratedFollowUp, setHasGeneratedFollowUp] = useState(false);
+  const [clickedFollowUpQuestions, setClickedFollowUpQuestions] = useState<
+    Set<string>
+  >(new Set());
 
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -90,8 +94,8 @@ const SearchPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [useLocationContext, setUseLocationContext] = useState(true);
   const [suggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
-  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [imageFiles, setImageFiles] = useState<File[]>([]);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -116,7 +120,7 @@ const SearchPage: React.FC = () => {
   const deviceSize = useDeviceSize();
   const isMobile = useIsMobile();
 
-  const fixBrokenBase64Url = (url: string | null) => {
+  const fixBrokenBase64Url = (url: string | null): string | null => {
     if (url != null && url != "") {
       if (
         url.startsWith("data:image/jpeg;base64,") ||
@@ -149,6 +153,7 @@ const SearchPage: React.FC = () => {
           id: message.id,
           user_role: message.user_role,
           image: fixBrokenBase64Url(message.image),
+          images: message.metadata.images?.map(fixBrokenBase64Url) || [],
           content: message.content,
           timestamp: new Date(message.created_at),
           fish_results: message.metadata?.fish_results || [],
@@ -192,12 +197,12 @@ const SearchPage: React.FC = () => {
   const processQuery = async (
     queryText: string,
     userMessage: Message,
-    imageFile?: File,
+    imageFiles?: File[],
   ) => {
     try {
       const response = await mutation.mutateAsync({
         message: queryText,
-        attachment: imageFile,
+        attachments: imageFiles,
         use_location_context: useLocationContext,
         use_imperial_units: useImperialUnits,
         session_id: id,
@@ -207,6 +212,8 @@ const SearchPage: React.FC = () => {
         id: response.id,
         user_role: "assistant",
         content: response.content,
+        image: fixBrokenBase64Url(response.image),
+        images: response.metadata?.images?.map(fixBrokenBase64Url) || [],
         timestamp: new Date(),
         fish_results: response.metadata?.fish_results || [],
       };
@@ -264,31 +271,34 @@ const SearchPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if ((!query.trim() && !imageFile) || loading) return;
+    if ((!query.trim() && imageFiles.length === 0) || loading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       user_role: "user",
-      content: query || "[Image uploaded]",
+      content:
+        query ||
+        `[${imageFiles.length} image${imageFiles.length > 1 ? "s" : ""} uploaded]`,
       timestamp: new Date(),
-      image: selectedImage || undefined,
+      images: selectedImages,
     };
 
     setMessages((prev) => [...prev, userMessage]);
     const currentQuery = query;
-    const currentImageFile = imageFile;
+    const currentImageFiles = [...imageFiles];
     setQuery("");
-    setSelectedImage(null);
-    setImageFile(null);
+    setSelectedImages([]);
+    setImageFiles([]);
     setLoading(true);
     setError(null);
 
     // Process the query with error handling
     try {
       await processQuery(
-        currentQuery || "What can you tell me about this image?",
+        currentQuery ||
+          `What can you tell me about ${currentImageFiles.length > 1 ? "these images" : "this image"}?`,
         userMessage,
-        currentImageFile || undefined,
+        currentImageFiles.length > 0 ? currentImageFiles : undefined,
       );
     } catch (err) {
       console.error("Error in handleSubmit:", err);
@@ -298,6 +308,9 @@ const SearchPage: React.FC = () => {
   };
 
   const handleSuggestionClick = async (suggestion: string) => {
+    // Add the clicked question to the set of clicked questions
+    setClickedFollowUpQuestions((prev) => new Set(prev).add(suggestion));
+
     // Create a user message for the clicked suggestion
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -342,9 +355,17 @@ const SearchPage: React.FC = () => {
     }
   }, [messagesMemo, hasGeneratedFollowUp, refetchFollowUpQuestions]);
 
+  // Reset clicked questions when new follow-up questions are fetched
+  useEffect(() => {
+    if (followUpQuestions && followUpQuestions.length > 0) {
+      setClickedFollowUpQuestions(new Set());
+    }
+  }, [followUpQuestions]);
+
   // Reset follow-up generation state when session ID changes
   useEffect(() => {
     setHasGeneratedFollowUp(false);
+    setClickedFollowUpQuestions(new Set());
   }, [id]);
 
   // Show skeleton while loading session only if we don't have messages from router state
@@ -539,6 +560,7 @@ const SearchPage: React.FC = () => {
                     }
                     loading={loading}
                     handleSuggestionClick={handleSuggestionClick}
+                    clickedQuestions={clickedFollowUpQuestions}
                   />
                 </div>
               )}
@@ -582,6 +604,7 @@ const SearchPage: React.FC = () => {
             followUpLoading={followUpLoading || isRefetchingFollowUpQuestions}
             loading={loading}
             handleSuggestionClick={handleSuggestionClick}
+            clickedQuestions={clickedFollowUpQuestions}
           />
         )}
 
@@ -590,23 +613,34 @@ const SearchPage: React.FC = () => {
           onSubmit={handleSubmit}
           className="w-full max-w-2xl mx-auto relative"
         >
-          {selectedImage && (
-            <div className="mb-3 relative inline-block">
-              <img
-                src={selectedImage}
-                alt="Selected image"
-                className="max-w-32 h-auto rounded-lg border border-gray-200 dark:border-gray-700"
-              />
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedImage(null);
-                  setImageFile(null);
-                }}
-                className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
-              >
-                ×
-              </button>
+          {selectedImages.length > 0 && (
+            <div className="py-2 flex overflow-x-auto md:overflow-x-visible md:flex-wrap gap-2">
+              {selectedImages.map((image, index) => (
+                <div key={index} className="relative inline-block">
+                  <img
+                    src={image}
+                    alt={`Selected image ${index + 1}`}
+                    className="max-w-32 h-auto rounded-lg border aspect-square border-gray-200 dark:border-gray-700"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      // Remove the image at the specific index
+                      setSelectedImages((prev) =>
+                        prev.filter((_, i) => i !== index),
+                      );
+                      setImageFiles((prev) =>
+                        prev.filter((_, i) => i !== index),
+                      );
+                      // Clean up the object URL to prevent memory leaks
+                      URL.revokeObjectURL(image);
+                    }}
+                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center text-sm hover:bg-red-600"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
             </div>
           )}
           <div className="relative flex items-center overflow-hidden border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 flex-col pr-[2] pl-0 rounded-2xl">
@@ -616,7 +650,9 @@ const SearchPage: React.FC = () => {
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               placeholder={
-                selectedImage ? "Ask about this image..." : "Send a message..."
+                selectedImages.length > 0
+                  ? `Ask about ${selectedImages.length > 1 ? "these images" : "this image"}...`
+                  : "Send a message..."
               }
               className="resize-none flex-1 focus:outline-none focus:ring-0 focus-visible:ring-0 focus-visible:ring-offset-0 focus-visible:ring-transparent bg-transparent text-gray-900 dark:text-gray-100 border-none my-auto grow shadow-none px-4 outline-none py-4 h-[100px]"
               disabled={loading}
@@ -633,16 +669,29 @@ const SearchPage: React.FC = () => {
                   id="image-upload"
                   type="file"
                   accept="image/*"
+                  multiple
                   className="hidden"
                   onChange={(e) => {
-                    // Handle image upload
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      // Create preview URL
-                      const previewUrl = URL.createObjectURL(file);
-                      setSelectedImage(previewUrl);
-                      setImageFile(file);
-                      // Reset the input to allow selecting the same file again
+                    // Handle multiple image upload with 5 file limit
+                    const files = Array.from(e.target.files || []);
+                    if (files.length > 0) {
+                      const remainingSlots = 5 - imageFiles.length;
+                      const filesToAdd = files.slice(0, remainingSlots);
+
+                      if (files.length > remainingSlots) {
+                        alert(
+                          `You can only upload up to 5 images. Only the first ${remainingSlots} images will be added.`,
+                        );
+                      }
+
+                      // Create preview URLs for new files
+                      const newPreviewUrls = filesToAdd.map((file) =>
+                        URL.createObjectURL(file),
+                      );
+                      setSelectedImages((prev) => [...prev, ...newPreviewUrls]);
+                      setImageFiles((prev) => [...prev, ...filesToAdd]);
+
+                      // Reset the input to allow selecting the same files again
                       e.target.value = "";
                     }
                   }}
@@ -667,8 +716,8 @@ const SearchPage: React.FC = () => {
               <Button
                 type="submit"
                 size="icon"
-                disabled={(!query.trim() && !imageFile) || loading}
-                className={`bg-transparent hover:bg-transparent ${query.trim() || imageFile ? "text-lishka-blue " : "text-[#989CA3]"} hover:text-lishka-blue h-10 w-10 flex-shrink-0 p-0 flex items-center justify-center`}
+                disabled={(!query.trim() && imageFiles.length === 0) || loading}
+                className={`bg-transparent hover:bg-transparent ${query.trim() || imageFiles.length > 0 ? "text-lishka-blue " : "text-[#989CA3]"} hover:text-lishka-blue h-10 w-10 flex-shrink-0 p-0 flex items-center justify-center`}
                 variant="ghost"
               >
                 <Send size={20} />
@@ -723,15 +772,22 @@ const FollowUpQuestions = ({
   followUpLoading,
   loading,
   handleSuggestionClick,
+  clickedQuestions,
 }: {
   followUpQuestions?: string[];
   followUpLoading: boolean;
   loading: boolean;
   handleSuggestionClick: (suggestion: string) => void;
+  clickedQuestions: Set<string>;
 }) => {
   if (followUpQuestions == undefined || followUpQuestions == null) {
     return null;
   }
+
+  // Filter out clicked questions
+  const visibleQuestions = followUpQuestions.filter(
+    (q) => !clickedQuestions.has(q),
+  );
 
   return (
     <TooltipProvider>
@@ -744,9 +800,9 @@ const FollowUpQuestions = ({
             />
           ))}
         </div>
-      ) : followUpQuestions.length > 0 ? (
+      ) : visibleQuestions.length > 0 ? (
         <div className="flex overflow-x-auto gap-2 pb-3 mb-1 w-full max-w-2xl mx-auto scrollbar-hide">
-          {followUpQuestions.map((q, i) => (
+          {visibleQuestions.map((q, i) => (
             <Tooltip key={`followup-tooltip-${i}`}>
               <TooltipTrigger asChild>
                 <Button
