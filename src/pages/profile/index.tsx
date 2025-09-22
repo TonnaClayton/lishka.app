@@ -656,7 +656,13 @@ export default function ProfilePage() {
         ? [...(profile.gallery_photos as any)]
         : [];
       if (editingPhotoIndex < updatedPhotos.length) {
-        updatedPhotos[editingPhotoIndex] = editingMetadata;
+        updatedPhotos[editingPhotoIndex] = {
+          ...editingMetadata,
+          fishInfo: {
+            ...editingMetadata.fishInfo,
+            confidence: null,
+          },
+        };
       }
 
       // Update the database
