@@ -188,6 +188,17 @@ function FishImageCard({
                 return;
               }
 
+              // sleep for 1 second
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+
+              fishInfoOverlayRef.current.style.borderRadius = "0px";
+              fishInfoOverlayRef.current.style.overflow = "hidden";
+
+              const image = fishInfoOverlayRef.current.querySelector("img");
+              if (image) {
+                image.style.borderRadius = "0px";
+              }
+
               const overlayBlob = await buildBlobWithRetry(
                 fishInfoOverlayRef.current,
               );
@@ -250,6 +261,14 @@ function FishImageCard({
           setSuccess("Photo URL copied to clipboard!");
           setTimeout(() => setSuccess(null), 3000);
         }
+
+        fishInfoOverlayRef.current.style.borderRadius = "8px";
+        fishInfoOverlayRef.current.style.overflow = "hidden";
+
+        const image = fishInfoOverlayRef.current.querySelector("img");
+        if (image) {
+          image.style.borderRadius = "8px";
+        }
       } else {
         // Fallback: copy URL to clipboard
         try {
@@ -271,17 +290,9 @@ function FishImageCard({
   };
 
   return (
-    <div
-      className={cn(
-        `relative cursor-pointer hover:opacity-90 transition-opacity rounded-[8px] overflow-hidden bg-gray-100 dark:bg-gray-700`,
-        isSingleColumn ? "" : "aspect-square",
-      )}
-    >
+    <div className={cn(`relative`)}>
       {/* Main image button */}
-      <button
-        onClick={handleImageClick}
-        className="w-full h-full rounded-[8px]"
-      >
+      <button onClick={handleImageClick} className="">
         {/* Loading spinner - only show when image is visible and loading */}
         {isVisible && isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-[8px]">
@@ -315,7 +326,10 @@ function FishImageCard({
             (imageRef as React.MutableRefObject<HTMLElement | null>).current =
               el;
           }}
-          className={cn("w-full", isSingleColumn ? "h-fit" : "h-full")}
+          className={cn(
+            "w-full rounded-[8px] relative overflow-hidden",
+            isSingleColumn ? "h-fit" : "h-full",
+          )}
           id="fish-info-overlay-container"
         >
           {/* Image */}
@@ -323,11 +337,15 @@ function FishImageCard({
             <img
               src={photoUrl}
               alt={photo.url}
-              className={`w-full transition-opacity duration-200 rounded-[8px] ${
-                isLoading ? "opacity-0" : "opacity-100"
-              } ${hasError ? "hidden" : ""} ${
-                isSingleColumn ? "h-auto object-contain" : "h-full object-cover"
-              }`}
+              className={cn(
+                `w-full transition-opacity duration-200 rounded-[8px]`,
+                isLoading ? "opacity-0" : "opacity-100",
+                hasError ? "hidden" : "",
+                isSingleColumn
+                  ? "h-auto object-contain"
+                  : "h-full object-cover",
+                isSingleColumn ? "" : "aspect-square",
+              )}
               // eslint-disable-next-line react/no-unknown-property
               onLoadStart={() => {
                 log(`[ProfilePage] Image started loading:`, photoUrl);
