@@ -28,58 +28,42 @@ export default function LoginPage() {
 
   return (
     <div className="bg-black h-full w-full">
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_560px] h-full">
+      <div className="grid grid-cols-1 h-full">
         <div
           className={cn(
             "w-full h-full flex flex-col",
-            !isMobile && "justify-center items-center bg-white",
+            !isMobile && "justify-center items-center",
           )}
         >
           <div
             className={cn(
-              "w-full flex flex-col items-center h-full",
-              isMobile ? "z-10 " : "justify-center max-w-md mx-auto",
+              "w-full flex flex-col items-center h-full z-10",
+              isMobile ? "" : "justify-center max-w-md w-full mx-auto",
             )}
           >
             <div
-              className={
-                "flex flex-col h-full w-full items-center justify-center text-center px-4 py-10 gap-4"
-              }
+              className={cn(
+                "flex flex-col h-full w-full items-center justify-center text-center px-4 py-10 gap-4",
+                !isMobile && "h-[85%]",
+              )}
             >
               <div className="flex items-center flex-col gap-3">
-                {isMobile ? (
-                  <img
-                    src={"/images/tempo-image-20250804T201257275Z.png"}
-                    alt={"Pasted Image"}
-                    className={"w-[210px] h-[40px]"}
-                  />
-                ) : (
-                  <>
-                    <img
-                      src="/logo.svg"
-                      alt="Lishka Logo"
-                      className="h-10 w-auto dark:hidden"
-                    />
-                    <img
-                      src="/logo-night.svg"
-                      alt="Lishka Logo"
-                      className="h-10 w-auto hidden dark:block"
-                    />
-                  </>
-                )}
+                <img
+                  src={"/images/tempo-image-20250804T201257275Z.png"}
+                  alt={"Pasted Image"}
+                  className={"w-[210px] h-[40px]"}
+                />
               </div>
 
               <div className="my-auto">
                 <p
                   className={cn(
-                    "leading-relaxed max-w-md font-light md:text-7xl text-black font-[serif] mb-6 text-6xl",
-                    isMobile && "text-white",
+                    "leading-relaxed max-w-md font-light md:text-7xl text-white font-[serif] mb-6 text-6xl",
                   )}
                 >
                   Create
-                  <br className="md:hidden" /> Your Free
-                  <br className="md:hidden" />{" "}
-                  <span className="italic">Account</span>
+                  <br className="" /> Your Free
+                  <br className="" /> <span className="italic">Account</span>
                 </p>
               </div>
 
@@ -180,15 +164,10 @@ export default function LoginPage() {
                 </div>
                 <div
                   className={cn(
-                    "flex items-center justify-center px-6 gap-4 gap-x-1 py-6",
-                    isMobile && "text-white",
+                    "flex items-center justify-center text-white px-6 gap-4 gap-x-1 py-6",
                   )}
                 >
-                  <p
-                    className={
-                      " max-w-md text-sm md:text-black/70 text-white/70 font-normal"
-                    }
-                  >
+                  <p className={"max-w-md text-sm text-white/70 font-normal"}>
                     Already have an account? {" "}
                   </p>
                   <Link
@@ -201,15 +180,6 @@ export default function LoginPage() {
               </div>
             </div>
           </div>
-          {isMobile && <Particles />}
-        </div>
-
-        <div
-          className={cn(
-            "w-full h-full relative overflow-hidden",
-            isMobile && "hidden",
-          )}
-        >
           <Particles />
         </div>
       </div>
