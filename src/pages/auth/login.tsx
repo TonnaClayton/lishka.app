@@ -72,7 +72,7 @@ export default function LoginPage() {
                     onClick={handleGoogleSignIn}
                     disabled={isGoogleLoading}
                     className={
-                      "flex-1 px-6 rounded-full font-medium size-full text-sm py-4 border bg-white border-gray-200 text-[#243041] flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed"
+                      "flex-1 px-6 rounded-full font-semibold size-full text-sm py-4 h-[46px] border bg-white border-gray-200 text-[#243041] flex justify-center items-center disabled:opacity-50 disabled:cursor-not-allowed"
                     }
                   >
                     <svg
@@ -118,7 +118,7 @@ export default function LoginPage() {
                   <button
                     disabled={isGoogleLoading}
                     className={
-                      "flex-1 px-6 rounded-full font-medium transition-colors size-full text-sm py-4 h-[48px] border bg-[#ffffff] border-[#d8dadc] text-[#243041] flex justify-center items-center"
+                      "flex-1 px-6 rounded-full font-semibold transition-colors size-full text-sm py-4 h-[46px] border bg-[#ffffff] border-[#d8dadc] text-[#243041] flex justify-center items-center"
                     }
                   >
                     <svg
@@ -140,7 +140,7 @@ export default function LoginPage() {
                     to={"/signup"}
                     aria-disabled={isGoogleLoading}
                     className={
-                      "flex-1 px-6 rounded-full font-medium transition-colors size-full text-sm py-4 h-[48px] border bg-[#ffffff] border-[#d8dadc] text-[#243041] flex justify-center items-center"
+                      "flex-1 px-6 rounded-full font-semibold transition-colors size-full text-sm py-4 h-[46px] border bg-[#ffffff] border-[#d8dadc] text-[#243041] flex justify-center items-center"
                     }
                   >
                     <svg
