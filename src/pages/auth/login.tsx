@@ -37,17 +37,16 @@ export default function LoginPage() {
         >
           <div
             className={cn(
-              "w-full flex flex-col items-center h-full z-10",
-              isMobile ? "" : "justify-center max-w-md w-full mx-auto",
+              "w-full flex flex-col items-center justify-center  h-full z-10 max-w-[327px] mx-auto",
             )}
           >
             <div
               className={cn(
-                "flex flex-col h-full w-full items-center justify-center text-center px-4 py-10 gap-4",
-                !isMobile && "h-[85%]",
+                "flex flex-col gap-[60px] h-full w-full items-center justify-center text-center",
+                !isMobile && "h-[85%] max-h-[586px]",
               )}
             >
-              <div className="flex items-center flex-col gap-3">
+              <div className="flex items-center flex-col">
                 <img
                   src={"/images/tempo-image-20250804T201257275Z.png"}
                   alt={"Pasted Image"}
@@ -55,10 +54,10 @@ export default function LoginPage() {
                 />
               </div>
 
-              <div className="my-auto">
+              <div className="">
                 <p
                   className={cn(
-                    "leading-relaxed max-w-md font-light md:text-7xl text-white font-[serif] mb-6 text-6xl",
+                    "leading-relaxed max-w-md font-light text-white font-[serif] text-6xl",
                   )}
                 >
                   Create
