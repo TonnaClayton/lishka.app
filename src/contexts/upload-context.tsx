@@ -244,11 +244,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       if (!data) return;
 
       // Improved gear message detection with safer string checking
-      if (
-        data.data.analyzing === UploadStepStatus.COMPLETED &&
-        data.data.uploading === UploadStepStatus.PROCESSING &&
-        data.data.message?.includes?.("Gear uploaded! Identified:")
-      ) {
+      if (data.data.message?.includes?.("Gear uploaded! Identified:")) {
         setIdentifyGearMessage(data.data.message);
       }
 
@@ -275,11 +271,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       if (!data) return;
 
       // Improved gear message detection with safer string checking
-      if (
-        data.data.analyzing === UploadStepStatus.COMPLETED &&
-        data.data.uploading === UploadStepStatus.PROCESSING &&
-        data.data.message?.includes?.("Gear uploaded! Identified:")
-      ) {
+      if (data.data.message?.includes?.("Gear uploaded! Identified:")) {
         setIdentifyGearMessage(data.data.message);
       }
       setUploadGearItemStreamData(data);
