@@ -104,14 +104,19 @@ export const useCreateProfile = () => {
 // Profile update hook
 export const useUpdateProfile = () => {
   const queryClient = useQueryClient();
-  const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (updates: any) => {
+    mutationFn: async ({
+      userId,
+      updates,
+    }: {
+      userId: string;
+      updates: any;
+    }) => {
       const { data, error } = await supabase
         .from("profiles")
         .update(updates)
-        .eq("id", user?.id)
+        .eq("id", userId)
         .select()
         .single();
 
@@ -121,12 +126,13 @@ export const useUpdateProfile = () => {
 
       return data;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       // Invalidate profile queries
-      if (user?.id) {
-        queryClient.invalidateQueries({
-          queryKey: profileQueryKeys.useProfile(user.id),
-        });
+      if (data.id) {
+        queryClient.setQueryData(profileQueryKeys.useProfile(data.id), data);
+        // queryClient.invalidateQueries({
+        //   queryKey: profileQueryKeys.useProfile(user.id),
+        // });
       }
     },
   });

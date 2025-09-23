@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Ruler, LogOut, Trash2 } from "lucide-react";
 
@@ -20,36 +20,42 @@ import { log } from "@/lib/logging";
 import BottomNav from "./bottom-nav";
 import { useAuth } from "@/contexts/auth-context";
 import { ROUTES } from "@/lib/routing";
+import { Alert, AlertDescription } from "./ui/alert";
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
   const { signOut, deleteAccount, updateProfile, profile } = useAuth();
   const [isDeleting, setIsDeleting] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const useImperialUnits = useMemo(() => {
     return profile?.use_imperial_units || false;
   }, [profile]);
 
-  const handleUnitsChange = (checked: boolean) => {
-    if (isUpdating) return;
-    setIsUpdating(true);
-    updateProfile({
-      preferred_units: checked ? "imperial" : "metric",
-      use_imperial_units: checked,
-    })
-      .then((res) => {
-        if (res.error) {
-          console.error("[SettingsPage] Units update error:", res.error);
-        }
-      })
-      .catch((err) => {
+  const handleUnitsChange = useCallback(
+    async (checked: boolean) => {
+      if (isUpdating) return;
+      setIsUpdating(true);
+      try {
+        await updateProfile({
+          preferred_units: checked ? "imperial" : "metric",
+          use_imperial_units: checked,
+        });
+
+        setSuccessMessage("Units updated successfully");
+        setTimeout(() => setSuccessMessage(null), 5000);
+      } catch (err) {
         console.error("[SettingsPage] Units update error:", err);
-      })
-      .finally(() => {
+        setError("Failed to update units");
+        setTimeout(() => setError(null), 5000);
+      } finally {
         setIsUpdating(false);
-      });
-  };
+      }
+    },
+    [updateProfile],
+  );
 
   const handleSignOut = async () => {
     try {
@@ -98,6 +104,16 @@ const SettingsPage: React.FC = () => {
       {/* Main Content */}
       <main className="flex-1 p-4 max-w-3xl mx-auto w-full pb-20 lg:pb-4">
         <div className="space-y-6 w-full">
+          {error && (
+            <Alert variant="destructive">
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
+          {successMessage && (
+            <Alert className="border-green-200 bg-green-50 text-green-800">
+              <AlertDescription>{successMessage}</AlertDescription>
+            </Alert>
+          )}
           {/* Units Settings */}
           <div className="space-y-2">
             <h2 className="text-lg font-semibold">Measurements</h2>
@@ -118,12 +134,14 @@ const SettingsPage: React.FC = () => {
                     }}
                   />
                   <button
+                    disabled={isUpdating}
                     className={`flex-1 rounded-full flex items-center justify-center text-sm font-medium z-10 relative transition-colors duration-300 ${useImperialUnits ? "text-white" : "text-gray-500"}`}
                     onClick={() => handleUnitsChange(true)}
                   >
                     in/oz
                   </button>
                   <button
+                    disabled={isUpdating}
                     className={`flex-1 rounded-full flex items-center justify-center text-sm font-medium z-10 relative transition-colors duration-300 ${!useImperialUnits ? "text-white" : "text-gray-500"}`}
                     onClick={() => handleUnitsChange(false)}
                   >

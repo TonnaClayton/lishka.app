@@ -12,10 +12,10 @@ import ScreenTwo from "./screen-two";
 import ScreenFour from "./screen-four";
 import ScreenThree from "./screen-three";
 import ScreenFive from "./screen-five";
-import { useUpdateProfile } from "@/hooks/queries";
 import useIsMobile from "@/hooks/use-is-mobile";
 import useDeviceSize from "@/hooks/use-device-size";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/contexts/auth-context";
 
 export const OnboardingDialog = React.memo(
   ({ hasSeenOnboardingFlow }: { hasSeenOnboardingFlow: boolean }) => {
@@ -24,7 +24,7 @@ export const OnboardingDialog = React.memo(
     const [current, setCurrent] = React.useState(0);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const [count, setCount] = React.useState(0);
-    const mutation = useUpdateProfile();
+    const { updateProfile } = useAuth();
     const [isLoading, setIsLoading] = React.useState(false);
     const isMobile = useIsMobile(550);
     const deviceSize = useDeviceSize();
@@ -45,7 +45,7 @@ export const OnboardingDialog = React.memo(
     const handleContinue = async () => {
       try {
         setIsLoading(true);
-        await mutation.mutateAsync({
+        await updateProfile({
           has_seen_onboarding_flow: true,
         });
         setIsOpen(false);

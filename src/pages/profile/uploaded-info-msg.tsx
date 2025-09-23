@@ -18,7 +18,7 @@ export default function UploadedInfoMsg({
         className,
       )}
     >
-      <div className={cn("h-[30px] w-full flex items-center justify-between")}>
+      <div className={cn(" w-full flex items-center justify-between")}>
         <p className="leading-snug text-white text-sm md:text-base">
           {message}
         </p>

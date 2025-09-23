@@ -64,8 +64,6 @@ const SearchPage: React.FC = () => {
   const { location } = useUserLocation();
   const { profile } = useAuth();
   const { id } = useParams<{ id?: string }>();
-  const [isSuggestedQuestionClicked, setIsSuggestedQuestionClicked] =
-    useState(false);
   const [hasGeneratedFollowUp, setHasGeneratedFollowUp] = useState(false);
 
   const [query, setQuery] = useState("");
@@ -300,7 +298,6 @@ const SearchPage: React.FC = () => {
   };
 
   const handleSuggestionClick = async (suggestion: string) => {
-    setIsSuggestedQuestionClicked(true);
     // Create a user message for the clicked suggestion
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -324,6 +321,8 @@ const SearchPage: React.FC = () => {
     // Process the query directly without setting it in the textarea
     try {
       await processQuery(suggestion, userMessage);
+
+      refetchFollowUpQuestions();
     } catch (err) {
       console.error("Error in handleSuggestionClick:", err);
       setLoading(false);
@@ -346,7 +345,6 @@ const SearchPage: React.FC = () => {
   // Reset follow-up generation state when session ID changes
   useEffect(() => {
     setHasGeneratedFollowUp(false);
-    setIsSuggestedQuestionClicked(false);
   }, [id]);
 
   // Show skeleton while loading session only if we don't have messages from router state
@@ -527,7 +525,7 @@ const SearchPage: React.FC = () => {
                 </div>
               ))}
 
-              {isMobile && !isSuggestedQuestionClicked && (
+              {isMobile && (
                 <div className="flex flex-col gap-2">
                   {followUpQuestions?.length > 0 && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -578,7 +576,7 @@ const SearchPage: React.FC = () => {
       <div className="fixed bottom-16 left-0 right-0 z-20 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 lg:static lg:bottom-auto lg:border-t md:w-full md:mx-auto md:mb-4">
         {/* Follow-up questions chips or loading skeleton */}
 
-        {!isMobile && !isSuggestedQuestionClicked && (
+        {!isMobile && (
           <FollowUpQuestions
             followUpQuestions={followUpQuestions || []}
             followUpLoading={followUpLoading || isRefetchingFollowUpQuestions}
