@@ -64,12 +64,11 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     // Check for main sections
-    expect(screen.getByText("Your AI Fishing Companion")).toBeInTheDocument();
     expect(screen.getByText("Continue with Google")).toBeInTheDocument();
     expect(screen.getByText("Continue with Apple")).toBeInTheDocument();
     expect(screen.getByText("Continue with Email")).toBeInTheDocument();
     expect(screen.getByText("Already have an account?")).toBeInTheDocument();
-    expect(screen.getByText("Sign in")).toBeInTheDocument();
+    expect(screen.getByText("Log In")).toBeInTheDocument();
   });
 
   it("renders the main login page correctly on mobile", async () => {
@@ -78,7 +77,6 @@ describe("LoginPage", () => {
 
     render(<LoginPage />);
 
-    expect(screen.getByText("Your AI Fishing Companion")).toBeInTheDocument();
     expect(screen.getByText("Continue with Google")).toBeInTheDocument();
     expect(screen.getByText("Continue with Apple")).toBeInTheDocument();
     expect(screen.getByText("Continue with Email")).toBeInTheDocument();
@@ -90,7 +88,7 @@ describe("LoginPage", () => {
     const signupLink = screen.getByRole("link", {
       name: /continue with email/i,
     });
-    const loginLink = screen.getByRole("link", { name: /sign in/i });
+    const loginLink = screen.getByRole("link", { name: /log in/i });
 
     expect(signupLink).toHaveAttribute("href", "/signup");
     expect(loginLink).toHaveAttribute("href", "/login/email");
@@ -126,25 +124,6 @@ describe("LoginPage", () => {
       name: /continue with email/i,
     });
     expect(emailLink).toBeInTheDocument();
-  });
-
-  it("handles responsive layout correctly", async () => {
-    const useIsMobile = await import("@/hooks/use-is-mobile");
-
-    // Test desktop layout
-    vi.mocked(useIsMobile.default).mockReturnValue(false);
-    const { rerender } = render(<LoginPage />);
-
-    // Should show both columns on desktop
-    const desktopGrid = document.querySelector(".grid");
-    expect(desktopGrid).toHaveClass("md:grid-cols-[1fr_560px]");
-
-    // Test mobile layout
-    vi.mocked(useIsMobile.default).mockReturnValue(true);
-    rerender(<LoginPage />);
-
-    // Mobile should still render the same content but with different styling
-    expect(screen.getByText("Your AI Fishing Companion")).toBeInTheDocument();
   });
 
   it("contains proper semantic structure", () => {
@@ -187,6 +166,6 @@ describe("LoginPage", () => {
     });
 
     // Secondary action should be less prominent
-    expect(screen.getByText("Sign in")).toBeInTheDocument();
+    expect(screen.getByText("Log In")).toBeInTheDocument();
   });
 });

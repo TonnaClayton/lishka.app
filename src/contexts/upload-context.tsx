@@ -255,7 +255,21 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       console.error("[STREAM] Error uploading photo:", error);
       setClassifyingImage(false);
       setIsUploadLocked(false);
-      setError("Failed to upload photo", "upload", true);
+
+      // Handle timeout errors specifically
+      let errorMsg =
+        error.message?.includes("timeout") ||
+        error.message?.includes("timed out")
+          ? "Upload timed out. Please check your connection and try again."
+          : "Failed to upload photo";
+
+      // check if error is content is too large
+      if (error.message?.includes("content is too large")) {
+        errorMsg =
+          "File is too large. Please reduce the file size and try again.";
+      }
+
+      setError(errorMsg, "upload", true);
     },
     onComplete: () => {
       uploadPhotoCompleteCallBack();
@@ -281,7 +295,21 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       console.error("[STREAM] Error uploading gear item:", error);
       setClassifyingImage(false);
       setIsUploadLocked(false);
-      setError("Failed to upload gear item", "upload", true);
+
+      // Handle timeout errors specifically
+      let errorMsg =
+        error.message?.includes("timeout") ||
+        error.message?.includes("timed out")
+          ? "Upload timed out. Please check your connection and try again."
+          : "Failed to upload gear item";
+
+      // check if error is content is too large
+      if (error.message?.includes("content is too large")) {
+        errorMsg =
+          "File is too large. Please reduce the file size and try again.";
+      }
+
+      setError(errorMsg, "upload", true);
     },
     onComplete: () => {
       uploadGearItemCompleteCallBack();

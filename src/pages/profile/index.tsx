@@ -205,6 +205,8 @@ export default function ProfilePage() {
     handlePhotoUpload,
     closeUploadedInfoMsg,
     totalGearItemsUploading,
+    uploadError,
+    clearError,
   } = useUpload();
 
   // React Query hooks - always call them, let React Query handle the enabled state
@@ -922,6 +924,13 @@ export default function ProfilePage() {
     }
   }, [user, authLoading, navigate]);
 
+  // Clear local error when upload starts
+  useEffect(() => {
+    if (isUploading && error) {
+      setError(null);
+    }
+  }, [isUploading, error]);
+
   // Early returns after all hooks
   if (authLoading) {
     return (
@@ -1021,6 +1030,23 @@ export default function ProfilePage() {
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            {uploadError && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {uploadError.message}
+                  {uploadError.retryable && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="ml-2"
+                      onClick={clearError}
+                    >
+                      Dismiss
+                    </Button>
+                  )}
+                </AlertDescription>
               </Alert>
             )}
             {success && (
