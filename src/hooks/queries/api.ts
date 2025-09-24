@@ -1,4 +1,5 @@
 import { config } from "@/lib/config";
+import { log } from "@/lib/logging";
 
 type SupabaseLocalAuthToken = {
   access_token: string;
@@ -65,6 +66,20 @@ export async function api<T = any>(
     headers: mergedHeaders,
   });
 
+  // Handle HTTP error status codes
+  if (!response.ok) {
+    if (response.status === 413) {
+      throw new Error("content is too large");
+    }
+    if (response.status === 400) {
+      throw new Error(`Bad request: ${response.statusText}`);
+    }
+    if (response.status === 500) {
+      throw new Error(`Server error: ${response.statusText}`);
+    }
+    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+  }
+
   return response.json() as Promise<T>;
 }
 
@@ -119,11 +134,42 @@ export async function apiStreamed(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { headers: _headers, ...restOptions } = options ?? {};
 
-  const response = await fetch(url, {
-    ...restOptions,
-    method: restOptions.method ?? "GET",
-    headers: mergedHeaders,
-  });
+  // Add timeout for fetch request (30 seconds)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
 
-  return response.body;
+  try {
+    const response = await fetch(url, {
+      ...restOptions,
+      method: restOptions.method ?? "GET",
+      headers: mergedHeaders,
+      signal: controller.signal,
+    });
+
+    clearTimeout(timeoutId);
+
+    // Handle HTTP error status codes
+
+    if (!response.ok) {
+      if (response.status === 413) {
+        throw new Error("content is too large");
+      }
+      if (response.status === 400) {
+        throw new Error(`Bad request: ${response.statusText}`);
+      }
+      if (response.status === 500) {
+        throw new Error(`Server error: ${response.statusText}`);
+      }
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+
+    return response.body;
+  } catch (error) {
+    log("[API STREAMED] Error:", error);
+    clearTimeout(timeoutId);
+    if (error instanceof Error && error.name === "AbortError") {
+      throw new Error("Upload request timed out after 30 seconds");
+    }
+    throw error;
+  }
 }
