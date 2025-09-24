@@ -70,6 +70,13 @@ const BottomNav: React.FC = () => {
       return;
     }
 
+    const file = files[0];
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Photo must be less than 10MB");
+      return;
+    }
+
     const fileArray = Array.from(files).slice(0, 10); // Limit to 10 files
 
     try {
