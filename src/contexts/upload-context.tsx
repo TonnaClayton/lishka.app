@@ -626,8 +626,8 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
 
         try {
           const classificationPromises = files.map(async (file) => {
-            if (file.size > 15 * 1024 * 1024) {
-              throw new Error(`Photo must be less than 15MB`);
+            if (file.size > 10 * 1024 * 1024) {
+              throw new Error(`Photo must be less than 10MB`);
             }
 
             if (!file.type.startsWith("image/")) {

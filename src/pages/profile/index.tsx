@@ -356,11 +356,11 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // if (file.size > 15 * 1024 * 1024) {
-    //   setError(`Photo must be less than 15MB`);
-    //   e.target.value = "";
-    //   return;
-    // }
+    if (file.size > 10 * 1024 * 1024) {
+      setError(`Photo must be less than 10MB`);
+      e.target.value = "";
+      return;
+    }
 
     try {
       setLoading(true);
