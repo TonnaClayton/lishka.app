@@ -182,13 +182,89 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
   });
 
   // Helper function to create FormData
-  const createFormData = useCallback((files: File[]): FormData => {
-    const formData = new FormData();
-    files.forEach((file) => {
-      formData.append("file", file);
-    });
-    return formData;
-  }, []);
+  const createFormData = useCallback(
+    async (files: File[]): Promise<FormData> => {
+      const formData = new FormData();
+      const FILE_SIZE_LIMIT = 3 * 1024 * 1024; // 3MB in bytes
+
+      const streamData = {
+        data: {
+          message: "Uploading large file...",
+          analyzing: UploadStepStatus.PROCESSING,
+          uploading: UploadStepStatus.PENDING,
+          saved: UploadStepStatus.PENDING,
+          errors: [],
+          processedFiles: 0,
+          totalFiles: 1,
+          uploadStatus: UploadStepStatus.PENDING,
+          classificationResult: null,
+        },
+      };
+
+      for (const file of files) {
+        if (file.size > FILE_SIZE_LIMIT) {
+          if (files.length === 1) {
+            if (universalUploadStreamData == null) {
+              setUniversalUploadStreamData(streamData);
+            }
+          } else {
+            if (uploadGearItemsStreamData == null) {
+              setUploadGearItemsStreamData(streamData);
+            }
+          }
+          try {
+            // Upload large file to Supabase and get URL
+            const { uploadImageToSupabase } = await import(
+              "@/lib/supabase-storage"
+            );
+            const fileUrl = await uploadImageToSupabase(file, "temp-uploads");
+
+            // Append the URL instead of the file
+            formData.append("fileUrl", fileUrl);
+            formData.append("fileName", file.name);
+            formData.append("fileSize", file.size.toString());
+            formData.append("fileType", file.type);
+          } catch (error) {
+            streamData.data.analyzing = UploadStepStatus.FAILED;
+            streamData.data.uploading = UploadStepStatus.FAILED;
+            streamData.data.saved = UploadStepStatus.FAILED;
+            streamData.data.errors.push(
+              `Failed to upload ${file.name}. Please try again.`,
+            );
+            if (files.length === 1) {
+              setUniversalUploadStreamData(streamData);
+            } else {
+              setUploadGearItemsStreamData(streamData);
+            }
+
+            setTimeout(() => {
+              if (files.length === 1) {
+                setUniversalUploadStreamData(null);
+              } else {
+                setUploadGearItemsStreamData(null);
+              }
+            }, 1500);
+            console.error(
+              "[UPLOAD] Failed to upload large file to Supabase:",
+              error,
+            );
+            throw new Error(`Failed to upload ${file.name}. Please try again.`);
+          }
+        } else {
+          // Attach small file directly
+          formData.append("file", file);
+        }
+      }
+
+      return formData;
+    },
+    [
+      setUniversalUploadStreamData,
+      setUploadGearItemsStreamData,
+      universalUploadStreamData,
+      uploadGearItemsStreamData,
+    ],
+  );
 
   // Comprehensive timeout cleanup
   const clearAllTimeouts = useCallback(() => {
@@ -229,7 +305,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
         return data;
       } catch (error) {
         console.error("[UPLOAD] Failed to parse upload data:", error);
-        setError("Invalid server response", "upload", false);
+        // setError("Invalid server response", "upload", false);
         return null;
       }
     },
@@ -426,7 +502,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       clearError();
 
       try {
-        const formData = createFormData(files);
+        const formData = await createFormData(files);
 
         if (type === "gear") {
           uploadGearItemsStream.startStream({

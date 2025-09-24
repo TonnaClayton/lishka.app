@@ -64,6 +64,7 @@ import { ROUTES } from "@/lib/routing";
 import ItemUploadBar from "./item-upload-bar";
 import { toImageMetadataItem } from "@/lib/gallery-photo";
 import UploadedInfoMsg from "./uploaded-info-msg";
+import { error as errorLog } from "@/lib/logging";
 
 interface ImageMetadata {
   url: string;
@@ -368,7 +369,8 @@ export default function ProfilePage() {
       });
       setTimeout(() => setSuccess(null), 5000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to upload photo");
+      errorLog("[ProfilePage] Error uploading photo:", err);
+      // setError(err instanceof Error ? err.message : "Failed to upload photo");
     } finally {
       setLoading(false);
       e.target.value = "";
@@ -378,9 +380,12 @@ export default function ProfilePage() {
   const handleDeletePhoto = async (index: number) => {
     try {
       await deletePhoto.mutateAsync(index);
+      setSuccess("Photo deleted successfully!");
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      console.error("[ProfilePage] Error deleting photo:", err);
+      errorLog("[ProfilePage] Error deleting photo:", err);
       setError("Failed to delete photo. Please try again.");
+      setTimeout(() => setError(null), 5000);
     } finally {
       setLoading(false);
     }
