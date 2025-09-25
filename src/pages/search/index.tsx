@@ -267,6 +267,9 @@ const SearchPage: React.FC = () => {
     e.preventDefault();
     if ((!query.trim() && !imageFile) || loading) return;
 
+    // Hide follow-up questions when user types and sends manually
+    setHideFollowUpQuestions(true);
+
     const userMessage: Message = {
       id: Date.now().toString(),
       user_role: "user",
@@ -291,6 +294,8 @@ const SearchPage: React.FC = () => {
         userMessage,
         currentImageFile || undefined,
       );
+
+      refetchFollowUpQuestions();
     } catch (err) {
       console.error("Error in handleSubmit:", err);
       setLoading(false);

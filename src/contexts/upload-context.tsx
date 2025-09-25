@@ -39,6 +39,7 @@ export type UploadPhotoStreamData = {
     type?: string;
     confidence?: number;
     classifying?: UploadStepStatus;
+    analyzeResult?: string;
     analyzing: UploadStepStatus;
     uploading: UploadStepStatus;
     saved: UploadStepStatus;
@@ -320,8 +321,8 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       if (!data) return;
 
       // Improved gear message detection with safer string checking
-      if (data.data.message?.includes?.("Gear uploaded! Identified:")) {
-        setIdentifyGearMessage(data.data.message);
+      if (data.data.analyzeResult && data.data.analyzeResult != "") {
+        setIdentifyGearMessage(data.data.analyzeResult);
       }
 
       setUniversalUploadStreamData(data);

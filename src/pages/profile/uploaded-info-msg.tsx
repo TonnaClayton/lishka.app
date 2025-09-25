@@ -19,7 +19,7 @@ export default function UploadedInfoMsg({
       )}
     >
       <div className={cn(" w-full flex items-center justify-between")}>
-        <p className="leading-snug text-white text-sm md:text-base">
+        <p className="leading-snug text-white text-sm md:text-base whitespace-pre-wrap">
           {message}
         </p>
         <button onClick={onClose}>

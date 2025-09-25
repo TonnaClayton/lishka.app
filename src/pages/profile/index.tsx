@@ -473,7 +473,7 @@ export default function ProfilePage() {
 
     try {
       await handlePhotoUpload(fileArray, {
-        type: "gear",
+        type: "photo",
       }); // The context handles both photo and gear uploads
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload gear");
@@ -1033,8 +1033,15 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {/* Alerts */}
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="relative">
                 <AlertDescription>{error}</AlertDescription>
+                <button
+                  onClick={() => setError(null)}
+                  className="absolute top-2 right-2 p-1 hover:bg-black/10 rounded-sm transition-colors"
+                  aria-label="Close alert"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </Alert>
             )}
             {uploadError && (
