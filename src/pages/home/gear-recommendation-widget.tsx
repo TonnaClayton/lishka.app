@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Package, Loader2, AlertCircle } from "lucide-react";
 import LoadingDots from "@/components/loading-dots";
@@ -8,6 +8,7 @@ import { useGetWeatherSummary } from "@/hooks/queries";
 import GearRecommendationSkeleton from "./gear-recommendation-skeleton";
 import { useGetGearRecommendation } from "@/hooks/queries/gear/use-gear-recommendation";
 import { GearItem } from "@/lib/gear";
+import { cn } from "@/lib/utils";
 
 // interface WeatherConditions {
 //   temperature: number;
@@ -24,7 +25,10 @@ interface AIRecommendation {
   gear_id: string;
   score: number;
   reasoning: string;
-  suitability_for_conditions: string;
+  suitability_for_conditions?: string;
+  method_tags?: string[];
+  match_type?: string;
+  confidence?: number;
 }
 
 // interface AnalysisState {
@@ -37,6 +41,7 @@ interface AIRecommendation {
 const GearRecommendationWidget: React.FC = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
+  const [selectedTag, setSelectedTag] = useState<string | null>(null);
   // const [analysis, setAnalysis] = useState<AnalysisState>({
   //   phase: "idle",
   //   weatherConditions: null,
@@ -106,10 +111,24 @@ const GearRecommendationWidget: React.FC = () => {
   //   }
   // };
 
+  const recommendations = useMemo(() => {
+    return [
+      ...(gearRecommendation?.recommendations || []),
+      ...(gearRecommendation?.alternativesIfNone || []),
+    ];
+  }, [gearRecommendation]);
+
+  const tags = useMemo(() => {
+    return recommendations?.map((rec) => rec.method_tags).flat() || [];
+  }, [recommendations]);
+
   // Get recommendation for specific gear
-  const getRecommendation = (gearId: string): AIRecommendation | null => {
-    return gearRecommendation?.find((rec) => rec.gear_id === gearId) || null;
-  };
+  const getRecommendation = useCallback(
+    (gearId: string): AIRecommendation | null => {
+      return recommendations?.find((rec) => rec.gear_id === gearId) || null;
+    },
+    [recommendations],
+  );
 
   // Get fishing technique for gear - prioritize AI data
   const getFishingTechnique = (gear: GearItem): string => {
@@ -121,19 +140,24 @@ const GearRecommendationWidget: React.FC = () => {
   };
 
   // Get gear tip based on AI recommendation only
-  const getGearTip = (gear: GearItem): string => {
-    const recommendation = getRecommendation(gear.id);
-    if (recommendation) {
-      return recommendation.suitability_for_conditions;
-    }
+  const getGearTip = useCallback(
+    (gear: GearItem): string => {
+      if (!recommendations) return "Waiting for AI analysis...";
 
-    // Only show if we have AI analysis complete, otherwise show waiting message
-    // if (analysis.phase === "complete") {
-    //   return "Analyzing suitability for current conditions...";
-    // }
+      const recommendation = getRecommendation(gear.id);
+      if (recommendation) {
+        return recommendation.reasoning;
+      }
 
-    return "Waiting for AI analysis...";
-  };
+      // Only show if we have AI analysis complete, otherwise show waiting message
+      // if (analysis.phase === "complete") {
+      //   return "Analyzing suitability for current conditions...";
+      // }
+
+      return "No recommendation found";
+    },
+    [getRecommendation, recommendations],
+  );
 
   // Get depth range from gear AI data
   const getDepthRange = (gear: GearItem): string | null => {
@@ -147,16 +171,27 @@ const GearRecommendationWidget: React.FC = () => {
     return null;
   };
 
-  // Sort gear by AI scores
-  const getSortedGear = (): GearItem[] => {
-    return [...userGear].sort((a: any, b: any) => {
+  // Sort gear by AI scores and filter by selected tag
+  const getSortedGear = useCallback((): GearItem[] => {
+    let filteredGear = [...userGear];
+
+    // Filter by selected tag if one is selected
+    if (selectedTag) {
+      filteredGear = filteredGear.filter((gear) => {
+        const recommendation = getRecommendation(gear.id);
+        return recommendation?.method_tags?.includes(selectedTag);
+      });
+    }
+
+    // Sort by AI scores
+    return filteredGear.sort((a: any, b: any) => {
       const scoreA = getRecommendation(a.id)?.score || 0;
       const scoreB = getRecommendation(b.id)?.score || 0;
 
       if (scoreA !== scoreB) return scoreB - scoreA;
       return a.name.localeCompare(b.name);
     });
-  };
+  }, [userGear, selectedTag, getRecommendation]);
 
   // Retry analysis
   // const retryAnalysis = () => {
@@ -273,6 +308,35 @@ const GearRecommendationWidget: React.FC = () => {
       ) : (
         /* Show gear recommendations */
         <div className="w-full">
+          {tags.length > 0 && (
+            <div className="flex gap-2 overflow-x-auto pb-4 -webkit-overflow-scrolling-touch px-1">
+              <Button
+                type="button"
+                className={cn(
+                  "bg-[#191B1F0D] shadow-none text-sm font-medium text-[#65758B] h-[36px] rounded-[30px] py-2 px-4 w-fit flex-shrink-0",
+                  selectedTag === null && "bg-[#191B1F] text-white",
+                )}
+                onClick={() => setSelectedTag(null)}
+              >
+                All
+              </Button>
+              {[...new Set(tags)].map((tag, index) => (
+                <Button
+                  key={index}
+                  type="button"
+                  className={cn(
+                    "bg-[#191B1F0D] shadow-none text-sm font-medium text-[#65758B] h-[36px] capitalize rounded-[30px] py-2 px-4 w-fit flex-shrink-0",
+                    selectedTag === tag && "bg-[#191B1F] text-white",
+                  )}
+                  onClick={() =>
+                    setSelectedTag(selectedTag === tag ? null : tag)
+                  }
+                >
+                  {tag}
+                </Button>
+              ))}
+            </div>
+          )}
           <div
             className="flex gap-3 overflow-x-auto pb-4 -webkit-overflow-scrolling-touch px-1"
             style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
