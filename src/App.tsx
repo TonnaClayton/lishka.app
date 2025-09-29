@@ -47,10 +47,8 @@ const SideNav = lazy(() =>
 const WeatherWidgetPro = lazy(() => import("./components/weather-widget-pro"));
 const SettingsPage = lazy(() => import("./components/settings-page"));
 const FaqPage = lazy(() => import("./components/faq-page"));
-const TermsPage = lazy(() => import("./components/terms-page"));
-const PrivacyPolicyPage = lazy(
-  () => import("./components/privacy-policy-page"),
-);
+const TermsPage = lazy(() => import("./pages/terms"));
+const PrivacyPolicyPage = lazy(() => import("./pages/privacy-policy"));
 const BlobConnectionTest = lazy(
   () => import("./components/blob-connection-test"),
 );
@@ -85,6 +83,14 @@ const router = createBrowserRouter(
         {
           path: "/home",
           element: <LandingPage />,
+        },
+        {
+          path: ROUTES.TERMS,
+          element: <TermsPage />,
+        },
+        {
+          path: ROUTES.PRIVACY_POLICY,
+          element: <PrivacyPolicyPage />,
         },
         {
           path: ROUTES.LOGIN,
@@ -231,22 +237,7 @@ const router = createBrowserRouter(
             </ProtectedRoute>
           ),
         },
-        {
-          path: ROUTES.TERMS,
-          element: (
-            <ProtectedRoute>
-              <TermsPage />
-            </ProtectedRoute>
-          ),
-        },
-        {
-          path: ROUTES.PRIVACY_POLICY,
-          element: (
-            <ProtectedRoute>
-              <PrivacyPolicyPage />
-            </ProtectedRoute>
-          ),
-        },
+
         {
           path: ROUTES.MY_GEAR,
           element: (
@@ -397,6 +388,8 @@ function AppContent() {
     ROUTES.LOGIN_EMAIL,
     ROUTES.RESET_PASSWORD,
     "/home",
+    ROUTES.PRIVACY_POLICY,
+    ROUTES.TERMS,
   ].includes(location.pathname);
 
   const is404Page =
