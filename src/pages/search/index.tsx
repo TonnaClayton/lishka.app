@@ -97,6 +97,7 @@ const SearchPage: React.FC = () => {
   const [suggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
   const [selectedImages, setSelectedImages] = useState<string[]>([]);
   const [imageFiles, setImageFiles] = useState<File[]>([]);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -154,7 +155,7 @@ const SearchPage: React.FC = () => {
           id: message.id,
           user_role: message.user_role,
           image: fixBrokenBase64Url(message.image),
-          images: message.metadata.images?.map(fixBrokenBase64Url) || [],
+          images: message.metadata?.images?.map(fixBrokenBase64Url) || [],
           content: message.content,
           timestamp: new Date(message.created_at),
           fish_results: message.metadata?.fish_results || [],
@@ -496,13 +497,27 @@ const SearchPage: React.FC = () => {
                         : "bg-[#F7F7F7] text-[#191B1F]",
                     )}
                   >
-                    {message.image && (
+                    {message.images && message.images.length > 0 && (
                       <div className="mb-3 px-4">
-                        <img
-                          src={message.image}
-                          alt="Uploaded image"
-                          className="max-w-full h-auto rounded-lg max-h-64 object-contain"
-                        />
+                        {message.images.length === 1 ? (
+                          <img
+                            src={message.images[0]}
+                            alt="Uploaded image"
+                            className="max-w-full h-auto rounded-lg max-h-64 object-contain"
+                          />
+                        ) : (
+                          <div className="grid grid-cols-2 gap-2 max-w-sm">
+                            {message.images.map((image, index) => (
+                              <img
+                                key={index}
+                                src={image}
+                                alt={`Uploaded image ${index + 1}`}
+                                className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                                onClick={() => setPreviewImage(image)}
+                              />
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                     <div className="px-4">
@@ -743,6 +758,29 @@ const SearchPage: React.FC = () => {
       {/* Bottom Navigation - Fixed at bottom on mobile, hidden on desktop */}
 
       <BottomNav />
+
+      {/* Image Preview Modal */}
+      {previewImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black bg-opacity-75 flex items-center justify-center p-4"
+          onClick={() => setPreviewImage(null)}
+        >
+          <div className="relative max-w-full overflow-hidden flex flex-col justify-center items-center max-h-full">
+            <img
+              src={previewImage}
+              alt="Preview"
+              className="object-contain aspect-square rounded-lg"
+              onClick={(e) => e.stopPropagation()}
+            />
+            <button
+              onClick={() => setPreviewImage(null)}
+              className="absolute top-2 right-2 bg-black bg-opacity-50 text-white rounded-full w-8 h-8 flex items-center justify-center hover:bg-opacity-75 transition-all"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
