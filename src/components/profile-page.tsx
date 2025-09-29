@@ -870,10 +870,10 @@ const ProfilePage: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 15MB)
-    if (file.size > 15 * 1024 * 1024) {
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
       setError(
-        `Gear image must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+        `Gear image must be less than 10MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
       );
       e.target.value = "";
       return;
@@ -1309,10 +1309,10 @@ const ProfilePage: React.FC = () => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Validate file size (max 15MB)
-    if (file.size > 15 * 1024 * 1024) {
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
       setError(
-        `Photo must be less than 15MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
+        `Photo must be less than 10MB (current: ${(file.size / (1024 * 1024)).toFixed(1)}MB)`,
       );
       e.target.value = "";
       return;

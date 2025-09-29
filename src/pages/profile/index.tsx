@@ -64,6 +64,7 @@ import { ROUTES } from "@/lib/routing";
 import ItemUploadBar from "./item-upload-bar";
 import { toImageMetadataItem } from "@/lib/gallery-photo";
 import UploadedInfoMsg from "./uploaded-info-msg";
+import { error as errorLog } from "@/lib/logging";
 
 interface ImageMetadata {
   url: string;
@@ -196,8 +197,8 @@ export default function ProfilePage() {
   const { user, profile, loading: authLoading } = useAuth();
 
   const {
-    uploadPhotoStreamData,
-    uploadGearItemStreamData,
+    universalUploadStreamData,
+    uploadGearItemsStreamData,
     classifyingImage,
     showUploadedInfoMsg,
     uploadedInfoMsg,
@@ -205,6 +206,8 @@ export default function ProfilePage() {
     handlePhotoUpload,
     closeUploadedInfoMsg,
     totalGearItemsUploading,
+    uploadError,
+    clearError,
   } = useUpload();
 
   // React Query hooks - always call them, let React Query handle the enabled state
@@ -269,7 +272,7 @@ export default function ProfilePage() {
     if (!profile?.gallery_photos) return [];
 
     return profile?.gallery_photos.map(toImageMetadataItem);
-  }, [profile, isUploading, uploadPhotoStreamData]);
+  }, [profile, isUploading, universalUploadStreamData]);
 
   // React Hook Form setup
   const form = useForm<ProfileFormData>({
@@ -353,8 +356,8 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 15 * 1024 * 1024) {
-      setError(`Photo must be less than 15MB`);
+    if (file.size > 10 * 1024 * 1024) {
+      setError(`Photo must be less than 10MB`);
       e.target.value = "";
       return;
     }
@@ -366,7 +369,8 @@ export default function ProfilePage() {
       });
       setTimeout(() => setSuccess(null), 5000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to upload photo");
+      errorLog("[ProfilePage] Error uploading photo:", err);
+      // setError(err instanceof Error ? err.message : "Failed to upload photo");
     } finally {
       setLoading(false);
       e.target.value = "";
@@ -376,9 +380,12 @@ export default function ProfilePage() {
   const handleDeletePhoto = async (index: number) => {
     try {
       await deletePhoto.mutateAsync(index);
+      setSuccess("Photo deleted successfully!");
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      console.error("[ProfilePage] Error deleting photo:", err);
+      errorLog("[ProfilePage] Error deleting photo:", err);
       setError("Failed to delete photo. Please try again.");
+      setTimeout(() => setError(null), 5000);
     } finally {
       setLoading(false);
     }
@@ -466,7 +473,7 @@ export default function ProfilePage() {
 
     try {
       await handlePhotoUpload(fileArray, {
-        type: "gear",
+        type: "photo",
       }); // The context handles both photo and gear uploads
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload gear");
@@ -922,6 +929,13 @@ export default function ProfilePage() {
     }
   }, [user, authLoading, navigate]);
 
+  // Clear local error when upload starts
+  useEffect(() => {
+    if (isUploading && error) {
+      setError(null);
+    }
+  }, [isUploading, error]);
+
   // Early returns after all hooks
   if (authLoading) {
     return (
@@ -1001,10 +1015,10 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      <ItemUploadBar streamData={uploadPhotoStreamData} />
+      <ItemUploadBar streamData={universalUploadStreamData} />
       <ItemUploadBar
         totalItemsUploading={totalGearItemsUploading}
-        streamData={uploadGearItemStreamData}
+        streamData={uploadGearItemsStreamData}
       />
       {showUploadedInfoMsg && uploadedInfoMsg && (
         <UploadedInfoMsg
@@ -1019,8 +1033,32 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {/* Alerts */}
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="relative">
                 <AlertDescription>{error}</AlertDescription>
+                <button
+                  onClick={() => setError(null)}
+                  className="absolute top-2 right-2 p-1 hover:bg-black/10 rounded-sm transition-colors"
+                  aria-label="Close alert"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </Alert>
+            )}
+            {uploadError && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {uploadError.message}
+                  {uploadError.retryable && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="ml-2"
+                      onClick={clearError}
+                    >
+                      Dismiss
+                    </Button>
+                  )}
+                </AlertDescription>
               </Alert>
             )}
             {success && (

@@ -71,10 +71,16 @@ export const useStream = ({
         const decoder = new TextDecoder();
 
         try {
+          // Add timeout for stream reading (45 seconds)
+          const streamTimeout = setTimeout(() => {
+            abortControllerRef.current?.abort();
+          }, 45000);
+
           while (true) {
             const { done, value } = await reader.read();
 
             if (done) {
+              clearTimeout(streamTimeout);
               onComplete?.();
               break;
             }
@@ -87,6 +93,8 @@ export const useStream = ({
               return newData;
             });
           }
+
+          clearTimeout(streamTimeout);
         } finally {
           reader.releaseLock();
         }

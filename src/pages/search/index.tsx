@@ -69,6 +69,7 @@ const SearchPage: React.FC = () => {
   const [clickedFollowUpQuestions, setClickedFollowUpQuestions] = useState<
     Set<string>
   >(new Set());
+  const [hideFollowUpQuestions, setHideFollowUpQuestions] = useState(false);
 
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>(() => {
@@ -273,6 +274,9 @@ const SearchPage: React.FC = () => {
     e.preventDefault();
     if ((!query.trim() && imageFiles.length === 0) || loading) return;
 
+    // Hide follow-up questions when user types and sends manually
+    setHideFollowUpQuestions(true);
+
     const userMessage: Message = {
       id: Date.now().toString(),
       user_role: "user",
@@ -300,6 +304,8 @@ const SearchPage: React.FC = () => {
         userMessage,
         currentImageFiles.length > 0 ? currentImageFiles : undefined,
       );
+
+      refetchFollowUpQuestions();
     } catch (err) {
       console.error("Error in handleSubmit:", err);
       setLoading(false);
@@ -310,6 +316,8 @@ const SearchPage: React.FC = () => {
   const handleSuggestionClick = async (suggestion: string) => {
     // Add the clicked question to the set of clicked questions
     setClickedFollowUpQuestions((prev) => new Set(prev).add(suggestion));
+    // Hide follow-up questions immediately when clicked
+    setHideFollowUpQuestions(true);
 
     // Create a user message for the clicked suggestion
     const userMessage: Message = {
@@ -352,6 +360,7 @@ const SearchPage: React.FC = () => {
     ) {
       refetchFollowUpQuestions();
       setHasGeneratedFollowUp(true);
+      setHideFollowUpQuestions(false); // Show new follow-up questions
     }
   }, [messagesMemo, hasGeneratedFollowUp, refetchFollowUpQuestions]);
 
@@ -366,6 +375,7 @@ const SearchPage: React.FC = () => {
   useEffect(() => {
     setHasGeneratedFollowUp(false);
     setClickedFollowUpQuestions(new Set());
+    setHideFollowUpQuestions(false);
   }, [id]);
 
   // Show skeleton while loading session only if we don't have messages from router state
@@ -389,6 +399,7 @@ const SearchPage: React.FC = () => {
                 setMessages([]);
                 setError(null);
                 setHasGeneratedFollowUp(false);
+                setHideFollowUpQuestions(false);
                 navigate("/search");
               }}
               className="mr-1"
@@ -548,7 +559,7 @@ const SearchPage: React.FC = () => {
 
               {isMobile && (
                 <div className="flex flex-col gap-2">
-                  {followUpQuestions?.length > 0 && (
+                  {followUpQuestions?.length > 0 && !hideFollowUpQuestions && (
                     <p className="text-sm text-gray-500 dark:text-gray-400">
                       Follow-up questions
                     </p>
@@ -561,6 +572,7 @@ const SearchPage: React.FC = () => {
                     loading={loading}
                     handleSuggestionClick={handleSuggestionClick}
                     clickedQuestions={clickedFollowUpQuestions}
+                    hideFollowUpQuestions={hideFollowUpQuestions}
                   />
                 </div>
               )}
@@ -605,6 +617,7 @@ const SearchPage: React.FC = () => {
             loading={loading}
             handleSuggestionClick={handleSuggestionClick}
             clickedQuestions={clickedFollowUpQuestions}
+            hideFollowUpQuestions={hideFollowUpQuestions}
           />
         )}
 
@@ -773,14 +786,20 @@ const FollowUpQuestions = ({
   loading,
   handleSuggestionClick,
   clickedQuestions,
+  hideFollowUpQuestions,
 }: {
   followUpQuestions?: string[];
   followUpLoading: boolean;
   loading: boolean;
   handleSuggestionClick: (suggestion: string) => void;
   clickedQuestions: Set<string>;
+  hideFollowUpQuestions: boolean;
 }) => {
-  if (followUpQuestions == undefined || followUpQuestions == null) {
+  if (
+    followUpQuestions == undefined ||
+    followUpQuestions == null ||
+    hideFollowUpQuestions
+  ) {
     return null;
   }
 

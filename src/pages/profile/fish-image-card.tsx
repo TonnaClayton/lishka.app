@@ -435,7 +435,7 @@ function FishImageCard({
           <div className="flex items-center justify-end pr-5">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="text-white p-1.5 transition-colors">
+                <button className="text-white h-fit w-fit transition-colors">
                   <MoreVertical className="w-5 h-5 rotate-90" />
                 </button>
               </DropdownMenuTrigger>

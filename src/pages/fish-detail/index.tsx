@@ -1008,7 +1008,7 @@ const FishDetailPage = () => {
             </div>
 
             {/* Weather Widget - Desktop only */}
-            <div className="hidden lg:block w-80 min-w-[320px] border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+            <div className="hidden lg:block lg:w-[380px] lg:flex-none bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 h-full overflow-y-auto">
               <div className="h-full overflow-y-auto">
                 <WeatherWidgetPro />
               </div>
@@ -1795,7 +1795,7 @@ const FishDetailPage = () => {
           </div>
 
           {/* Weather Widget - Desktop only */}
-          <div className="hidden lg:block w-80 min-w-[320px] border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <div className="hidden lg:block lg:w-[380px] lg:flex-none bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 h-full overflow-y-auto">
             <div className="h-full overflow-y-auto">
               <WeatherWidgetPro />
             </div>
