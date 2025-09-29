@@ -95,9 +95,10 @@ export const useCreateSearchSession = () =>
       use_location_context?: boolean;
       use_imperial_units?: boolean;
       message: string;
-      attachment?: File;
+      attachments?: File[];
       session_id?: string;
     }) => {
+      const FILE_SIZE_LIMIT = 3 * 1024 * 1024; // 3MB in bytes
       const formData = new FormData();
       formData.append(
         "use_location_context",
@@ -109,8 +110,29 @@ export const useCreateSearchSession = () =>
       );
       formData.append("message", payload.message);
 
-      if (payload.attachment) {
-        formData.append("attachment", payload.attachment);
+      for (const file of payload.attachments) {
+        if (file.size > FILE_SIZE_LIMIT || payload.attachments.length > 1) {
+          try {
+            // Upload large file to Supabase and get URL
+            // NOTE: This is to avoid the vercel request size limit
+            const { uploadImageToSupabase } = await import(
+              "@/lib/supabase-storage"
+            );
+            const fileUrl = await uploadImageToSupabase(file, "temp-uploads");
+
+            // Append the URL instead of the file
+            formData.append("attachmentsUrls", fileUrl);
+          } catch (error) {
+            console.error(
+              "[UPLOAD] Failed to upload large file to Supabase:",
+              error,
+            );
+            throw new Error(`Failed to upload ${file.name}. Please try again.`);
+          }
+        } else {
+          // Attach small file directly
+          formData.append("attachments", file);
+        }
       }
 
       let path = "search-agent/sessions";

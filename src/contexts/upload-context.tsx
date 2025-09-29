@@ -203,7 +203,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       };
 
       for (const file of files) {
-        if (file.size > FILE_SIZE_LIMIT) {
+        if (file.size > FILE_SIZE_LIMIT || files.length > 1) {
           if (files.length === 1) {
             if (universalUploadStreamData == null) {
               setUniversalUploadStreamData(streamData);
