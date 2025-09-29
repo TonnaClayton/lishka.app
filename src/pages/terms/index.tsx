@@ -13,20 +13,22 @@ const TermsPage: React.FC = () => {
         navigate(-1);
       }}
     >
-      <LandingPageHeader
-        scrollToSection={() => {
-          navigate(-1);
-        }}
-        isMobileMenuOpen={false}
-        setIsMobileMenuOpen={() => {}}
-      />
+      <div className="relative w-full">
+        <LandingPageHeader
+          scrollToSection={() => {
+            navigate(-1);
+          }}
+          isMobileMenuOpen={false}
+          setIsMobileMenuOpen={() => {}}
+        />
+      </div>
       <div className="flex mt-20 bg-black mb-10 flex-col">
         {/* Main Content */}
 
         <div className="max-w-3xl mx-auto w-full">
-          <div className=" space-y-6">
+          <div className="px-4 md:px-0 space-y-6">
             <div className="flex items-center">
-              <h1 className="text-6xl font-bold text-white">
+              <h1 className="text-6xl font-bold font-[serif] text-white">
                 Terms of Service
               </h1>
             </div>

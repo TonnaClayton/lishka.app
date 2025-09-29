@@ -13,20 +13,24 @@ const PrivacyPolicyPage: React.FC = () => {
         navigate(-1);
       }}
     >
-      <LandingPageHeader
-        scrollToSection={() => {
-          navigate(-1);
-        }}
-        isMobileMenuOpen={false}
-        setIsMobileMenuOpen={() => {}}
-      />
+      <div className="relative w-full">
+        <LandingPageHeader
+          scrollToSection={() => {
+            navigate(-1);
+          }}
+          isMobileMenuOpen={false}
+          setIsMobileMenuOpen={() => {}}
+        />
+      </div>
 
       {/* Main Content */}
       <main className="flex-1 bg-black mt-20 mb-10 pb-20">
         <div className="max-w-3xl mx-auto w-full">
-          <div className=" space-y-6">
+          <div className="px-4 md:px-0 space-y-6">
             <div className="flex items-center text-white">
-              <h1 className="text-6xl font-bold">Privacy Policy</h1>
+              <h1 className="text-6xl font-bold font-[serif]">
+                Privacy Policy
+              </h1>
             </div>
             <div className="space-y-4">
               <h2 className="text-lg font-semibold text-white">

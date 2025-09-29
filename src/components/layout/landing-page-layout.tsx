@@ -82,8 +82,20 @@ export default function LandingPageLayout({
         <div className="flex justify-between items-center py-0 w-full lg:w-3/5">
           <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-0">
             <div className="text-white/60 text-sm">© 2025 Lishka App</div>
-            <div className="md:hidden text-white/60 text-sm hover:text-white/80 transition-colors cursor-pointer">
-              Privacy Policy
+            <div className="flex md:hidden gap-2 items-center">
+              <Link
+                to={ROUTES.PRIVACY_POLICY}
+                className=" text-white/60 text-sm hover:text-white/80 transition-colors cursor-pointer"
+              >
+                Privacy Policy
+              </Link>
+              <span className="text-white/60">•</span>
+              <Link
+                to={ROUTES.TERMS}
+                className=" text-white/60 text-sm hover:text-white/80 transition-colors cursor-pointer"
+              >
+                Terms
+              </Link>
             </div>
           </div>
           <div className="flex items-center">
@@ -97,12 +109,21 @@ export default function LandingPageLayout({
             </a>
           </div>
 
-          <Link
-            to={ROUTES.PRIVACY_POLICY}
-            className="hidden md:block text-white/60 text-sm hover:text-white/80 transition-colors cursor-pointer"
-          >
-            Privacy Policy
-          </Link>
+          <div className="hidden md:flex gap-2 items-center">
+            <Link
+              to={ROUTES.PRIVACY_POLICY}
+              className=" text-white/60 text-sm hover:text-white/80 transition-colors cursor-pointer"
+            >
+              Privacy Policy
+            </Link>
+            <span className="text-white/60">•</span>
+            <Link
+              to={ROUTES.TERMS}
+              className=" text-white/60 text-sm hover:text-white/80 transition-colors cursor-pointer"
+            >
+              Terms
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -317,7 +338,7 @@ export function LandingPageHeader({
         <div className="particle particle-10"></div>
       </div>
       {/* Background glow */}
-      <div className="flex justify-center items-center w-[600px] h-[300px] absolute rounded-full top-[-105px] blur-3xl left-1/2 -translate-x-1/2 bg-[#0251FB] opacity-35" />
+      <div className="flex justify-center items-center w-[600px] max-w-full md:max-w-[600px] h-[300px] absolute rounded-full top-[-105px] blur-3xl left-1/2 -translate-x-1/2 bg-[#0251FB] opacity-35" />
 
       {/* Glass navbar pill */}
       <div className="w-full bg-transparent flex justify-center items-center relative overflow-visible h-[150px] px-5">
