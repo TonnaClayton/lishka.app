@@ -292,7 +292,10 @@ function FishImageCard({
   return (
     <div className={cn(`relative`)}>
       {/* Main image button */}
-      <button onClick={handleImageClick} className="">
+      <button
+        onClick={handleImageClick}
+        className={cn(isSingleColumn ? "" : "h-full")}
+      >
         {/* Loading spinner - only show when image is visible and loading */}
         {isVisible && isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-[8px]">

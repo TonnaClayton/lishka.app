@@ -1339,8 +1339,8 @@ export default function ProfilePage() {
                     onClick={handlePhotoUploadClick}
                     disabled={isUploading || classifyingImage}
                     className={cn(
-                      "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex-col relative transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation",
-                      isSingleColumn ? "h-20 rounded-lg mb-2" : "aspect-square",
+                      "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex-col relative transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation rounded-[8px]",
+                      isSingleColumn ? "h-20 rounded-lg mb-2" : "h-full",
                     )}
                     style={{
                       WebkitTapHighlightColor: "transparent",
