@@ -10,6 +10,7 @@ import { Edit3, MoreVertical, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router";
 import { ROUTES } from "@/lib/routing";
+import { captureEvent } from "@/lib/posthog";
 
 export default function GearItemCard({
   gear,
@@ -114,6 +115,11 @@ export default function GearItemCard({
                     e.stopPropagation();
                     //handleEditGear(index);
                     navigate(ROUTES.GEAR_DETAIL.replace(":gearId", gear.id));
+                    captureEvent("gear_edit_clicked", {
+                      gear_id: gear.id,
+                      gear_category: gear.category,
+                      gear_name: gear.name,
+                    });
                   }}
                   className="cursor-pointer"
                   disabled={loading}
@@ -125,6 +131,11 @@ export default function GearItemCard({
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteGear();
+                    captureEvent("gear_delete_clicked", {
+                      gear_id: gear.id,
+                      gear_category: gear.category,
+                      gear_name: gear.name,
+                    });
                   }}
                   className="cursor-pointer text-red-600"
                   disabled={loading}
@@ -163,6 +174,11 @@ export default function GearItemCard({
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(ROUTES.GEAR_DETAIL.replace(":gearId", gear.id));
+                      captureEvent("gear_edit_clicked", {
+                        gear_id: gear.id,
+                        gear_category: gear.category,
+                        gear_name: gear.name,
+                      });
                     }}
                     className="cursor-pointer"
                     disabled={loading}
@@ -174,6 +190,11 @@ export default function GearItemCard({
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDeleteGear();
+                      captureEvent("gear_delete_clicked", {
+                        gear_id: gear.id,
+                        gear_category: gear.category,
+                        gear_name: gear.name,
+                      });
                     }}
                     className="cursor-pointer text-red-600"
                     disabled={loading}

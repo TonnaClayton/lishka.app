@@ -29,6 +29,7 @@ import SearchPageSkeleton from "@/hooks/queries/search/skeleton";
 import { SearchHistorySheet } from "./search-history-sheet";
 import { useAuth } from "@/contexts/auth-context";
 import LocationBtn from "@/components/location-btn";
+import { captureEvent } from "@/lib/posthog";
 
 interface Message {
   id: string;
@@ -288,6 +289,15 @@ const SearchPage: React.FC = () => {
       images: selectedImages,
     };
 
+    // Track search query event
+    captureEvent("search_query_submitted", {
+      query_length: query.length,
+      has_images: imageFiles.length > 0,
+      image_count: imageFiles.length,
+      use_location_context: useLocationContext,
+      is_new_session: !id,
+    });
+
     setMessages((prev) => [...prev, userMessage]);
     const currentQuery = query;
     const currentImageFiles = [...imageFiles];
@@ -315,6 +325,12 @@ const SearchPage: React.FC = () => {
   };
 
   const handleSuggestionClick = async (suggestion: string) => {
+    // Track follow-up question click
+    captureEvent("search_followup_question_clicked", {
+      question: suggestion,
+      session_id: id,
+    });
+
     // Add the clicked question to the set of clicked questions
     setClickedFollowUpQuestions((prev) => new Set(prev).add(suggestion));
     // Hide follow-up questions immediately when clicked

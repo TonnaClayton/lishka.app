@@ -11,6 +11,7 @@ import { GearItem, toGearItem } from "@/lib/gear";
 import { useDeleteGear } from "@/hooks/queries";
 import GearItemCard from "./gear-item-card";
 import { GEAR_CATEGORIES } from "./my-gear";
+import { captureEvent } from "@/lib/posthog";
 
 const GearCategoryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -79,11 +80,10 @@ const GearCategoryPage: React.FC = () => {
 
   const handleDeleteGear = useCallback(
     async (id: string) => {
+      const gearIndex = allGearItems.findIndex((item) => item.id == id);
       try {
         setLoading(true);
         setError(null);
-
-        const gearIndex = allGearItems.findIndex((item) => item.id == id);
 
         if (gearIndex === -1) {
           setError("Gear not found!");
@@ -92,9 +92,20 @@ const GearCategoryPage: React.FC = () => {
         }
 
         await deleteGear.mutateAsync(gearIndex);
+        captureEvent("gear_deleted", {
+          gear_id: id,
+          gear_category: categoryId,
+          gear_name: allGearItems[gearIndex].name,
+        });
         setSuccess("Gear deleted successfully!");
         setTimeout(() => setSuccess(null), 3000);
       } catch (error) {
+        captureEvent("gear_deleted_error", {
+          gear_id: id,
+          gear_category: categoryId,
+          gear_name: allGearItems[gearIndex].name,
+          error: error,
+        });
         errorLog("[GearCategoryPage] Error deleting gear:", error);
         setError("Failed to delete gear. Please try again.");
         setTimeout(() => setError(null), 3000);

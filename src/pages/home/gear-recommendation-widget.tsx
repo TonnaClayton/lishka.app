@@ -9,6 +9,7 @@ import GearRecommendationSkeleton from "./gear-recommendation-skeleton";
 import { useGetGearRecommendation } from "@/hooks/queries/gear/use-gear-recommendation";
 import { GearItem } from "@/lib/gear";
 import { cn } from "@/lib/utils";
+import { captureEvent } from "@/lib/posthog";
 
 // interface WeatherConditions {
 //   temperature: number;
@@ -205,6 +206,16 @@ const GearRecommendationWidget: React.FC = () => {
 
   // Handle gear click to navigate to gear category page
   const handleGearClick = (gear: GearItem) => {
+    // Track gear recommendation click
+    captureEvent("gear_recommendation_clicked", {
+      gear_id: gear.id,
+      gear_name: gear.name,
+      gear_category: gear.category,
+      weather_condition: weatherData?.condition,
+      temperature: weatherData?.temperature,
+      wind_speed: weatherData?.wind_speed,
+    });
+
     // Navigate to the gear category page with the specific gear ID as a query parameter
     navigate(`/gear-category/${gear.category}?gearId=${gear.id}`);
   };
@@ -272,7 +283,14 @@ const GearRecommendationWidget: React.FC = () => {
               </div>
             )}
             {isErrorGearRecommendation && (
-              <Button variant="outline" size="sm" onClick={() => refetch()}>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  captureEvent("gear_recommendation_retry_clicked");
+                  refetch();
+                }}
+              >
                 <RefreshCw className="h-3 w-3 mr-1" />
                 Retry
               </Button>

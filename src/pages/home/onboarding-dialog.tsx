@@ -16,6 +16,7 @@ import useIsMobile from "@/hooks/use-is-mobile";
 import useDeviceSize from "@/hooks/use-device-size";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/auth-context";
+import { captureEvent } from "@/lib/posthog";
 
 export const OnboardingDialog = React.memo(
   ({ hasSeenOnboardingFlow }: { hasSeenOnboardingFlow: boolean }) => {
@@ -45,6 +46,13 @@ export const OnboardingDialog = React.memo(
     const handleContinue = async () => {
       try {
         setIsLoading(true);
+
+        // Track onboarding completion
+        captureEvent("onboarding_completed", {
+          screens_viewed: current,
+          total_screens: 5,
+        });
+
         await updateProfile({
           has_seen_onboarding_flow: true,
         });

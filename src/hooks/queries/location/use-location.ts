@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from "react";
 import { log } from "@/lib/logging";
 import { LocationData, locationQueryKeys } from "./use-location-storage";
 import { useAuth } from "@/contexts/auth-context";
+import { captureEvent } from "@/lib/posthog";
 
 // Default location (Malta)
 const DEFAULT_LOCATION: LocationData = {
@@ -60,12 +61,14 @@ export const useUserLocation = () => {
       log("Setting new location:", newLocation);
 
       // Check if location actually changed
-      if (
+      const locationChanged = !(
         currentLocation &&
         currentLocation.latitude === newLocation.latitude &&
         currentLocation.longitude === newLocation.longitude &&
         currentLocation.name === newLocation.name
-      ) {
+      );
+
+      if (!locationChanged) {
         return currentLocation;
       }
 
@@ -73,6 +76,16 @@ export const useUserLocation = () => {
       await updateProfile({
         location_coordinates: newLocation as any,
         location: newLocation.name,
+      });
+
+      // Track location change event
+      captureEvent("location_changed", {
+        location_name: newLocation.name,
+        latitude: newLocation.latitude,
+        longitude: newLocation.longitude,
+        country_code: newLocation.countryCode,
+        state: newLocation.state,
+        city: newLocation.city,
       });
 
       return newLocation;

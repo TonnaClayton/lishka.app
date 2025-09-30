@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useStream } from "@/hooks/use-stream";
 import { useClassifyPhoto } from "@/hooks/queries";
 import { log, error as errorLog } from "@/lib/logging";
+import { captureEvent } from "@/lib/posthog";
 
 // Constants for timeout values and configuration
 const UPLOAD_TIMEOUTS = {
@@ -396,6 +397,12 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
 
   const uploadPhotoCompleteCallBack = useCallback(() => {
     console.log("[STREAM] Photo uploaded successfully!");
+
+    // Track photo upload event
+    captureEvent("fish_photo_uploaded", {
+      upload_count: totalPhotosUploading || 1,
+    });
+
     refreshProfile();
     setIsUploadLocked(false);
     clearError();
@@ -428,10 +435,16 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
         timeoutRefs.current.autoHide = null;
       }, UPLOAD_TIMEOUTS.AUTO_HIDE);
     }, UPLOAD_TIMEOUTS.MESSAGE_DELAY);
-  }, [refreshProfile, clearError]);
+  }, [refreshProfile, clearError, clearAllTimeouts, totalPhotosUploading]);
 
   const uploadGearItemCompleteCallBack = useCallback(() => {
     console.log("[STREAM] Gear item uploaded successfully!");
+
+    // Track gear upload event
+    captureEvent("gear_uploaded", {
+      upload_count: totalGearItemsUploading || 1,
+    });
+
     refreshProfile();
     setIsUploadLocked(false);
     clearError();
@@ -464,7 +477,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
         timeoutRefs.current.autoHide = null;
       }, UPLOAD_TIMEOUTS.AUTO_HIDE);
     }, UPLOAD_TIMEOUTS.MESSAGE_DELAY);
-  }, [refreshProfile, clearError, clearAllTimeouts]);
+  }, [refreshProfile, clearError, clearAllTimeouts, totalGearItemsUploading]);
 
   // Queue management functions
   const addToQueue = useCallback((files: File[], type: UploadType): string => {
@@ -660,6 +673,15 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
         }
 
         setClassifyingImage(false);
+
+        // Track classification results
+        const gearCount = filesTypes.filter((t) => t === "gear").length;
+        const fishCount = filesTypes.filter((t) => t === "fish").length;
+        captureEvent("image_classification_completed", {
+          total_images: files.length,
+          gear_classified: gearCount,
+          fish_classified: fishCount,
+        });
 
         try {
           // Separate files by type
