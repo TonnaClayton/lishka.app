@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { log } from "@/lib/logging";
 import { useAuth } from "@/contexts/auth-context";
 import FishDetailSkeleton from "./fish-detail-skeleton";
+import { captureEvent } from "@/lib/posthog";
 
 // Fishing Season Calendar Component
 interface FishingSeasonCalendarProps {
@@ -260,6 +261,19 @@ const FishDetailPage = () => {
     isError: isFishDetailError,
     error: fishDetailError,
   } = useFishDetails(fishName);
+
+  // Track fish detail page view
+  useEffect(() => {
+    if (fishDetailsData && fishName) {
+      captureEvent("fish_detail_viewed", {
+        fish_name: fishName,
+        scientific_name: fishDetailsData.scientific_name,
+        is_toxic: fishDetailsData.is_toxic,
+        habitat: fishDetailsData.habitat,
+        difficulty: fishDetailsData.difficulty,
+      });
+    }
+  }, [fishDetailsData, fishName]);
 
   // Cache keys for consistent data
   // const getCacheKey = (

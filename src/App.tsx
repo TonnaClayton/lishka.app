@@ -27,6 +27,8 @@ import { cn } from "./lib/utils";
 import { ROUTES } from "./lib/routing";
 import ErrorBoundary from "./components/error-boundary";
 import Page404 from "./pages/404";
+import { PostHogProvider } from "posthog-js/react";
+import { initPosthog, posthog } from "./lib/posthog";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./pages/home"));
@@ -489,6 +491,8 @@ function AppWithAuth() {
 }
 
 function App() {
+  initPosthog();
+
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -500,20 +504,22 @@ function App() {
   });
 
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center h-screen">
-              <p>Loading...</p>
-            </div>
-          }
-        >
-          <RouterProvider router={router} />
-        </Suspense>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <PostHogProvider client={posthog}>
+      <ErrorBoundary>
+        <QueryClientProvider client={queryClient}>
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-screen">
+                <p>Loading...</p>
+              </div>
+            }
+          >
+            <RouterProvider router={router} />
+          </Suspense>
+          <ReactQueryDevtools initialIsOpen={false} />
+        </QueryClientProvider>
+      </ErrorBoundary>
+    </PostHogProvider>
   );
 }
 

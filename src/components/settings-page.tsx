@@ -21,6 +21,7 @@ import BottomNav from "./bottom-nav";
 import { useAuth } from "@/contexts/auth-context";
 import { ROUTES } from "@/lib/routing";
 import { Alert, AlertDescription } from "./ui/alert";
+import { captureEvent } from "@/lib/posthog";
 
 const SettingsPage: React.FC = () => {
   const navigate = useNavigate();
@@ -44,6 +45,12 @@ const SettingsPage: React.FC = () => {
           use_imperial_units: checked,
         });
 
+        // Track units change
+        captureEvent("units_changed", {
+          new_unit_system: checked ? "imperial" : "metric",
+          previous_unit_system: useImperialUnits ? "imperial" : "metric",
+        });
+
         setSuccessMessage("Units updated successfully");
         setTimeout(() => setSuccessMessage(null), 5000);
       } catch (err) {
@@ -54,7 +61,7 @@ const SettingsPage: React.FC = () => {
         setIsUpdating(false);
       }
     },
-    [updateProfile],
+    [updateProfile, useImperialUnits],
   );
 
   const handleSignOut = async () => {
@@ -73,14 +80,22 @@ const SettingsPage: React.FC = () => {
     try {
       setIsDeleting(true);
       log("[SettingsPage] Initiating account deletion");
+
+      // Track account deletion attempt
+      captureEvent("account_deletion_initiated");
+
       const { error } = await deleteAccount();
 
       if (error) {
         console.error("[SettingsPage] Account deletion error:", error);
+        captureEvent("account_deletion_failed", { error: error.message });
         alert("Failed to delete account. Please try again or contact support.");
+      } else {
+        captureEvent("account_deletion_success");
       }
     } catch (err) {
       console.error("[SettingsPage] Account deletion error:", err);
+      captureEvent("account_deletion_error", { error: String(err) });
       alert("Failed to delete account. Please try again or contact support.");
     } finally {
       setIsDeleting(false);

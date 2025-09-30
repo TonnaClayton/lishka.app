@@ -32,6 +32,7 @@ import {
 } from "@/hooks/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { ROUTES } from "@/lib/routing";
+import { identifyUser, captureEvent, resetUser } from "@/lib/posthog";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -184,11 +185,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [createProfile],
   );
 
-  // Handle profile creation when user exists but profile doesn't
+  // Handle profile creation and PostHog identification when user exists
   useEffect(() => {
     if (user?.id && profileData === undefined && !profileLoading) {
       // Profile query returned but no data found - create profile
       handleCreateProfile(user.id, user.full_name, user.avatar_url);
+    }
+
+    // Identify user in PostHog if user exists and email is available
+    if (user?.id && user?.email && profileData !== undefined) {
+      identifyUser(user.id, user.email);
     }
   }, [user, profileData, profileLoading, handleCreateProfile]);
 
@@ -311,6 +317,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       );
 
       if (error) {
+        captureEvent("signup_failed", { error: error.message });
         return { error, needsConfirmation: false };
       }
 
@@ -319,16 +326,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const authUser = convertUser(data.user);
         setUser(authUser);
         // Profile will be created automatically via useEffect when user is set
+        captureEvent("signup_success", {
+          user_id: data.user.id,
+          email: data.user.email,
+          needs_confirmation: false,
+        });
       }
 
       // If user is created but needs email confirmation
       if (data?.user && data.session == null) {
+        captureEvent("signup_success", {
+          user_id: data.user.id,
+          email: data.user.email,
+          needs_confirmation: true,
+        });
         return { error: null, needsConfirmation: true };
       }
 
       // User will be automatically set via onAuthStateChange if session exists
       return { error: null, needsConfirmation: false };
     } catch (err) {
+      captureEvent("signup_error", { error: String(err) });
       return {
         error: { message: "An unexpected error occurred during signup", err },
         needsConfirmation: false,
@@ -351,14 +369,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (error) {
         log("[AuthContext] Returning error:", error);
+        captureEvent("signin_failed", { error: error.message });
         return { error };
       }
 
       // Success - user will be set via onAuthStateChange
       log("[AuthContext] SignIn successful");
+      captureEvent("signin_success", {
+        user_id: data?.user?.id,
+        email: data?.user?.email,
+      });
       return { error: null };
     } catch (err) {
       console.error("[AuthContext] SignIn exception:", err);
+      captureEvent("signin_error", { error: String(err) });
       return {
         error: { message: "An unexpected error occurred during signin" },
       };
@@ -366,7 +390,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signInWithGoogle = async () => {
-    return authService.signInWithGoogle();
+    const result = await authService.signInWithGoogle();
+    if (result.error) {
+      captureEvent("google_signin_failed", { error: result.error.message });
+    } else {
+      captureEvent("google_signin_initiated");
+    }
+    return result;
   };
 
   const signOut = async () => {
@@ -375,6 +405,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Store user ID for cache cleanup before clearing state
       const userIdForCleanup = user?.id;
+
+      // Track signout event
+      if (userIdForCleanup) {
+        captureEvent("signout_success", { user_id: userIdForCleanup });
+      }
+
+      // Reset PostHog user
+      resetUser();
 
       // Clear local state first to ensure immediate UI update
       setUser(null);
@@ -654,6 +692,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       });
 
       await updateProfileMutation.mutateAsync({ userId: user.id, updates });
+
+      // Track profile update event (excluding gear_items updates as they're tracked separately)
+      if (!updates.gear_items) {
+        captureEvent("profile_updated", {
+          updated_fields: Object.keys(updates),
+          field_count: Object.keys(updates).length,
+        });
+      }
     } catch (err) {
       console.error("[AuthContext] 💥 UpdateProfile exception:", {
         error: err instanceof Error ? err.message : String(err),

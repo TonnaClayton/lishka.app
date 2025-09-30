@@ -65,6 +65,7 @@ import ItemUploadBar from "./item-upload-bar";
 import { toImageMetadataItem } from "@/lib/gallery-photo";
 import UploadedInfoMsg from "./uploaded-info-msg";
 import { error as errorLog } from "@/lib/logging";
+import { captureEvent } from "@/lib/posthog";
 
 interface ImageMetadata {
   url: string;
@@ -1228,7 +1229,10 @@ export default function ProfilePage() {
                   "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-10 flex items-center justify-center gap-2 rounded-[8px]",
                 )}
                 style={{ backgroundColor: "#0251FB0D" }}
-                onClick={() => navigate("/my-gear")}
+                onClick={() => {
+                  captureEvent("my_gear_button_clicked");
+                  navigate("/my-gear");
+                }}
               >
                 My gear
                 {profile?.gear_items &&

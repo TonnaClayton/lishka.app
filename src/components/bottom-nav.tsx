@@ -21,6 +21,7 @@ import ItemUploadBar from "@/pages/profile/item-upload-bar";
 import UploadedInfoMsg from "@/pages/profile/uploaded-info-msg";
 import { Alert, AlertDescription } from "./ui/alert";
 import { Button } from "./ui/button";
+import { captureEvent } from "@/lib/posthog";
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
@@ -55,6 +56,7 @@ const BottomNav: React.FC = () => {
   const handleCameraClick = () => {
     // Open camera directly
     cameraInputRef.current?.click();
+    captureEvent("camera_clicked");
   };
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -69,6 +71,8 @@ const BottomNav: React.FC = () => {
       alert("Maximum 10 gear items can be uploaded at once.");
       return;
     }
+
+    captureEvent("photo_changed");
 
     const file = files[0];
 
@@ -88,6 +92,7 @@ const BottomNav: React.FC = () => {
 
     // Reset file input
     e.target.value = "";
+    captureEvent("photo_changed_complete");
   };
 
   return (
@@ -135,6 +140,7 @@ const BottomNav: React.FC = () => {
                 ? "text-lishka-blue "
                 : "text-[#191B1F] hover:text-lishka-blue",
             )}
+            onClick={() => captureEvent("navigation_home_clicked")}
           >
             <Home size={24} />
           </Link>
@@ -146,6 +152,7 @@ const BottomNav: React.FC = () => {
                 ? "text-lishka-blue "
                 : "text-[#191B1F] hover:text-lishka-blue",
             )}
+            onClick={() => captureEvent("navigation_search_clicked")}
           >
             <Search size={24} />
           </Link>
@@ -171,6 +178,7 @@ const BottomNav: React.FC = () => {
                   ? "text-lishka-blue "
                   : "text-[#191B1F] hover:text-lishka-blue",
               )}
+              onClick={() => captureEvent("navigation_weather_clicked")}
             >
               <Cloud size={24} />
             </Link>
@@ -183,6 +191,7 @@ const BottomNav: React.FC = () => {
                 ? "text-lishka-blue "
                 : "text-[#191B1F] hover:text-lishka-blue",
             )}
+            onClick={() => captureEvent("navigation_profile_clicked")}
           >
             <User size={24} />
           </Link>
@@ -264,6 +273,7 @@ export const SideNav: React.FC = () => {
       "sideNav-isCollapsed",
       JSON.stringify(newCollapsedState),
     );
+    captureEvent("sidebar_collapsed");
   };
 
   const getInitials = (name: string) => {

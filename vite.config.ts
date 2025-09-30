@@ -14,6 +14,9 @@ export default defineConfig({
   optimizeDeps: {
     entries: ["src/main.tsx", "src/tempobook/**/*"],
   },
+  ssr: {
+    noExternal: ["posthog-js", "posthog-js/react"],
+  },
   plugins: [
     react(),
     tempo(),
