@@ -29,6 +29,11 @@ export default function GearItemCard({
 
   const handleExpandCard = () => {
     setIsExpanded(!isExpanded);
+    captureEvent("gear_item_card_expanded", {
+      gear_id: gear.id,
+      gear_category: gear.category,
+      gear_name: gear.name,
+    });
     setTimeout(() => {
       cardRef.current?.scrollIntoView({
         behavior: "smooth",
@@ -41,25 +46,11 @@ export default function GearItemCard({
     <div
       key={gear.id}
       ref={cardRef}
-      className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm cursor-pointer overflow-hidden ${
-        isExpanded ? "p-6 transition-all duration-300 ease-in-out" : "p-4"
-      }`}
-      onClick={() => {
-        // if (!isExpanded) {
-        //   setExpandedCardIndex(index);
-        //   // Scroll to the top of the card after a brief delay to allow for expansion
-        //   setTimeout(() => {
-        //     cardRefs.current[index]?.scrollIntoView({
-        //       behavior: "smooth",
-        //       block: "start",
-        //     });
-        //   }, 100);
-        // } else {
-        //   setExpandedCardIndex(null);
-        // }
-        // setOpenMenuIndex(null);
-        handleExpandCard();
-      }}
+      className={cn(
+        `bg-white dark:bg-gray-800 rounded-xl shadow-sm cursor-pointer overflow-hidden`,
+        isExpanded ? "p-6 transition-all duration-300 ease-in-out" : "p-4",
+      )}
+      onClick={handleExpandCard}
     >
       {!isExpanded ? (
         // Compact Card View

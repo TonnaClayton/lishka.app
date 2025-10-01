@@ -255,6 +255,11 @@ export default function ProfilePage() {
     return false;
   });
 
+  const [clickedImageIndex, setClickedImageIndex] = useState<number | null>(
+    null,
+  );
+  const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   const [borderStyle, setBorderStyle] = useState({ left: 0, width: 0 });
   const [loading, setLoading] = useState(false);
 
@@ -865,8 +870,9 @@ export default function ProfilePage() {
       .slice(0, 2);
   };
 
-  const handleImageClick = () => {
+  const handleImageClick = (index: number) => {
     const newColumnState = !isSingleColumn;
+    setClickedImageIndex(index);
     setIsSingleColumn(newColumnState);
   };
 
@@ -936,6 +942,22 @@ export default function ProfilePage() {
       setError(null);
     }
   }, [isUploading, error]);
+
+  // Scroll to clicked image when switching to single column
+  useEffect(() => {
+    if (
+      isSingleColumn &&
+      clickedImageIndex !== null &&
+      imageRefs.current[clickedImageIndex]
+    ) {
+      setTimeout(() => {
+        imageRefs.current[clickedImageIndex]?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 100);
+    }
+  }, [isSingleColumn, clickedImageIndex]);
 
   // Early returns after all hooks
   if (authLoading) {
@@ -1376,17 +1398,21 @@ export default function ProfilePage() {
                   {/* Show uploaded photos */}
                   {galleryPhotos.map((photo, index) => {
                     return (
-                      <FishImageCard
+                      <div
                         key={index}
-                        handleImageClick={handleImageClick}
-                        isSingleColumn={isSingleColumn}
-                        loading={loading}
-                        handleDeletePhoto={() => handleDeletePhoto(index)}
-                        handleEditAIInfo={() => handleEditAIInfo(index)}
-                        setSuccess={setSuccess}
-                        setError={setError}
-                        photo={photo}
-                      />
+                        ref={(el) => (imageRefs.current[index] = el)}
+                      >
+                        <FishImageCard
+                          handleImageClick={() => handleImageClick(index)}
+                          isSingleColumn={isSingleColumn}
+                          loading={loading}
+                          handleDeletePhoto={() => handleDeletePhoto(index)}
+                          handleEditAIInfo={() => handleEditAIInfo(index)}
+                          setSuccess={setSuccess}
+                          setError={setError}
+                          photo={photo}
+                        />
+                      </div>
                     );
                   })}
                 </div>
