@@ -225,7 +225,7 @@ const SearchPage: React.FC = () => {
         id == undefined ||
         id == null ||
         id == "" ||
-        id != response.session_id
+        (response.session_id && id != response.session_id)
       ) {
         // Cache the initial two messages so they persist across navigation
         try {
@@ -629,7 +629,7 @@ const SearchPage: React.FC = () => {
                 </div>
               )}
 
-              <div className="h-[200px] md:hidden"></div>
+              <div className="h-[200px] md:h-[250px] lg:hidden"></div>
 
               <div ref={messagesEndRef} />
             </div>
@@ -638,7 +638,7 @@ const SearchPage: React.FC = () => {
       )}
       {/* Input Form - Fixed at bottom on mobile, static on desktop */}
 
-      <div className="fixed bottom-16 left-0 right-0 z-20 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 lg:static lg:bottom-auto lg:border-t md:w-full md:mx-auto md:mb-4">
+      <div className="fixed bottom-16 left-0 right-0 z-20 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 p-4 lg:static lg:bottom-auto lg:border-t md:w-full md:mx-auto lg:mb-4">
         {/* Follow-up questions chips or loading skeleton */}
 
         {!isMobile && (
@@ -664,7 +664,7 @@ const SearchPage: React.FC = () => {
                   <img
                     src={image}
                     alt={`Selected image ${index + 1}`}
-                    className="max-w-32 h-auto rounded-lg border aspect-square border-gray-200 dark:border-gray-700"
+                    className="max-w-32 h-auto rounded-lg border aspect-square border-gray-200 dark:border-gray-700 object-cover"
                   />
                   <button
                     type="button"

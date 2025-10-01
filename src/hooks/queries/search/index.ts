@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { api } from "../api";
 
 export const searchQueryKeys = {
@@ -110,28 +110,32 @@ export const useCreateSearchSession = () =>
       );
       formData.append("message", payload.message);
 
-      for (const file of payload.attachments) {
-        if (file.size > FILE_SIZE_LIMIT || payload.attachments.length > 1) {
-          try {
-            // Upload large file to Supabase and get URL
-            // NOTE: This is to avoid the vercel request size limit
-            const { uploadImageToSupabase } = await import(
-              "@/lib/supabase-storage"
-            );
-            const fileUrl = await uploadImageToSupabase(file, "temp-uploads");
+      if (payload.attachments) {
+        for (const file of payload.attachments) {
+          if (file.size > FILE_SIZE_LIMIT || payload.attachments.length > 1) {
+            try {
+              // Upload large file to Supabase and get URL
+              // NOTE: This is to avoid the vercel request size limit
+              const { uploadImageToSupabase } = await import(
+                "@/lib/supabase-storage"
+              );
+              const fileUrl = await uploadImageToSupabase(file, "temp-uploads");
 
-            // Append the URL instead of the file
-            formData.append("attachmentsUrls", fileUrl);
-          } catch (error) {
-            console.error(
-              "[UPLOAD] Failed to upload large file to Supabase:",
-              error,
-            );
-            throw new Error(`Failed to upload ${file.name}. Please try again.`);
+              // Append the URL instead of the file
+              formData.append("attachmentsUrls", fileUrl);
+            } catch (error) {
+              console.error(
+                "[UPLOAD] Failed to upload large file to Supabase:",
+                error,
+              );
+              throw new Error(
+                `Failed to upload ${file.name}. Please try again.`,
+              );
+            }
+          } else {
+            // Attach small file directly
+            formData.append("attachments", file);
           }
-        } else {
-          // Attach small file directly
-          formData.append("attachments", file);
         }
       }
 
@@ -171,3 +175,33 @@ export const useCreateSearchSession = () =>
       // setCurrentLocation(updatedLocation);
     },
   });
+
+export const useDeleteSearchSession = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const data = await api<{
+        data: {
+          success: boolean;
+          message: string;
+        };
+      }>(
+        `search-agent/sessions/${id}`,
+        {
+          method: "DELETE",
+        },
+        true,
+      );
+
+      return data.data;
+    },
+    onSuccess: (data, id) => {
+      queryClient.invalidateQueries({
+        queryKey: searchQueryKeys.sessions(),
+      });
+      queryClient.invalidateQueries({
+        queryKey: searchQueryKeys.search(id),
+      });
+    },
+  });
+};
