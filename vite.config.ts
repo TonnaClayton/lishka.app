@@ -41,7 +41,7 @@ export default defineConfig({
         short_name: "Lishka",
         description:
           "Your ultimate fishing companion app for tracking catches, gear, and locations",
-        theme_color: "#1e40af",
+        //theme_color: "#1e40af",
         background_color: "#ffffff",
         display: "standalone",
         orientation: "portrait",
