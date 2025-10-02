@@ -18,6 +18,7 @@ module.exports = {
     },
     fontFamily: {
       inter: ["Inter", "sans-serif"],
+      georgia: ["Georgia", "serif"],
     },
     fontWeight: {
       normal: "400",

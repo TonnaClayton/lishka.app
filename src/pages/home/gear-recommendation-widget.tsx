@@ -126,6 +126,8 @@ const GearRecommendationWidget: React.FC = () => {
   // Get recommendation for specific gear
   const getRecommendation = useCallback(
     (gearId: string): AIRecommendation | null => {
+      if (!recommendations) return null;
+
       return recommendations?.find((rec) => rec.gear_id === gearId) || null;
     },
     [recommendations],

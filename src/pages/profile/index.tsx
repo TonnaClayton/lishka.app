@@ -1078,7 +1078,6 @@ export default function ProfilePage() {
                 </button>
               </Alert>
             )}
-
             {success && (
               <Alert className="border-green-200 bg-green-50 text-green-800">
                 <AlertDescription>{success}</AlertDescription>
