@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, Package, Loader2, AlertCircle } from "lucide-react";
 import LoadingDots from "@/components/loading-dots";
@@ -107,9 +107,16 @@ const GearRecommendationWidget: React.FC = () => {
   // };
 
   // Get recommendation for specific gear
-  const getRecommendation = (gearId: string): AIRecommendation | null => {
-    return gearRecommendation?.find((rec) => rec.gear_id === gearId) || null;
-  };
+  const getRecommendation = useCallback(
+    (gearId: string): AIRecommendation | null => {
+      if (!gearRecommendation) return null;
+
+      console.log("[GEAR RECOMMENDATION]", gearRecommendation);
+
+      return gearRecommendation?.find((rec) => rec.gear_id === gearId) || null;
+    },
+    [gearRecommendation],
+  );
 
   // Get fishing technique for gear - prioritize AI data
   const getFishingTechnique = (gear: GearItem): string => {
