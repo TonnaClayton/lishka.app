@@ -312,6 +312,14 @@ export default function ProfilePage() {
   const achievementsTabRef = useRef<HTMLButtonElement>(null);
   const tripsTabRef = useRef<HTMLButtonElement>(null);
 
+  const userError = useMemo(() => {
+    if (uploadError) {
+      return uploadError.message;
+    }
+
+    return error;
+  }, [error, uploadError]);
+
   // Form submission handler
   const onSubmit = async (data: ProfileFormData) => {
     try {
@@ -1055,50 +1063,19 @@ export default function ProfilePage() {
         <div className="max-w-2xl mx-auto w-full">
           <div className="space-y-6">
             {/* Alerts */}
-            {error && (
+            {userError && userError !== "" && (
               <Alert variant="destructive" className="relative">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>{userError}</AlertDescription>
                 <button
-                  onClick={() => setError(null)}
+                  onClick={() => {
+                    setError(null);
+                    clearError();
+                  }}
                   className="absolute top-2 right-2 p-1 hover:bg-black/10 rounded-sm transition-colors"
                   aria-label="Close alert"
                 >
                   <X className="h-4 w-4" />
                 </button>
-              </Alert>
-            )}
-            {uploadError && (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  {uploadError.message}
-                  {uploadError.retryable && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="ml-2"
-                      onClick={clearError}
-                    >
-                      Dismiss
-                    </Button>
-                  )}
-                </AlertDescription>
-              </Alert>
-            )}
-            {uploadError && (
-              <Alert variant="destructive">
-                <AlertDescription>
-                  {uploadError.message}
-                  {uploadError.retryable && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="ml-2"
-                      onClick={clearError}
-                    >
-                      Dismiss
-                    </Button>
-                  )}
-                </AlertDescription>
               </Alert>
             )}
             {success && (

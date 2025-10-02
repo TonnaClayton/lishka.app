@@ -19,8 +19,6 @@ import { ROUTES } from "@/lib/routing";
 import { cn } from "@/lib/utils";
 import ItemUploadBar from "@/pages/profile/item-upload-bar";
 import UploadedInfoMsg from "@/pages/profile/uploaded-info-msg";
-import { Alert, AlertDescription } from "./ui/alert";
-import { Button } from "./ui/button";
 import { captureEvent } from "@/lib/posthog";
 
 const BottomNav: React.FC = () => {
@@ -113,22 +111,12 @@ const BottomNav: React.FC = () => {
           onClose={closeUploadedInfoMsg}
         />
       )}
-      {uploadError && (
-        <Alert variant="destructive">
-          <AlertDescription>
-            {uploadError.message}
-            {uploadError.retryable && (
-              <Button
-                variant="outline"
-                size="sm"
-                className="ml-2"
-                onClick={clearError}
-              >
-                Dismiss
-              </Button>
-            )}
-          </AlertDescription>
-        </Alert>
+      {uploadError && currentPath !== "/profile" && (
+        <UploadedInfoMsg
+          className="z-[60] top-[58px] bg-destructive text-white absolute md:hidden"
+          message={uploadError.message}
+          onClose={clearError}
+        />
       )}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 z-50 w-full shadow-md">
         <div className="flex justify-around items-center h-16">
