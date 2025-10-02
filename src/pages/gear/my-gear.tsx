@@ -25,6 +25,7 @@ import { useAuth } from "@/contexts/auth-context";
 import BottomNav from "../../components/bottom-nav";
 import { toGearItem } from "@/lib/gear";
 import { Json } from "@/types/supabase";
+import { captureEvent } from "@/lib/posthog";
 
 // Gear categories as specified
 export const GEAR_CATEGORIES = [
@@ -125,8 +126,9 @@ const MyGearPage: React.FC = () => {
       setError(null);
 
       const updatedGear = [...gearItems];
+      const gearBeingEdited = updatedGear[editingGearIndex];
       updatedGear[editingGearIndex] = {
-        ...updatedGear[editingGearIndex],
+        ...gearBeingEdited,
         name: editFormData.name,
         category: editFormData.category,
         description: editFormData.description,
@@ -138,6 +140,14 @@ const MyGearPage: React.FC = () => {
 
       // Update profile with new gear data
       await updateProfile({ gear_items: updatedGear as unknown as Json[] });
+
+      // Track gear edit event
+      captureEvent("gear_edited", {
+        gear_id: gearBeingEdited.id,
+        gear_category: editFormData.category,
+        gear_name: editFormData.name,
+      });
+
       setShowEditDialog(false);
       setEditingGearIndex(null);
       setSuccess("Gear updated successfully!");
@@ -156,10 +166,19 @@ const MyGearPage: React.FC = () => {
       setLoading(true);
       setError(null);
 
+      const gearBeingDeleted = gearItems[index];
       const updatedGear = gearItems.filter((_, i) => i !== index);
 
       // Update profile with new gear data
       await updateProfile({ gear_items: updatedGear as unknown as Json[] });
+
+      // Track gear deletion event
+      captureEvent("gear_deleted", {
+        gear_id: gearBeingDeleted.id,
+        gear_category: gearBeingDeleted.category,
+        gear_name: gearBeingDeleted.name,
+      });
+
       setOpenMenuIndex(null);
       setSuccess("Gear deleted successfully!");
       setTimeout(() => setSuccess(null), 3000);

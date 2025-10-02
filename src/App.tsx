@@ -30,6 +30,9 @@ import ErrorBoundary from "./components/error-boundary";
 import LandingPage from "./pages/landing";
 import Page404 from "./pages/404";
 import AuthWrapper from "./pages/auth/auth-wrapper";
+import { PostHogProvider, PostHogErrorBoundary } from "posthog-js/react";
+import { initPosthog, posthog } from "./lib/posthog";
+import { Toaster } from "./components/ui/toaster";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./pages/home"));
@@ -540,6 +543,8 @@ const router = createBrowserRouter(
 );
 
 function App() {
+  initPosthog();
+
   const queryClient = new QueryClient({
     defaultOptions: {
       queries: {
@@ -551,20 +556,25 @@ function App() {
   });
 
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <Suspense
-          fallback={
-            <div className="flex items-center justify-center h-screen">
-              <p>Loading...</p>
-            </div>
-          }
-        >
-          <RouterProvider router={router} />
-        </Suspense>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
-    </ErrorBoundary>
+    <PostHogProvider client={posthog}>
+      <PostHogErrorBoundary>
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center h-screen">
+                  <p>Loading...</p>
+                </div>
+              }
+            >
+              <RouterProvider router={router} />
+            </Suspense>
+            <ReactQueryDevtools initialIsOpen={false} />
+            <Toaster />
+          </QueryClientProvider>
+        </ErrorBoundary>
+      </PostHogErrorBoundary>
+    </PostHogProvider>
   );
 }
 

@@ -15,6 +15,7 @@ import FishInfoOverlay from "@/components/fish-info-overlay";
 import { ImageMetadata } from "@/lib/image-metadata";
 import useIsMobile from "@/hooks/use-is-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
+import { captureEvent } from "@/lib/posthog";
 
 function FishImageCard({
   isSingleColumn,
@@ -249,6 +250,13 @@ function FishImageCard({
             files: [file],
           });
 
+          captureEvent("fish_image_share_success", {
+            share_text: shareText,
+            file_size: file.size,
+            file_type: file.type,
+            file_name: file.name,
+          });
+
           log("[ProfilePage] Photo with overlay shared successfully");
           setSuccess(
             "Fish image exported successfully! Tag us on Instagram @lishka.app and use #lishkaapp to get featured",
@@ -256,6 +264,9 @@ function FishImageCard({
           setTimeout(() => setSuccess(null), 5000);
         } catch (shareError) {
           console.error("[ProfilePage] Error sharing photo:", shareError);
+          captureEvent("fish_image_share_error", {
+            error: shareError,
+          });
           // Fallback to copying URL
           await navigator.clipboard.writeText(photoUrl);
           setSuccess("Photo URL copied to clipboard!");
@@ -276,6 +287,9 @@ function FishImageCard({
           setSuccess("Photo URL copied to clipboard!");
           setTimeout(() => setSuccess(null), 3000);
         } catch (clipboardError) {
+          captureEvent("fish_image_share_error", {
+            error: clipboardError,
+          });
           console.error(
             "[ProfilePage] Error copying to clipboard:",
             clipboardError,
@@ -292,7 +306,10 @@ function FishImageCard({
   return (
     <div className={cn(`relative`)}>
       {/* Main image button */}
-      <button onClick={handleImageClick} className="">
+      <button
+        onClick={handleImageClick}
+        className={cn(isSingleColumn ? "" : "h-full")}
+      >
         {/* Loading spinner - only show when image is visible and loading */}
         {isVisible && isLoading && (
           <div className="absolute inset-0 flex items-center justify-center bg-gray-100 dark:bg-gray-700 rounded-[8px]">
@@ -435,7 +452,7 @@ function FishImageCard({
           <div className="flex items-center justify-end pr-5">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="text-white p-1.5 transition-colors">
+                <button className="text-white h-fit w-fit transition-colors">
                   <MoreVertical className="w-5 h-5 rotate-90" />
                 </button>
               </DropdownMenuTrigger>
@@ -444,6 +461,7 @@ function FishImageCard({
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSharePhoto();
+                    captureEvent("fish_image_share_clicked");
                   }}
                   disabled={loading}
                 >
@@ -454,6 +472,7 @@ function FishImageCard({
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEditAIInfo();
+                    captureEvent("fish_image_edit_clicked");
                   }}
                   disabled={loading}
                 >
@@ -464,6 +483,7 @@ function FishImageCard({
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeletePhoto();
+                    captureEvent("fish_image_delete_clicked");
                   }}
                   className="text-red-600 hover:text-red-700 focus:text-red-700"
                   disabled={loading}

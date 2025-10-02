@@ -64,6 +64,8 @@ import { ROUTES } from "@/lib/routing";
 import ItemUploadBar from "./item-upload-bar";
 import { toImageMetadataItem } from "@/lib/gallery-photo";
 import UploadedInfoMsg from "./uploaded-info-msg";
+import { error as errorLog } from "@/lib/logging";
+import { captureEvent } from "@/lib/posthog";
 
 interface ImageMetadata {
   url: string;
@@ -196,8 +198,8 @@ export default function ProfilePage() {
   const { user, profile, loading: authLoading } = useAuth();
 
   const {
-    uploadPhotoStreamData,
-    uploadGearItemStreamData,
+    universalUploadStreamData,
+    uploadGearItemsStreamData,
     classifyingImage,
     showUploadedInfoMsg,
     uploadedInfoMsg,
@@ -253,6 +255,11 @@ export default function ProfilePage() {
     return false;
   });
 
+  const [clickedImageIndex, setClickedImageIndex] = useState<number | null>(
+    null,
+  );
+  const imageRefs = useRef<(HTMLDivElement | null)[]>([]);
+
   const [borderStyle, setBorderStyle] = useState({ left: 0, width: 0 });
   const [loading, setLoading] = useState(false);
 
@@ -271,7 +278,7 @@ export default function ProfilePage() {
     if (!profile?.gallery_photos) return [];
 
     return profile?.gallery_photos.map(toImageMetadataItem);
-  }, [profile, isUploading, uploadPhotoStreamData]);
+  }, [profile, isUploading, universalUploadStreamData]);
 
   // React Hook Form setup
   const form = useForm<ProfileFormData>({
@@ -355,8 +362,8 @@ export default function ProfilePage() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.size > 15 * 1024 * 1024) {
-      setError(`Photo must be less than 15MB`);
+    if (file.size > 10 * 1024 * 1024) {
+      setError(`Photo must be less than 10MB`);
       e.target.value = "";
       return;
     }
@@ -368,7 +375,8 @@ export default function ProfilePage() {
       });
       setTimeout(() => setSuccess(null), 5000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to upload photo");
+      errorLog("[ProfilePage] Error uploading photo:", err);
+      // setError(err instanceof Error ? err.message : "Failed to upload photo");
     } finally {
       setLoading(false);
       e.target.value = "";
@@ -378,9 +386,12 @@ export default function ProfilePage() {
   const handleDeletePhoto = async (index: number) => {
     try {
       await deletePhoto.mutateAsync(index);
+      setSuccess("Photo deleted successfully!");
+      setTimeout(() => setSuccess(null), 3000);
     } catch (err) {
-      console.error("[ProfilePage] Error deleting photo:", err);
+      errorLog("[ProfilePage] Error deleting photo:", err);
       setError("Failed to delete photo. Please try again.");
+      setTimeout(() => setError(null), 5000);
     } finally {
       setLoading(false);
     }
@@ -468,7 +479,7 @@ export default function ProfilePage() {
 
     try {
       await handlePhotoUpload(fileArray, {
-        type: "gear",
+        type: "photo",
       }); // The context handles both photo and gear uploads
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to upload gear");
@@ -859,8 +870,9 @@ export default function ProfilePage() {
       .slice(0, 2);
   };
 
-  const handleImageClick = () => {
+  const handleImageClick = (index: number) => {
     const newColumnState = !isSingleColumn;
+    setClickedImageIndex(index);
     setIsSingleColumn(newColumnState);
   };
 
@@ -930,6 +942,22 @@ export default function ProfilePage() {
       setError(null);
     }
   }, [isUploading, error]);
+
+  // Scroll to clicked image when switching to single column
+  useEffect(() => {
+    if (
+      isSingleColumn &&
+      clickedImageIndex !== null &&
+      imageRefs.current[clickedImageIndex]
+    ) {
+      setTimeout(() => {
+        imageRefs.current[clickedImageIndex]?.scrollIntoView({
+          behavior: "smooth",
+          block: "center",
+        });
+      }, 100);
+    }
+  }, [isSingleColumn, clickedImageIndex]);
 
   // Early returns after all hooks
   if (authLoading) {
@@ -1010,10 +1038,10 @@ export default function ProfilePage() {
         </div>
       </header>
 
-      <ItemUploadBar streamData={uploadPhotoStreamData} />
+      <ItemUploadBar streamData={universalUploadStreamData} />
       <ItemUploadBar
         totalItemsUploading={totalGearItemsUploading}
-        streamData={uploadGearItemStreamData}
+        streamData={uploadGearItemsStreamData}
       />
       {showUploadedInfoMsg && uploadedInfoMsg && (
         <UploadedInfoMsg
@@ -1028,8 +1056,32 @@ export default function ProfilePage() {
           <div className="space-y-6">
             {/* Alerts */}
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="relative">
                 <AlertDescription>{error}</AlertDescription>
+                <button
+                  onClick={() => setError(null)}
+                  className="absolute top-2 right-2 p-1 hover:bg-black/10 rounded-sm transition-colors"
+                  aria-label="Close alert"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </Alert>
+            )}
+            {uploadError && (
+              <Alert variant="destructive">
+                <AlertDescription>
+                  {uploadError.message}
+                  {uploadError.retryable && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="ml-2"
+                      onClick={clearError}
+                    >
+                      Dismiss
+                    </Button>
+                  )}
+                </AlertDescription>
               </Alert>
             )}
             {uploadError && (
@@ -1216,7 +1268,10 @@ export default function ProfilePage() {
                   "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-10 flex items-center justify-center gap-2 rounded-[8px]",
                 )}
                 style={{ backgroundColor: "#0251FB0D" }}
-                onClick={() => navigate("/my-gear")}
+                onClick={() => {
+                  captureEvent("my_gear_button_clicked");
+                  navigate("/my-gear");
+                }}
               >
                 My gear
                 {profile?.gear_items &&
@@ -1327,8 +1382,8 @@ export default function ProfilePage() {
                     onClick={handlePhotoUploadClick}
                     disabled={isUploading || classifyingImage}
                     className={cn(
-                      "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex-col relative transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation",
-                      isSingleColumn ? "h-20 rounded-lg mb-2" : "aspect-square",
+                      "bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 flex-col relative transition-colors flex items-center justify-center disabled:opacity-50 touch-manipulation rounded-[8px]",
+                      isSingleColumn ? "h-20 rounded-lg mb-2" : "h-full",
                     )}
                     style={{
                       WebkitTapHighlightColor: "transparent",
@@ -1360,17 +1415,21 @@ export default function ProfilePage() {
                   {/* Show uploaded photos */}
                   {galleryPhotos.map((photo, index) => {
                     return (
-                      <FishImageCard
+                      <div
                         key={index}
-                        handleImageClick={handleImageClick}
-                        isSingleColumn={isSingleColumn}
-                        loading={loading}
-                        handleDeletePhoto={() => handleDeletePhoto(index)}
-                        handleEditAIInfo={() => handleEditAIInfo(index)}
-                        setSuccess={setSuccess}
-                        setError={setError}
-                        photo={photo}
-                      />
+                        ref={(el) => (imageRefs.current[index] = el)}
+                      >
+                        <FishImageCard
+                          handleImageClick={() => handleImageClick(index)}
+                          isSingleColumn={isSingleColumn}
+                          loading={loading}
+                          handleDeletePhoto={() => handleDeletePhoto(index)}
+                          handleEditAIInfo={() => handleEditAIInfo(index)}
+                          setSuccess={setSuccess}
+                          setError={setError}
+                          photo={photo}
+                        />
+                      </div>
                     );
                   })}
                 </div>

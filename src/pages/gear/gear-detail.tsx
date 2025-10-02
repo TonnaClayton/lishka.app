@@ -1,9 +1,10 @@
 import BottomNav, { SideNav } from "@/components/bottom-nav";
-import { useMemo } from "react";
+import { useMemo, useEffect } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
+import { captureEvent } from "@/lib/posthog";
 import {
   Form,
   FormControl,
@@ -58,6 +59,17 @@ export default function GearDetailPage() {
 
     return list.find((g) => g.id === gearId);
   }, [profile, gearId]);
+
+  // Track gear view event
+  useEffect(() => {
+    if (gear) {
+      captureEvent("gear_viewed", {
+        gear_id: gear.id,
+        gear_category: gear.category,
+        gear_name: gear.name,
+      });
+    }
+  }, [gear]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -116,6 +128,12 @@ export default function GearDetailPage() {
     await updateProfile({
       // store as plain array; context layer ensures correct typing/validation
       gear_items: updated as unknown as any,
+    });
+
+    captureEvent("gear_edited", {
+      gear_id: gear.id,
+      gear_category: values.category,
+      gear_name: values.name,
     });
 
     await refreshProfile();

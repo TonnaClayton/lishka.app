@@ -19,6 +19,9 @@ import { ROUTES } from "@/lib/routing";
 import { cn } from "@/lib/utils";
 import ItemUploadBar from "@/pages/profile/item-upload-bar";
 import UploadedInfoMsg from "@/pages/profile/uploaded-info-msg";
+import { Alert, AlertDescription } from "./ui/alert";
+import { Button } from "./ui/button";
+import { captureEvent } from "@/lib/posthog";
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
@@ -28,12 +31,14 @@ const BottomNav: React.FC = () => {
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const {
-    uploadPhotoStreamData,
-    uploadGearItemStreamData,
+    universalUploadStreamData,
+    uploadGearItemsStreamData,
     showUploadedInfoMsg,
     uploadedInfoMsg,
     classifyingImage,
     isUploading,
+    uploadError,
+    clearError,
     totalGearItemsUploading,
     handlePhotoUpload,
     closeUploadedInfoMsg,
@@ -51,6 +56,7 @@ const BottomNav: React.FC = () => {
   const handleCameraClick = () => {
     // Open camera directly
     cameraInputRef.current?.click();
+    captureEvent("camera_clicked");
   };
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,6 +72,15 @@ const BottomNav: React.FC = () => {
       return;
     }
 
+    captureEvent("photo_changed");
+
+    const file = files[0];
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Photo must be less than 10MB");
+      return;
+    }
+
     const fileArray = Array.from(files).slice(0, 10); // Limit to 10 files
 
     try {
@@ -77,17 +92,18 @@ const BottomNav: React.FC = () => {
 
     // Reset file input
     e.target.value = "";
+    captureEvent("photo_changed_complete");
   };
 
   return (
     <>
       <ItemUploadBar
-        streamData={uploadPhotoStreamData}
+        streamData={universalUploadStreamData}
         className="z-[60] top-[58px] absolute md:hidden"
       />
       <ItemUploadBar
         className="z-[60] top-[58px] absolute md:hidden"
-        streamData={uploadGearItemStreamData}
+        streamData={uploadGearItemsStreamData}
         totalItemsUploading={totalGearItemsUploading}
       />
       {showUploadedInfoMsg && uploadedInfoMsg && (
@@ -96,6 +112,23 @@ const BottomNav: React.FC = () => {
           message={uploadedInfoMsg}
           onClose={closeUploadedInfoMsg}
         />
+      )}
+      {uploadError && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            {uploadError.message}
+            {uploadError.retryable && (
+              <Button
+                variant="outline"
+                size="sm"
+                className="ml-2"
+                onClick={clearError}
+              >
+                Dismiss
+              </Button>
+            )}
+          </AlertDescription>
+        </Alert>
       )}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 z-50 w-full shadow-md">
         <div className="flex justify-around items-center h-16">
@@ -107,6 +140,7 @@ const BottomNav: React.FC = () => {
                 ? "text-lishka-blue "
                 : "text-[#191B1F] hover:text-lishka-blue",
             )}
+            onClick={() => captureEvent("navigation_home_clicked")}
           >
             <Home size={24} />
           </Link>
@@ -118,6 +152,7 @@ const BottomNav: React.FC = () => {
                 ? "text-lishka-blue "
                 : "text-[#191B1F] hover:text-lishka-blue",
             )}
+            onClick={() => captureEvent("navigation_search_clicked")}
           >
             <Search size={24} />
           </Link>
@@ -143,6 +178,7 @@ const BottomNav: React.FC = () => {
                   ? "text-lishka-blue "
                   : "text-[#191B1F] hover:text-lishka-blue",
               )}
+              onClick={() => captureEvent("navigation_weather_clicked")}
             >
               <Cloud size={24} />
             </Link>
@@ -155,6 +191,7 @@ const BottomNav: React.FC = () => {
                 ? "text-lishka-blue "
                 : "text-[#191B1F] hover:text-lishka-blue",
             )}
+            onClick={() => captureEvent("navigation_profile_clicked")}
           >
             <User size={24} />
           </Link>
@@ -236,6 +273,7 @@ export const SideNav: React.FC = () => {
       "sideNav-isCollapsed",
       JSON.stringify(newCollapsedState),
     );
+    captureEvent("sidebar_collapsed");
   };
 
   const getInitials = (name: string) => {

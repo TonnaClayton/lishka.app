@@ -16,7 +16,7 @@ export default function GearUploadScreen() {
   const navigate = useNavigate();
   const {
     handlePhotoUpload,
-    uploadGearItemStreamData,
+    uploadGearItemsStreamData,
     isUploading: contextIsUploading,
     identifyGearMessage,
     uploadError,
@@ -42,7 +42,7 @@ export default function GearUploadScreen() {
   useEffect(() => {
     if (!isUploading || totalUploadsStarted === 0) return;
 
-    const streamData = uploadGearItemStreamData?.data;
+    const streamData = uploadGearItemsStreamData?.data;
 
     // Handle successful completion
     if (streamData?.saved === "completed") {
@@ -74,7 +74,7 @@ export default function GearUploadScreen() {
       setCompletedUploads((prev) => prev + 1);
     }
   }, [
-    uploadGearItemStreamData?.data,
+    uploadGearItemsStreamData?.data,
     identifyGearMessage,
     isUploading,
     totalUploadsStarted,
@@ -354,7 +354,7 @@ export default function GearUploadScreen() {
 
               // Get real-time status from upload stream
               const streamStatus =
-                isCurrentlyProcessing && uploadGearItemStreamData?.data;
+                isCurrentlyProcessing && uploadGearItemsStreamData?.data;
               const isAnalyzing = streamStatus?.analyzing === "processing";
               const isUploading_stream =
                 streamStatus?.uploading === "processing";
@@ -530,9 +530,9 @@ export default function GearUploadScreen() {
             Our AI is analyzing each item through multiple steps to ensure
             accurate identification and categorization.
           </p>
-          {uploadGearItemStreamData?.data?.message && (
+          {uploadGearItemsStreamData?.data?.message && (
             <div className="mt-4 text-sm text-blue-600 font-medium">
-              {uploadGearItemStreamData.data.message}
+              {uploadGearItemsStreamData.data.message}
             </div>
           )}
         </div>
