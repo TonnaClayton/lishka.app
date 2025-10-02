@@ -117,7 +117,7 @@ export function SearchHistorySheet() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="h-8 w-8 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                     onClick={(e) => handleDelete(e, session.id)}
                     disabled={deletingIds.has(session.id)}
                   >
