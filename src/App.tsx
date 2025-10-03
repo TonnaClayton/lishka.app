@@ -33,6 +33,7 @@ import AuthWrapper from "./pages/auth/auth-wrapper";
 import { PostHogProvider, PostHogErrorBoundary } from "posthog-js/react";
 import { initPosthog, posthog } from "./lib/posthog";
 import { Toaster } from "./components/ui/toaster";
+import { useThemeColor } from "./hooks/use-theme-color";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./pages/home"));
@@ -115,6 +116,9 @@ function AppContent() {
   const location = useLocation();
   // const navigate = useNavigate();
   // const isSplashPage = location.pathname === "/" && !profile?.location;
+
+  // Update theme color based on current route
+  useThemeColor();
 
   // Check if current route should have the weather widget in desktop layout
   const shouldShowWeatherWidget =
