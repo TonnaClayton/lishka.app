@@ -598,7 +598,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
                       __html: highlightKeywords(tip.content),
                     }}
                   ></p>
-                  <div className="flex items-center justify-between mt-auto pt-2 border-t border-border">
+                  <div className="flex items-center justify-between mt-auto pt-2 border-t border-white/10">
                     <span className="text-sm font-medium text-white">
                       {tip.category}
                     </span>
