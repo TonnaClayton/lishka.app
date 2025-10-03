@@ -304,11 +304,13 @@ function FishImageCard({
   };
 
   return (
-    <div className={cn(`relative`)}>
+    <div
+      className={cn(`relative`, isSingleColumn ? "" : "h-full rounded-[8px]")}
+    >
       {/* Main image button */}
       <button
         onClick={handleImageClick}
-        className={cn(isSingleColumn ? "" : "h-full")}
+        className={cn(isSingleColumn ? "" : "h-full rounded-[8px]")}
       >
         {/* Loading spinner - only show when image is visible and loading */}
         {isVisible && isLoading && (
