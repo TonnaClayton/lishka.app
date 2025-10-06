@@ -187,16 +187,23 @@ const PrivacyPolicyPage: React.FC = () => {
               <p className="text-white/70 leading-relaxed">
                 Lishka is suitable for users of all ages, including young
                 fishing enthusiasts. We are committed to protecting children’s
-                privacy and complying with applicable laws such as the EU
-                General Data Protection Regulation (GDPR) and the U.S.
-                Children’s Online Privacy Protection Act (COPPA).
+                privacy and complying with applicable laws such as the{" "}
+                <strong>EU General Data Protection Regulation (GDPR)</strong>{" "}
+                and{" "}
+                <strong>
+                  the U.S. Children’s Online Privacy Protection Act (COPPA)
+                </strong>
+                .
                 <br />
                 <br />
-                If you are under 16 years of age (or under 13 if you are located
-                outside the EU), you may use the App only with the consent and
-                supervision of a parent or legal guardian. We do not knowingly
-                collect, use, or disclose personal information from children
-                without verifiable parental consent.
+                If you are under <strong>16 years of age</strong> (or under 13
+                if you are located outside the EU), you may use the App{" "}
+                <strong>
+                  only with the consent and supervision of a parent or legal
+                  guardian.
+                </strong>{" "}
+                We do not knowingly collect, use, or disclose personal
+                information from children without verifiable parental consent.
                 <br />
                 <br />
                 If we become aware that we have inadvertently collected personal
