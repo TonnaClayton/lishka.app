@@ -196,7 +196,7 @@ const PrivacyPolicyPage: React.FC = () => {
                 .
                 <br />
                 <br />
-                If you are under <strong>16 years of age</strong> (or under 13
+                If you are <strong>under 16 years of age</strong> (or under 13
                 if you are located outside the EU), you may use the App{" "}
                 <strong>
                   only with the consent and supervision of a parent or legal
