@@ -1,23 +1,13 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import LandingPageLayout, {
   LandingPageHeader,
 } from "@/components/layout/landing-page-layout";
 
 const PrivacyPolicyPage: React.FC = () => {
-  const navigate = useNavigate();
-
   return (
-    <LandingPageLayout
-      scrollToSection={() => {
-        navigate(-1);
-      }}
-    >
+    <LandingPageLayout>
       <div className="relative w-full">
         <LandingPageHeader
-          scrollToSection={() => {
-            navigate(-1);
-          }}
           isMobileMenuOpen={false}
           setIsMobileMenuOpen={() => {}}
         />
@@ -195,9 +185,32 @@ const PrivacyPolicyPage: React.FC = () => {
                 9. Children's Privacy
               </h3>
               <p className="text-white/70 leading-relaxed">
-                Our App is not intended for children under 13. We do not
-                knowingly collect personal information from children under 13
-                years of age.
+                Lishka is suitable for users of all ages, including young
+                fishing enthusiasts. We are committed to protecting children’s
+                privacy and complying with applicable laws such as the{" "}
+                <strong>EU General Data Protection Regulation (GDPR)</strong>{" "}
+                and{" "}
+                <strong>
+                  the U.S. Children’s Online Privacy Protection Act (COPPA)
+                </strong>
+                .
+                <br />
+                <br />
+                If you are <strong>under 16 years of age</strong> (or under 13
+                if you are located outside the EU), you may use the App{" "}
+                <strong>
+                  only with the consent and supervision of a parent or legal
+                  guardian.
+                </strong>{" "}
+                We do not knowingly collect, use, or disclose personal
+                information from children without verifiable parental consent.
+                <br />
+                <br />
+                If we become aware that we have inadvertently collected personal
+                information from a child without proper consent, we will
+                promptly delete that information. Parents or guardians who
+                believe their child has provided personal data are encouraged to
+                contact us so we can take appropriate action.
               </p>
             </div>
 

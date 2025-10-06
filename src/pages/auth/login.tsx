@@ -47,11 +47,13 @@ export default function LoginPage() {
               )}
             >
               <div className="flex items-center flex-col">
-                <img
-                  src={"/images/tempo-image-20250804T201257275Z.png"}
-                  alt={"Pasted Image"}
-                  className={"w-[210px] h-[40px]"}
-                />
+                <Link to="/">
+                  <img
+                    src={"/images/tempo-image-20250804T201257275Z.png"}
+                    alt={"Pasted Image"}
+                    className={"w-[210px] h-[40px]"}
+                  />
+                </Link>
               </div>
 
               <div className="">

@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { User2, Globe2, Sparkles, Smile } from "lucide-react";
 import {
   Carousel,
@@ -141,6 +142,7 @@ const faqData = [
 
 export default function LandingPage() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const location = useLocation();
 
   const scrollToSection = (sectionId: string) => {
     const element = document.getElementById(sectionId);
@@ -153,11 +155,22 @@ export default function LandingPage() {
     }
     setIsMobileMenuOpen(false);
   };
+
+  // Handle hash navigation on mount and location change
+  useEffect(() => {
+    if (location.hash) {
+      // Remove the # from the hash to get the section id
+      const sectionId = location.hash.substring(1);
+      // Use a timeout to ensure the DOM is fully loaded
+      setTimeout(() => {
+        scrollToSection(sectionId);
+      }, 100);
+    }
+  }, [location]);
   return (
-    <LandingPageLayout scrollToSection={scrollToSection}>
+    <LandingPageLayout>
       <div className="relative w-full flex flex-col overflow-hidden h-[1000px] md:h-[1056px]">
         <LandingPageHeader
-          scrollToSection={scrollToSection}
           isMobileMenuOpen={isMobileMenuOpen}
           setIsMobileMenuOpen={setIsMobileMenuOpen}
         />

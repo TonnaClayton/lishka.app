@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -71,16 +71,18 @@ export default function ResetPasswordPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-12 mt-4">
           <div className="flex items-center gap-2">
-            <img
-              src="/logo.svg"
-              alt="Lishka Logo"
-              className="h-8 w-auto dark:hidden"
-            />
-            <img
-              src="/logo-night.svg"
-              alt="Lishka Logo"
-              className="h-8 w-auto hidden dark:block"
-            />
+            <Link to="/">
+              <img
+                src="/logo.svg"
+                alt="Lishka Logo"
+                className="h-8 w-auto dark:hidden"
+              />
+              <img
+                src="/logo-night.svg"
+                alt="Lishka Logo"
+                className="h-8 w-auto hidden dark:block"
+              />
+            </Link>
           </div>
         </div>
 

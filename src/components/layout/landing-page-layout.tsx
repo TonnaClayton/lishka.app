@@ -1,18 +1,19 @@
 import { ROUTES } from "@/lib/routing";
 import { Instagram } from "lucide-react";
-import React from "react";
+import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { X, Menu } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import { useAuth } from "@/contexts/auth-context";
 
 export default function LandingPageLayout({
   children,
-  scrollToSection,
 }: {
   children: React.ReactNode;
-  scrollToSection: (sectionId: string) => void;
 }) {
+  const { user } = useAuth();
+  const homeLink = useMemo(() => (user ? "/home" : "/"), [user]);
   return (
     <div className="flex-1 flex-col h-full w-full relative overflow-y-auto bg-black">
       {children}
@@ -42,37 +43,37 @@ export default function LandingPageLayout({
               "flex gap-8 w-full flex-wrap items-start justify-center lg:gap-x-[32px] gap-x-[16px]"
             }
           >
-            <span
+            <Link
               className="text-white/90 hover:text-white transition-colors cursor-pointer text-sm font-normal"
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+              to={homeLink}
             >
               Home
-            </span>
-            <span className="text-white/60">•</span>
-            <span
-              className="text-white/90 hover:text-white transition-colors cursor-pointer text-sm font-normal"
-              onClick={() => scrollToSection("features")}
-            >
-              Features
-            </span>
-            <span className="text-white/60">•</span>
-            <span
-              className="text-white/90 hover:text-white transition-colors cursor-pointer text-sm font-normal"
-              onClick={() => scrollToSection("gallery")}
-            >
-              Gallery
-            </span>
-            <span className="text-white/60">•</span>
-            <span
-              className="text-white/90 hover:text-white transition-colors cursor-pointer text-sm font-normal"
-              onClick={() => scrollToSection("faqs")}
-            >
-              FAQs
-            </span>
+            </Link>
             <span className="text-white/60">•</span>
             <Link
               className="text-white/90 hover:text-white transition-colors cursor-pointer text-sm font-normal"
-              to={ROUTES.LOGIN}
+              to={homeLink + "#features"}
+            >
+              Features
+            </Link>
+            <span className="text-white/60">•</span>
+            <Link
+              className="text-white/90 hover:text-white transition-colors cursor-pointer text-sm font-normal"
+              to={homeLink + "#gallery"}
+            >
+              Gallery
+            </Link>
+            <span className="text-white/60">•</span>
+            <Link
+              className="text-white/90 hover:text-white transition-colors cursor-pointer text-sm font-normal"
+              to={homeLink + "#faqs"}
+            >
+              FAQs
+            </Link>
+            <span className="text-white/60">•</span>
+            <Link
+              className="text-white/90 hover:text-white transition-colors cursor-pointer text-sm font-normal"
+              to={ROUTES.LOGIN_EMAIL}
             >
               Log In
             </Link>
@@ -314,14 +315,15 @@ export default function LandingPageLayout({
 }
 
 export function LandingPageHeader({
-  scrollToSection,
   isMobileMenuOpen,
   setIsMobileMenuOpen,
 }: {
-  scrollToSection: (sectionId: string) => void;
   isMobileMenuOpen: boolean;
   setIsMobileMenuOpen: (isOpen: boolean) => void;
 }) {
+  const { user } = useAuth();
+
+  const homeLink = useMemo(() => (user ? "/home" : "/"), [user]);
   return (
     <>
       {/* Animated Particles */}
@@ -373,29 +375,34 @@ export function LandingPageHeader({
         <div className="flex items-center justify-center w-full max-w-2xl mx-auto border-white/20 rounded-full py-3 h-[64px] relative z-10 border-0 px-0">
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-8">
-            <span className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-normal">
-              Home
-            </span>
-            <span className="text-white/60">•</span>
-            <span
+            <Link
+              to={homeLink}
               className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-normal"
-              onClick={() => scrollToSection("features")}
+            >
+              Home
+            </Link>
+            <span className="text-white/60">•</span>
+            <Link
+              to={homeLink + "#features"}
+              className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-normal"
             >
               Features
-            </span>
+            </Link>
             <div className="flex items-center justify-center rounded-xl h-[48px]">
-              <img
-                src="/logo-dark.svg"
-                alt="Lishka Logo"
-                className="h-full object-contain lg:w-[250px] w-[120px]"
-              />
+              <Link to={homeLink}>
+                <img
+                  src="/logo-dark.svg"
+                  alt="Lishka Logo"
+                  className="h-full object-contain lg:w-[250px] w-[120px]"
+                />
+              </Link>
             </div>
-            <span
+            <Link
+              to={homeLink + "#faqs"}
               className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-normal"
-              onClick={() => scrollToSection("faqs")}
             >
               FAQs
-            </span>
+            </Link>
             <span className="text-white/60">•</span>
             <Link
               to={ROUTES.LOGIN}
@@ -409,22 +416,24 @@ export function LandingPageHeader({
           <div className="md:hidden flex items-center justify-between w-full">
             <div>
               <Link
-                to={""}
+                to={homeLink}
                 className="text-white/90 hover:text-white transition-colors cursor-pointer text-sm font-normal"
               >
                 Home
               </Link>
             </div>
             <div className="flex items-center justify-center rounded-xl h-[48px]">
-              <img
-                src="/logo-dark.svg"
-                alt="Lishka Logo"
-                className="h-full object-contain w-[137px]"
-              />
+              <Link to={homeLink}>
+                <img
+                  src="/logo-dark.svg"
+                  alt="Lishka Logo"
+                  className="h-full object-contain w-[137px]"
+                />
+              </Link>
             </div>
             <div>
               <Link
-                to={ROUTES.LOGIN}
+                to={ROUTES.LOGIN_EMAIL}
                 className="text-white/90 hover:text-white transition-colors cursor-pointer text-sm font-normal"
               >
                 Log In
@@ -512,7 +521,7 @@ export function LandingPageHeader({
                       onClick={() =>
                         item.id === "home"
                           ? setIsMobileMenuOpen(false)
-                          : scrollToSection(item.id)
+                          : setIsMobileMenuOpen(false)
                       }
                       whileHover={{ scale: 1.05 }}
                       whileTap={{ scale: 0.95 }}
