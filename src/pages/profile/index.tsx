@@ -485,6 +485,15 @@ export default function ProfilePage() {
     if (!files || files.length === 0) return;
     const fileArray = Array.from(files).slice(0, 10); // Limit to 10 files
 
+    // check all file sizes
+    for (const file of fileArray) {
+      if (file.size > 10 * 1024 * 1024) {
+        setError("Gear image is too large. It must be less than 10MB");
+        setTimeout(() => setError(null), 5000);
+        return;
+      }
+    }
+
     try {
       await handlePhotoUpload(fileArray, {
         type: "photo",
