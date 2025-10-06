@@ -134,7 +134,7 @@ describe("LoginPage", () => {
     const links = screen.getAllByRole("link");
 
     expect(buttons).toHaveLength(2); // Google and Apple
-    expect(links).toHaveLength(2); // Email signup and signin links
+    expect(links).toHaveLength(3); // Logo, Email signup and signin links
 
     // Check that text content is accessible
     expect(screen.getByText("Already have an account?")).toBeInTheDocument();

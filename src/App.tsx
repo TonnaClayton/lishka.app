@@ -6,7 +6,6 @@ import {
   Outlet,
 } from "react-router-dom";
 import { useAuth } from "./contexts/auth-context";
-import routes from "tempo-routes";
 import { lazy } from "react";
 import {
   ForgotPasswordPage,
@@ -225,11 +224,22 @@ const AppWrapper = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// Conditionally import tempo routes - use empty array if not available
+let tempoRoutes: any[] = [];
+if (config.VITE_TEMPO) {
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    tempoRoutes = require("tempo-routes").default || [];
+  } catch {
+    // tempo-routes not available, continue with empty array
+  }
+}
+
 // Create router with future flags
 const router = createBrowserRouter(
   [
     // Add tempo routes first if VITE_TEMPO is enabled
-    ...(config.VITE_TEMPO ? routes : []),
+    ...tempoRoutes,
     {
       path: "/home",
       element: (
