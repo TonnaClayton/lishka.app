@@ -1,3 +1,5 @@
+import { log } from "@/lib/logging";
+
 interface PrecipitationForecast {
   chance: number;
   amount: number;
@@ -12,6 +14,7 @@ export const calculatePrecipitationForecast = (
   weatherData: any,
   currentHourIndex: number,
 ): PrecipitationForecast => {
+  log("calculatePrecipitationForecast", weatherData, currentHourIndex);
   const emptyForecast: PrecipitationForecast = {
     chance: 0,
     amount: 0,
@@ -25,16 +28,19 @@ export const calculatePrecipitationForecast = (
     return emptyForecast;
   }
 
-  const probabilities =
-    weatherData?.hourly?.precipitation_probability?.slice(
-      currentHourIndex,
-      currentHourIndex + 6,
-    ) || [];
-  const amounts =
-    weatherData?.hourly?.precipitation?.slice(
-      currentHourIndex,
-      currentHourIndex + 6,
-    ) || [];
+  const probabilities = weatherData?.hourly?.precipitation_probability || [];
+
+  // ?.slice(
+  //   currentHourIndex,
+  //   currentHourIndex + 6,
+  // ) || [];
+
+  const amounts = weatherData?.hourly?.precipitation || [];
+
+  // ?.slice(
+  //   currentHourIndex,
+  //   currentHourIndex + 6,
+  // ) || [];
 
   if (!probabilities.length || !amounts.length) {
     return emptyForecast;

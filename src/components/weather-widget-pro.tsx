@@ -33,7 +33,10 @@ import {
   getMarineAdvice,
   findCurrentHourIndex,
 } from "@/lib/weather-utils";
-import { getWeatherIcon, getDailyWeatherIcon } from "@/lib/weather-icons";
+import {
+  getIconForWeatherCode,
+  getDailyWeatherIcon,
+} from "@/lib/weather-icons";
 import { calculatePrecipitationForecast } from "@/lib/precipitation-utils";
 import { WeatherCard } from "./weather/weather-card";
 import { MarineCard } from "./weather/marine-card";
@@ -157,6 +160,10 @@ const WeatherWidget: React.FC<{
     Array(hours).fill(null);
 
   const times = getHourlySlice(weatherData?.hourly?.time || [], 24);
+  const weatherCodes = getHourlySlice(
+    weatherData?.hourly?.weather_code || [],
+    24,
+  );
   const waveHeights = getHourlySlice(weatherData?.hourly?.wave_height || []);
   const waveDirections = getHourlySlice(
     weatherData?.hourly?.wave_direction || [],
@@ -474,7 +481,9 @@ const WeatherWidget: React.FC<{
                 <p className="text-xs font-medium text-[#6B7280] mb-1">
                   {time ? formatTime(time) : "--:--"}
                 </p>
-                <div className="mb-2">{getWeatherIcon(weatherData)}</div>
+                <div className="mb-2">
+                  {getIconForWeatherCode(weatherCodes[index], "h-5 w-5", 1)}
+                </div>
                 <p className="text-lg font-bold text-[#191B1F] mb-2">
                   {temperatures[index] !== null &&
                   temperatures[index] !== undefined
