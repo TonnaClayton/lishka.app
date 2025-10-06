@@ -232,15 +232,27 @@ const router = createBrowserRouter(
     ...(config.VITE_TEMPO ? routes : []),
     {
       path: "/home",
-      element: <LandingPage />,
+      element: (
+        <AppWrapper>
+          <LandingPage />
+        </AppWrapper>
+      ),
     },
     {
       path: ROUTES.TERMS,
-      element: <TermsPage />,
+      element: (
+        <AppWrapper>
+          <TermsPage />
+        </AppWrapper>
+      ),
     },
     {
       path: ROUTES.PRIVACY_POLICY,
-      element: <PrivacyPolicyPage />,
+      element: (
+        <AppWrapper>
+          <PrivacyPolicyPage />
+        </AppWrapper>
+      ),
     },
     {
       path: ROUTES.LOGIN,

@@ -1,23 +1,13 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
 import LandingPageLayout, {
   LandingPageHeader,
 } from "@/components/layout/landing-page-layout";
 
 const TermsPage: React.FC = () => {
-  const navigate = useNavigate();
-
   return (
-    <LandingPageLayout
-      scrollToSection={() => {
-        navigate(-1);
-      }}
-    >
+    <LandingPageLayout>
       <div className="relative w-full">
         <LandingPageHeader
-          scrollToSection={() => {
-            navigate(-1);
-          }}
           isMobileMenuOpen={false}
           setIsMobileMenuOpen={() => {}}
         />
