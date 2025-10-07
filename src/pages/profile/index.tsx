@@ -1136,6 +1136,10 @@ export default function ProfilePage() {
                         onSubmit={form.handleSubmit(onSubmit)}
                         className="w-full space-y-3"
                       >
+                        <div className="flex items-center justify-center gap-2 text-gray-600 dark:text-gray-300 mt-2">
+                          <Mail className="w-4 h-4" />
+                          <span className="text-sm">{user?.email}</span>
+                        </div>
                         <FormField
                           control={form.control}
                           name="full_name"
@@ -1236,12 +1240,6 @@ export default function ProfilePage() {
                       )}
                     </div>
                   )}
-
-                  {/* Email */}
-                  <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300 mt-2">
-                    <Mail className="w-4 h-4" />
-                    <span className="text-sm">{user?.email}</span>
-                  </div>
                 </div>
               </CardContent>
             </Card>

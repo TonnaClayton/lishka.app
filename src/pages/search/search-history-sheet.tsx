@@ -88,7 +88,7 @@ export function SearchHistorySheet() {
           <SheetTitle>Search History</SheetTitle>
           <SheetDescription>View your search history here.</SheetDescription>
         </SheetHeader>
-        <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground mt-4 flex h-[calc(100vh-150px)] flex-col gap-3 overflow-y-auto px-4">
+        <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300 mt-4 flex h-[calc(100vh-150px)] flex-col gap-3 overflow-y-auto px-4">
           {isLoading ? (
             <div className="flex flex-col gap-2">
               {[...Array(8)].map((_, i) => (
