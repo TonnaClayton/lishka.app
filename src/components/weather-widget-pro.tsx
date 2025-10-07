@@ -295,7 +295,7 @@ const WeatherWidget: React.FC<{
             variant="ghost"
             size="sm"
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center text-lishka-blue px-0  hover:bg-blue-50"
+            className="flex items-center text-lishka-blue px-0  hover:px-2 hover:bg-blue-50"
           >
             <LocationBtn
               useLocationContext={true}
