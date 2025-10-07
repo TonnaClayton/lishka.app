@@ -1,6 +1,12 @@
 import React, { useCallback, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, Package, Loader2, AlertCircle } from "lucide-react";
+import {
+  RefreshCw,
+  Package,
+  Loader2,
+  AlertCircle,
+  Sparkles,
+} from "lucide-react";
 import LoadingDots from "@/components/loading-dots";
 import { useAuth } from "@/contexts/auth-context";
 import { useNavigate } from "react-router-dom";
@@ -10,17 +16,6 @@ import { useGetGearRecommendation } from "@/hooks/queries/gear/use-gear-recommen
 import { GearItem } from "@/lib/gear";
 import { cn } from "@/lib/utils";
 import { captureEvent } from "@/lib/posthog";
-
-// interface WeatherConditions {
-//   temperature: number;
-//   windSpeed: number;
-//   windDirection: number;
-//   waveHeight: number;
-//   swellHeight: number;
-//   swellPeriod: number;
-//   weatherCondition: string;
-//   isSeaLocation: boolean;
-// }
 
 interface AIRecommendation {
   gear_id: string;
@@ -32,26 +27,12 @@ interface AIRecommendation {
   confidence?: number;
 }
 
-// interface AnalysisState {
-//   phase: "idle" | "loading-weather" | "analyzing-gear" | "complete" | "error";
-//   weatherConditions: WeatherConditions | null;
-//   recommendations: AIRecommendation[];
-//   error: string | null;
-// }
-
 const GearRecommendationWidget: React.FC = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
   const [selectedTag, setSelectedTag] = useState<string | null>(null);
-  // const [analysis, setAnalysis] = useState<AnalysisState>({
-  //   phase: "idle",
-  //   weatherConditions: null,
-  //   recommendations: [],
-  //   error: null,
-  // });
 
   const { data: weatherData } = useGetWeatherSummary();
-  console.log("[WEATHER DATA]", weatherData);
   const {
     data: gearRecommendation,
     refetch,
@@ -72,45 +53,10 @@ const GearRecommendationWidget: React.FC = () => {
       : undefined,
   );
 
-  // Get user gear directly from profile (no local state)
   const userGear: GearItem[] =
     profile?.gear_items && Array.isArray(profile.gear_items)
       ? (profile.gear_items as unknown as GearItem[])
       : [];
-
-  // Track previous location to detect changes
-
-  // Load cached analysis
-
-  // Main analysis function - sequential flow with caching
-
-  // Get weather condition from WMO code
-  // const getWeatherCondition = (weatherCode: number): string => {
-  //   switch (true) {
-  //     case weatherCode === 0:
-  //       return "Clear sky";
-  //     case weatherCode === 1:
-  //       return "Mainly clear";
-  //     case weatherCode === 2:
-  //       return "Partly cloudy";
-  //     case weatherCode === 3:
-  //       return "Overcast";
-  //     case weatherCode >= 45 && weatherCode <= 49:
-  //       return "Fog";
-  //     case weatherCode >= 51 && weatherCode <= 55:
-  //       return "Drizzle";
-  //     case weatherCode >= 61 && weatherCode <= 65:
-  //       return "Rain";
-  //     case weatherCode >= 71 && weatherCode <= 77:
-  //       return "Snow";
-  //     case weatherCode >= 80 && weatherCode <= 82:
-  //       return "Rain showers";
-  //     case weatherCode >= 95 && weatherCode <= 99:
-  //       return "Thunderstorm";
-  //     default:
-  //       return "Clear";
-  //   }
-  // };
 
   const recommendations = useMemo(() => {
     return [
@@ -123,62 +69,17 @@ const GearRecommendationWidget: React.FC = () => {
     return recommendations?.map((rec) => rec.method_tags).flat() || [];
   }, [recommendations]);
 
-  // Get recommendation for specific gear
   const getRecommendation = useCallback(
     (gearId: string): AIRecommendation | null => {
       if (!recommendations) return null;
-
       return recommendations?.find((rec) => rec.gear_id === gearId) || null;
     },
     [recommendations],
   );
 
-  // Get fishing technique for gear - prioritize AI data
-  const getFishingTechnique = (gear: GearItem): string => {
-    // Always prioritize AI-provided fishing technique
-    if (gear.fishingTechnique) return gear.fishingTechnique;
-
-    // Only show category as fallback if no AI data available
-    return gear.category || "Fishing Gear";
-  };
-
-  // Get gear tip based on AI recommendation only
-  const getGearTip = useCallback(
-    (gear: GearItem): string => {
-      if (!recommendations) return "Waiting for AI analysis...";
-
-      const recommendation = getRecommendation(gear.id);
-      if (recommendation) {
-        return recommendation.reasoning;
-      }
-
-      // Only show if we have AI analysis complete, otherwise show waiting message
-      // if (analysis.phase === "complete") {
-      //   return "Analyzing suitability for current conditions...";
-      // }
-
-      return "No recommendation found";
-    },
-    [getRecommendation, recommendations],
-  );
-
-  // Get depth range from gear AI data
-  const getDepthRange = (gear: GearItem): string | null => {
-    if (
-      gear.depthRange &&
-      gear.depthRange !== "Any" &&
-      gear.depthRange !== "Unknown"
-    ) {
-      return gear.depthRange;
-    }
-    return null;
-  };
-
-  // Sort gear by AI scores and filter by selected tag
   const getSortedGear = useCallback((): GearItem[] => {
     let filteredGear = [...userGear];
 
-    // Filter by selected tag if one is selected
     if (selectedTag) {
       filteredGear = filteredGear.filter((gear) => {
         const recommendation = getRecommendation(gear.id);
@@ -186,7 +87,6 @@ const GearRecommendationWidget: React.FC = () => {
       });
     }
 
-    // Sort by AI scores
     return filteredGear.sort((a: any, b: any) => {
       const scoreA = getRecommendation(a.id)?.score || 0;
       const scoreB = getRecommendation(b.id)?.score || 0;
@@ -196,19 +96,7 @@ const GearRecommendationWidget: React.FC = () => {
     });
   }, [userGear, selectedTag, getRecommendation]);
 
-  // Retry analysis
-  // const retryAnalysis = () => {
-  //   setAnalysis({
-  //     phase: "idle",
-  //     weatherConditions: null,
-  //     recommendations: [],
-  //     error: null,
-  //   });
-  // };
-
-  // Handle gear click to navigate to gear category page
   const handleGearClick = (gear: GearItem) => {
-    // Track gear recommendation click
     captureEvent("gear_recommendation_clicked", {
       gear_id: gear.id,
       gear_name: gear.name,
@@ -218,7 +106,6 @@ const GearRecommendationWidget: React.FC = () => {
       wind_speed: weatherData?.wind_speed,
     });
 
-    // Navigate to the gear category page with the specific gear ID as a query parameter
     navigate(`/gear-category/${gear.category}?gearId=${gear.id}`);
   };
 
@@ -226,10 +113,9 @@ const GearRecommendationWidget: React.FC = () => {
     return <GearRecommendationSkeleton />;
   }
 
-  // Show empty state if no gear
   if (userGear.length === 0) {
     return (
-      <div className="mb-8">
+      <div className="mb-8 px-4 lg:px-6">
         <h2 className="font-bold mb-1 text-black dark:text-white text-xl">
           AI Gear Recommendations
         </h2>
@@ -260,8 +146,7 @@ const GearRecommendationWidget: React.FC = () => {
 
   return (
     <div className="mb-8">
-      {/* Header */}
-      <div className="mb-4">
+      <div className="mb-4 px-4 lg:px-6">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
@@ -276,7 +161,6 @@ const GearRecommendationWidget: React.FC = () => {
             </p>
           </div>
 
-          {/* Status indicator */}
           <div className="flex items-center gap-2">
             {isLoadingGearRecommendation && (
               <div className="flex items-center gap-2 text-lishka-blue">
@@ -300,9 +184,9 @@ const GearRecommendationWidget: React.FC = () => {
           </div>
         </div>
       </div>
-      {/* Content based on analysis phase */}
+
       {isLoadingGearRecommendation || isRefetchingGearRecommendation ? (
-        <div className="flex flex-col items-center justify-center py-8">
+        <div className="flex flex-col items-center justify-center py-8 px-4 lg:px-6">
           <LoadingDots />
           <p className="text-sm text-muted-foreground mt-2">
             {isLoadingGearRecommendation && "Loading weather conditions..."}
@@ -310,7 +194,7 @@ const GearRecommendationWidget: React.FC = () => {
           </p>
         </div>
       ) : isErrorGearRecommendation ? (
-        <div className="flex items-center justify-center py-12">
+        <div className="flex items-center justify-center py-12 px-4 lg:px-6">
           <div className="text-center">
             <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
             <p className="text-sm text-red-600 dark:text-red-400 mb-2">
@@ -326,15 +210,14 @@ const GearRecommendationWidget: React.FC = () => {
           </div>
         </div>
       ) : (
-        /* Show gear recommendations */
         <div className="w-full">
           {tags.length > 0 && (
-            <div className="flex gap-2 overflow-x-auto pb-4 -webkit-overflow-scrolling-touch px-1">
+            <div className="flex gap-2 overflow-x-auto pb-4 -webkit-overflow-scrolling-touch px-4 lg:px-6">
               <Button
                 type="button"
                 className={cn(
-                  "bg-[#191B1F0D] shadow-none text-sm font-medium text-[#65758B] h-[36px] rounded-[30px] py-2 px-4 w-fit flex-shrink-0",
-                  selectedTag === null && "bg-[#191B1F] text-white",
+                  "bg-[#191B1F0D] shadow-none text-sm font-medium text-[#65758B] hover:bg-black hover:text-white h-[36px] rounded-[30px] py-2 px-4 w-fit flex-shrink-0",
+                  selectedTag === null && "bg-black text-white",
                 )}
                 onClick={() => setSelectedTag(null)}
               >
@@ -345,8 +228,8 @@ const GearRecommendationWidget: React.FC = () => {
                   key={index}
                   type="button"
                   className={cn(
-                    "bg-[#191B1F0D] shadow-none text-sm font-medium text-[#65758B] h-[36px] capitalize rounded-[30px] py-2 px-4 w-fit flex-shrink-0",
-                    selectedTag === tag && "bg-[#191B1F] text-white",
+                    "bg-[#191B1F0D] shadow-none text-sm font-medium text-[#65758B] hover:bg-black hover:text-white h-[36px] capitalize rounded-[30px] py-2 px-4 w-fit flex-shrink-0",
+                    selectedTag === tag && "bg-black text-white",
                   )}
                   onClick={() =>
                     setSelectedTag(selectedTag === tag ? null : tag)
@@ -357,25 +240,21 @@ const GearRecommendationWidget: React.FC = () => {
               ))}
             </div>
           )}
-          <div
-            className="flex gap-3 overflow-x-auto pb-4 -webkit-overflow-scrolling-touch px-1"
-            style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-          >
+          <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-thin scrollbar-track-transparent px-4 lg:px-6 scrollbar-thumb-gray-300">
             {getSortedGear()
               .slice(0, 20)
               .map((gear, index) => {
-                //const recommendation = getRecommendation(gear.id);
-                //const score = recommendation?.score || null;
-                // const isTopRecommendation = score && score >= 80;
+                const recommendation = getRecommendation(gear.id);
+                const score = recommendation?.score || 0;
 
                 return (
                   <div
                     key={index}
-                    className="overflow-hidden flex flex-col border-0 shadow bg-white dark:bg-gray-800 rounded-xl flex-shrink-0 w-[280px] relative cursor-pointer hover:shadow-lg transition-shadow"
+                    className="overflow-hidden flex flex-col border border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800 rounded-2xl flex-shrink-0 w-[320px] relative cursor-pointer hover:shadow-md transition-all"
                     onClick={() => handleGearClick(gear)}
                   >
                     {/* Gear Image */}
-                    <div className="relative w-full aspect-[3/2] overflow-hidden max-w-full">
+                    <div className="relative w-full aspect-square overflow-hidden">
                       {gear.imageUrl ? (
                         <img
                           src={gear.imageUrl}
@@ -383,41 +262,71 @@ const GearRecommendationWidget: React.FC = () => {
                           className="w-full h-full object-cover"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gray-100 dark:bg-gray-600 flex items-center justify-center">
-                          <Package className="h-8 w-8 text-gray-400" />
+                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
+                          <Package className="h-12 w-12 text-gray-400" />
+                        </div>
+                      )}
+
+                      {/* AI Score Badge */}
+                      {score > 0 && (
+                        <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
+                          <Sparkles className="h-3.5 w-3.5" />
+                          <span className="text-xs font-bold">
+                            {score}% Match
+                          </span>
                         </div>
                       )}
                     </div>
+
                     {/* Gear Info */}
-                    <div className="p-2 sm:p-3 flex flex-col flex-1">
-                      <div className="mb-1">
-                        <h3 className="font-inter text-sm sm:text-base font-bold text-foreground line-clamp-1">
+                    <div className="p-4 flex flex-col flex-1">
+                      {/* Gear Name */}
+                      <div className="mb-4">
+                        <h3 className="font-bold text-base text-foreground line-clamp-1">
                           {gear.name}
                         </h3>
                       </div>
 
-                      <div className="text-xs space-y-1 sm:space-y-1.5">
-                        <div className="flex items-center">
-                          <span className="text-foreground line-clamp-1 text-xs">
-                            {getFishingTechnique(gear)}
-                          </span>
+                      {/* AI Reasoning - Only show if available */}
+                      {recommendation?.reasoning && (
+                        <div className="mb-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 p-3 rounded-lg border border-blue-100 dark:border-blue-900/50">
+                          <div className="flex items-start gap-2">
+                            <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-3 leading-relaxed">
+                              {recommendation.reasoning}
+                            </p>
+                          </div>
                         </div>
+                      )}
 
-                        <div className="flex items-start">
-                          <span className="text-xs line-clamp-2 text-muted-foreground">
-                            {getGearTip(gear)}
-                          </span>
-                        </div>
+                      {/* Spacer to push tags to bottom */}
+                      <div className="flex-1" />
 
-                        {/* Depth Range from AI */}
-                        {getDepthRange(gear) && (
-                          <div className="flex items-center">
-                            <span className="text-foreground line-clamp-1 text-xs">
-                              Use in depth: {getDepthRange(gear)}
-                            </span>
+                      {/* Method Tags - Only show if available */}
+                      {recommendation?.method_tags &&
+                        recommendation.method_tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {recommendation.method_tags
+                              .slice(0, 3)
+                              .map((tag, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-md capitalize"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
                           </div>
                         )}
-                      </div>
+
+                      {/* No AI Data Available Message */}
+                      {!recommendation && (
+                        <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg">
+                          <p className="text-xs text-gray-500 dark:text-gray-400 text-center italic">
+                            No AI analysis available for current conditions
+                          </p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 );
@@ -425,11 +334,11 @@ const GearRecommendationWidget: React.FC = () => {
           </div>
         </div>
       )}
-      {/* Show more indicator */}
+
       {isLoadingGearRecommendation == false &&
         isErrorGearRecommendation == false &&
         userGear.length > 20 && (
-          <div className="mt-3">
+          <div className="mt-3 px-4 lg:px-6">
             <p className="text-xs text-gray-500 dark:text-gray-500">
               +{userGear.length - 20} more gear items in your collection
             </p>
