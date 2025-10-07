@@ -35,6 +35,8 @@ export default defineConfig({
         "apple-touch-icon.png",
         "android-chrome-192x192.png",
         "android-chrome-512x512.png",
+        "sitemap.xml",
+        "robots.txt",
       ],
       manifest: {
         name: "Lishka - Fishing Companion",
