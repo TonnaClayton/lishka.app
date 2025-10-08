@@ -385,7 +385,7 @@ export default function LandingPage() {
       {/* Mobile App Screenshots - Carousel on mobile, side by side on desktop */}
       <div
         id="gallery"
-        className="bg-black w-full z-1 py-8 lg:h-[650px] xl:h-[650px]"
+        className="bg-black w-full z-1 pt-8 lg:h-[650px] xl:h-[650px]"
       >
         {/* Mobile Carousel (hidden on md+) */}
         <div className="block md:hidden">
@@ -434,7 +434,7 @@ export default function LandingPage() {
           ))}
         </div>
       </div>
-      <div className="w-full relative z-10 overflow-hidden -mt-10 h-[600px] sm:h-[800px] bg-black border-white/40 border-t lg:rounded-tl-[100px] rounded-tl-[40px] lg:rounded-tr-[100px] rounded-tr-[40px]">
+      <div className="w-full relative z-10 overflow-hidden -mt-14 md:-mt-10 h-[600px] sm:h-[800px] bg-black border-white/40 border-t lg:rounded-tl-[100px] rounded-tl-[40px] lg:rounded-tr-[100px] rounded-tr-[40px]">
         <div className="z-50  absolute h-full w-full">
           <div className="max-w-4xl mx-auto flex h-full justify-center items-center flex-col">
             <h1
