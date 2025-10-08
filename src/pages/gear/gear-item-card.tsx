@@ -81,14 +81,13 @@ export default function GearItemCard({
                 </span>
               )}
               {gear.weight && (
-                <span className="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium truncate max-w-[60px] sm:max-w-[80px]">
+                <span className="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium truncate w-fit">
                   {gear.weight}
                 </span>
               )}
               {gear.targetFish && (
-                <span className="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium truncate max-w-[80px] sm:max-w-[100px]">
-                  {gear.targetFish.split(",")[0].trim()}
-                  {gear.targetFish.includes(",") && "..."}
+                <span className="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium truncate max-w-[80px] sm:max-w-[200px]">
+                  {gear.targetFish}
                 </span>
               )}
             </div>

@@ -1273,11 +1273,11 @@ const FishDetailPage = () => {
                 </div>
               </div>
 
-              {/* Fishing Season Calendar Card */}
+              {/* Active Months Calendar Card */}
               <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    Fishing Season
+                    Active Months
                   </h2>
                   <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
                     {fishDetailsData.fishing_location ||
@@ -1303,7 +1303,7 @@ const FishDetailPage = () => {
                   />
 
                   {/* Reasoning */}
-                  {fishDetailsData.fishing_seasons?.reasoning && (
+                  {/* {fishDetailsData.fishing_seasons?.reasoning && (
                     <div className="mt-4 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Seasonal Information
@@ -1312,7 +1312,7 @@ const FishDetailPage = () => {
                         {fishDetailsData.fishing_seasons.reasoning}
                       </p>
                     </div>
-                  )}
+                  )} */}
                 </div>
               </Card>
 
