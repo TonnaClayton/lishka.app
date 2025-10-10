@@ -81,6 +81,7 @@ export default [
       "src/components/ui/**",
       "dist-ssr/**",
       "dev-dist/**",
+      "src/lib/add-to-homescreen/**",
     ],
   },
 ];

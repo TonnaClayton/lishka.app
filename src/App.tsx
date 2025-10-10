@@ -32,6 +32,7 @@ import AuthWrapper from "./pages/auth/auth-wrapper";
 import { PostHogProvider, PostHogErrorBoundary } from "posthog-js/react";
 import { initPosthog, posthog } from "./lib/posthog";
 import { Toaster } from "./components/ui/toaster";
+import AddToHomeScreenPrompt from "./components/add-to-homescreen";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./pages/home"));
@@ -593,6 +594,7 @@ function App() {
             </Suspense>
             <ReactQueryDevtools initialIsOpen={false} />
             <Toaster />
+            <AddToHomeScreenPrompt />
           </QueryClientProvider>
         </ErrorBoundary>
       </PostHogErrorBoundary>
