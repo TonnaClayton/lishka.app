@@ -16,16 +16,7 @@ import { useGetGearRecommendation } from "@/hooks/queries/gear/use-gear-recommen
 import { GearItem } from "@/lib/gear";
 import { cn } from "@/lib/utils";
 import { captureEvent } from "@/lib/posthog";
-
-interface AIRecommendation {
-  gear_id: string;
-  score: number;
-  reasoning: string;
-  suitability_for_conditions?: string;
-  method_tags?: string[];
-  match_type?: string;
-  confidence?: number;
-}
+import { AIRecommendation } from "@/types/gear-recommendation";
 
 const GearRecommendationWidget: React.FC = () => {
   const { profile } = useAuth();
@@ -244,7 +235,8 @@ const GearRecommendationWidget: React.FC = () => {
             {getSortedGear()
               .slice(0, 20)
               .map((gear, index) => {
-                const recommendation = getRecommendation(gear.id);
+                const recommendation =
+                  gear.recommendation || getRecommendation(gear.id);
                 const score = recommendation?.score || 0;
 
                 return (
