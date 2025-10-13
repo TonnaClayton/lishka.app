@@ -1,5 +1,5 @@
 import { GearItem } from "@/lib/gear";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,6 +13,7 @@ import { ROUTES } from "@/lib/routing";
 import { captureEvent } from "@/lib/posthog";
 
 export default function GearItemCard({
+  gearId,
   gear,
   categoryId,
   handleDeleteGear,
@@ -20,6 +21,7 @@ export default function GearItemCard({
 }: {
   gear: GearItem;
   categoryId: string;
+  gearId: string;
   handleDeleteGear: () => void;
   loading: boolean;
 }) {
@@ -42,9 +44,19 @@ export default function GearItemCard({
     }, 100);
   };
 
+  useEffect(() => {
+    if (gearId === gear.id) {
+      setIsExpanded(true);
+
+      cardRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [gearId]);
+
   return (
     <div
-      key={gear.id}
       ref={cardRef}
       className={cn(
         `bg-white dark:bg-gray-800 rounded-xl shadow-sm cursor-pointer overflow-hidden`,

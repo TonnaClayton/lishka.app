@@ -45,76 +45,79 @@ const highlightKeywords = (text: string): string => {
     {
       regex:
         /(\d+(?:-\d+)?(?:\.\d+)?\s*(?:ft|feet|m|cm|inch|inches|°F|°C|mph|km\/h|knots))/g,
-      replacement: "<strong>$1</strong>",
+      replacement: "<span class='font-semibold'>$1</span>",
     },
 
     // Depths and ranges
     {
       regex: /(\d+(?:-\d+)?\s*(?:ft|feet|m|meters)\s*(?:depth|deep))/gi,
-      replacement: "<strong>$1</strong>",
+      replacement: "<span class='font-semibold'>$1</span>",
     },
 
     // Times of day
     {
       regex:
         /\b(dawn|dusk|sunrise|sunset|morning|afternoon|evening|night|early|late)\b/gi,
-      replacement: "<strong>$1</strong>",
+      replacement: "<span class='font-semibold'>$1</span>",
     },
 
     // Fishing techniques
     {
       regex:
         /\b(trolling|casting|jigging|spinning|bottom fishing|fly fishing|bait fishing|lure fishing)\b/gi,
-      replacement: "<strong>$1</strong>",
+      replacement: "<span class='font-semibold'>$1</span>",
     },
 
     // Bait types
     {
       regex:
         /\b(live bait|cut bait|artificial bait|dead bait|chum|worms|minnows|shrimp|squid|crab|clams|nightcrawlers|leeches|crickets|grasshoppers)\b/gi,
-      replacement: "<strong>$1</strong>",
+      replacement: "<span class='font-semibold'>$1</span>",
     },
 
     // Lure types
     {
       regex:
         /\b(spoons|spinners|crankbaits|jerkbaits|topwater|soft plastics|jigs|swimbaits|plugs|poppers|spinnerbaits|buzzbaits|flies|streamers|nymphs|dry flies|wet flies)\b/gi,
-      replacement: "<strong>$1</strong>",
+      replacement: "<span class='font-semibold'>$1</span>",
     },
 
     // Locations
     {
       regex:
         /\b(shallow|deep|offshore|inshore|nearshore|reef|structure|weed beds|drop-offs|flats)\b/gi,
-      replacement: "<strong>$1</strong>",
+      replacement: "<span class='font-semibold'>$1</span>",
     },
 
     // Weather conditions
     {
       regex: /\b(cloudy|sunny|windy|calm|overcast|rainy|stormy|clear)\b/gi,
-      replacement: "<strong>$1</strong>",
+      replacement: "<span class='font-semibold'>$1</span>",
     },
 
     // Water conditions
     {
       regex: /\b(murky|clear|warm|cold|hot|cool|choppy|flat|rough)\b/gi,
-      replacement: "<strong>$1</strong>",
+      replacement: "<span class='font-semibold'>$1</span>",
     },
 
     // Seasons
     {
       regex: /\b(spring|summer|fall|autumn|winter)\b/gi,
-      replacement: "<strong>$1</strong>",
+      replacement: "<span class='font-semibold'>$1</span>",
     },
 
     // Temperature ranges
-    { regex: /(\d+(?:-\d+)?\s*degrees)/gi, replacement: "<strong>$1</strong>" },
+    {
+      regex: /(\d+(?:-\d+)?\s*degrees)/gi,
+      replacement: "<span class='font-semibold'>$1</span>",
+    },
 
     // Specific fish species (common ones)
     {
       regex:
         /\b(bass|trout|salmon|tuna|marlin|snapper|grouper|wahoo|mahi|dorado|tarpon|bonefish|redfish)\b/gi,
-      replacement: "<strong>$1</strong>",
+      replacement: "<span class='font-semibold'>$1</span>",
     },
   ];
 
@@ -124,7 +127,12 @@ const highlightKeywords = (text: string): string => {
     result = result.replace(pattern.regex, pattern.replacement);
   });
 
-  return result;
+  return result
+    .replace(
+      "<span class='font-semibold'><span class='font-semibold'>",
+      "<span class='font-semibold'>",
+    )
+    .replace("</span></span>", "</span>");
 };
 
 const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
