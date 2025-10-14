@@ -172,6 +172,7 @@ const GearCategoryPage: React.FC = () => {
                 {gearItems.map((gear, index) => {
                   return (
                     <GearItemCard
+                      gearId={gearId}
                       key={index}
                       gear={gear}
                       categoryId={categoryId}
