@@ -1,4 +1,5 @@
 import { Json } from "@/types/supabase";
+import { GearRecommendation } from "@/types/gear-recommendation";
 
 export interface GearItem {
   id: string;
@@ -76,6 +77,7 @@ export interface GearItem {
   // Debug information
   rawJsonResponse?: string;
   openaiPrompt?: string;
+  recommendation?: GearRecommendation;
 }
 
 export const toGearItem = (item: Json | string | null) => {
