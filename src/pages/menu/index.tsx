@@ -1,9 +1,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Instagram } from "lucide-react";
-import BottomNav from "./bottom-nav";
-import { Button } from "./ui/button";
-import { Badge } from "./ui/badge";
+import BottomNav from "@/components/bottom-nav";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 
 const MenuPage: React.FC = () => {
   const navigate = useNavigate();
@@ -82,7 +82,7 @@ const MenuPage: React.FC = () => {
               <Button
                 variant="ghost"
                 className="w-full justify-between text-left p-4 h-auto hover:bg-transparent rounded-t-lg rounded-b-none"
-                onClick={() => navigate("/terms")}
+                onClick={() => window.open("/terms", "_blank")}
               >
                 <span className="font-medium">Terms</span>
                 <ChevronLeft className="h-4 w-4 rotate-180" />
@@ -90,7 +90,7 @@ const MenuPage: React.FC = () => {
               <Button
                 variant="ghost"
                 className="w-full justify-between text-left p-4 h-auto hover:bg-transparent rounded-none rounded-b-lg"
-                onClick={() => navigate("/privacy-policy")}
+                onClick={() => window.open("/privacy-policy", "_blank")}
               >
                 <span className="font-medium">Privacy Policy</span>
                 <ChevronLeft className="h-4 w-4 rotate-180" />
