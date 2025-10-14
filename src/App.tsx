@@ -36,7 +36,7 @@ import { Toaster } from "./components/ui/toaster";
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./pages/home"));
 const FishDetailPage = lazy(() => import("./pages/fish-detail"));
-const MenuPage = lazy(() => import("./components/menu-page"));
+const MenuPage = lazy(() => import("./pages/menu"));
 const SearchPage = lazy(() => import("./pages/search"));
 const WeatherPage = lazy(() => import("./pages/weather/weather"));
 const ProfilePage = lazy(() => import("./pages/profile"));
