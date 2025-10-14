@@ -115,7 +115,6 @@ const MenuPage: React.FC = () => {
               <Button
                 variant="ghost"
                 className="w-full justify-between text-left p-4 h-auto hover:bg-transparent rounded-none"
-                onClick={() => navigate("/gear-database-debug")}
               >
                 <div className="flex items-center justify-between w-full">
                   <span className="font-medium">App Version</span>
