@@ -16,6 +16,7 @@ import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { captureEvent } from "@/lib/posthog";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function SearchHistorySheet() {
   const { data, isLoading } = useGetSearchSessions();
@@ -116,28 +117,44 @@ export function SearchHistorySheet() {
               ))}
             </div>
           ) : data && data.length > 0 ? (
-            data.map((session) => (
-              <Link
-                to={`/search/${session.id}`}
-                key={session.id}
-                className="hover:bg-gray-100 dark:hover:bg-gray-800 border flex items-center border-[#191B1F0D] rounded-[8px] px-4 h-[44px] group"
-              >
-                <div className="flex items-center gap-2 w-full">
-                  <p className="text-xs font-semibold text-[#191B1FB2] dark:text-[#191B1FB2] w-full flex-1 truncate max-w-[85%]">
-                    {session.title}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 transition-opacity flex-shrink-0 ml-auto"
-                    onClick={(e) => handleDelete(e, session.id)}
-                    disabled={deletingIds.has(session.id)}
+            <AnimatePresence mode="popLayout">
+              {data.map((session) => (
+                <motion.div
+                  key={session.id}
+                  layout
+                  initial={{ opacity: 1, scale: 1 }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0,
+                    transition: {
+                      duration: 0.3,
+                      ease: "easeInOut",
+                    },
+                  }}
+                  style={{ transformOrigin: "center center" }}
+                >
+                  <Link
+                    to={`/search/${session.id}`}
+                    className="hover:bg-gray-100 dark:hover:bg-gray-800 border flex items-center border-[#191B1F0D] rounded-[8px] px-4 h-[44px] group"
                   >
-                    <Trash2 className="h-4 w-4 text-[#E8E8E9] group-hover:text-red-500" />
-                  </Button>
-                </div>
-              </Link>
-            ))
+                    <div className="flex items-center gap-2 w-full">
+                      <p className="text-xs font-semibold text-[#191B1FB2] dark:text-[#191B1FB2] w-full flex-1 truncate max-w-[85%]">
+                        {session.title}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 transition-opacity flex-shrink-0 ml-auto disabled:cursor-not-allowed"
+                        onClick={(e) => handleDelete(e, session.id)}
+                        disabled={deletingIds.has(session.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-[#E8E8E9] group-hover:text-red-500" />
+                      </Button>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           ) : (
             <div className="flex flex-1 items-center justify-center py-8">
               <div className="text-center px-4">
