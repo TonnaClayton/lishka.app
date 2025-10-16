@@ -474,8 +474,8 @@ const SearchPage: React.FC = () => {
                   key={`suggestion-${index}`}
                   variant="outline"
                   className={cn(
-                    "text-left flex justify-start items-center h-fit py-3 px-4 rounded-2xl border-0 bg-[#E6EFFF] text-lishka-blue w-[48%] shadow-none whitespace-normal hover:text-lishka-blue hover:bg-[#E6EFFF]",
-                    isMobile && "px-8 py-6 h-auto",
+                    "text-left flex justify-start items-center min-h-[88px] py-3 rounded-2xl border-0 bg-[#E6EFFF] text-lishka-blue w-[48%] shadow-none whitespace-normal hover:text-lishka-blue hover:bg-[#E6EFFF] px-8",
+                    isMobile && "py-6 h-auto",
                   )}
                   onClick={() => handleSuggestionClick(suggestion)}
                 >

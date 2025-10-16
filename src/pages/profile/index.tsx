@@ -1249,7 +1249,7 @@ export default function ProfilePage() {
               <Button
                 variant="outline"
                 className={cn(
-                  "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-10 flex items-center justify-center gap-2 rounded-[8px]",
+                  "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-[56px] flex items-center justify-center gap-2 rounded-[8px]",
                 )}
                 style={{ backgroundColor: "#0251FB0D" }}
                 onClick={() => {
@@ -1274,7 +1274,7 @@ export default function ProfilePage() {
                 variant="outline"
                 disabled={isUploading || classifyingImage}
                 className={cn(
-                  "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-10 flex items-center justify-center gap-2 rounded-[8px]",
+                  "flex-1 border-none shadow-none text-[#191B1F] bg-[#025DFB0D] font-medium py-4 h-[56px] flex items-center justify-center gap-2 rounded-[8px]",
                 )}
                 style={{ backgroundColor: "#025DFB0D" }}
                 //onClick={() => navigate("/gear-upload")}
