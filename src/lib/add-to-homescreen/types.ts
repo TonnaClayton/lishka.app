@@ -67,6 +67,7 @@ export interface AddToHomeScreenType {
   showArrow: boolean;
 
   clearModalDisplayCount: () => void;
+  clearSessionLaterFlag: () => void;
   isStandAlone: () => boolean;
   show: (locale: string) => DeviceInfo;
   closeModal: () => void;
