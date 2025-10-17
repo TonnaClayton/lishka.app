@@ -306,7 +306,7 @@ export default function LandingPage() {
             </div>
 
             {/* Center phone mockup */}
-            <div className="relative flex items-center justify-center w-full bg-[url('https://storage.googleapis.com/tempo-image-previews/github%7C45309499-1757494689219-Screenshot_20250910_at_21546PM_1png')] bg-cover bg-top bg-no-repeat h-[500px]">
+            <div className="relative flex items-center justify-center w-full bg-[url('https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/discover-mockup.png')] bg-cover bg-top bg-no-repeat h-[500px]">
               {/* iPhone Frame */}
             </div>
 
