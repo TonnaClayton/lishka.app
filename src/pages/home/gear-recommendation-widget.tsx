@@ -57,8 +57,15 @@ const GearRecommendationWidget: React.FC = () => {
   }, [gearRecommendation]);
 
   const tags = useMemo(() => {
-    return recommendations?.map((rec) => rec.method_tags).flat() || [];
-  }, [recommendations]);
+    const gearTags = userGear
+      .filter((i) => i.recommendation != undefined)
+      .map((i) => i.recommendation.method_tags)
+      .flat();
+
+    const aiTags = recommendations?.map((rec) => rec.method_tags).flat() || [];
+
+    return [...gearTags, ...aiTags];
+  }, [recommendations, userGear]);
 
   const getRecommendation = useCallback(
     (gearId: string): AIRecommendation | null => {
@@ -73,7 +80,8 @@ const GearRecommendationWidget: React.FC = () => {
 
     if (selectedTag) {
       filteredGear = filteredGear.filter((gear) => {
-        const recommendation = getRecommendation(gear.id);
+        const recommendation =
+          gear.recommendation || getRecommendation(gear.id);
         return recommendation?.method_tags?.includes(selectedTag);
       });
     }
