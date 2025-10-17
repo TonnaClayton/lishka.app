@@ -32,11 +32,12 @@ import AuthWrapper from "./pages/auth/auth-wrapper";
 import { PostHogProvider, PostHogErrorBoundary } from "posthog-js/react";
 import { initPosthog, posthog } from "./lib/posthog";
 import { Toaster } from "./components/ui/toaster";
+import AddToHomeScreenPrompt from "./components/add-to-homescreen";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./pages/home"));
 const FishDetailPage = lazy(() => import("./pages/fish-detail"));
-const MenuPage = lazy(() => import("./components/menu-page"));
+const MenuPage = lazy(() => import("./pages/menu"));
 const SearchPage = lazy(() => import("./pages/search"));
 const WeatherPage = lazy(() => import("./pages/weather/weather"));
 const ProfilePage = lazy(() => import("./pages/profile"));
@@ -593,6 +594,7 @@ function App() {
             </Suspense>
             <ReactQueryDevtools initialIsOpen={false} />
             <Toaster />
+            <AddToHomeScreenPrompt />
           </QueryClientProvider>
         </ErrorBoundary>
       </PostHogErrorBoundary>

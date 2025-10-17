@@ -1,30 +1,19 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import {
-  Home,
-  Search,
-  Cloud,
-  Settings,
-  HelpCircle,
-  ChevronLeft,
-  User,
-  LogOut,
-  Camera,
-} from "lucide-react";
+import { Home, Search, Cloud, ChevronLeft, User, Camera } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useUpload } from "@/contexts/upload-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { log } from "@/lib/logging";
-import { ROUTES } from "@/lib/routing";
 import { cn } from "@/lib/utils";
 import ItemUploadBar from "@/pages/profile/item-upload-bar";
 import UploadedInfoMsg from "@/pages/profile/uploaded-info-msg";
 import { captureEvent } from "@/lib/posthog";
+import useIsMobile from "@/hooks/use-is-mobile";
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const isMobile = useIsMobile(1024);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
@@ -41,15 +30,6 @@ const BottomNav: React.FC = () => {
     handlePhotoUpload,
     closeUploadedInfoMsg,
   } = useUpload();
-
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
 
   const handleCameraClick = () => {
     // Open camera directly
@@ -219,7 +199,6 @@ export const SideNav: React.FC = () => {
   let user = null;
   let profile = null;
   let loading = false;
-  let signOut = null;
   let hasAuthContext = false;
   let hasRouterContext = false;
   const location = useLocation();
@@ -238,7 +217,6 @@ export const SideNav: React.FC = () => {
     user = authContext.user;
     profile = authContext.profile;
     loading = authContext.loading;
-    signOut = authContext.signOut;
     hasAuthContext = true;
   } catch {
     // Component is rendered outside AuthProvider, use default values
@@ -282,6 +260,7 @@ export const SideNav: React.FC = () => {
 
       {/* Desktop Side Nav */}
       <div
+        onClick={isCollapsed ? toggleSidebar : undefined}
         className={`hidden lg:flex lg:flex-col h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 fixed left-0 top-0 z-50 ${isCollapsed ? "w-16 px-2 py-4 cursor-pointer" : "w-64 p-4"}`}
       >
         <div
@@ -384,78 +363,6 @@ export const SideNav: React.FC = () => {
         </nav>
 
         <div className="border-t border-gray-200 dark:border-gray-800 mt-auto flex flex-col gap-1 pt-4">
-          {hasRouterContext ? (
-            <Link
-              to="/settings"
-              className={cn(
-                `flex items-center py-3 rounded-lg`,
-                isCollapsed ? "justify-center" : "px-4",
-                currentPath === "/settings"
-                  ? "bg-[#E6EFFF] text-lishka-blue  "
-                  : "text-[#191B1F] hover:bg-gray-100 ",
-              )}
-            >
-              <Settings className={isCollapsed ? "" : "mr-3"} size={20} />
-              {!isCollapsed && <span>Settings</span>}
-            </Link>
-          ) : (
-            <div
-              className={cn(
-                `flex items-center py-3 rounded-lg`,
-                isCollapsed ? "justify-center" : "px-4",
-                currentPath === "/settings"
-                  ? "bg-[#E6EFFF] text-lishka-blue  "
-                  : "text-[#191B1F] hover:bg-gray-100 ",
-              )}
-            >
-              <Settings className={isCollapsed ? "" : "mr-3"} size={20} />
-              {!isCollapsed && <span>Settings</span>}
-            </div>
-          )}
-          <div
-            className={cn(
-              `flex items-center py-3 rounded-lg`,
-              isCollapsed ? "justify-center" : "px-4",
-              currentPath === "/help"
-                ? "bg-[#E6EFFF] text-lishka-blue  "
-                : "text-[#191B1F] hover:bg-gray-100 ",
-            )}
-          >
-            <HelpCircle className={isCollapsed ? "" : "mr-3"} size={20} />
-            {!isCollapsed && <span>Help</span>}
-          </div>
-          {hasAuthContext && (
-            <button
-              onClick={async () => {
-                try {
-                  log("[SideNav] Initiating sign out");
-                  if (signOut) {
-                    await signOut();
-                  } else {
-                    // Fallback: clear everything and redirect
-                    log("[SideNav] No signOut function, using fallback");
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    window.location.href = ROUTES.LOGIN;
-                  }
-                  log("[SideNav] Sign out completed");
-                } catch (err) {
-                  console.error("[SideNav] Sign out error:", err);
-                  // Fallback on error: clear everything and redirect
-                  localStorage.clear();
-                  sessionStorage.clear();
-                  window.location.href = ROUTES.LOGIN;
-                }
-              }}
-              className={cn(
-                `flex items-center py-3 rounded-lg text-[#191B1F] hover:bg-gray-100 `,
-                isCollapsed ? "justify-center" : "px-4",
-              )}
-            >
-              <LogOut className={isCollapsed ? "" : "mr-3"} size={20} />
-              {!isCollapsed && <span>Sign Out</span>}
-            </button>
-          )}
           {hasAuthContext &&
             (loading ? (
               <div

@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, AlertCircle, MapPin } from "lucide-react";
+import Lottie from "lottie-react";
+import bookmarkAnimation from "@/assets/animations/bookmark-icon.json";
 import BottomNav, { SideNav } from "@/components/bottom-nav";
 import WeatherWidgetPro from "@/components/weather-widget-pro";
 import { FishingGear, FishingSeasons } from "@/hooks/queries";
@@ -737,7 +739,7 @@ const FishDetailPage = () => {
   //           regulationsResult = cachedRegulations;
   //           log("⚖️ Using cached regulations");
   //         } else {
-  //           log("🌐 Fetching fresh regulations from API");
+  //           log("🔍 Fetching fresh regulations from API");
   //           // Second API call for detailed regulations
 
   //           const { text } = await generateTextWithAI({
@@ -1817,13 +1819,38 @@ const FishDetailPage = () => {
 
                             {/* Pro Tip */}
                             {method.proTip && (
-                              <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                                <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-2">
-                                  Pro Tip
-                                </h4>
-                                <p className="text-xs text-gray-600 dark:text-gray-300">
-                                  {method.proTip}
-                                </p>
+                              <div
+                                className="relative overflow-hidden border p-5 rounded-xl"
+                                style={{ backgroundColor: "#0251FB" }}
+                              >
+                                {/* Decorative corner accent */}
+                                <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-bl-full"></div>
+
+                                <div className="relative flex gap-3">
+                                  {/* Icon */}
+                                  <div className="flex-shrink-0 mt-0.5">
+                                    <div className="w-8 h-8">
+                                      <Lottie
+                                        animationData={bookmarkAnimation}
+                                        loop={true}
+                                        style={{
+                                          width: "100%",
+                                          height: "100%",
+                                        }}
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {/* Content */}
+                                  <div className="flex-1">
+                                    <h4 className="font-bold text-base text-white mb-0.5">
+                                      Pro Tip
+                                    </h4>
+                                    <p className="text-sm text-white/95 leading-relaxed">
+                                      {method.proTip}
+                                    </p>
+                                  </div>
+                                </div>
                               </div>
                             )}
                           </div>

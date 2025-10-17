@@ -11,11 +11,12 @@ import {
 } from "@/components/ui/sheet";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useDeleteSearchSession, useGetSearchSessions } from "@/hooks/queries";
-import { Menu, Trash2 } from "lucide-react";
+import { Menu, Trash2, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useToast } from "@/components/ui/use-toast";
 import { useState } from "react";
 import { captureEvent } from "@/lib/posthog";
+import { motion, AnimatePresence } from "framer-motion";
 
 export function SearchHistorySheet() {
   const { data, isLoading } = useGetSearchSessions();
@@ -83,10 +84,22 @@ export function SearchHistorySheet() {
           <Menu className="h-5 w-5" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="p-0">
-        <SheetHeader className="flex flex-col items-start space-y-0 gap-1 px-6 pt-4">
-          <SheetTitle>Search History</SheetTitle>
-          <SheetDescription>View your search history here.</SheetDescription>
+      <SheetContent side="left" className="p-0" hideCloseButton={true}>
+        <SheetHeader className="flex flex-row items-center justify-between space-y-0 border-b border-[#191B1F1A] gap-1 mx-6 pb-2 pt-4">
+          <div>
+            <SheetTitle className="text-base font-bold text-black">
+              Search History
+            </SheetTitle>
+            <SheetDescription></SheetDescription>
+          </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-fit w-fit"
+            onClick={() => setOpen(false)}
+          >
+            <X className="h-4 w-4 stroke-[2] text-[#191B1F]" />
+          </Button>
         </SheetHeader>
         <div className="scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300 mt-4 flex h-[calc(100vh-150px)] flex-col gap-3 overflow-y-auto px-4">
           {isLoading ? (
@@ -104,28 +117,44 @@ export function SearchHistorySheet() {
               ))}
             </div>
           ) : data && data.length > 0 ? (
-            data.map((session) => (
-              <Link
-                to={`/search/${session.id}`}
-                key={session.id}
-                className="hover:bg-gray-100 dark:hover:bg-gray-800 p-2 rounded-md group"
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <p className="text-sm text-gray-500 dark:text-gray-400 flex-1 truncate">
-                    {session.title}
-                  </p>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
-                    onClick={(e) => handleDelete(e, session.id)}
-                    disabled={deletingIds.has(session.id)}
+            <AnimatePresence mode="popLayout">
+              {data.map((session) => (
+                <motion.div
+                  key={session.id}
+                  layout
+                  initial={{ opacity: 1, scale: 1 }}
+                  exit={{
+                    opacity: 0,
+                    scale: 0,
+                    transition: {
+                      duration: 0.3,
+                      ease: "easeInOut",
+                    },
+                  }}
+                  style={{ transformOrigin: "center center" }}
+                >
+                  <Link
+                    to={`/search/${session.id}`}
+                    className="hover:bg-gray-100 dark:hover:bg-gray-800 border flex items-center border-[#191B1F0D] rounded-[8px] px-4 h-[44px] group"
                   >
-                    <Trash2 className="h-4 w-4 text-red-500" />
-                  </Button>
-                </div>
-              </Link>
-            ))
+                    <div className="flex items-center gap-2 w-full">
+                      <p className="text-xs font-semibold text-[#191B1FB2] dark:text-[#191B1FB2] w-full flex-1 truncate max-w-[85%]">
+                        {session.title}
+                      </p>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 transition-opacity flex-shrink-0 ml-auto disabled:cursor-not-allowed"
+                        onClick={(e) => handleDelete(e, session.id)}
+                        disabled={deletingIds.has(session.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-[#E8E8E9] group-hover:text-red-500" />
+                      </Button>
+                    </div>
+                  </Link>
+                </motion.div>
+              ))}
+            </AnimatePresence>
           ) : (
             <div className="flex flex-1 items-center justify-center py-8">
               <div className="text-center px-4">
@@ -145,7 +174,7 @@ export function SearchHistorySheet() {
         </div>
         <SheetFooter className="w-full px-6">
           <SheetClose asChild>
-            <Button variant="outline" className="w-full">
+            <Button className="w-full shadow-none bg-[#025DFB1A] text-lishka-blue rounded-[24px] h-[46px] hover:bg-[#025DFB33] hover:text-lishka-blue">
               Close
             </Button>
           </SheetClose>
