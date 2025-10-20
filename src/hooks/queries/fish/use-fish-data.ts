@@ -420,7 +420,7 @@ export const useFishingTips = (query: {
         method: "GET",
       });
 
-      console.log("[FISHING TIPS]", data);
+      log("[FISHING TIPS]", data);
 
       return data.data;
       //return fetchToxicFishData(location, userLatitude, userLongitude);

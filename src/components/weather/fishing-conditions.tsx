@@ -71,7 +71,7 @@ const StructuredAdvice: React.FC<{ advice: FishingAdviceJSON }> = ({
           <ul className="list-disc list-inside space-y-1">
             {advice.tactics.map((tactic, idx) => (
               <li key={idx} className="text-sm">
-                {tactic}
+                {tactic.charAt(0).toUpperCase() + tactic.slice(1)}
               </li>
             ))}
           </ul>
@@ -89,7 +89,7 @@ const StructuredAdvice: React.FC<{ advice: FishingAdviceJSON }> = ({
                 variant="secondary"
                 className="bg-white dark:bg-gray-700"
               >
-                {location}
+                {location.charAt(0).toUpperCase() + location.slice(1)}
               </Badge>
             ))}
           </div>
@@ -182,7 +182,7 @@ export const FishingConditions: React.FC<FishingConditionsProps> = ({
   setActiveTab,
 }) => {
   return (
-    <Card className="p-6 lg:p-8 bg-white dark:bg-card overflow-hidden relative shadow-sm mt-4 rounded-xl">
+    <Card className="p-6 bg-white dark:bg-card overflow-hidden relative shadow-sm mt-4 rounded-xl">
       <div className="flex justify-between items-start">
         <div>
           <h2 className="text-lg font-semibold dark:text-white">

@@ -37,7 +37,7 @@ export const useProfile = (userId: string) => {
         throw error;
       }
 
-      console.log("[PROFILE]", data);
+      log("[PROFILE]", data);
 
       return data;
     },
