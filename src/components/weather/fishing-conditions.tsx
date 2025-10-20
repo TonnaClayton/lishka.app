@@ -189,7 +189,7 @@ export const FishingConditions: React.FC<FishingConditionsProps> = ({
             Fishing Conditions
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            AI-Generated Advice
+            AI-Generated Insights
           </p>
         </div>
         <div></div>
