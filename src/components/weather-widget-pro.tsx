@@ -342,8 +342,8 @@ const WeatherWidget: React.FC<{
       {/* Fishing Conditions Card */}
       <FishingConditions
         fishingAdvice={{
-          inshore: weatherData?.inshoreAdvice || "",
-          offshore: weatherData?.offshoreAdvice || "",
+          inshore: weatherData?.inshoreAdvice,
+          offshore: weatherData?.offshoreAdvice,
         }}
         isLoadingFishingAdvice={
           isRefreshingWeather || isLoadingWeather || isLoadingLocation

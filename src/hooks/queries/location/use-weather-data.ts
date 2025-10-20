@@ -74,8 +74,8 @@ interface WeatherData {
     latitude: number;
     longitude: number;
   };
-  inshoreAdvice?: string;
-  offshoreAdvice?: string;
+  inshoreAdvice?: any;
+  offshoreAdvice?: any;
 }
 
 export const weatherQueryKeys = {
