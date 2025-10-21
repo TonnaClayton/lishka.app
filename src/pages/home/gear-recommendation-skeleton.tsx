@@ -4,7 +4,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const GearRecommendationSkeleton: React.FC = () => {
   return (
-    <div className="mb-8">
+    <div className="mb-8 px-4 lg:px-6">
       <div className="mb-4">
         <Skeleton className="h-6 w-56 mb-2" />
         <Skeleton className="h-4 w-72" />

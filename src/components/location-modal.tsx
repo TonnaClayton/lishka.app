@@ -66,6 +66,7 @@ const MapSelection = ({
   const [locationName, setLocationName] = useState("");
   const [map, setMap] = useState<L.Map | null>(null);
   const [isSeaLocation, setIsSeaLocation] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
 
   // Make selectedPosition and locationName available to parent component
   React.useEffect(() => {
@@ -75,37 +76,24 @@ const MapSelection = ({
       locationName,
       isSeaLocation,
     };
-  }, [selectedPosition, locationName, currentLocation]);
+  }, [selectedPosition, locationName, isSeaLocation]);
 
-  // Set initial marker if we have a current location
+  // Set initial marker and center map only once when component mounts
   useEffect(() => {
-    if (currentLocation) {
+    if (currentLocation && map && !hasInitialized) {
       const lat = currentLocation.latitude;
       const lng = currentLocation.longitude;
       if (lat && lng) {
         setSelectedPosition([lat, lng]);
         setLocationName(currentLocation.name);
-
-        // Center the map on the current location
-        if (map) {
-          log(`Centering map on: ${lat}, ${lng} (${currentLocation.name})`);
-          map.setView([lat, lng], 15);
-        }
+        log(
+          `Initial centering map on: ${lat}, ${lng} (${currentLocation.name})`,
+        );
+        map.setView([lat, lng], 15);
+        setHasInitialized(true);
       }
     }
-  }, [currentLocation, map]);
-
-  // Make sure map is centered when it's created
-  useEffect(() => {
-    if (map && currentLocation) {
-      const lat = currentLocation.latitude;
-      const lng = currentLocation.longitude;
-      log(
-        `Map created, centering on: ${lat}, ${lng} (${currentLocation.name})`,
-      );
-      map.setView([lat, lng], 15);
-    }
-  }, [map]);
+  }, [currentLocation, map, hasInitialized]);
 
   // Function to handle map click and set marker
   const MapClickHandler = () => {

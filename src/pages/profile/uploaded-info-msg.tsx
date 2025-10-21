@@ -14,12 +14,12 @@ export default function UploadedInfoMsg({
   return (
     <div
       className={cn(
-        "w-full py-3 px-4  bg-lishka-blue flex flex-col gap-2 h-fit z-20 sticky top-[69px]",
+        "w-full py-3 px-4 bg-lishka-blue flex flex-col gap-2 h-fit z-20 sticky top-[69px]",
         className,
       )}
     >
-      <div className={cn("h-[26px] w-full flex items-center justify-between")}>
-        <p className="leading-snug text-white text-sm md:text-base">
+      <div className={cn(" w-full flex items-center justify-between")}>
+        <p className="leading-snug text-white text-sm md:text-base whitespace-pre-wrap">
           {message}
         </p>
         <button onClick={onClose}>

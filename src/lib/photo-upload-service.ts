@@ -123,9 +123,9 @@ export class PhotoUploadService {
     this.notifyCallbacks("onProgress", "Starting upload...");
 
     try {
-      // Validate file size (max 15MB)
-      if (file.size > 15 * 1024 * 1024) {
-        const errorMsg = `Photo must be less than 15MB (current: ${(
+      // Validate file size (max 10MB)
+      if (file.size > 10 * 1024 * 1024) {
+        const errorMsg = `Photo must be less than 10MB (current: ${(
           file.size /
           (1024 * 1024)
         ).toFixed(1)}MB)`;

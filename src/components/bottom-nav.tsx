@@ -1,57 +1,41 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import {
-  Home,
-  Search,
-  Cloud,
-  Settings,
-  HelpCircle,
-  ChevronLeft,
-  User,
-  LogOut,
-  Camera,
-} from "lucide-react";
+import { Home, Search, Cloud, ChevronLeft, User, Camera } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useUpload } from "@/contexts/upload-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { log, error, warn as warnLog } from "@/lib/logging";
-import { ROUTES } from "@/lib/routing";
+import { warn as warnLog } from "@/lib/logging";
 import { cn } from "@/lib/utils";
-import PhotoUploadBar from "@/pages/profile/photo-upload-bar";
-import GearItemUploadBar from "@/pages/profile/gear-item-upload-bar";
+import ItemUploadBar from "@/pages/profile/item-upload-bar";
 import UploadedInfoMsg from "@/pages/profile/uploaded-info-msg";
+import { captureEvent } from "@/lib/posthog";
+import useIsMobile from "@/hooks/use-is-mobile";
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
   const currentPath = location.pathname;
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 1024);
+  const isMobile = useIsMobile(1024);
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
 
   const {
-    uploadPhotoStreamData,
-    uploadGearItemStreamData,
-    identifyGearMessage,
+    universalUploadStreamData,
+    uploadGearItemsStreamData,
     showUploadedInfoMsg,
     uploadedInfoMsg,
     classifyingImage,
     isUploading,
+    uploadError,
+    clearError,
+    totalGearItemsUploading,
     handlePhotoUpload,
     closeUploadedInfoMsg,
   } = useUpload();
 
-  useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < 1024);
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
   const handleCameraClick = () => {
     // Open camera directly
     cameraInputRef.current?.click();
+    captureEvent("camera_clicked");
   };
 
   const handlePhotoChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -59,11 +43,27 @@ const BottomNav: React.FC = () => {
       return;
     }
 
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    if (files.length > 10) {
+      alert("Maximum 10 gear items can be uploaded at once.");
+      return;
+    }
+
+    captureEvent("photo_changed");
+
+    const file = files[0];
+
+    if (file.size > 10 * 1024 * 1024) {
+      alert("Photo must be less than 10MB");
+      return;
+    }
+
+    const fileArray = Array.from(files).slice(0, 10); // Limit to 10 files
 
     try {
-      await handlePhotoUpload(file);
+      await handlePhotoUpload(fileArray);
     } catch (error: any) {
       error("❌ [BOTTOMNAV] Smart upload failed:", error);
       alert(error?.message || "Failed to process photo. Please try again.");
@@ -71,24 +71,32 @@ const BottomNav: React.FC = () => {
 
     // Reset file input
     e.target.value = "";
+    captureEvent("photo_changed_complete");
   };
 
   return (
     <>
-      <PhotoUploadBar
-        uploadPhotoStreamData={uploadPhotoStreamData}
+      <ItemUploadBar
+        streamData={universalUploadStreamData}
         className="z-[60] top-[58px] absolute md:hidden"
       />
-      <GearItemUploadBar
+      <ItemUploadBar
         className="z-[60] top-[58px] absolute md:hidden"
-        uploadGearItemStreamData={uploadGearItemStreamData}
-        identifyGearMessage={identifyGearMessage}
+        streamData={uploadGearItemsStreamData}
+        totalItemsUploading={totalGearItemsUploading}
       />
       {showUploadedInfoMsg && uploadedInfoMsg && (
         <UploadedInfoMsg
           className="z-[60] top-[58px] absolute md:hidden"
           message={uploadedInfoMsg}
           onClose={closeUploadedInfoMsg}
+        />
+      )}
+      {uploadError && currentPath !== "/profile" && (
+        <UploadedInfoMsg
+          className="z-[60] top-[58px] bg-destructive text-white absolute md:hidden"
+          message={uploadError.message}
+          onClose={clearError}
         />
       )}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-black border-t border-gray-200 dark:border-gray-800 z-50 w-full shadow-md">
@@ -101,6 +109,7 @@ const BottomNav: React.FC = () => {
                 ? "text-lishka-blue "
                 : "text-[#191B1F] hover:text-lishka-blue",
             )}
+            onClick={() => captureEvent("navigation_home_clicked")}
           >
             <Home size={24} />
           </Link>
@@ -112,6 +121,7 @@ const BottomNav: React.FC = () => {
                 ? "text-lishka-blue "
                 : "text-[#191B1F] hover:text-lishka-blue",
             )}
+            onClick={() => captureEvent("navigation_search_clicked")}
           >
             <Search size={24} />
           </Link>
@@ -137,6 +147,7 @@ const BottomNav: React.FC = () => {
                   ? "text-lishka-blue "
                   : "text-[#191B1F] hover:text-lishka-blue",
               )}
+              onClick={() => captureEvent("navigation_weather_clicked")}
             >
               <Cloud size={24} />
             </Link>
@@ -149,6 +160,7 @@ const BottomNav: React.FC = () => {
                 ? "text-lishka-blue "
                 : "text-[#191B1F] hover:text-lishka-blue",
             )}
+            onClick={() => captureEvent("navigation_profile_clicked")}
           >
             <User size={24} />
           </Link>
@@ -188,7 +200,6 @@ export const SideNav: React.FC = () => {
   let user = null;
   let profile = null;
   let loading = false;
-  let signOut = null;
   let hasAuthContext = false;
   let hasRouterContext = false;
   const location = useLocation();
@@ -207,7 +218,6 @@ export const SideNav: React.FC = () => {
     user = authContext.user;
     profile = authContext.profile;
     loading = authContext.loading;
-    signOut = authContext.signOut;
     hasAuthContext = true;
   } catch {
     // Component is rendered outside AuthProvider, use default values
@@ -230,6 +240,7 @@ export const SideNav: React.FC = () => {
       "sideNav-isCollapsed",
       JSON.stringify(newCollapsedState),
     );
+    captureEvent("sidebar_collapsed");
   };
 
   const getInitials = (name: string) => {
@@ -250,8 +261,8 @@ export const SideNav: React.FC = () => {
 
       {/* Desktop Side Nav */}
       <div
-        className={`hidden lg:flex lg:flex-col h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 fixed left-0 top-0 z-50 ${isCollapsed ? "w-16 px-2 py-4 cursor-pointer" : "w-64 p-4"}`}
         onClick={isCollapsed ? toggleSidebar : undefined}
+        className={`hidden lg:flex lg:flex-col h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 fixed left-0 top-0 z-50 ${isCollapsed ? "w-16 px-2 py-4 cursor-pointer" : "w-64 p-4"}`}
       >
         <div
           className={`flex items-center ${isCollapsed ? "justify-center" : "justify-between"} h-16`}
@@ -353,78 +364,6 @@ export const SideNav: React.FC = () => {
         </nav>
 
         <div className="border-t border-gray-200 dark:border-gray-800 mt-auto flex flex-col gap-1 pt-4">
-          {hasRouterContext ? (
-            <Link
-              to="/settings"
-              className={cn(
-                `flex items-center py-3 rounded-lg`,
-                isCollapsed ? "justify-center" : "px-4",
-                currentPath === "/settings"
-                  ? "bg-[#E6EFFF] text-lishka-blue  "
-                  : "text-[#191B1F] hover:bg-gray-100 ",
-              )}
-            >
-              <Settings className={isCollapsed ? "" : "mr-3"} size={20} />
-              {!isCollapsed && <span>Settings</span>}
-            </Link>
-          ) : (
-            <div
-              className={cn(
-                `flex items-center py-3 rounded-lg`,
-                isCollapsed ? "justify-center" : "px-4",
-                currentPath === "/settings"
-                  ? "bg-[#E6EFFF] text-lishka-blue  "
-                  : "text-[#191B1F] hover:bg-gray-100 ",
-              )}
-            >
-              <Settings className={isCollapsed ? "" : "mr-3"} size={20} />
-              {!isCollapsed && <span>Settings</span>}
-            </div>
-          )}
-          <div
-            className={cn(
-              `flex items-center py-3 rounded-lg`,
-              isCollapsed ? "justify-center" : "px-4",
-              currentPath === "/help"
-                ? "bg-[#E6EFFF] text-lishka-blue  "
-                : "text-[#191B1F] hover:bg-gray-100 ",
-            )}
-          >
-            <HelpCircle className={isCollapsed ? "" : "mr-3"} size={20} />
-            {!isCollapsed && <span>Help</span>}
-          </div>
-          {hasAuthContext && (
-            <button
-              onClick={async () => {
-                try {
-                  log("[SideNav] Initiating sign out");
-                  if (signOut) {
-                    await signOut();
-                  } else {
-                    // Fallback: clear everything and redirect
-                    log("[SideNav] No signOut function, using fallback");
-                    localStorage.clear();
-                    sessionStorage.clear();
-                    window.location.href = ROUTES.LOGIN;
-                  }
-                  log("[SideNav] Sign out completed");
-                } catch (err) {
-                  error("[SideNav] Sign out error:", err);
-                  // Fallback on error: clear everything and redirect
-                  localStorage.clear();
-                  sessionStorage.clear();
-                  window.location.href = ROUTES.LOGIN;
-                }
-              }}
-              className={cn(
-                `flex items-center py-3 rounded-lg text-[#191B1F] hover:bg-gray-100 `,
-                isCollapsed ? "justify-center" : "px-4",
-              )}
-            >
-              <LogOut className={isCollapsed ? "" : "mr-3"} size={20} />
-              {!isCollapsed && <span>Sign Out</span>}
-            </button>
-          )}
           {hasAuthContext &&
             (loading ? (
               <div

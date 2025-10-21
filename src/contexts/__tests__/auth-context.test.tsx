@@ -129,6 +129,12 @@ vi.mock("@/hooks/queries", () => ({
     isLoading: false,
     error: null,
   }),
+  useUpdateProfile: () => ({
+    mutateAsync: vi.fn().mockResolvedValue({}),
+    mutate: vi.fn(),
+    isLoading: false,
+    error: null,
+  }),
   profileQueryKeys: {
     useProfile: (userId: string) => ["profile", userId],
     useUserPhotos: (userId: string) => ["userPhotos", userId],

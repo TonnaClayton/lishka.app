@@ -1,5 +1,5 @@
 import { GearItem } from "@/lib/gear";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,8 +10,10 @@ import { Edit3, MoreVertical, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router";
 import { ROUTES } from "@/lib/routing";
+import { captureEvent } from "@/lib/posthog";
 
 export default function GearItemCard({
+  gearId,
   gear,
   categoryId,
   handleDeleteGear,
@@ -19,6 +21,7 @@ export default function GearItemCard({
 }: {
   gear: GearItem;
   categoryId: string;
+  gearId: string;
   handleDeleteGear: () => void;
   loading: boolean;
 }) {
@@ -28,6 +31,11 @@ export default function GearItemCard({
 
   const handleExpandCard = () => {
     setIsExpanded(!isExpanded);
+    captureEvent("gear_item_card_expanded", {
+      gear_id: gear.id,
+      gear_category: gear.category,
+      gear_name: gear.name,
+    });
     setTimeout(() => {
       cardRef.current?.scrollIntoView({
         behavior: "smooth",
@@ -36,29 +44,25 @@ export default function GearItemCard({
     }, 100);
   };
 
+  useEffect(() => {
+    if (gearId === gear.id) {
+      setIsExpanded(true);
+
+      cardRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+    }
+  }, [gearId]);
+
   return (
     <div
-      key={gear.id}
       ref={cardRef}
-      className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm cursor-pointer overflow-hidden ${
-        isExpanded ? "p-6 transition-all duration-300 ease-in-out" : "p-4"
-      }`}
-      onClick={() => {
-        // if (!isExpanded) {
-        //   setExpandedCardIndex(index);
-        //   // Scroll to the top of the card after a brief delay to allow for expansion
-        //   setTimeout(() => {
-        //     cardRefs.current[index]?.scrollIntoView({
-        //       behavior: "smooth",
-        //       block: "start",
-        //     });
-        //   }, 100);
-        // } else {
-        //   setExpandedCardIndex(null);
-        // }
-        // setOpenMenuIndex(null);
-        handleExpandCard();
-      }}
+      className={cn(
+        `bg-white dark:bg-gray-800 rounded-xl shadow-sm cursor-pointer overflow-hidden`,
+        isExpanded ? "p-6 transition-all duration-300 ease-in-out" : "p-4",
+      )}
+      onClick={handleExpandCard}
     >
       {!isExpanded ? (
         // Compact Card View
@@ -89,14 +93,13 @@ export default function GearItemCard({
                 </span>
               )}
               {gear.weight && (
-                <span className="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium truncate max-w-[60px] sm:max-w-[80px]">
+                <span className="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium truncate w-fit">
                   {gear.weight}
                 </span>
               )}
               {gear.targetFish && (
-                <span className="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium truncate max-w-[80px] sm:max-w-[100px]">
-                  {gear.targetFish.split(",")[0].trim()}
-                  {gear.targetFish.includes(",") && "..."}
+                <span className="inline-block px-2 py-1 text-xs bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full font-medium truncate max-w-[80px] sm:max-w-[200px]">
+                  {gear.targetFish}
                 </span>
               )}
             </div>
@@ -114,6 +117,11 @@ export default function GearItemCard({
                     e.stopPropagation();
                     //handleEditGear(index);
                     navigate(ROUTES.GEAR_DETAIL.replace(":gearId", gear.id));
+                    captureEvent("gear_edit_clicked", {
+                      gear_id: gear.id,
+                      gear_category: gear.category,
+                      gear_name: gear.name,
+                    });
                   }}
                   className="cursor-pointer"
                   disabled={loading}
@@ -125,6 +133,11 @@ export default function GearItemCard({
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeleteGear();
+                    captureEvent("gear_delete_clicked", {
+                      gear_id: gear.id,
+                      gear_category: gear.category,
+                      gear_name: gear.name,
+                    });
                   }}
                   className="cursor-pointer text-red-600"
                   disabled={loading}
@@ -163,6 +176,11 @@ export default function GearItemCard({
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(ROUTES.GEAR_DETAIL.replace(":gearId", gear.id));
+                      captureEvent("gear_edit_clicked", {
+                        gear_id: gear.id,
+                        gear_category: gear.category,
+                        gear_name: gear.name,
+                      });
                     }}
                     className="cursor-pointer"
                     disabled={loading}
@@ -174,6 +192,11 @@ export default function GearItemCard({
                     onClick={(e) => {
                       e.stopPropagation();
                       handleDeleteGear();
+                      captureEvent("gear_delete_clicked", {
+                        gear_id: gear.id,
+                        gear_category: gear.category,
+                        gear_name: gear.name,
+                      });
                     }}
                     className="cursor-pointer text-red-600"
                     disabled={loading}
@@ -682,7 +705,8 @@ export default function GearItemCard({
                     Description
                   </div>
                   <div className="text-sm text-lishka-blue-500 ">
-                    {gear.description}
+                    {gear.description.charAt(0).toUpperCase() +
+                      gear.description.slice(1)}
                   </div>
                 </div>
               )}

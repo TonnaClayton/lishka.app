@@ -8,8 +8,8 @@ import { LayersControl } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { motion, AnimatePresence } from "framer-motion";
-import { error as logError, log } from "@/lib/logging";
-import { useUpdateProfile } from "@/hooks/queries";
+import { log, error as logError } from "@/lib/logging";
+import { useAuth } from "@/contexts/auth-context";
 
 interface LocationSetupProps {
   onLocationSet: (location: { lat: number; lng: number; name: string }) => void;
@@ -32,7 +32,7 @@ const LocationSetup = ({
   } | null>(null);
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [countdown, setCountdown] = useState<number | null>(null);
-  const updateProfile = useUpdateProfile();
+  const { updateProfile } = useAuth();
 
   const handleDetectLocation = () => {
     setIsDetecting(true);
@@ -163,7 +163,7 @@ const LocationSetup = ({
             : location.name,
       };
 
-      updateProfile.mutate({
+      updateProfile({
         location_coordinates: fullLocationData,
         location: location.name,
       });

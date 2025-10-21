@@ -33,7 +33,10 @@ import {
   getMarineAdvice,
   findCurrentHourIndex,
 } from "@/lib/weather-utils";
-import { getWeatherIcon, getDailyWeatherIcon } from "@/lib/weather-icons";
+import {
+  getIconForWeatherCode,
+  getDailyWeatherIcon,
+} from "@/lib/weather-icons";
 import { calculatePrecipitationForecast } from "@/lib/precipitation-utils";
 import { WeatherCard } from "./weather/weather-card";
 import { MarineCard } from "./weather/marine-card";
@@ -157,6 +160,10 @@ const WeatherWidget: React.FC<{
     Array(hours).fill(null);
 
   const times = getHourlySlice(weatherData?.hourly?.time || [], 24);
+  const weatherCodes = getHourlySlice(
+    weatherData?.hourly?.weather_code || [],
+    24,
+  );
   const waveHeights = getHourlySlice(weatherData?.hourly?.wave_height || []);
   const waveDirections = getHourlySlice(
     weatherData?.hourly?.wave_direction || [],
@@ -288,7 +295,7 @@ const WeatherWidget: React.FC<{
             variant="ghost"
             size="sm"
             onClick={() => setShowLocationModal(true)}
-            className="flex items-center text-lishka-blue px-0  hover:bg-blue-50"
+            className="flex items-center text-lishka-blue px-0  hover:px-2 hover:bg-blue-50"
           >
             <LocationBtn
               useLocationContext={true}
@@ -335,8 +342,8 @@ const WeatherWidget: React.FC<{
       {/* Fishing Conditions Card */}
       <FishingConditions
         fishingAdvice={{
-          inshore: weatherData?.inshoreAdvice || "",
-          offshore: weatherData?.offshoreAdvice || "",
+          inshore: weatherData?.inshoreAdvice,
+          offshore: weatherData?.offshoreAdvice,
         }}
         isLoadingFishingAdvice={
           isRefreshingWeather || isLoadingWeather || isLoadingLocation
@@ -474,7 +481,9 @@ const WeatherWidget: React.FC<{
                 <p className="text-xs font-medium text-[#6B7280] mb-1">
                   {time ? formatTime(time) : "--:--"}
                 </p>
-                <div className="mb-2">{getWeatherIcon(weatherData)}</div>
+                <div className="mb-2">
+                  {getIconForWeatherCode(weatherCodes[index], "h-5 w-5", 1)}
+                </div>
                 <p className="text-lg font-bold text-[#191B1F] mb-2">
                   {temperatures[index] !== null &&
                   temperatures[index] !== undefined
@@ -574,66 +583,66 @@ const WeatherWidget: React.FC<{
         </div>
       </Card>
       {/* Precipitation Forecast Card */}
-      {precipitationForecast && precipitationForecast.chance > 0 && (
-        <Card className="p-4 bg-white dark:bg-card shadow-sm">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-lg font-semibold dark:text-white">
-              Precipitation Forecast
-            </h2>
-            <CloudRain className="h-5 w-5 text-white" />
-          </div>
-          <div className="bg-blue-50 /20 p-3 rounded-lg mb-4">
-            <p className="text-sm font-medium dark:text-white">
-              Next 6 hours: {precipitationForecast.chance}% chance,{" "}
-              {precipitationForecast.amount}mm expected
-            </p>
-          </div>
 
-          {/* 24-hour Precipitation Forecast */}
-          <div className="mt-4 sm:mt-6">
-            <div className="overflow-x-auto">
-              <div className="flex gap-1 sm:gap-2 pb-2 min-w-[300px] w-full sm:min-w-[800px] md:min-w-[1200px] lg:min-w-[1600px] sm:w-auto">
-                {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
-                  const probability =
-                    weatherData?.hourly?.precipitation_probability?.[
-                      currentHourIndex + hour
-                    ] || 0;
-                  const amount =
-                    weatherData?.hourly?.precipitation?.[
-                      currentHourIndex + hour
-                    ] || 0;
-                  return (
-                    <div
-                      key={`precip-24h-${hour}`}
-                      className="flex flex-col flex-shrink-0 items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[50px]"
-                    >
-                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                        {times[hour] ? formatTime(times[hour]) : `+${hour}h`}
-                      </p>
-                      <div className="flex flex-col items-center">
+      <Card className="p-4 bg-white dark:bg-card shadow-sm">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold dark:text-white">
+            Precipitation Forecast
+          </h2>
+          <CloudRain className="h-5 w-5 text-white" />
+        </div>
+        <div className="bg-blue-50 /20 p-3 rounded-lg mb-4">
+          <p className="text-sm font-medium dark:text-white">
+            Next 6 hours: {precipitationForecast.chance}% chance,{" "}
+            {precipitationForecast.amount}mm expected
+          </p>
+        </div>
+
+        {/* 24-hour Precipitation Forecast */}
+        <div className="mt-4 sm:mt-6">
+          <div className="overflow-x-auto">
+            <div className="flex gap-1 sm:gap-2 pb-2 min-w-[300px] w-full sm:min-w-[800px] md:min-w-[1200px] lg:min-w-[1600px] sm:w-auto">
+              {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
+                const probability =
+                  weatherData?.hourly?.precipitation_probability?.[
+                    currentHourIndex + hour
+                  ] || 0;
+                const amount =
+                  weatherData?.hourly?.precipitation?.[
+                    currentHourIndex + hour
+                  ] || 0;
+                return (
+                  <div
+                    key={`precip-24h-${hour}`}
+                    className="flex flex-col flex-shrink-0 items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[50px]"
+                  >
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      {times[hour] ? formatTime(times[hour]) : `+${hour}h`}
+                    </p>
+                    <div className="flex flex-col items-center">
+                      <div
+                        className="w-4 h-16 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden relative"
+                        title={`${probability}% chance, ${amount.toFixed(1)}mm`}
+                      >
                         <div
-                          className="w-4 h-16 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden relative"
-                          title={`${probability}% chance, ${amount.toFixed(1)}mm`}
-                        >
-                          <div
-                            className="absolute bottom-0 w-full bg-lishka-blue transition-all duration-300"
-                            style={{
-                              height: `${Math.max(5, probability)}%`,
-                            }}
-                          ></div>
-                        </div>
-                        <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
-                          {probability}%
-                        </p>
+                          className="absolute bottom-0 w-full bg-lishka-blue transition-all duration-300"
+                          style={{
+                            height: `${Math.max(5, probability)}%`,
+                          }}
+                        ></div>
                       </div>
+                      <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
+                        {probability}%
+                      </p>
                     </div>
-                  );
-                })}
-              </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-        </Card>
-      )}
+        </div>
+      </Card>
+
       {/* Weekly Forecast */}
       {weatherData?.daily?.time && weatherData.daily.time.length > 0 && (
         <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">

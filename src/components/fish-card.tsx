@@ -9,6 +9,7 @@ import {
 import { Waves, Target } from "lucide-react";
 import { log } from "@/lib/logging";
 import { cn } from "@/lib/utils";
+import { captureEvent } from "@/lib/posthog";
 
 interface FishCardProps {
   image?: string;
@@ -67,13 +68,25 @@ const FishCard = ({
       setImageLoading(false);
     }
   }, [name, scientificName, image]);
+  const handleClick = () => {
+    // Track fish card click event
+    captureEvent("fish_card_clicked", {
+      fish_name: name,
+      scientific_name: scientificName,
+      is_toxic: isToxic,
+      difficulty: difficulty,
+      habitat: habitat,
+    });
+    onClick();
+  };
+
   return (
     <Card
       className={cn(
         "overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full border-0 shadow bg-white rounded-xl",
         className,
       )}
-      onClick={onClick}
+      onClick={handleClick}
     >
       <div className="relative w-full aspect-[3/2] overflow-hidden max-w-full">
         {/* Using aspect ratio for consistent 3:2 ratio */}

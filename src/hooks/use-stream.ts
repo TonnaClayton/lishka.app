@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { apiStreamed } from "./queries/api";
 
 interface StartStreamOptions {
+  path?: string;
   options?: RequestInit;
   isFormData?: boolean;
   enabled?: boolean;
@@ -54,7 +55,7 @@ export const useStream = ({
         abortControllerRef.current = new AbortController();
 
         const stream = await apiStreamed(
-          path,
+          payload.path || path,
           {
             ...(payload.options || options),
             signal: abortControllerRef.current.signal,
@@ -70,10 +71,16 @@ export const useStream = ({
         const decoder = new TextDecoder();
 
         try {
+          // Add timeout for stream reading (45 seconds)
+          const streamTimeout = setTimeout(() => {
+            abortControllerRef.current?.abort();
+          }, 45000);
+
           while (true) {
             const { done, value } = await reader.read();
 
             if (done) {
+              clearTimeout(streamTimeout);
               onComplete?.();
               break;
             }
@@ -86,6 +93,8 @@ export const useStream = ({
               return newData;
             });
           }
+
+          clearTimeout(streamTimeout);
         } finally {
           reader.releaseLock();
         }

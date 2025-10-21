@@ -198,7 +198,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
         </div>
 
         {/* Gear Recommendation Widget */}
-        <div className="mb-8 px-4 lg:px-6">
+        <div className="mb-8">
           <GearRecommendationWidget />
         </div>
 
@@ -405,7 +405,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                           <p className="">Loading...</p>
                         </div>
                       ) : (
-                        "Load More Fish"
+                        "Load more fish"
                       )}
                     </Button>
                   </div>

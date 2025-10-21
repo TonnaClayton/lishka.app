@@ -1,21 +1,20 @@
+import { CheckIcon, LoaderIcon, XIcon } from "lucide-react";
 import {
   UploadPhotoStreamData,
   UploadStepStatus,
 } from "@/contexts/upload-context";
 import { cn } from "@/lib/utils";
-import { CheckIcon, LoaderIcon, XIcon } from "lucide-react";
+import { useMemo } from "react";
 
-export default function PhotoUploadBar({
-  uploadPhotoStreamData,
+export default function ItemUploadBar({
+  streamData,
+  totalItemsUploading,
   className,
 }: {
-  uploadPhotoStreamData: UploadPhotoStreamData | null;
+  totalItemsUploading?: number;
+  streamData: UploadPhotoStreamData | null;
   className?: string;
 }) {
-  if (uploadPhotoStreamData == null) {
-    return null;
-  }
-
   const getStepIcon = (step: UploadStepStatus) => {
     if (step === UploadStepStatus.COMPLETED) {
       return <CheckIcon className="w-5 h-5 text-white" />;
@@ -30,6 +29,18 @@ export default function PhotoUploadBar({
     return null;
   };
 
+  const analyzingText = useMemo(() => {
+    if (totalItemsUploading && totalItemsUploading > 1) {
+      return `AI Analyzing ${totalItemsUploading} Photos`;
+    }
+
+    return "AI Analyzing Photo";
+  }, [totalItemsUploading]);
+
+  if (streamData == null) {
+    return null;
+  }
+
   return (
     <div
       className={cn(
@@ -40,38 +51,37 @@ export default function PhotoUploadBar({
       <div
         className={cn(
           "h-[26px] w-full flex items-center justify-between",
-          uploadPhotoStreamData.data.analyzing === UploadStepStatus.PENDING &&
+          streamData.data.analyzing === UploadStepStatus.PENDING &&
             "opacity-50",
         )}
       >
         <p className="leading-snug text-white text-sm md:text-base">
-          AI Analyzing Photo
+          {analyzingText}
         </p>
-        {getStepIcon(uploadPhotoStreamData.data.analyzing)}
+        {getStepIcon(streamData.data.analyzing)}
       </div>
       <div
         className={cn(
           "h-[26px] w-full flex items-center justify-between",
-          uploadPhotoStreamData.data.uploading === UploadStepStatus.PENDING &&
+          streamData.data.uploading === UploadStepStatus.PENDING &&
             "opacity-50",
         )}
       >
         <p className="leading-snug text-white text-sm md:text-base">
           Photo Uploading
         </p>
-        {getStepIcon(uploadPhotoStreamData.data.uploading)}
+        {getStepIcon(streamData.data.uploading)}
       </div>
       <div
         className={cn(
           "h-[26px] w-full flex items-center justify-between",
-          uploadPhotoStreamData.data.saved === UploadStepStatus.PENDING &&
-            "opacity-50",
+          streamData.data.saved === UploadStepStatus.PENDING && "opacity-50",
         )}
       >
         <p className="leading-snug text-white text-sm md:text-base">
           Photo Saved
         </p>
-        {getStepIcon(uploadPhotoStreamData.data.saved)}
+        {getStepIcon(streamData.data.saved)}
       </div>
     </div>
   );

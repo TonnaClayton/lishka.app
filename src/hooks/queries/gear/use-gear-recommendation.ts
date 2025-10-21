@@ -56,11 +56,26 @@ export const useGetGearRecommendation = (query?: GearRecommendationQuery) => {
 
       const data = await api<{
         data: {
-          gear_id: string;
-          score: number;
-          reasoning: string;
-          suitability_for_conditions: string;
-        }[];
+          recommendations: {
+            gear_id: string;
+            score: number;
+            reasoning: string;
+            suitability_for_conditions?: string;
+            method_tags?: string[];
+            match_type?: string;
+            confidence?: number;
+          }[];
+          alternativesIfNone: {
+            gear_id: string;
+            score: number;
+            reasoning: string;
+            suitability_for_conditions?: string;
+            method_tags?: string[];
+            match_type?: string;
+            confidence?: number;
+          }[];
+          conditions_used: any;
+        };
       }>(`gear/recommendation?${queryString}`, {
         method: "GET",
       });
@@ -68,5 +83,7 @@ export const useGetGearRecommendation = (query?: GearRecommendationQuery) => {
       return data.data;
     },
     enabled: !!query,
+    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    gcTime: 48 * 60 * 60 * 1000, // 48 hours
   });
 };

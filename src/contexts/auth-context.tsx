@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import { User, Session, OAuthResponse } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
-import { supabase, authService, profileService } from "@/lib/supabase";
+import { supabase, authService } from "@/lib/supabase";
 import {
   uploadAvatar as uploadAvatarToBlob,
   getBlobStorageStatus,
@@ -29,9 +29,11 @@ import {
   useProfile,
   useCreateProfile,
   profileQueryKeys,
+  useUpdateProfile,
 } from "@/hooks/queries";
 import { useQueryClient } from "@tanstack/react-query";
 import { ROUTES } from "@/lib/routing";
+import { identifyUser, captureEvent, resetUser } from "@/lib/posthog";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -115,6 +117,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   } = useProfile(user?.id);
   const createProfile = useCreateProfile();
   const queryClient = useQueryClient();
+  const updateProfileMutation = useUpdateProfile();
 
   // Convert Supabase User to AuthUser
   const convertUser = (supabaseUser: User | null): AuthUser | null => {
@@ -183,11 +186,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     [createProfile],
   );
 
-  // Handle profile creation when user exists but profile doesn't
+  // Handle profile creation and PostHog identification when user exists
   useEffect(() => {
     if (user?.id && profileData === undefined && !profileLoading) {
       // Profile query returned but no data found - create profile
       handleCreateProfile(user.id, user.full_name, user.avatar_url);
+    }
+
+    // Identify user in PostHog if user exists and email is available
+    if (user?.id && user?.email && profileData !== undefined) {
+      identifyUser(user.id, user.email);
     }
   }, [user, profileData, profileLoading, handleCreateProfile]);
 
@@ -310,6 +318,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       );
 
       if (error) {
+        captureEvent("signup_failed", { error: error.message });
         return { error, needsConfirmation: false };
       }
 
@@ -318,16 +327,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         const authUser = convertUser(data.user);
         setUser(authUser);
         // Profile will be created automatically via useEffect when user is set
+        captureEvent("signup_success", {
+          user_id: data.user.id,
+          email: data.user.email,
+          needs_confirmation: false,
+        });
       }
 
       // If user is created but needs email confirmation
       if (data?.user && data.session == null) {
+        captureEvent("signup_success", {
+          user_id: data.user.id,
+          email: data.user.email,
+          needs_confirmation: true,
+        });
         return { error: null, needsConfirmation: true };
       }
 
       // User will be automatically set via onAuthStateChange if session exists
       return { error: null, needsConfirmation: false };
     } catch (err) {
+      captureEvent("signup_error", { error: String(err) });
       return {
         error: { message: "An unexpected error occurred during signup", err },
         needsConfirmation: false,
@@ -350,14 +370,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       if (error) {
         log("[AuthContext] Returning error:", error);
+        captureEvent("signin_failed", { error: error.message });
         return { error };
       }
 
       // Success - user will be set via onAuthStateChange
       log("[AuthContext] SignIn successful");
+      captureEvent("signin_success", {
+        user_id: data?.user?.id,
+        email: data?.user?.email,
+      });
       return { error: null };
     } catch (err) {
-      logError("[AuthContext] SignIn exception:", err);
+      console.error("[AuthContext] SignIn exception:", err);
+      captureEvent("signin_error", { error: String(err) });
       return {
         error: { message: "An unexpected error occurred during signin" },
       };
@@ -365,7 +391,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   };
 
   const signInWithGoogle = async () => {
-    return authService.signInWithGoogle();
+    const result = await authService.signInWithGoogle();
+    if (result.error) {
+      captureEvent("google_signin_failed", { error: result.error.message });
+    } else {
+      captureEvent("google_signin_initiated");
+    }
+    return result;
   };
 
   const signOut = async () => {
@@ -374,6 +406,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Store user ID for cache cleanup before clearing state
       const userIdForCleanup = user?.id;
+
+      // Track signout event
+      if (userIdForCleanup) {
+        captureEvent("signout_success", { user_id: userIdForCleanup });
+      }
+
+      // Reset PostHog user
+      resetUser();
 
       // Clear local state first to ensure immediate UI update
       setUser(null);
@@ -640,8 +680,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }
       }
 
-      // Add timeout wrapper for database operations with better error tracking
-      const startTime = Date.now();
       log("[AuthContext] 🚀 Starting database update operation:", {
         userId: user.id,
         updateKeys: Object.keys(updates),
@@ -651,195 +689,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         timestamp: new Date().toISOString(),
       });
 
-      const updatePromise = profileService.updateProfile(user.id, updates);
-      const timeoutPromise = new Promise<{ data: any; error: any }>(
-        (_, reject) => {
-          setTimeout(() => {
-            const elapsedTime = Date.now() - startTime;
-            logError("[AuthContext] ⏰ Database timeout after:", {
-              elapsedTime: `${elapsedTime}ms`,
-              userId: user.id,
-              updateKeys: Object.keys(updates),
-              gearItemsCount: Array.isArray(updates.gear_items)
-                ? updates.gear_items.length
-                : 0,
-            });
-            reject(
-              new Error(
-                `Database timeout after ${elapsedTime}ms - operation took too long. This suggests a database connection or performance issue.`,
-              ),
-            );
-          }, 20000); // Increased to 20 seconds to better differentiate from network timeouts
-        },
-      );
+      await updateProfileMutation.mutateAsync({ userId: user.id, updates });
 
-      const { data, error } = await Promise.race([
-        updatePromise,
-        timeoutPromise,
-      ]);
-
-      const totalTime = Date.now() - startTime;
-      log("[AuthContext] ⏱️ Database operation completed:", {
-        totalTime: `${totalTime}ms`,
-        success: !!data && !error,
-        userId: user.id,
-      });
-
-      log("[AuthContext] 📋 updateProfile result:", {
-        success: !!data && !error,
-        error: error?.message,
-        errorCode: error?.code,
-        errorDetails: error?.details,
-        errorHint: error?.hint,
-        galleryPhotosCount: Array.isArray(data?.gallery_photos)
-          ? data.gallery_photos.length
-          : 0,
-        gearItemsCount: Array.isArray(data?.gear_items)
-          ? data.gear_items.length
-          : 0,
-        dataKeys: data ? Object.keys(data) : [],
-        userId: user.id,
-      });
-
-      if (data && !error) {
-        log("[AuthContext] ✅ Profile updated successfully");
-
-        // Additional verification for gear_items
-        if (updates.gear_items) {
-          const expectedCount = Array.isArray(updates.gear_items)
-            ? updates.gear_items.length
-            : 0;
-          const actualCount = data.gear_items?.length || 0;
-          log("[AuthContext] 🔍 Gear items verification:", {
-            expected: expectedCount,
-            actual: actualCount,
-            match: expectedCount === actualCount,
-            gearWithAI: Array.isArray(data.gear_items)
-              ? data.gear_items.filter(
-                  (item): item is GearItem =>
-                    typeof item === "object" &&
-                    item != null &&
-                    "gearType" in item &&
-                    (item as GearItem).gearType &&
-                    (item as GearItem).gearType !== "unknown",
-                ).length
-              : 0,
-          });
-        }
-
-        // Additional verification for gallery_photos
-        if (updates.gallery_photos) {
-          const expectedCount = updates.gallery_photos.length;
-          const actualCount = data.gallery_photos?.length || 0;
-          log("[AuthContext] 🔍 Gallery photos verification:", {
-            expected: expectedCount,
-            actual: actualCount,
-            match: expectedCount === actualCount,
-            photosWithFishInfo: Array.isArray(data.gallery_photos)
-              ? data.gallery_photos.filter((photo): photo is string => {
-                  // Photos are now stored as string URLs in the database
-                  return typeof photo === "string" && photo.length > 0;
-                }).length
-              : 0,
-            samplePhotoStructure:
-              Array.isArray(data.gallery_photos) && data.gallery_photos[0]
-                ? {
-                    photoUrl: data.gallery_photos[0],
-                    isString: typeof data.gallery_photos[0] === "string",
-                  }
-                : null,
-          });
-        }
-
-        return { error: null };
-      } else if (error) {
-        logError("[AuthContext] ❌ Profile update failed:", {
-          error: error.message,
-          errorCode: error.code,
-          errorDetails: error.details,
-          errorHint: error.hint,
-          userId: user.id,
-          updateKeys: Object.keys(updates),
-          isGearUpdate: !!updates.gear_items,
-          gearCount: Array.isArray(updates.gear_items)
-            ? updates.gear_items.length
-            : 0,
-          totalTime: `${Date.now() - startTime}ms`,
+      // Track profile update event (excluding gear_items updates as they're tracked separately)
+      if (!updates.gear_items) {
+        captureEvent("profile_updated", {
+          updated_fields: Object.keys(updates),
+          field_count: Object.keys(updates).length,
         });
-
-        // Provide more specific error messages with database context
-        let userFriendlyError = error.message;
-        let errorCategory = "UNKNOWN";
-
-        if (error.code === "PGRST204") {
-          userFriendlyError =
-            "Database schema needs to be updated. Please run: npm run types:supabase";
-          errorCategory = "SCHEMA_ERROR";
-        } else if (error.code === "23505") {
-          userFriendlyError = "Duplicate entry detected. Please try again.";
-          errorCategory = "CONSTRAINT_ERROR";
-        } else if (error.code === "42703") {
-          userFriendlyError =
-            "Database column missing. Please contact support.";
-          errorCategory = "SCHEMA_ERROR";
-        } else if (error.code === "PGRST116") {
-          userFriendlyError =
-            "Database query failed. The table or column may not exist.";
-          errorCategory = "SCHEMA_ERROR";
-        } else if (error.code === "PGRST301") {
-          userFriendlyError = "Database connection error. Please try again.";
-          errorCategory = "CONNECTION_ERROR";
-        } else if (error.message?.includes("gear_items")) {
-          userFriendlyError =
-            "Database schema error with gear_items. Please regenerate types or contact support.";
-          errorCategory = "SCHEMA_ERROR";
-        } else if (
-          error.message?.includes("timeout") ||
-          error.message?.includes("took too long")
-        ) {
-          userFriendlyError =
-            "Database operation timed out. This may indicate a database performance issue. Please try again.";
-          errorCategory = "TIMEOUT_ERROR";
-        } else if (
-          error.message?.includes("connection") ||
-          error.message?.includes("network")
-        ) {
-          userFriendlyError =
-            "Database connection failed. Please check your internet connection and try again.";
-          errorCategory = "CONNECTION_ERROR";
-        } else if (
-          error.message?.includes("payload") ||
-          error.message?.includes("too large")
-        ) {
-          userFriendlyError =
-            "Data payload too large for database. Try reducing the amount of data being saved.";
-          errorCategory = "PAYLOAD_ERROR";
-        }
-
-        logError("[AuthContext] 🏷️ Error categorized as:", {
-          category: errorCategory,
-          originalError: error.message,
-          userFriendlyError,
-          code: error.code,
-        });
-
-        return {
-          error: {
-            ...error,
-            message: userFriendlyError,
-            category: errorCategory,
-          },
-        };
       }
-
-      logError("[AuthContext] ❓ Unknown profile update state:", {
-        hasData: !!data,
-        hasError: !!error,
-        userId: user.id,
-      });
-      return {
-        error: { message: "Unknown error occurred during profile update" },
-      };
     } catch (err) {
       logError("[AuthContext] 💥 UpdateProfile exception:", {
         error: err instanceof Error ? err.message : String(err),
@@ -930,26 +788,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Update profile with the new avatar URL
       log("[AuthContext] Updating profile with new avatar URL...");
-      const { data, error } = await profileService.updateProfile(user.id, {
-        avatar_url: avatarUrl,
+      await updateProfileMutation.mutateAsync({
+        userId: user.id,
+        updates: { avatar_url: avatarUrl },
       });
-
-      log("[AuthContext] Profile update result:", {
-        hasData: !!data,
-        error: error?.message || error,
-      });
-
-      if (error) {
-        logError("[AuthContext] Profile update failed:", error);
-        return { error };
-      }
-
-      if (data) {
-        log("[AuthContext] Avatar upload successful");
-        return { error: null };
-      }
-
-      return { error: { message: "No data returned from profile update" } };
     } catch (err) {
       logError("[AuthContext] Avatar upload error:", err);
 

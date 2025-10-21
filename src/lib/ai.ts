@@ -35,7 +35,7 @@ export async function generateTextWithAI({
       content: message.content,
       experimental_attachments: message.attachments,
     })),
-    maxTokens: maxTokens,
+    maxOutputTokens: maxTokens,
     temperature: temperature,
   });
 }

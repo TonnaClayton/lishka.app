@@ -15,6 +15,7 @@ import FishInfoOverlay from "@/components/fish-info-overlay";
 import { ImageMetadata } from "@/lib/image-metadata";
 import useIsMobile from "@/hooks/use-is-mobile";
 import { Skeleton } from "@/components/ui/skeleton";
+import { captureEvent } from "@/lib/posthog";
 
 function FishImageCard({
   isSingleColumn,
@@ -185,6 +186,17 @@ function FishImageCard({
                 return;
               }
 
+              // sleep for 1 second
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+
+              fishInfoOverlayRef.current.style.borderRadius = "0px";
+              fishInfoOverlayRef.current.style.overflow = "hidden";
+
+              const image = fishInfoOverlayRef.current.querySelector("img");
+              if (image) {
+                image.style.borderRadius = "0px";
+              }
+
               const overlayBlob = await buildBlobWithRetry(
                 fishInfoOverlayRef.current,
               );
@@ -232,17 +244,35 @@ function FishImageCard({
             files: [file],
           });
 
+          captureEvent("fish_image_share_success", {
+            share_text: shareText,
+            file_size: file.size,
+            file_type: file.type,
+            file_name: file.name,
+          });
+
           log("[ProfilePage] Photo with overlay shared successfully");
           setSuccess(
             "Fish image exported successfully! Tag us on Instagram @lishka.app and use #lishkaapp to get featured",
           );
           setTimeout(() => setSuccess(null), 5000);
         } catch (shareError) {
-          error("[ProfilePage] Error sharing photo:", shareError);
+          console.error("[ProfilePage] Error sharing photo:", shareError);
+          captureEvent("fish_image_share_error", {
+            error: shareError,
+          });
           // Fallback to copying URL
           await navigator.clipboard.writeText(photoUrl);
           setSuccess("Photo URL copied to clipboard!");
           setTimeout(() => setSuccess(null), 3000);
+        }
+
+        fishInfoOverlayRef.current.style.borderRadius = "8px";
+        fishInfoOverlayRef.current.style.overflow = "hidden";
+
+        const image = fishInfoOverlayRef.current.querySelector("img");
+        if (image) {
+          image.style.borderRadius = "8px";
         }
       } else {
         // Fallback: copy URL to clipboard
@@ -251,7 +281,13 @@ function FishImageCard({
           setSuccess("Photo URL copied to clipboard!");
           setTimeout(() => setSuccess(null), 3000);
         } catch (clipboardError) {
-          error("[ProfilePage] Error copying to clipboard:", clipboardError);
+          captureEvent("fish_image_share_error", {
+            error: clipboardError,
+          });
+          console.error(
+            "[ProfilePage] Error copying to clipboard:",
+            clipboardError,
+          );
           setError("Unable to share photo. Please try again.");
         }
       }
@@ -263,15 +299,12 @@ function FishImageCard({
 
   return (
     <div
-      className={cn(
-        `relative cursor-pointer hover:opacity-90 transition-opacity rounded-[8px] overflow-hidden bg-gray-100 dark:bg-gray-700`,
-        isSingleColumn ? "" : "aspect-square",
-      )}
+      className={cn(`relative`, isSingleColumn ? "" : "h-full rounded-[8px]")}
     >
       {/* Main image button */}
       <button
         onClick={handleImageClick}
-        className="w-full h-full rounded-[8px]"
+        className={cn(isSingleColumn ? "" : "h-full rounded-[8px]")}
       >
         {/* Loading spinner - only show when image is visible and loading */}
         {isVisible && isLoading && (
@@ -306,7 +339,10 @@ function FishImageCard({
             (imageRef as React.MutableRefObject<HTMLElement | null>).current =
               el;
           }}
-          className={cn("w-full", isSingleColumn ? "h-fit" : "h-full")}
+          className={cn(
+            "w-full rounded-[8px] relative overflow-hidden",
+            isSingleColumn ? "h-fit" : "h-full",
+          )}
           id="fish-info-overlay-container"
         >
           {/* Image */}
@@ -314,11 +350,15 @@ function FishImageCard({
             <img
               src={photoUrl}
               alt={photo.url}
-              className={`w-full transition-opacity duration-200 rounded-[8px] ${
-                isLoading ? "opacity-0" : "opacity-100"
-              } ${hasError ? "hidden" : ""} ${
-                isSingleColumn ? "h-auto object-contain" : "h-full object-cover"
-              }`}
+              className={cn(
+                `w-full transition-opacity duration-200 rounded-[8px]`,
+                isLoading ? "opacity-0" : "opacity-100",
+                hasError ? "hidden" : "",
+                isSingleColumn
+                  ? "h-auto object-contain"
+                  : "h-full object-cover",
+                isSingleColumn ? "" : "aspect-square",
+              )}
               // eslint-disable-next-line react/no-unknown-property
               onLoadStart={() => {
                 log(`[ProfilePage] Image started loading:`, photoUrl);
@@ -396,16 +436,11 @@ function FishImageCard({
 
       {/* 3-dots menu - only show in single column mode */}
       {isSingleColumn && (
-        <div
-          className={cn(
-            "absolute right-0 h-10 w-full z-20",
-            isMobile == true ? "top-2" : "bottom-28",
-          )}
-        >
+        <div className={cn("absolute right-0 h-10 w-full z-20", "top-2")}>
           <div className="flex items-center justify-end pr-5">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="text-white p-1.5 transition-colors">
+                <button className="text-white h-fit w-fit transition-colors">
                   <MoreVertical className="w-5 h-5 rotate-90" />
                 </button>
               </DropdownMenuTrigger>
@@ -414,6 +449,7 @@ function FishImageCard({
                   onClick={(e) => {
                     e.stopPropagation();
                     handleSharePhoto();
+                    captureEvent("fish_image_share_clicked");
                   }}
                   disabled={loading}
                 >
@@ -424,6 +460,7 @@ function FishImageCard({
                   onClick={(e) => {
                     e.stopPropagation();
                     handleEditAIInfo();
+                    captureEvent("fish_image_edit_clicked");
                   }}
                   disabled={loading}
                 >
@@ -434,6 +471,7 @@ function FishImageCard({
                   onClick={(e) => {
                     e.stopPropagation();
                     handleDeletePhoto();
+                    captureEvent("fish_image_delete_clicked");
                   }}
                   className="text-red-600 hover:text-red-700 focus:text-red-700"
                   disabled={loading}

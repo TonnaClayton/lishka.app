@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, AlertCircle, MapPin } from "lucide-react";
+import Lottie from "lottie-react";
+import bookmarkAnimation from "@/assets/animations/bookmark-icon.json";
 import BottomNav, { SideNav } from "@/components/bottom-nav";
 import WeatherWidgetPro from "@/components/weather-widget-pro";
 import { FishingGear, FishingSeasons, useFishDetails } from "@/hooks/queries";
@@ -15,6 +17,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { log } from "@/lib/logging";
 import { useAuth } from "@/contexts/auth-context";
 import FishDetailSkeleton from "./fish-detail-skeleton";
+import { captureEvent } from "@/lib/posthog";
 
 // Fishing Season Calendar Component
 interface FishingSeasonCalendarProps {
@@ -258,6 +261,19 @@ const FishDetailPage = () => {
     error: fishDetailError,
   } = useFishDetails(fishName);
 
+  // Track fish detail page view
+  useEffect(() => {
+    if (fishDetailsData && fishName) {
+      captureEvent("fish_detail_viewed", {
+        fish_name: fishName,
+        scientific_name: fishDetailsData.scientific_name,
+        is_toxic: fishDetailsData.is_toxic,
+        habitat: fishDetailsData.habitat,
+        difficulty: fishDetailsData.difficulty,
+      });
+    }
+  }, [fishDetailsData, fishName]);
+
   useEffect(() => {
     const loadFishImage = async () => {
       try {
@@ -363,7 +379,7 @@ const FishDetailPage = () => {
             </div>
 
             {/* Weather Widget - Desktop only */}
-            <div className="hidden lg:block w-80 min-w-[320px] border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+            <div className="hidden lg:block lg:w-[380px] lg:flex-none bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 h-full overflow-y-auto">
               <div className="h-full overflow-y-auto">
                 <WeatherWidgetPro />
               </div>
@@ -510,6 +526,10 @@ const FishDetailPage = () => {
                     <p className="text-white/80 text-xs italic">
                       {fishDetailsData.scientific_name}
                     </p>
+                    <p className="text-white/80 text-[8px] leading-[100%] italic">
+                      Our AI-created images give a close reference but may
+                      differ from real life.
+                    </p>
                   </div>
                   <div className="absolute -bottom-4 left-0 right-0 h-4 bg-red-600"></div>
                 </div>
@@ -610,11 +630,11 @@ const FishDetailPage = () => {
                 </div>
               </div>
 
-              {/* Fishing Season Calendar Card */}
+              {/* Active Months Calendar Card */}
               <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
                 <div className="flex items-center justify-between mb-4">
                   <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-                    Fishing Season
+                    Active Months
                   </h2>
                   <div className="flex items-center text-xs text-gray-600 dark:text-gray-400">
                     {fishDetailsData.fishing_location ||
@@ -640,7 +660,7 @@ const FishDetailPage = () => {
                   />
 
                   {/* Reasoning */}
-                  {fishDetailsData.fishing_seasons?.reasoning && (
+                  {/* {fishDetailsData.fishing_seasons?.reasoning && (
                     <div className="mt-4 bg-gray-50 dark:bg-gray-800/50 p-3 rounded-lg">
                       <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                         Seasonal Information
@@ -649,7 +669,7 @@ const FishDetailPage = () => {
                         {fishDetailsData.fishing_seasons.reasoning}
                       </p>
                     </div>
-                  )}
+                  )} */}
                 </div>
               </Card>
 
@@ -981,13 +1001,35 @@ const FishDetailPage = () => {
 
                           {/* Pro Tip */}
                           {method.proTip && (
-                            <div className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg">
-                              <h4 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-2">
-                                Pro Tip
-                              </h4>
-                              <p className="text-xs text-gray-600 dark:text-gray-300">
-                                {method.proTip}
-                              </p>
+                            <div
+                              className="relative overflow-hidden border p-5 rounded-xl"
+                              style={{ backgroundColor: "#0251FB" }}
+                            >
+                              {/* Decorative corner accent */}
+                              <div className="absolute top-0 right-0 w-20 h-20 bg-white/10 rounded-bl-full"></div>
+
+                              <div className="relative flex gap-3">
+                                {/* Icon */}
+                                <div className="flex-shrink-0 mt-0.5">
+                                  <div className="w-8 h-8">
+                                    <Lottie
+                                      animationData={bookmarkAnimation}
+                                      loop={true}
+                                      style={{ width: "100%", height: "100%" }}
+                                    />
+                                  </div>
+                                </div>
+
+                                {/* Content */}
+                                <div className="flex-1">
+                                  <h4 className="font-bold text-base text-white mb-0.5">
+                                    Pro Tip
+                                  </h4>
+                                  <p className="text-sm text-white/95 leading-relaxed">
+                                    {method.proTip}
+                                  </p>
+                                </div>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -1146,7 +1188,7 @@ const FishDetailPage = () => {
           </div>
 
           {/* Weather Widget - Desktop only */}
-          <div className="hidden lg:block w-80 min-w-[320px] border-l border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900">
+          <div className="hidden lg:block lg:w-[380px] lg:flex-none bg-white dark:bg-gray-900 border-l border-gray-200 dark:border-gray-800 h-full overflow-y-auto">
             <div className="h-full overflow-y-auto">
               <WeatherWidgetPro />
             </div>

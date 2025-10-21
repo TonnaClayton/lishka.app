@@ -102,7 +102,7 @@
 
 @layer base {
   * {
-    @apply border-border scrollbar-thin scrollbar-track-transparent scrollbar-thumb-muted-foreground;
+    @apply border-border scrollbar-thin scrollbar-track-transparent scrollbar-thumb-gray-300;
   }
   body {
     @apply bg-background text-foreground font-['Inter',sans-serif];
@@ -112,10 +112,23 @@
     height: 100%;
     overflow: hidden;
     -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
   }
 
   #root {
     height: 100%;
+  }
+
+  /* Smooth scroll for all scrollable elements */
+  * {
+    scroll-behavior: smooth;
+  }
+
+  /* Enhanced smooth scrolling for webkit browsers */
+  @supports (-webkit-overflow-scrolling: touch) {
+    * {
+      -webkit-overflow-scrolling: touch;
+    }
   }
 }
 
@@ -153,18 +166,6 @@
 
   /* Mobile viewport fix */
   @media (max-width: 640px) {
-    /* html {
-      height: -webkit-fill-available;
-    }
-    body {
-      min-height: 100vh;
-      min-height: -webkit-fill-available;
-    }
-    .min-h-screen {
-      min-height: 100vh;
-      min-height: -webkit-fill-available;
-    } */
-
     /* Mobile-specific spacing adjustments */
     .card-grid-mobile {
       gap: 0.75rem;

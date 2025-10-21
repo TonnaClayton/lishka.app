@@ -5,13 +5,167 @@ import { Loader2 } from "lucide-react";
 
 interface FishingConditionsProps {
   fishingAdvice: {
-    inshore?: string;
-    offshore?: string;
+    inshore?: any;
+    offshore?: any;
   };
   isLoadingFishingAdvice: boolean;
   activeTab: string;
   setActiveTab: (value: string) => void;
 }
+
+interface FishingAdviceJSON {
+  summary: string;
+  tactics: string[];
+  locations: string[];
+  targetSpecies: {
+    common: string;
+    scientific: string;
+    note?: string;
+  }[];
+  gearSuggestions: {
+    item: string;
+    note: string;
+  }[];
+  whyItWorks: string[];
+  safetyNotes: string[];
+}
+
+const parseAdvice = (advice: any): FishingAdviceJSON | null => {
+  if (!advice) return null;
+
+  // If it's already an object, return it
+  if (typeof advice === "object" && !Array.isArray(advice)) {
+    return advice as FishingAdviceJSON;
+  }
+
+  // If it's a string, try to parse it as JSON
+  if (typeof advice === "string") {
+    try {
+      const parsed = JSON.parse(advice);
+      return parsed as FishingAdviceJSON;
+    } catch {
+      return null;
+    }
+  }
+
+  return null;
+};
+
+const StructuredAdvice: React.FC<{ advice: FishingAdviceJSON }> = ({
+  advice,
+}) => {
+  return (
+    <div className="space-y-4">
+      {/* Summary */}
+      {advice.summary && (
+        <div>
+          <p className="text-sm font-bold mb-2">{advice.summary}</p>
+        </div>
+      )}
+
+      {/* Tactics */}
+      {advice.tactics && advice.tactics.length > 0 && (
+        <div>
+          <h4 className="text-sm font-bold mb-2">Tactics</h4>
+          <ul className="list-disc list-inside space-y-1">
+            {advice.tactics.map((tactic, idx) => (
+              <li key={idx} className="text-sm font-normal">
+                {tactic.charAt(0).toUpperCase() + tactic.slice(1)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Locations */}
+      {advice.locations && advice.locations.length > 0 && (
+        <div>
+          <h4 className="text-sm font-bold mb-2">Best Locations</h4>
+          <ul className="list-disc list-inside space-y-1">
+            {advice.locations.map((location, idx) => (
+              <li key={idx} className="text-sm font-normal">
+                {location.charAt(0).toUpperCase() + location.slice(1)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Target Species */}
+      {advice.targetSpecies && advice.targetSpecies.length > 0 && (
+        <div>
+          <h4 className="text-sm font-bold mb-2">Target Species</h4>
+          <ul className="list-disc list-inside space-y-1">
+            {advice.targetSpecies.map((species, idx) => (
+              <li key={idx} className="text-sm font-normal">
+                <span className="">{species.common}</span>
+                {species.scientific && (
+                  <span className="italic text-gray-600 dark:text-gray-400 ml-1">
+                    ({species.scientific})
+                  </span>
+                )}
+                {species.note && (
+                  <p className="text-xs text-gray-600 dark:text-gray-400 mt-0.5">
+                    {species.note}
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Gear Suggestions */}
+      {advice.gearSuggestions && advice.gearSuggestions.length > 0 && (
+        <div>
+          <h4 className="text-sm font-bold mb-2">Gear Suggestions</h4>
+          <ul className="list-disc list-inside space-y-1">
+            {advice.gearSuggestions.map((gear, idx) => (
+              <li key={idx} className="text-sm font-normal">
+                <span className="">{gear.item}</span>
+                {gear.note && (
+                  <span className="text-gray-600 dark:text-gray-400 ml-1">
+                    - {gear.note}
+                  </span>
+                )}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Why It Works */}
+      {advice.whyItWorks && advice.whyItWorks.length > 0 && (
+        <div>
+          <h4 className="text-sm font-bold mb-2">Why It Works</h4>
+          <ul className="list-disc list-inside space-y-1">
+            {advice.whyItWorks.map((reason, idx) => (
+              <li key={idx} className="text-sm font-normal">
+                {reason}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Safety Notes */}
+      {advice.safetyNotes && advice.safetyNotes.length > 0 && (
+        <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md border border-yellow-200 dark:border-yellow-800">
+          <h4 className="text-sm font-bold mb-2 text-yellow-800 dark:text-yellow-300">
+            Safety Notes
+          </h4>
+          <ul className="list-disc list-inside space-y-1">
+            {advice.safetyNotes.map((note, idx) => (
+              <li key={idx} className="text-sm font-normal">
+                {note}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
 
 export const FishingConditions: React.FC<FishingConditionsProps> = ({
   fishingAdvice,
@@ -20,14 +174,14 @@ export const FishingConditions: React.FC<FishingConditionsProps> = ({
   setActiveTab,
 }) => {
   return (
-    <Card className="p-6 lg:p-8 bg-white dark:bg-card overflow-hidden relative shadow-sm mt-4 rounded-xl">
+    <Card className="p-6 bg-white dark:bg-card overflow-hidden relative shadow-sm mt-4 rounded-xl">
       <div className="flex justify-between items-start">
         <div>
           <h2 className="text-lg font-semibold dark:text-white">
             Fishing Conditions
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
-            AI-Generated Advice
+            AI-Generated Insights
           </p>
         </div>
         <div></div>
@@ -46,14 +200,21 @@ export const FishingConditions: React.FC<FishingConditionsProps> = ({
 
           <TabsContent
             value="inshore"
-            className="mt-4 bg-[#F7F7F7] text-[#191B1F] p-4 rounded-md"
+            className="mt-4 bg-[#F7F7F7] text-[#191B1F] p-4 rounded-[8px]"
           >
             {isLoadingFishingAdvice ? (
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="h-6 w-6 animate-spin text-lishka-blue" />
               </div>
             ) : fishingAdvice?.inshore ? (
-              <p className="text-sm font-normal">{fishingAdvice.inshore}</p>
+              (() => {
+                const parsedAdvice = parseAdvice(fishingAdvice.inshore);
+                return parsedAdvice ? (
+                  <StructuredAdvice advice={parsedAdvice} />
+                ) : (
+                  <p className="text-sm font-normal">{fishingAdvice.inshore}</p>
+                );
+              })()
             ) : (
               <p className="text-sm font-normal italic">
                 No inshore fishing advice available
@@ -63,14 +224,23 @@ export const FishingConditions: React.FC<FishingConditionsProps> = ({
 
           <TabsContent
             value="offshore"
-            className="mt-4 bg-[#F7F7F7] text-[#191B1F] p-4 rounded-md"
+            className="mt-4 bg-[#F7F7F7] text-[#191B1F] p-4 rounded-[8px]"
           >
             {isLoadingFishingAdvice ? (
               <div className="flex items-center justify-center py-4">
                 <Loader2 className="h-6 w-6 animate-spin text-lishka-blue" />
               </div>
             ) : fishingAdvice?.offshore ? (
-              <p className="text-sm font-normal">{fishingAdvice.offshore}</p>
+              (() => {
+                const parsedAdvice = parseAdvice(fishingAdvice.offshore);
+                return parsedAdvice ? (
+                  <StructuredAdvice advice={parsedAdvice} />
+                ) : (
+                  <p className="text-sm font-normal">
+                    {fishingAdvice.offshore}
+                  </p>
+                );
+              })()
             ) : (
               <p className="text-sm font-normal italic">
                 No offshore fishing advice available

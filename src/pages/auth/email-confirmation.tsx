@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2, AlertCircle, Mail, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -259,16 +259,18 @@ const EmailConfirmationPage: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-center mb-12 mt-4">
           <div className="flex items-center gap-2">
-            <img
-              src="/logo.svg"
-              alt="Lishka Logo"
-              className="h-8 w-auto dark:hidden"
-            />
-            <img
-              src="/logo-night.svg"
-              alt="Lishka Logo"
-              className="h-8 w-auto hidden dark:block"
-            />
+            <Link to="/">
+              <img
+                src="/logo.svg"
+                alt="Lishka Logo"
+                className="h-8 w-auto dark:hidden"
+              />
+              <img
+                src="/logo-night.svg"
+                alt="Lishka Logo"
+                className="h-8 w-auto hidden dark:block"
+              />
+            </Link>
           </div>
         </div>
 

@@ -14,6 +14,9 @@ export default defineConfig({
   optimizeDeps: {
     entries: ["src/main.tsx", "src/tempobook/**/*"],
   },
+  ssr: {
+    noExternal: ["posthog-js", "posthog-js/react"],
+  },
   plugins: [
     react(),
     tempo(),
@@ -32,13 +35,15 @@ export default defineConfig({
         "apple-touch-icon.png",
         "android-chrome-192x192.png",
         "android-chrome-512x512.png",
+        "sitemap.xml",
+        "robots.txt",
       ],
       manifest: {
         name: "Lishka - Fishing Companion",
         short_name: "Lishka",
         description:
           "Your ultimate fishing companion app for tracking catches, gear, and locations",
-        theme_color: "#1e40af",
+        theme_color: "#ffffff",
         background_color: "#ffffff",
         display: "standalone",
         orientation: "portrait",
@@ -75,6 +80,14 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp}"],
+        // Clean up outdated caches
+        cleanupOutdatedCaches: true,
+        // Skip waiting and claim clients immediately on update
+        skipWaiting: true,
+        clientsClaim: true,
+        // Navigation fallback for SPA
+        navigateFallback: "/index.html",
+        navigateFallbackDenylist: [/^\/api/, /\.[^/]+$/],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.openai\.com\/.*/i,
@@ -104,6 +117,18 @@ export default defineConfig({
             options: {
               cacheName: "weather-cache",
               networkTimeoutSeconds: 10,
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            // Cache JS/CSS chunks with NetworkFirst strategy
+            urlPattern: /\.(?:js|css)$/i,
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "assets-cache",
+              networkTimeoutSeconds: 3,
               cacheableResponse: {
                 statuses: [0, 200],
               },
