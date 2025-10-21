@@ -47,11 +47,6 @@ const BlobImageUploader = () => {
       setUploading(true);
       setStatus({ type: "info", message: "Uploading..." });
 
-      // Normalize the scientific name (lowercase, remove spaces)
-      // const normalizedName = scientificName.toLowerCase().replace(/\s+/g, "");
-      // const fileExt = file.name.split(".").pop();
-      // const fileName = `${normalizedName}.${fileExt}`;
-
       // Upload file to Vercel Blob
       const imageUrl = await uploadImage(file);
 

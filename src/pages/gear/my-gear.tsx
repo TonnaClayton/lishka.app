@@ -41,8 +41,6 @@ export const GEAR_CATEGORIES = [
 const MyGearPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, updateProfile } = useAuth();
-  // const fileInputRef = useRef<HTMLInputElement>(null);
-  // const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -85,11 +83,6 @@ const MyGearPage: React.FC = () => {
       return "You're in the top 5% of fishermen with this gear collection.";
     }
   };
-
-  // Handle gear click to show detail modal - store only the ID to ensure we always get fresh data
-  // const handleGearClick = (gear: GearItem) => {
-  //   setSelectedGearId(gear.id);
-  // };
 
   // Close gear modal
   const closeGearModal = () => {

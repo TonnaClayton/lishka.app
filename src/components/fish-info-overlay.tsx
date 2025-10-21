@@ -67,7 +67,6 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
 
   // Extract fish information directly from the AI JSON response
   const fishInfo = metadata.fishInfo;
-  // const location = metadata.location;
 
   // Check if we have any valid fish data from the AI response
   const fishName = fishInfo?.name;
@@ -91,7 +90,6 @@ const FishInfoOverlay: React.FC<FishInfoOverlayProps> = ({
     fishWeight !== "Unknown" &&
     fishWeight.trim() !== "" &&
     fishWeight.toLowerCase() !== "unknown";
-  // const hasValidLocation = location?.address && location.address.trim() !== "";
 
   // Check if we have ANY useful fish data from the AI
   const hasAnyFishData =

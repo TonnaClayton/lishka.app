@@ -114,8 +114,6 @@ const SearchPage: React.FC = () => {
   } = useGetSearchSessionFollowQuestions(id);
   const { refetch: refetchSessions } = useGetSearchSessions();
   const mutation = useCreateSearchSession();
-  // const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
-  // const [followUpLoading, setFollowUpLoading] = useState(false);
 
   const useImperialUnits = useMemo(() => {
     return profile?.use_imperial_units || false;
@@ -177,25 +175,6 @@ const SearchPage: React.FC = () => {
     isRefetchingFollowUpQuestions,
     followUpLoading,
   ]);
-
-  // Listen for units changes from settings
-  useEffect(() => {
-    // const handleUnitsChange = () => {
-    //   setImperialUnits(getImperialUnits());
-    // };
-    // window.addEventListener("unitsChanged", handleUnitsChange);
-    // return () => window.removeEventListener("unitsChanged", handleUnitsChange);
-  }, []);
-
-  // Convert image to base64
-  // const convertImageToBase64 = (file: File): Promise<string> => {
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.onload = () => resolve(reader.result as string);
-  //     reader.onerror = reject;
-  //     reader.readAsDataURL(file);
-  //   });
-  // };
 
   // Extract the API call logic to a separate function
   const processQuery = async (

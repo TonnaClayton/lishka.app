@@ -137,9 +137,7 @@ const WeatherPage: React.FC = () => {
             setIsLocationModalOpen(false);
           }
         }}
-        onLocationSelect={() => {
-          //onLocationChange(newLocation.name);
-        }}
+        onLocationSelect={() => {}}
         currentLocation={(() => {
           const locationCoordinates = profile?.location_coordinates as any;
 

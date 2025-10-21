@@ -21,7 +21,6 @@ export const validateFishingData = (
           if (numbers) {
             const distances = numbers.map(Number);
             const maxDistance = Math.max(...distances);
-            // const minDistance = Math.min(...distances);
 
             // Flag suspicious trolling distances
             if (maxDistance > 300) {

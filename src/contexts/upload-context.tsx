@@ -631,7 +631,6 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       } else {
         let filesTypes: UploadType[] = [];
 
-        // if (!options) {
         setClassifyingImage(true);
         clearError();
 

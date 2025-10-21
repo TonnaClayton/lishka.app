@@ -106,11 +106,6 @@ export async function uploadAvatarToSupabase(
       throw new Error("User ID is required for avatar upload");
     }
 
-    // Generate avatar filename
-    // const timestamp = Date.now();
-    // const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    // const fileName = `${userId}-${timestamp}.${fileExt}`;
-
     return await uploadImageToSupabase(file, "avatars");
   } catch (error) {
     logError("[SupabaseStorage] Avatar upload failed:", error);
