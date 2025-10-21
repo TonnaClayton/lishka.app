@@ -18,8 +18,7 @@ export const config = {
   VITE_SUPABASE_PROJECT_ID: env.VITE_SUPABASE_PROJECT_ID,
   SUPABASE_KEY: env.SUPABASE_KEY,
   VITE_BLOB_READ_WRITE_TOKEN: env.VITE_BLOB_READ_WRITE_TOKEN,
-  BACKEND_URL:
-    "https://liska-backend-gs49xhdta-claytons-projects-7c9b8210.vercel.app", //"https://api.lishka.dev",
+  BACKEND_URL: "https://api.lishka.dev",
   VITE_PUBLIC_POSTHOG_KEY: env.VITE_PUBLIC_POSTHOG_KEY,
   VITE_PUBLIC_POSTHOG_HOST: env.VITE_PUBLIC_POSTHOG_HOST,
 };

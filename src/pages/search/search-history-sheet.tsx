@@ -40,12 +40,8 @@ export function SearchHistorySheet() {
     // Start delete mutation
     deleteSession.mutate(sessionId, {
       onSuccess: () => {
-        // Remove from deleting set after successful delete
-        setDeletingIds((prev) => {
-          const newSet = new Set(prev);
-          newSet.delete(sessionId);
-          return newSet;
-        });
+        // Don't remove from deletingIds - let React Query's refetch handle it
+        // This prevents the item from re-appearing before the cache updates
         captureEvent("search_history_deleted", {
           sessionId,
         });
