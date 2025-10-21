@@ -2,7 +2,6 @@ import React from "react";
 import { Card } from "../ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 import { Loader2 } from "lucide-react";
-import { Badge } from "../ui/badge";
 
 interface FishingConditionsProps {
   fishingAdvice: {
@@ -60,17 +59,17 @@ const StructuredAdvice: React.FC<{ advice: FishingAdviceJSON }> = ({
       {/* Summary */}
       {advice.summary && (
         <div>
-          <p className="text-sm font-medium mb-2">{advice.summary}</p>
+          <p className="text-sm font-bold mb-2">{advice.summary}</p>
         </div>
       )}
 
       {/* Tactics */}
       {advice.tactics && advice.tactics.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold mb-2">Tactics</h4>
+          <h4 className="text-sm font-bold mb-2">Tactics</h4>
           <ul className="list-disc list-inside space-y-1">
             {advice.tactics.map((tactic, idx) => (
-              <li key={idx} className="text-sm">
+              <li key={idx} className="text-sm font-normal">
                 {tactic.charAt(0).toUpperCase() + tactic.slice(1)}
               </li>
             ))}
@@ -81,29 +80,25 @@ const StructuredAdvice: React.FC<{ advice: FishingAdviceJSON }> = ({
       {/* Locations */}
       {advice.locations && advice.locations.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold mb-2">Best Locations</h4>
-          <div className="flex flex-wrap gap-2">
+          <h4 className="text-sm font-bold mb-2">Best Locations</h4>
+          <ul className="list-disc list-inside space-y-1">
             {advice.locations.map((location, idx) => (
-              <Badge
-                key={idx}
-                variant="secondary"
-                className="bg-white dark:bg-gray-700"
-              >
+              <li key={idx} className="text-sm font-normal">
                 {location.charAt(0).toUpperCase() + location.slice(1)}
-              </Badge>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
 
       {/* Target Species */}
       {advice.targetSpecies && advice.targetSpecies.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold mb-2">Target Species</h4>
-          <div className="space-y-2">
+          <h4 className="text-sm font-bold mb-2">Target Species</h4>
+          <ul className="list-disc list-inside space-y-1">
             {advice.targetSpecies.map((species, idx) => (
-              <div key={idx} className="text-sm">
-                <span className="font-medium">{species.common}</span>
+              <li key={idx} className="text-sm font-normal">
+                <span className="">{species.common}</span>
                 {species.scientific && (
                   <span className="italic text-gray-600 dark:text-gray-400 ml-1">
                     ({species.scientific})
@@ -114,20 +109,20 @@ const StructuredAdvice: React.FC<{ advice: FishingAdviceJSON }> = ({
                     {species.note}
                   </p>
                 )}
-              </div>
+              </li>
             ))}
-          </div>
+          </ul>
         </div>
       )}
 
       {/* Gear Suggestions */}
       {advice.gearSuggestions && advice.gearSuggestions.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold mb-2">Gear Suggestions</h4>
-          <ul className="space-y-2">
+          <h4 className="text-sm font-bold mb-2">Gear Suggestions</h4>
+          <ul className="list-disc list-inside space-y-1">
             {advice.gearSuggestions.map((gear, idx) => (
-              <li key={idx} className="text-sm">
-                <span className="font-medium">{gear.item}</span>
+              <li key={idx} className="text-sm font-normal">
+                <span className="">{gear.item}</span>
                 {gear.note && (
                   <span className="text-gray-600 dark:text-gray-400 ml-1">
                     - {gear.note}
@@ -142,10 +137,10 @@ const StructuredAdvice: React.FC<{ advice: FishingAdviceJSON }> = ({
       {/* Why It Works */}
       {advice.whyItWorks && advice.whyItWorks.length > 0 && (
         <div>
-          <h4 className="text-sm font-semibold mb-2">Why It Works</h4>
+          <h4 className="text-sm font-bold mb-2">Why It Works</h4>
           <ul className="list-disc list-inside space-y-1">
             {advice.whyItWorks.map((reason, idx) => (
-              <li key={idx} className="text-sm">
+              <li key={idx} className="text-sm font-normal">
                 {reason}
               </li>
             ))}
@@ -156,15 +151,12 @@ const StructuredAdvice: React.FC<{ advice: FishingAdviceJSON }> = ({
       {/* Safety Notes */}
       {advice.safetyNotes && advice.safetyNotes.length > 0 && (
         <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-md border border-yellow-200 dark:border-yellow-800">
-          <h4 className="text-sm font-semibold mb-2 text-yellow-800 dark:text-yellow-300">
+          <h4 className="text-sm font-bold mb-2 text-yellow-800 dark:text-yellow-300">
             Safety Notes
           </h4>
           <ul className="list-disc list-inside space-y-1">
             {advice.safetyNotes.map((note, idx) => (
-              <li
-                key={idx}
-                className="text-sm text-yellow-800 dark:text-yellow-300"
-              >
+              <li key={idx} className="text-sm font-normal">
                 {note}
               </li>
             ))}
@@ -208,7 +200,7 @@ export const FishingConditions: React.FC<FishingConditionsProps> = ({
 
           <TabsContent
             value="inshore"
-            className="mt-4 bg-[#F7F7F7] text-[#191B1F] p-4 rounded-md"
+            className="mt-4 bg-[#F7F7F7] text-[#191B1F] p-4 rounded-[8px]"
           >
             {isLoadingFishingAdvice ? (
               <div className="flex items-center justify-center py-4">
@@ -232,7 +224,7 @@ export const FishingConditions: React.FC<FishingConditionsProps> = ({
 
           <TabsContent
             value="offshore"
-            className="mt-4 bg-[#F7F7F7] text-[#191B1F] p-4 rounded-md"
+            className="mt-4 bg-[#F7F7F7] text-[#191B1F] p-4 rounded-[8px]"
           >
             {isLoadingFishingAdvice ? (
               <div className="flex items-center justify-center py-4">
