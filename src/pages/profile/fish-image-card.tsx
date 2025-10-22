@@ -305,12 +305,19 @@ function FishImageCard({
 
   return (
     <div
-      className={cn(`relative`, isSingleColumn ? "" : "h-full rounded-[8px]")}
+      className={cn(
+        `relative`,
+        isSingleColumn ? "" : "h-full rounded-[8px]",
+        !isVisible && "h-64",
+      )}
     >
       {/* Main image button */}
       <button
         onClick={handleImageClick}
-        className={cn(isSingleColumn ? "" : "h-full rounded-[8px]")}
+        className={cn(
+          isSingleColumn ? "" : "h-full rounded-[8px]",
+          !isVisible && "w-full h-64",
+        )}
       >
         {/* Loading spinner - only show when image is visible and loading */}
         {isVisible && isLoading && (
@@ -421,9 +428,9 @@ function FishImageCard({
             />
           ) : (
             <div
-              className={`w-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 rounded-[8px] flex items-center justify-center ${
-                isSingleColumn ? "h-64" : "h-full"
-              }`}
+              className={cn(
+                `w-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-600 dark:to-gray-700 rounded-[8px] flex items-center justify-center h-64`,
+              )}
             >
               <div className="flex flex-col items-center gap-2">
                 <Skeleton className="w-8 h-8 rounded-full" />
