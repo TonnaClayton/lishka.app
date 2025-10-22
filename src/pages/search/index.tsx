@@ -30,6 +30,7 @@ import { SearchHistorySheet } from "./search-history-sheet";
 import { useAuth } from "@/contexts/auth-context";
 import LocationBtn from "@/components/location-btn";
 import { captureEvent } from "@/lib/posthog";
+import SearchGearCard from "./gear-card";
 
 interface Message {
   id: string;
@@ -38,6 +39,9 @@ interface Message {
   timestamp: Date;
   images?: string[];
   fish_results?: Fish[];
+  gear_results?: Array<{
+    id: string;
+  }>;
   image?: string;
 }
 
@@ -75,6 +79,7 @@ const SearchPage: React.FC = () => {
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<Message[]>(() => {
     const stateMessages = (routerLocation.state?.messages as Message[]) || null;
+
     if (stateMessages && stateMessages.length > 0) {
       return stateMessages;
     }
@@ -82,6 +87,8 @@ const SearchPage: React.FC = () => {
       try {
         const cached = sessionStorage.getItem(`search_messages_${id}`);
         if (cached) {
+          // clear the cached messages and return the cached messages
+          sessionStorage.removeItem(`search_messages_${id}`);
           return JSON.parse(cached) as Message[];
         }
       } catch {
@@ -160,6 +167,7 @@ const SearchPage: React.FC = () => {
           content: message.content,
           timestamp: new Date(message.created_at),
           fish_results: message.metadata?.fish_results || [],
+          gear_results: message.metadata?.gear_results || [],
         })) || []
       );
     }
@@ -219,6 +227,7 @@ const SearchPage: React.FC = () => {
         images: response.metadata?.images?.map(fixBrokenBase64Url) || [],
         timestamp: new Date(),
         fish_results: response.metadata?.fish_results || [],
+        gear_results: response.metadata?.gear_results || [],
       };
 
       if (
@@ -584,6 +593,20 @@ const SearchPage: React.FC = () => {
                                   }}
                                 />
                               ))}
+                          </div>
+                        </div>
+                      )}
+
+                    {message.gear_results &&
+                      message.gear_results.length > 0 && (
+                        <div className="mt-4 space-y-4 w-full">
+                          <h3 className="font-medium text-sm px-4">
+                            Gear Items:
+                          </h3>
+                          <div className="flex w-full overflow-x-auto gap-4 px-4 pb-3">
+                            {message.gear_results.map((gear) => (
+                              <SearchGearCard key={gear.id} gearId={gear.id} />
+                            ))}
                           </div>
                         </div>
                       )}
