@@ -705,7 +705,8 @@ export default function GearItemCard({
                     Description
                   </div>
                   <div className="text-sm text-lishka-blue-500 ">
-                    {gear.description}
+                    {gear.description.charAt(0).toUpperCase() +
+                      gear.description.slice(1)}
                   </div>
                 </div>
               )}

@@ -1196,6 +1196,7 @@ export function AddToHomeScreen(
     var cancelButton =
       container.getElementsByClassName("adhs-button-cancel")[0];
     cancelButton.addEventListener("click", () => {
+      _setLaterClickedInSession();
       closeModal();
     });
 
@@ -1272,6 +1273,7 @@ export function AddToHomeScreen(
         .getElementsByClassName("adhs-container")[0]
         .getElementsByClassName("adhs-modal")[0];
       if (!modal.contains(e.target as Node) && allowClose) {
+        _setLaterClickedInSession();
         closeModal();
       }
     };
@@ -1289,6 +1291,12 @@ export function AddToHomeScreen(
     }
   }
 
+  function clearSessionLaterFlag() {
+    if (typeof window.sessionStorage !== "undefined") {
+      window.sessionStorage.removeItem(_getSessionLaterKey());
+    }
+  }
+
   function _isEnabledModalDisplayCount(): boolean {
     return (
       typeof maxModalDisplayCount === "number" &&
@@ -1298,10 +1306,32 @@ export function AddToHomeScreen(
   }
 
   function _hasReachedMaxModalDisplayCount(): boolean {
+    // Check if user clicked "Later" in this session
+    if (_isLaterClickedInSession()) {
+      return true;
+    }
+
     if (!_isEnabledModalDisplayCount()) {
       return false;
     }
     return _getModalDisplayCount() >= maxModalDisplayCount;
+  }
+
+  function _getSessionLaterKey(): string {
+    return "adhs-later-clicked";
+  }
+
+  function _isLaterClickedInSession(): boolean {
+    if (typeof window.sessionStorage === "undefined") {
+      return false;
+    }
+    return window.sessionStorage.getItem(_getSessionLaterKey()) === "true";
+  }
+
+  function _setLaterClickedInSession(): void {
+    if (typeof window.sessionStorage !== "undefined") {
+      window.sessionStorage.setItem(_getSessionLaterKey(), "true");
+    }
   }
 
   function _incrModalDisplayCount(): boolean {
@@ -1436,6 +1466,7 @@ export function AddToHomeScreen(
     allowClose,
     showArrow,
     clearModalDisplayCount,
+    clearSessionLaterFlag,
     isStandAlone,
     show,
     closeModal,

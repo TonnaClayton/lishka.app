@@ -36,9 +36,14 @@ const AddToHomeScreenPrompt = () => {
       },
     });
 
-    // Show the prompt with English locale
+    // Show the prompt after 3 seconds delay
     // Available languages: en, fr, es, de, pt, it, nl, sv, da, fi, nb, pl, tr, uk, ru, ar, ja, ko, zh, zh_CN, zh_HK, zh_TW
-    instance.show("en");
+    const timeoutId = setTimeout(() => {
+      instance.show("en");
+    }, 3000);
+
+    // Cleanup timeout on component unmount
+    return () => clearTimeout(timeoutId);
   }, []);
 
   // This component doesn't render any visible UI

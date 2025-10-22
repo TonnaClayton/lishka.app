@@ -340,308 +340,320 @@ const WeatherWidget: React.FC<{
         isLoadingRecommendation={isLoadingRecommendation}
       />
       {/* Fishing Conditions Card */}
-      <FishingConditions
-        fishingAdvice={{
-          inshore: weatherData?.inshoreAdvice || "",
-          offshore: weatherData?.offshoreAdvice || "",
-        }}
-        isLoadingFishingAdvice={
-          isRefreshingWeather || isLoadingWeather || isLoadingLocation
-        }
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+      {weatherData && (
+        <FishingConditions
+          fishingAdvice={{
+            inshore: weatherData?.inshoreAdvice || "",
+            offshore: weatherData?.offshoreAdvice || "",
+          }}
+          isLoadingFishingAdvice={
+            isRefreshingWeather || isLoadingWeather || isLoadingLocation
+          }
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+        />
+      )}
       {/* Marine Data Hourly Cards */}
-      <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold dark:text-white">
-            Marine Data Forecast
-          </h2>
-        </div>
-
-        {/* Wave Height Hourly Card */}
-        <div className="mb-4">
-          <div className="flex items-center mb-2">
-            <Waves className="h-5 w-5 mr-2 text-lishka-blue " />
-            <h3 className="text-md font-medium dark:text-white">
-              Wave Height (m)
-            </h3>
+      {weatherData && (
+        <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold dark:text-white">
+              Marine Data Forecast
+            </h2>
           </div>
+
+          {/* Wave Height Hourly Card */}
+          <div className="mb-4">
+            <div className="flex items-center mb-2">
+              <Waves className="h-5 w-5 mr-2 text-lishka-blue " />
+              <h3 className="text-md font-medium dark:text-white">
+                Wave Height (m)
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <div className="flex gap-3 pb-2 min-w-[800px]">
+                {times.slice(0, 12).map((time, index) => (
+                  <div
+                    key={`wave-${index}`}
+                    className="flex flex-col items-center p-3 bg-[#025DFB0D] rounded-[8px] flex-shrink-0 min-w-[70px]"
+                  >
+                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                      {time ? formatTime(time) : "--:--"}
+                    </p>
+                    <p className="text-lg font-bold text-lishka-blue ">
+                      {waveHeights[index] !== null &&
+                      waveHeights[index] !== undefined
+                        ? waveHeights[index].toFixed(1)
+                        : "-"}
+                    </p>
+                    {waveDirections[index] !== undefined &&
+                      waveDirections[index] !== null && (
+                        <div className="mt-1 text-xs text-lishka-blue ">
+                          {getDirectionArrow(waveDirections[index])}
+                        </div>
+                      )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Wind Speed Hourly Card */}
+          <div>
+            <div className="flex items-center mb-2">
+              <Wind className="h-5 w-5 mr-2 text-lishka-blue " />
+              <h3 className="text-md font-medium dark:text-white">
+                Wind Speed (km/h)
+              </h3>
+            </div>
+            <div className="overflow-x-auto">
+              <div className="flex gap-3 pb-2 min-w-[800px]">
+                {times.slice(0, 24).map((time, index) => (
+                  <div
+                    key={`wind-${index}`}
+                    className="flex flex-col items-center p-3 bg-[#F7F7F7] rounded-[8px] flex-shrink-0 min-w-[70px]"
+                  >
+                    <p className="text-xs font-medium text-[#6B7280] mb-1">
+                      {time ? formatTime(time) : "--:--"}
+                    </p>
+                    <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
+                      {windSpeeds[index] !== null &&
+                      windSpeeds[index] !== undefined
+                        ? Math.round(windSpeeds[index])
+                        : "-"}
+                    </p>
+                    {windDirections[index] !== undefined &&
+                      windDirections[index] !== null && (
+                        <div className="mt-1 text-xs text-[#191B1FCC] flex items-center">
+                          {getWindDirection(windDirections[index])}
+                          <span className="ml-1">
+                            {getDirectionArrow(windDirections[index])}
+                          </span>
+                        </div>
+                      )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="p-3 bg-[#F7F7F7] rounded-md mt-4">
+            <p className="text-sm font-medium mb-1 text-[#191B1F]">
+              Data Sources:
+            </p>
+            <div className="text-xs text-[#191B1FCC]  flex items-center gap-2">
+              <Layers className="h-4 w-4 text-[#191B1FCC] " />
+              <span>Open-Meteo Weather & Marine API</span>
+            </div>
+            {location && (
+              <div className="text-xs text-[#6B7280]  mt-1 italic">
+                {weatherData?.marineDataFromNearby ? (
+                  <span className="text-amber-600 dark:text-amber-400">
+                    Note: Marine data is from nearby coordinates as it was not
+                    available at your exact location
+                    {weatherData?.marineCoordinates && (
+                      <span>
+                        {" "}
+                        ({weatherData.marineCoordinates.latitude.toFixed(
+                          2,
+                        )}, {weatherData.marineCoordinates.longitude.toFixed(2)}
+                        )
+                      </span>
+                    )}
+                  </span>
+                ) : (
+                  <span>
+                    Note: Marine data may be from nearby coordinates if not
+                    available at exact location
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </Card>
+      )}
+      {/* Hourly Forecast */}
+      {weatherData && (
+        <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
+          <h2 className="text-lg font-semibold mb-4 dark:text-white">
+            Hourly Forecast
+          </h2>
           <div className="overflow-x-auto">
-            <div className="flex gap-3 pb-2 min-w-[800px]">
+            <div className="flex gap-3 pb-2 min-w-[1200px]">
               {times.slice(0, 12).map((time, index) => (
                 <div
-                  key={`wave-${index}`}
-                  className="flex flex-col items-center p-3 bg-[#025DFB0D] rounded-[8px] flex-shrink-0 min-w-[70px]"
+                  key={`hourly-${index}`}
+                  className="flex flex-col flex-shrink-0 items-center p-3 bg-[#F7F7F7] rounded-[8px] min-w-[90px]"
                 >
-                  <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                  <p className="text-xs font-medium text-[#6B7280] mb-1">
                     {time ? formatTime(time) : "--:--"}
                   </p>
-                  <p className="text-lg font-bold text-lishka-blue ">
-                    {waveHeights[index] !== null &&
-                    waveHeights[index] !== undefined
-                      ? waveHeights[index].toFixed(1)
+                  <div className="mb-2">
+                    {getIconForWeatherCode(weatherCodes[index], "h-5 w-5", 1)}
+                  </div>
+                  <p className="text-lg font-bold text-[#191B1F] mb-2">
+                    {temperatures[index] !== null &&
+                    temperatures[index] !== undefined
+                      ? `${Math.round(temperatures[index])}°`
                       : "-"}
                   </p>
-                  {waveDirections[index] !== undefined &&
-                    waveDirections[index] !== null && (
-                      <div className="mt-1 text-xs text-lishka-blue ">
-                        {getDirectionArrow(waveDirections[index])}
-                      </div>
-                    )}
+
+                  {/* Wind Speed and Direction */}
+                  <div className="flex items-center mb-1">
+                    <Wind className="h-3 w-3 mr-1 text-lishka-blue" />
+                    <p className="text-xs text-[#191B1FCC]">
+                      {windSpeeds[index] !== null &&
+                      windSpeeds[index] !== undefined
+                        ? `${Math.round(windSpeeds[index])}`
+                        : "-"}
+                    </p>
+                    {windDirections[index] !== undefined &&
+                      windDirections[index] !== null && (
+                        <div className="ml-1 flex items-center">
+                          <span className="text-xs text-[#191B1FCC] ">
+                            {getWindDirection(windDirections[index])}
+                          </span>
+                          <span className="ml-1 text-xs">
+                            {getDirectionArrow(windDirections[index])}
+                          </span>
+                        </div>
+                      )}
+                  </div>
+
+                  {/* Wave Height and Direction */}
+                  <div className="flex items-center">
+                    <Waves className="h-3 w-3 mr-1 text-lishka-blue" />
+                    <p className="text-xs text-[#191B1FCC]">
+                      {waveHeights[index] !== null &&
+                      waveHeights[index] !== undefined
+                        ? `${waveHeights[index].toFixed(1)}m`
+                        : "-"}
+                    </p>
+                    {waveDirections[index] !== undefined &&
+                      waveDirections[index] !== null && (
+                        <div className="ml-1 text-xs">
+                          {getDirectionArrow(waveDirections[index])}
+                        </div>
+                      )}
+                  </div>
                 </div>
               ))}
             </div>
           </div>
-        </div>
-
-        {/* Wind Speed Hourly Card */}
-        <div>
-          <div className="flex items-center mb-2">
-            <Wind className="h-5 w-5 mr-2 text-lishka-blue " />
-            <h3 className="text-md font-medium dark:text-white">
-              Wind Speed (km/h)
-            </h3>
+        </Card>
+      )}
+      {/* Hourly Precipitation Card */}
+      {weatherData && (
+        <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold dark:text-white">
+              Hourly Precipitation (mm)
+            </h2>
           </div>
           <div className="overflow-x-auto">
             <div className="flex gap-3 pb-2 min-w-[800px]">
-              {times.slice(0, 24).map((time, index) => (
-                <div
-                  key={`wind-${index}`}
-                  className="flex flex-col items-center p-3 bg-[#F7F7F7] rounded-[8px] flex-shrink-0 min-w-[70px]"
-                >
-                  <p className="text-xs font-medium text-[#6B7280] mb-1">
-                    {time ? formatTime(time) : "--:--"}
-                  </p>
-                  <p className="text-lg font-bold text-gray-700 dark:text-gray-200">
-                    {windSpeeds[index] !== null &&
-                    windSpeeds[index] !== undefined
-                      ? Math.round(windSpeeds[index])
-                      : "-"}
-                  </p>
-                  {windDirections[index] !== undefined &&
-                    windDirections[index] !== null && (
-                      <div className="mt-1 text-xs text-[#191B1FCC] flex items-center">
-                        {getWindDirection(windDirections[index])}
-                        <span className="ml-1">
-                          {getDirectionArrow(windDirections[index])}
-                        </span>
-                      </div>
-                    )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="p-3 bg-[#F7F7F7] rounded-md mt-4">
-          <p className="text-sm font-medium mb-1 text-[#191B1F]">
-            Data Sources:
-          </p>
-          <div className="text-xs text-[#191B1FCC]  flex items-center gap-2">
-            <Layers className="h-4 w-4 text-[#191B1FCC] " />
-            <span>Open-Meteo Weather & Marine API</span>
-          </div>
-          {location && (
-            <div className="text-xs text-[#6B7280]  mt-1 italic">
-              {weatherData?.marineDataFromNearby ? (
-                <span className="text-amber-600 dark:text-amber-400">
-                  Note: Marine data is from nearby coordinates as it was not
-                  available at your exact location
-                  {weatherData?.marineCoordinates && (
-                    <span>
-                      {" "}
-                      ({weatherData.marineCoordinates.latitude.toFixed(2)},{" "}
-                      {weatherData.marineCoordinates.longitude.toFixed(2)})
-                    </span>
-                  )}
-                </span>
-              ) : (
-                <span>
-                  Note: Marine data may be from nearby coordinates if not
-                  available at exact location
-                </span>
-              )}
-            </div>
-          )}
-        </div>
-      </Card>
-      {/* Hourly Forecast */}
-      <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
-        <h2 className="text-lg font-semibold mb-4 dark:text-white">
-          Hourly Forecast
-        </h2>
-        <div className="overflow-x-auto">
-          <div className="flex gap-3 pb-2 min-w-[1200px]">
-            {times.slice(0, 12).map((time, index) => (
-              <div
-                key={`hourly-${index}`}
-                className="flex flex-col flex-shrink-0 items-center p-3 bg-[#F7F7F7] rounded-[8px] min-w-[90px]"
-              >
-                <p className="text-xs font-medium text-[#6B7280] mb-1">
-                  {time ? formatTime(time) : "--:--"}
-                </p>
-                <div className="mb-2">
-                  {getIconForWeatherCode(weatherCodes[index], "h-5 w-5", 1)}
-                </div>
-                <p className="text-lg font-bold text-[#191B1F] mb-2">
-                  {temperatures[index] !== null &&
-                  temperatures[index] !== undefined
-                    ? `${Math.round(temperatures[index])}°`
-                    : "-"}
-                </p>
-
-                {/* Wind Speed and Direction */}
-                <div className="flex items-center mb-1">
-                  <Wind className="h-3 w-3 mr-1 text-lishka-blue" />
-                  <p className="text-xs text-[#191B1FCC]">
-                    {windSpeeds[index] !== null &&
-                    windSpeeds[index] !== undefined
-                      ? `${Math.round(windSpeeds[index])}`
-                      : "-"}
-                  </p>
-                  {windDirections[index] !== undefined &&
-                    windDirections[index] !== null && (
-                      <div className="ml-1 flex items-center">
-                        <span className="text-xs text-[#191B1FCC] ">
-                          {getWindDirection(windDirections[index])}
-                        </span>
-                        <span className="ml-1 text-xs">
-                          {getDirectionArrow(windDirections[index])}
-                        </span>
-                      </div>
-                    )}
-                </div>
-
-                {/* Wave Height and Direction */}
-                <div className="flex items-center">
-                  <Waves className="h-3 w-3 mr-1 text-lishka-blue" />
-                  <p className="text-xs text-[#191B1FCC]">
-                    {waveHeights[index] !== null &&
-                    waveHeights[index] !== undefined
-                      ? `${waveHeights[index].toFixed(1)}m`
-                      : "-"}
-                  </p>
-                  {waveDirections[index] !== undefined &&
-                    waveDirections[index] !== null && (
-                      <div className="ml-1 text-xs">
-                        {getDirectionArrow(waveDirections[index])}
-                      </div>
-                    )}
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </Card>
-      {/* Hourly Precipitation Card */}
-      <Card className="p-4 bg-white dark:bg-card shadow-sm rounded-xl">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold dark:text-white">
-            Hourly Precipitation (mm)
-          </h2>
-        </div>
-        <div className="overflow-x-auto">
-          <div className="flex gap-3 pb-2 min-w-[800px]">
-            {times.slice(0, 12).map((time, index) => {
-              const precipitation =
-                weatherData?.hourly?.precipitation?.[
-                  currentHourIndex + index
-                ] || 0;
-              const precipitationProbability =
-                weatherData?.hourly?.precipitation_probability?.[
-                  currentHourIndex + index
-                ] || 0;
-              return (
-                <div
-                  key={`precip-${index}`}
-                  className="flex flex-col flex-shrink-0 items-center p-3 bg-[#F7F7F7] rounded-lg min-w-[70px]"
-                >
-                  <p className="text-xs font-medium text-[#6B7280] mb-1">
-                    {time ? formatTime(time) : "--:--"}
-                  </p>
-                  <div className="flex items-center mb-1">
-                    <Droplets className="h-3 w-3 mr-1 text-lishka-blue" />
-                    <p className="text-sm font-bold text-lishka-blue ">
-                      {precipitation !== null && precipitation !== undefined
-                        ? precipitation.toFixed(1)
-                        : "0.0"}
-                    </p>
-                  </div>
-                  <p className="text-xs text-[#191B1FCC] ">
-                    (
-                    {precipitationProbability !== null &&
-                    precipitationProbability !== undefined
-                      ? `${precipitationProbability}%`
-                      : "0%"}
-                    )
-                  </p>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      </Card>
-      {/* Precipitation Forecast Card */}
-
-      <Card className="p-4 bg-white dark:bg-card shadow-sm">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold dark:text-white">
-            Precipitation Forecast
-          </h2>
-          <CloudRain className="h-5 w-5 text-white" />
-        </div>
-        <div className="bg-blue-50 /20 p-3 rounded-lg mb-4">
-          <p className="text-sm font-medium dark:text-white">
-            Next 6 hours: {precipitationForecast.chance}% chance,{" "}
-            {precipitationForecast.amount}mm expected
-          </p>
-        </div>
-
-        {/* 24-hour Precipitation Forecast */}
-        <div className="mt-4 sm:mt-6">
-          <div className="overflow-x-auto">
-            <div className="flex gap-1 sm:gap-2 pb-2 min-w-[300px] w-full sm:min-w-[800px] md:min-w-[1200px] lg:min-w-[1600px] sm:w-auto">
-              {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
-                const probability =
-                  weatherData?.hourly?.precipitation_probability?.[
-                    currentHourIndex + hour
-                  ] || 0;
-                const amount =
+              {times.slice(0, 12).map((time, index) => {
+                const precipitation =
                   weatherData?.hourly?.precipitation?.[
-                    currentHourIndex + hour
+                    currentHourIndex + index
+                  ] || 0;
+                const precipitationProbability =
+                  weatherData?.hourly?.precipitation_probability?.[
+                    currentHourIndex + index
                   ] || 0;
                 return (
                   <div
-                    key={`precip-24h-${hour}`}
-                    className="flex flex-col flex-shrink-0 items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[50px]"
+                    key={`precip-${index}`}
+                    className="flex flex-col flex-shrink-0 items-center p-3 bg-[#F7F7F7] rounded-lg min-w-[70px]"
                   >
-                    <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
-                      {times[hour] ? formatTime(times[hour]) : `+${hour}h`}
+                    <p className="text-xs font-medium text-[#6B7280] mb-1">
+                      {time ? formatTime(time) : "--:--"}
                     </p>
-                    <div className="flex flex-col items-center">
-                      <div
-                        className="w-4 h-16 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden relative"
-                        title={`${probability}% chance, ${amount.toFixed(1)}mm`}
-                      >
-                        <div
-                          className="absolute bottom-0 w-full bg-lishka-blue transition-all duration-300"
-                          style={{
-                            height: `${Math.max(5, probability)}%`,
-                          }}
-                        ></div>
-                      </div>
-                      <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
-                        {probability}%
+                    <div className="flex items-center mb-1">
+                      <Droplets className="h-3 w-3 mr-1 text-lishka-blue" />
+                      <p className="text-sm font-bold text-lishka-blue ">
+                        {precipitation !== null && precipitation !== undefined
+                          ? precipitation.toFixed(1)
+                          : "0.0"}
                       </p>
                     </div>
+                    <p className="text-xs text-[#191B1FCC] ">
+                      (
+                      {precipitationProbability !== null &&
+                      precipitationProbability !== undefined
+                        ? `${precipitationProbability}%`
+                        : "0%"}
+                      )
+                    </p>
                   </div>
                 );
               })}
             </div>
           </div>
-        </div>
-      </Card>
+        </Card>
+      )}
+      {/* Precipitation Forecast Card */}
+
+      {weatherData && (
+        <Card className="p-4 bg-white dark:bg-card shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-lg font-semibold dark:text-white">
+              Precipitation Forecast
+            </h2>
+            <CloudRain className="h-5 w-5 text-white" />
+          </div>
+          <div className="bg-blue-50 /20 p-3 rounded-lg mb-4">
+            <p className="text-sm font-medium dark:text-white">
+              Next 6 hours: {precipitationForecast.chance}% chance,{" "}
+              {precipitationForecast.amount}mm expected
+            </p>
+          </div>
+
+          {/* 24-hour Precipitation Forecast */}
+          <div className="mt-4 sm:mt-6">
+            <div className="overflow-x-auto">
+              <div className="flex gap-1 sm:gap-2 pb-2 min-w-[300px] w-full sm:min-w-[800px] md:min-w-[1200px] lg:min-w-[1600px] sm:w-auto">
+                {Array.from({ length: 24 }, (_, i) => i).map((hour) => {
+                  const probability =
+                    weatherData?.hourly?.precipitation_probability?.[
+                      currentHourIndex + hour
+                    ] || 0;
+                  const amount =
+                    weatherData?.hourly?.precipitation?.[
+                      currentHourIndex + hour
+                    ] || 0;
+                  return (
+                    <div
+                      key={`precip-24h-${hour}`}
+                      className="flex flex-col flex-shrink-0 items-center p-2 bg-gray-50 dark:bg-gray-800 rounded-lg min-w-[50px]"
+                    >
+                      <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1">
+                        {times[hour] ? formatTime(times[hour]) : `+${hour}h`}
+                      </p>
+                      <div className="flex flex-col items-center">
+                        <div
+                          className="w-4 h-16 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden relative"
+                          title={`${probability}% chance, ${amount.toFixed(1)}mm`}
+                        >
+                          <div
+                            className="absolute bottom-0 w-full bg-lishka-blue transition-all duration-300"
+                            style={{
+                              height: `${Math.max(5, probability)}%`,
+                            }}
+                          ></div>
+                        </div>
+                        <p className="text-xs mt-1 text-gray-600 dark:text-gray-400">
+                          {probability}%
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </Card>
+      )}
 
       {/* Weekly Forecast */}
       {weatherData?.daily?.time && weatherData.daily.time.length > 0 && (

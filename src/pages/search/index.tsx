@@ -278,6 +278,8 @@ const SearchPage: React.FC = () => {
 
     // Hide follow-up questions when user types and sends manually
     setHideFollowUpQuestions(true);
+    // Reset flag to allow new follow-up questions to be generated
+    setHasGeneratedFollowUp(false);
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -335,6 +337,8 @@ const SearchPage: React.FC = () => {
     setClickedFollowUpQuestions((prev) => new Set(prev).add(suggestion));
     // Hide follow-up questions immediately when clicked
     setHideFollowUpQuestions(true);
+    // Reset flag to allow new follow-up questions to be generated
+    setHasGeneratedFollowUp(false);
 
     // Create a user message for the clicked suggestion
     const userMessage: Message = {

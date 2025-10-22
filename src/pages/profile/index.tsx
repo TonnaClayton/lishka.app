@@ -42,7 +42,6 @@ import {
   X,
   Save,
   Check,
-  ArrowLeft,
   Edit3,
   Trophy,
   MapPin as MapIcon,
@@ -52,6 +51,7 @@ import {
   Camera,
   Crop as CropIcon,
   Menu,
+  ChevronLeft,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import ReactCrop, { Crop, PixelCrop } from "react-image-crop";
@@ -1003,7 +1003,7 @@ export default function ProfilePage() {
         <div className="flex items-center justify-between">
           <div className="flex items-center">
             <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-              <ArrowLeft className="h-6 w-6" />
+              <ChevronLeft className="h-6 w-6" />
             </Button>
             <h1 className="text-xl font-bold ml-2 dark:text-white">Profile</h1>
           </div>

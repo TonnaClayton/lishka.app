@@ -120,7 +120,7 @@ export const useFishDetails = (slug: string) => {
         method: "GET",
       });
 
-      console.log("[FISHING TIPS]", data);
+      log("[FISHING TIPS]", data);
 
       return data.data;
     },
