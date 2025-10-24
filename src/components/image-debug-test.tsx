@@ -136,7 +136,7 @@ const ImageDebugTest = () => {
         setNonWorkingImage(result);
       }
     } catch (error) {
-      console.error(`❌ [IMAGE DEBUG] Error processing ${type} image:`, error);
+      error(`❌ [IMAGE DEBUG] Error processing ${type} image:`, error);
 
       const result: ImageDebugResult = {
         file,

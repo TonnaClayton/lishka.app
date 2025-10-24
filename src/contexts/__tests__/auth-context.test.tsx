@@ -101,6 +101,11 @@ vi.mock("react-router-dom", async () => {
 // Mock logging
 vi.mock("@/lib/logging", () => ({
   log: vi.fn(),
+  logError: vi.fn(),
+  warnLog: vi.fn(),
+  errorLog: vi.fn(),
+  warn: vi.fn(),
+  error: vi.fn(),
 }));
 
 // Mock routing

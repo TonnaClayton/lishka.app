@@ -4,6 +4,7 @@ import { Home, Search, Cloud, ChevronLeft, User, Camera } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useUpload } from "@/contexts/upload-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { warn as warnLog } from "@/lib/logging";
 import { cn } from "@/lib/utils";
 import ItemUploadBar from "@/pages/profile/item-upload-bar";
 import UploadedInfoMsg from "@/pages/profile/uploaded-info-msg";
@@ -64,7 +65,7 @@ const BottomNav: React.FC = () => {
     try {
       await handlePhotoUpload(fileArray);
     } catch (error: any) {
-      console.error("❌ [BOTTOMNAV] Smart upload failed:", error);
+      error("❌ [BOTTOMNAV] Smart upload failed:", error);
       alert(error?.message || "Failed to process photo. Please try again.");
     }
 
@@ -208,7 +209,7 @@ export const SideNav: React.FC = () => {
     hasRouterContext = true;
   } catch {
     // Component is rendered outside Router context
-    console.warn("SideNav rendered outside Router context");
+    warnLog("SideNav rendered outside Router context");
     hasRouterContext = false;
   }
 
@@ -220,7 +221,7 @@ export const SideNav: React.FC = () => {
     hasAuthContext = true;
   } catch {
     // Component is rendered outside AuthProvider, use default values
-    console.warn("SideNav rendered outside AuthProvider context");
+    warnLog("SideNav rendered outside AuthProvider context");
     hasAuthContext = false;
   }
 

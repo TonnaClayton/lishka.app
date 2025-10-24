@@ -1364,8 +1364,7 @@ export function AddToHomeScreen(
   }
 
   function debugMessage(message: string) {
-    // alert(message);
-    // console.log(message);
+    // Debug function - intentionally empty in production
   }
 
   let _modalIsShowing: boolean = false;

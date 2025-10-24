@@ -1,4 +1,4 @@
-import { log } from "./logging";
+import { error as logError, log } from "./logging";
 import { supabase } from "./supabase";
 import { config } from "@/lib/config";
 
@@ -56,7 +56,7 @@ export async function uploadImageToSupabase(
       });
 
     if (error) {
-      console.error("[SupabaseStorage] ❌ Upload failed:", error);
+      logError("[SupabaseStorage] ❌ Upload failed:", error);
       throw new Error(`Upload failed: ${error.message}`);
     }
 
@@ -76,7 +76,7 @@ export async function uploadImageToSupabase(
     log("[SupabaseStorage] ✅ Upload successful:", urlData.publicUrl);
     return urlData.publicUrl;
   } catch (error) {
-    console.error("[SupabaseStorage] 💥 Upload failed:", {
+    logError("[SupabaseStorage] 💥 Upload failed:", {
       error: error instanceof Error ? error.message : String(error),
       fileName: file.name,
       fileSize: file.size,
@@ -106,14 +106,9 @@ export async function uploadAvatarToSupabase(
       throw new Error("User ID is required for avatar upload");
     }
 
-    // Generate avatar filename
-    // const timestamp = Date.now();
-    // const fileExt = file.name.split(".").pop()?.toLowerCase() || "jpg";
-    // const fileName = `${userId}-${timestamp}.${fileExt}`;
-
     return await uploadImageToSupabase(file, "avatars");
   } catch (error) {
-    console.error("[SupabaseStorage] Avatar upload failed:", error);
+    logError("[SupabaseStorage] Avatar upload failed:", error);
     throw error;
   }
 }

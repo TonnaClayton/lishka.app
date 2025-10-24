@@ -1,4 +1,4 @@
-import { log } from "./logging";
+import { error as logError, log } from "./logging";
 import { supabase } from "./supabase";
 
 /**
@@ -41,14 +41,14 @@ export const setupAvatarStorage = async () => {
           await supabase.storage.listBuckets();
 
         if (listError) {
-          console.error("Error listing buckets:", listError);
+          logError("Error listing buckets:", listError);
           // Continue anyway - we'll try to create the bucket
         } else {
           buckets = bucketData;
           log("Available buckets:", buckets?.map((b) => b.name) || []);
         }
       } catch (listErr) {
-        console.error("Exception listing buckets:", listErr);
+        logError("Exception listing buckets:", listErr);
         // Continue anyway - we'll try to create the bucket
       }
 
@@ -72,7 +72,7 @@ export const setupAvatarStorage = async () => {
           );
 
           if (error) {
-            console.error("Error creating bucket:", error);
+            logError("Error creating bucket:", error);
 
             // If bucket already exists error, that's actually OK
             if (
@@ -92,7 +92,7 @@ export const setupAvatarStorage = async () => {
             log("Avatars bucket created successfully:", data);
           }
         } catch (createErr) {
-          console.error("Exception creating bucket:", createErr);
+          logError("Exception creating bucket:", createErr);
           // Continue anyway - maybe the bucket exists but we can't detect it
         }
       } else {
@@ -106,7 +106,7 @@ export const setupAvatarStorage = async () => {
           .list("", { limit: 1 });
 
         if (verifyError) {
-          console.error("Bucket verification failed:", verifyError);
+          logError("Bucket verification failed:", verifyError);
 
           // If it's just an empty bucket error, that's fine
           if (
@@ -127,7 +127,7 @@ export const setupAvatarStorage = async () => {
         log("Avatars bucket setup completed successfully");
         return { error: null };
       } catch (verifyErr) {
-        console.error("Exception during verification:", verifyErr);
+        logError("Exception during verification:", verifyErr);
         // Still return success - let the upload attempt reveal real issues
         return { error: null };
       }
@@ -136,7 +136,7 @@ export const setupAvatarStorage = async () => {
     const result = await Promise.race([setupPromise(), timeoutPromise]);
     return result as { error: any };
   } catch (err) {
-    console.error("Setup error:", err);
+    logError("Setup error:", err);
 
     // Handle timeout errors specifically
     if (err instanceof Error && err.message.includes("timeout")) {
@@ -187,12 +187,12 @@ export const cleanupOldAvatars = async (
         .remove(filesToDelete);
 
       if (deleteError) {
-        console.error("Error cleaning up old avatars:", deleteError);
+        logError("Error cleaning up old avatars:", deleteError);
       } else {
         log("Old avatars cleaned up successfully");
       }
     }
   } catch (err) {
-    console.error("Cleanup error:", err);
+    logError("Cleanup error:", err);
   }
 };

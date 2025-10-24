@@ -67,7 +67,7 @@ export class EmailService {
 
       return { success: true };
     } catch (error: any) {
-      console.error("Email sending error:", error);
+      error("Email sending error:", error);
       return { success: false, error: error.message };
     }
   }

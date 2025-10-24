@@ -5,7 +5,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle2, AlertCircle, Database, RefreshCw } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
-import { log } from "@/lib/logging";
+import { log, error as logError } from "@/lib/logging";
 import { ImageMetadata } from "@/lib/image-metadata";
 import { toImageMetadataItem } from "@/lib/gallery-photo";
 
@@ -105,7 +105,7 @@ const DatabaseDebugger: React.FC = () => {
         },
       });
     } catch (err) {
-      console.error("[DatabaseDebugger] Test error:", err);
+      logError("[DatabaseDebugger] Test error:", err);
       setResults({
         profileExists: false,
         profileData: null,
@@ -132,14 +132,14 @@ const DatabaseDebugger: React.FC = () => {
         .eq("id", user.id);
 
       if (error) {
-        console.error("[DatabaseDebugger] Error clearing test data:", error);
+        logError("[DatabaseDebugger] Error clearing test data:", error);
       } else {
         log("[DatabaseDebugger] Test data cleared successfully");
         // Re-run tests to show current state
         await runDatabaseTests();
       }
     } catch (err) {
-      console.error("[DatabaseDebugger] Exception clearing test data:", err);
+      logError("[DatabaseDebugger] Exception clearing test data:", err);
     }
   };
 

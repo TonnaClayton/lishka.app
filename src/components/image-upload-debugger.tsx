@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { getBlobStorageStatus, uploadImage } from "@/lib/blob-storage";
 import { processImageUpload, ImageMetadata } from "@/lib/image-metadata";
-import { log } from "@/lib/logging";
+import { error as logError, log } from "@/lib/logging";
 
 interface UploadState {
   loading: boolean;
@@ -113,7 +113,7 @@ const ImageUploadDebugger: React.FC = () => {
 
       log("🎉 [ImageUploadDebugger] Upload process completed successfully");
     } catch (error) {
-      console.error("❌ [ImageUploadDebugger] Upload failed:", error);
+      error("❌ [ImageUploadDebugger] Upload failed:", error);
       setUploadState({
         loading: false,
         error: error instanceof Error ? error.message : "Upload failed",
@@ -424,7 +424,7 @@ const ImageUploadDebugger: React.FC = () => {
                   alt="Uploaded test image"
                   className="max-w-full max-h-96 object-contain rounded-lg border shadow-lg"
                   onError={(e) => {
-                    console.error("Failed to load uploaded image");
+                    logError("Failed to load uploaded image");
                     e.currentTarget.style.display = "none";
                   }}
                 />

@@ -14,7 +14,7 @@ import {
   CloudRain,
   Sun,
 } from "lucide-react";
-import { log } from "@/lib/logging";
+import { log, error as logError } from "@/lib/logging";
 import WeatherWidgetProSkeleton from "./skeletons/weather-widget-pro-skeleton";
 import {
   useUserLocation,
@@ -140,7 +140,7 @@ const WeatherWidget: React.FC<{
         // Trigger a fresh fetch using React Query mutations
         await Promise.all([refreshLocationAsync(), refreshWeatherAsync()]);
       } catch (error) {
-        console.error("Error refreshing data:", error);
+        logError("refreshing data:", error);
       }
     }
   };

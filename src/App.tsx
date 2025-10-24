@@ -113,8 +113,6 @@ function AppContent() {
   // Check if we're on the splash page
   const { user } = useAuth();
   const location = useLocation();
-  // const navigate = useNavigate();
-  // const isSplashPage = location.pathname === "/" && !profile?.location;
 
   // Check if current route should have the weather widget in desktop layout
   const shouldShowWeatherWidget =

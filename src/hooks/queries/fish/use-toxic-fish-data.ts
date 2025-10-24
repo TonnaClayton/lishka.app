@@ -5,7 +5,7 @@ import { getLocalFishName } from "@/lib/fishbase-api";
 import { getFishImageUrl } from "@/lib/fish-image-service";
 import { OPENAI_DISABLED_MESSAGE, OPENAI_ENABLED } from "@/lib/openai-toggle";
 import { config } from "@/lib/config";
-import { log } from "@/lib/logging";
+import { error, log } from "@/lib/logging";
 import { FishData, fishQueryKeys } from "./use-fish-data";
 import { api } from "../api";
 import z from "zod";
@@ -453,8 +453,8 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
         return hasValidScientificName && isNotAlgae;
       });
   } catch (e) {
-    console.error("Error parsing toxic fish data:", e);
-    console.error("Raw toxic fish response:", content);
+    error("Error parsing toxic fish data:", e);
+    error("Raw toxic fish response:", content);
 
     // No fallback data - show error message instead
     toxicFishData = [];
@@ -502,14 +502,14 @@ Return only genuinely toxic marine organisms. If there are fewer than 20 such sp
       try {
         imageUrl = await getFishImageUrl(fish.name, fish.scientificName);
       } catch (e) {
-        console.error(`Error fetching image for ${fish.name}:`, e);
+        error(`Error fetching image for ${fish.name}:`, e);
       }
 
       try {
         const browserLang = navigator.language.split("-")[0] || "en";
         localName = await getLocalFishName(fish.scientificName, browserLang);
       } catch (e) {
-        console.error(`Error fetching local name for ${fish.name}:`, e);
+        error(`Error fetching local name for ${fish.name}:`, e);
       }
 
       // Update individual toxic fish with image and local name

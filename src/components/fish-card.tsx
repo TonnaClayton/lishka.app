@@ -51,7 +51,7 @@ const FishCard = ({
         log(`FishCard: Got image URL for ${name}:`, fishImageUrl);
         setActualImageUrl(fishImageUrl);
       } catch (error) {
-        console.error(`FishCard: Error loading image for ${name}:`, error);
+        error(`FishCard: Error loading image for ${name}:`, error);
         setActualImageUrl(getPlaceholderFishImage());
       } finally {
         setImageLoading(false);

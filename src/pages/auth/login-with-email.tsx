@@ -16,7 +16,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useAuth } from "@/contexts/auth-context";
-import { log } from "@/lib/logging";
+import { log, error as logError } from "@/lib/logging";
 import { ROUTES } from "@/lib/routing";
 
 // Zod schema for form validation
@@ -101,7 +101,7 @@ const LoginWithEmailPage: React.FC = () => {
         navigate(from, { replace: true });
       }
     } catch (err) {
-      console.error("[LoginPage] Login exception:", err);
+      logError("[LoginPage] Login exception:", err);
       setError("An unexpected error occurred. Please try again.");
     } finally {
       setLoading(false);
@@ -131,7 +131,7 @@ const LoginWithEmailPage: React.FC = () => {
         setShowEmailVerification(false);
       }
     } catch (err) {
-      console.error("Resend verification error:", err);
+      logError("Resend verification error:", err);
       setError("Failed to resend verification email. Please try again.");
     } finally {
       setResendingEmail(false);

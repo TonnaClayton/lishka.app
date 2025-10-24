@@ -8,7 +8,7 @@ import { LayersControl } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { motion, AnimatePresence } from "framer-motion";
-import { log } from "@/lib/logging";
+import { log, error as logError } from "@/lib/logging";
 import { useAuth } from "@/contexts/auth-context";
 
 interface LocationSetupProps {
@@ -81,7 +81,7 @@ const LocationSetup = ({
               log("Land location detected:", name, data.address);
             }
           } catch (error) {
-            console.error("Error getting location name:", error);
+            logError("Error getting location name:", error);
           }
 
           const newLocation = {
@@ -108,7 +108,7 @@ const LocationSetup = ({
           }, 1000);
         },
         (error) => {
-          console.error("Error getting location:", error);
+          logError("Error getting location:", error);
           alert(
             "Unable to retrieve your location. Please try selecting on the map.",
           );
@@ -373,12 +373,12 @@ const MapSelection: React.FC<MapSelectionProps> = ({
             const formattedLng = lng.toFixed(6);
             setLocationName(`${formattedLat}, ${formattedLng}`);
           } catch (error) {
-            console.error("Error handling map click:", error);
+            logError("Error handling map click:", error);
           }
         },
       });
     } catch (error) {
-      console.error("Error setting up map events:", error);
+      logError("Error setting up map events:", error);
     }
 
     return null;
@@ -399,7 +399,7 @@ const MapSelection: React.FC<MapSelectionProps> = ({
             try {
               window.dispatchEvent(new Event("resize"));
             } catch (error) {
-              console.warn("Map resize event failed:", error);
+              logError("Map resize event failed:", error);
             }
           }, 100);
         }}
@@ -437,7 +437,7 @@ const MapSelection: React.FC<MapSelectionProps> = ({
                   name: locationName,
                 });
               } catch (error) {
-                console.error("Error selecting location:", error);
+                logError("Error selecting location:", error);
               }
             }
           }}

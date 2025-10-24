@@ -2,6 +2,7 @@ import useIsMobile from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/routing";
+import { error as logError } from "@/lib/logging";
 import { useAuth } from "@/contexts/auth-context";
 import { useState } from "react";
 
@@ -16,11 +17,11 @@ export default function LoginPage() {
       setIsGoogleLoading(true);
       const { error } = await signInWithGoogle();
       if (error) {
-        console.error("Google sign-in error:", error);
+        logError("Google sign-in error:", error);
         // You could add a toast notification here
       }
     } catch (err) {
-      console.error("Unexpected error during Google sign-in:", err);
+      logError("Unexpected error during Google sign-in:", err);
     } finally {
       setIsGoogleLoading(false);
     }

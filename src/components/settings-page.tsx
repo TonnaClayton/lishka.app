@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "./ui/alert-dialog";
-import { log } from "@/lib/logging";
+import { log, error as logError } from "@/lib/logging";
 
 import BottomNav from "./bottom-nav";
 import { useAuth } from "@/contexts/auth-context";
@@ -70,7 +70,7 @@ const SettingsPage: React.FC = () => {
       await signOut();
       log("[SettingsPage] Sign out completed");
     } catch (err) {
-      console.error("[SettingsPage] Sign out error:", err);
+      logError("[SettingsPage] Sign out error:", err);
       // Force redirect even if signOut fails
       navigate(ROUTES.LOGIN, { replace: true });
     }

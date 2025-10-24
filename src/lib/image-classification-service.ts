@@ -1,4 +1,4 @@
-import { log } from "./logging";
+import { error as logError, log, warn as warnLog } from "./logging";
 import { OPENAI_ENABLED, validateOpenAIConfig } from "./openai-toggle";
 import { config } from "@/lib/config";
 
@@ -23,7 +23,7 @@ export const classifyImage = async (
   try {
     // Check OpenAI configuration
     if (!OPENAI_ENABLED || !validateOpenAIConfig()) {
-      console.warn("❌ [IMAGE CLASSIFICATION] OpenAI not available");
+      warnLog("❌ [IMAGE CLASSIFICATION] OpenAI not available");
       return {
         type: "unknown",
         confidence: 0,
@@ -33,7 +33,7 @@ export const classifyImage = async (
 
     const apiKey = config.VITE_OPENAI_API_KEY;
     if (!apiKey) {
-      console.error("❌ [IMAGE CLASSIFICATION] No API key");
+      logError("❌ [IMAGE CLASSIFICATION] No API key");
       return {
         type: "unknown",
         confidence: 0,
@@ -71,11 +71,15 @@ export const classifyImage = async (
 
         log("✅ [IMAGE CLASSIFICATION] Compression completed:", {
           originalSize: `${(imageFile.size / (1024 * 1024)).toFixed(2)}MB`,
-          compressedSize: `${(processedFile.size / (1024 * 1024)).toFixed(2)}MB`,
-          compressionRatio: `${compressionResult.compressionInfo.compressionRatio.toFixed(1)}%`,
+          compressedSize: `${(processedFile.size / (1024 * 1024)).toFixed(
+            2,
+          )}MB`,
+          compressionRatio: `${compressionResult.compressionInfo.compressionRatio.toFixed(
+            1,
+          )}%`,
         });
       } catch (compressionError) {
-        console.warn(
+        warnLog(
           "⚠️ [IMAGE CLASSIFICATION] Compression failed, using original:",
           {
             error: compressionError.message,
@@ -156,7 +160,7 @@ Be decisive - if you see a fish (even if there's also gear in the image), classi
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(
+      logError(
         "❌ [IMAGE CLASSIFICATION] API error:",
         response.status,
         errorText,
@@ -173,7 +177,7 @@ Be decisive - if you see a fish (even if there's also gear in the image), classi
     });
 
     if (!content) {
-      console.error("❌ [IMAGE CLASSIFICATION] Empty response");
+      logError("❌ [IMAGE CLASSIFICATION] Empty response");
       return {
         type: "unknown",
         confidence: 0,
@@ -232,11 +236,8 @@ Be decisive - if you see a fish (even if there's also gear in the image), classi
 
       log("✅ [IMAGE CLASSIFICATION] Parsed successfully:", result);
     } catch (parseError) {
-      console.error(
-        "❌ [IMAGE CLASSIFICATION] Parse failed:",
-        parseError.message,
-      );
-      console.error("❌ [IMAGE CLASSIFICATION] Content was:", content);
+      logError("❌ [IMAGE CLASSIFICATION] Parse failed:", parseError.message);
+      logError("❌ [IMAGE CLASSIFICATION] Content was:", content);
 
       // Fallback: try to extract type from text
       const lowerContent = content.toLowerCase();
@@ -263,7 +264,7 @@ Be decisive - if you see a fish (even if there's also gear in the image), classi
     log("🎉 [IMAGE CLASSIFICATION] Final result:", result);
     return result;
   } catch (error) {
-    console.error("💥 [IMAGE CLASSIFICATION] Failed:", {
+    logError("💥 [IMAGE CLASSIFICATION] Failed:", {
       error: error instanceof Error ? error.message : String(error),
       fileName: imageFile.name,
     });
@@ -271,7 +272,9 @@ Be decisive - if you see a fish (even if there's also gear in the image), classi
     return {
       type: "unknown",
       confidence: 0,
-      reasoning: `Classification failed: ${error instanceof Error ? error.message : String(error)}`,
+      reasoning: `Classification failed: ${
+        error instanceof Error ? error.message : String(error)
+      }`,
     };
   }
 };

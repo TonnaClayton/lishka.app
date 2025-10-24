@@ -43,7 +43,7 @@ const SupabaseConnectionTest = () => {
           throw new Error("No public URL returned");
         }
       } catch (error) {
-        console.error("Supabase connection test failed:", error);
+        error("Supabase connection test failed:", error);
         setStatus("error");
         setMessage(
           `Connection error: ${error instanceof Error ? error.message : String(error)}`,

@@ -8,7 +8,7 @@ import {
   getFishImageUrl,
   getPlaceholderFishImage,
 } from "@/lib/fish-image-service";
-import { log } from "@/lib/logging";
+import { error as logError, log } from "@/lib/logging";
 
 const BlobImageTest: React.FC = () => {
   const [loading, setLoading] = useState(false);
@@ -97,7 +97,7 @@ const BlobImageTest: React.FC = () => {
         imageTests,
       });
     } catch (err) {
-      console.error("[BlobImageTest] Test error:", err);
+      logError("[BlobImageTest] Test error:", err);
     } finally {
       setLoading(false);
     }
@@ -208,7 +208,7 @@ const BlobImageTest: React.FC = () => {
                                   alt={test.name}
                                   className="w-16 h-16 object-cover rounded border"
                                   onError={(e) => {
-                                    console.error(
+                                    logError(
                                       `Failed to load preview for ${test.name}`,
                                     );
                                     e.currentTarget.style.display = "none";

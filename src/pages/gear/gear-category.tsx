@@ -19,13 +19,10 @@ const GearCategoryPage: React.FC = () => {
   const [searchParams] = useSearchParams();
   const { user, profile, loading: authLoading } = useAuth();
   const gearId = searchParams.get("gearId");
-  // const fileInputRef = useRef<HTMLInputElement>(null);
-  // const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  // const [uploadingGear, setUploadingGear] = useState(false);
 
   const deleteGear = useDeleteGear();
 
@@ -55,25 +52,7 @@ const GearCategoryPage: React.FC = () => {
 
   // Load gear items from profile on component mount
   useEffect(() => {
-    if (user?.id) {
-      // If no real gear items, use mock data for testing
-      // Auto-expand the specific gear item if gearId is provided
-      // if (gearId) {
-      //   const gearIndex = categoryGear.findIndex(
-      //     (item) => item.id === gearId
-      //   );
-      //   if (gearIndex !== -1) {
-      //     log(
-      //       `[GearCategoryPage] Auto-expanding gear at index ${gearIndex} with ID ${gearId}`
-      //     );
-      //     setExpandedCardIndex(gearIndex);
-      //   } else {
-      //     console.warn(
-      //       `[GearCategoryPage] Gear with ID ${gearId} not found in category ${categoryId}`
-      //     );
-      //   }
-      // }
-    } else {
+    if (!user?.id) {
       errorLog("[GearCategoryPage] No user ID, setting gear loaded to true");
     }
   }, [user?.id, profile?.gear_items, profile?.id, categoryId, searchParams]);
