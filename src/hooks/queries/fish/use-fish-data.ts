@@ -394,6 +394,25 @@ export const useFishDataInfinite = (location: string) => {
       // Return next page number if we have data
       return lastPage.length > 0 ? allPages.length + 1 : undefined;
     },
+    select: (data) => {
+      // flatten pages
+      const flat = data.pages.flat();
+
+      // de-dupe by normalized scientific name (+ location if you include it in rows)
+      const seen = new Set<string>();
+      const unique = [];
+      for (const f of flat) {
+        const key = (f.scientific_name || "").toLowerCase().trim();
+        if (!seen.has(key)) {
+          seen.add(key);
+          unique.push(f);
+        }
+      }
+
+      // keep order stable
+      unique.sort((a, b) => a.scientific_name.localeCompare(b.scientific_name));
+      return { ...data, pages: [unique] }; // consumers map over pages[0]
+    },
     initialPageParam: 1,
     enabled: !!location,
     staleTime: 12 * 60 * 60 * 1000, // 12 hours

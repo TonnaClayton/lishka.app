@@ -16,7 +16,8 @@
     "strict": false,
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "types": ["vite-plugin-pwa/react"]
   },
   "include": ["src"],
   "exclude": ["src/tempobook"],

@@ -25,7 +25,7 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { cn } from "./lib/utils";
 import { ROUTES } from "./lib/routing";
-import ErrorBoundary from "./components/error-boundary";
+// import ErrorBoundary from "./components/error-boundary";
 import LandingPage from "./pages/landing";
 import Page404 from "./pages/404";
 import AuthWrapper from "./pages/auth/auth-wrapper";
@@ -579,22 +579,22 @@ function App() {
   return (
     <PostHogProvider client={posthog}>
       <PostHogErrorBoundary>
-        <ErrorBoundary>
-          <QueryClientProvider client={queryClient}>
-            <Suspense
-              fallback={
-                <div className="flex items-center justify-center h-screen">
-                  <p>Loading...</p>
-                </div>
-              }
-            >
-              <RouterProvider router={router} />
-            </Suspense>
-            <ReactQueryDevtools initialIsOpen={false} />
-            <Toaster />
-            <AddToHomeScreenPrompt />
-          </QueryClientProvider>
-        </ErrorBoundary>
+        {/* <ErrorBoundary> */}
+        <QueryClientProvider client={queryClient}>
+          <Suspense
+            fallback={
+              <div className="flex items-center justify-center h-screen">
+                <p>Loading...</p>
+              </div>
+            }
+          >
+            <RouterProvider router={router} />
+          </Suspense>
+          <ReactQueryDevtools initialIsOpen={false} />
+          <Toaster />
+          <AddToHomeScreenPrompt />
+        </QueryClientProvider>
+        {/* </ErrorBoundary> */}
       </PostHogErrorBoundary>
     </PostHogProvider>
   );

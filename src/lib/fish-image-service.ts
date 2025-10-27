@@ -1,5 +1,7 @@
 import { log } from "./logging";
 
+const imageCache = new Map<string, string>();
+
 export function getPlaceholderFishImage(): string {
   return "https://ghep9tkuzzpsmczw.public.blob.vercel-storage.com/default-image.jpg";
 }
@@ -24,6 +26,9 @@ export async function getFishImageUrl(
   scientificName: string,
 ): Promise<string> {
   log(`[FishImageService] Looking up image for ${name} (${scientificName})`);
+
+  const norm = (scientificName || "").toLowerCase().replace(/\s+/g, "");
+  if (imageCache.has(norm)) return imageCache.get(norm)!;
 
   // Only try dynamic URL generation using scientific name
   if (scientificName) {
@@ -55,6 +60,7 @@ export async function getFishImageUrl(
       const imageExists = await imageLoadPromise;
       if (imageExists) {
         log(`[FishImageService] Dynamic URL accessible: ${dynamicUrl}`);
+        imageCache.set(norm, dynamicUrl);
         return dynamicUrl;
       } else {
         log(`[FishImageService] Dynamic URL not accessible: ${dynamicUrl}`);
