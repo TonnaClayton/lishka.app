@@ -4,7 +4,7 @@
  * This module provides a way to disable all OpenAI API calls
  */
 
-import { log } from "./logging";
+import { error as logError, log } from "./logging";
 import { config } from "@/lib/config";
 
 // Set this to true to enable OpenAI API calls
@@ -22,26 +22,24 @@ export const validateOpenAIConfig = () => {
 
   const apiKey = config.VITE_OPENAI_API_KEY;
   if (!apiKey) {
-    console.error(
+    logError(
       "[OpenAI] API key is missing - check VITE_OPENAI_API_KEY environment variable",
     );
     return false;
   }
 
   if (typeof apiKey !== "string" || apiKey.trim() === "") {
-    console.error("[OpenAI] API key is invalid - empty or wrong type");
+    logError("[OpenAI] API key is invalid - empty or wrong type");
     return false;
   }
 
   if (!apiKey.startsWith("sk-")) {
-    console.error(
-      "[OpenAI] API key format is invalid - should start with 'sk-'",
-    );
+    logError("[OpenAI] API key format is invalid - should start with 'sk-'");
     return false;
   }
 
   if (apiKey.length < 20) {
-    console.error("[OpenAI] API key appears to be too short");
+    logError("[OpenAI] API key appears to be too short");
     return false;
   }
 

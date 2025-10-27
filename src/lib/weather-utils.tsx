@@ -1,3 +1,5 @@
+import { error as logError } from "./logging";
+
 export const formatTime = (timeString: number | string): string => {
   try {
     const date =
@@ -10,7 +12,7 @@ export const formatTime = (timeString: number | string): string => {
       minute: "2-digit",
     });
   } catch (err) {
-    console.error("Error formatting time:", err);
+    logError("Error formatting time:", err);
     return "--:--";
   }
 };

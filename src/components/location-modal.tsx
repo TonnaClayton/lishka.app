@@ -18,7 +18,7 @@ import {
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { log } from "@/lib/logging";
+import { log, error as logError } from "@/lib/logging";
 import { useUserLocation } from "@/hooks/queries";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import useDeviceSize from "@/hooks/use-device-size";
@@ -151,7 +151,7 @@ const MapSelection = ({
           // }
           setLocationName(name);
         } catch (error) {
-          console.error("Error getting location name:", error);
+          logError("Error getting location name:", error);
           // Display coordinates as fallback
           const formattedLat = lat.toFixed(6);
           const formattedLng = lng.toFixed(6);
@@ -238,7 +238,7 @@ const LocationModal = ({
         city: newLocation.city,
       });
     } catch (error) {
-      console.error("[LocationModal] Error saving to database:", error);
+      logError("[LocationModal] Error saving to database:", error);
     }
 
     setLoading(false);
@@ -300,7 +300,7 @@ const LocationModal = ({
             locationName = name || "Current Location";
             // }
           } catch (error) {
-            console.error("Error getting location name:", error);
+            logError("Error getting location name:", error);
           }
 
           const newLocation = {
@@ -315,8 +315,8 @@ const LocationModal = ({
           handleLocationUpdate(newLocation);
           setLoading(false);
         },
-        (error) => {
-          console.error("Error getting location:", error);
+        (err) => {
+          logError("Error getting location:", err);
           setLoading(false);
 
           // If geolocation fails, set a default location instead of showing an alert
@@ -338,7 +338,7 @@ const LocationModal = ({
   const handleMapLocationSelect = () => {
     // Access the stored map selection state
     const mapState = (window as any).mapSelectionState;
-    console.log("mapState", mapState);
+    log("mapState", mapState);
     if (mapState && mapState.selectedPosition) {
       const [lat, lng] = mapState.selectedPosition;
       const newLocation = {

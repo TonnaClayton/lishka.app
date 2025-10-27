@@ -4,13 +4,13 @@
  * This module provides functions to interact with the Fishbase API and format data
  */
 
-import { fetchWithRetry, cacheApiResponse } from "./api-helpers";
+import { cacheApiResponse, fetchWithRetry } from "./api-helpers";
 import {
   getFishImageUrl as getFishImageFromService,
   getPlaceholderFishImage,
   handleFishImageError,
 } from "./fish-image-service";
-import { log } from "./logging";
+import { error as logError, log } from "./logging";
 import { config } from "@/lib/config";
 
 /**
@@ -81,7 +81,7 @@ export async function getFishImageUrl(
     log(`Got image for ${scientificName}: ${imageUrl}`);
     return imageUrl;
   } catch (error) {
-    console.error("Error getting fish image:", error);
+    error("Error getting fish image:", error);
     // Fall back to Lishka placeholder image
     log(`Using placeholder image for ${name} (${scientificName})`);
     return getPlaceholderFishImage();
@@ -95,7 +95,7 @@ export async function getFishImageUrl(
  * @param countryCode ISO country code for the location
  * @returns Promise that resolves to the local name or null if not found
  */
-import { OPENAI_ENABLED, OPENAI_DISABLED_MESSAGE } from "./openai-toggle";
+import { OPENAI_DISABLED_MESSAGE, OPENAI_ENABLED } from "./openai-toggle";
 
 export async function getLocalFishName(
   scientificName: string,
@@ -256,7 +256,7 @@ export async function getLocalFishName(
     // Check if API key is available
     const apiKey = config.VITE_OPENAI_API_KEY;
     if (!apiKey) {
-      console.error("OpenAI API key is missing");
+      logError("OpenAI API key is missing");
       return null;
     }
 
@@ -295,7 +295,7 @@ export async function getLocalFishName(
     );
 
     if (!response.ok) {
-      console.error(`OpenAI API error: ${response.status}`);
+      logError(`OpenAI API error: ${response.status}`);
       return null;
     }
 
@@ -317,7 +317,7 @@ export async function getLocalFishName(
 
     return localName;
   } catch (error) {
-    console.error("Error fetching local fish name:", error);
+    logError("Error fetching local fish name:", error);
     return null;
   }
 }

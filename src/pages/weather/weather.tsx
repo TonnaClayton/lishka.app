@@ -57,7 +57,7 @@ const WeatherPage: React.FC = () => {
       });
       log("[WeatherPage] Saved location to database:", newLocation);
     } catch (error) {
-      console.error("[WeatherPage] Error saving location:", error);
+      error("[WeatherPage] Error saving location:", error);
     }
 
     setDataLoaded(true);
@@ -137,9 +137,7 @@ const WeatherPage: React.FC = () => {
             setIsLocationModalOpen(false);
           }
         }}
-        onLocationSelect={() => {
-          //onLocationChange(newLocation.name);
-        }}
+        onLocationSelect={() => {}}
         currentLocation={(() => {
           const locationCoordinates = profile?.location_coordinates as any;
 

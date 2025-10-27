@@ -6,6 +6,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/contexts/auth-context";
 import { supabase } from "@/lib/supabase";
 import LoadingDots from "@/components/loading-dots";
+import { error as logError } from "@/lib/logging";
 
 const EmailConfirmationPage: React.FC = () => {
   const navigate = useNavigate();
@@ -32,7 +33,7 @@ const EmailConfirmationPage: React.FC = () => {
           });
 
           if (error) {
-            console.error("Email confirmation error:", error);
+            logError("Email confirmation error:", error);
             if (
               error.message.includes("expired") ||
               error.message.includes("Token has expired")
@@ -50,7 +51,7 @@ const EmailConfirmationPage: React.FC = () => {
             }, 1500);
           }
         } catch (err) {
-          console.error("Email confirmation exception:", err);
+          logError("Email confirmation exception:", err);
           setStatus("error");
           setError("An unexpected error occurred during email confirmation.");
         }
@@ -68,7 +69,7 @@ const EmailConfirmationPage: React.FC = () => {
         const { error } = await confirmEmail(token);
 
         if (error) {
-          console.error("Custom confirmation error:", error);
+          logError("Custom confirmation error:", error);
           if (
             error.message.includes("expired") ||
             error.message.includes("Token has expired")
@@ -86,7 +87,7 @@ const EmailConfirmationPage: React.FC = () => {
           }, 1500);
         }
       } catch (err) {
-        console.error("Custom confirmation exception:", err);
+        logError("Custom confirmation exception:", err);
         setStatus("error");
         setError("An unexpected error occurred during email confirmation.");
       }

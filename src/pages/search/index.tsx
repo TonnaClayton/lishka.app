@@ -12,6 +12,7 @@ import BottomNav from "@/components/bottom-nav";
 import useDeviceSize from "@/hooks/use-device-size";
 import useIsMobile from "@/hooks/use-is-mobile";
 import { cn } from "@/lib/utils";
+import { error as logError } from "@/lib/logging";
 import {
   Tooltip,
   TooltipTrigger,
@@ -120,8 +121,6 @@ const SearchPage: React.FC = () => {
   } = useGetSearchSessionFollowQuestions(id);
   const { refetch: refetchSessions } = useGetSearchSessions();
   const mutation = useCreateSearchSession();
-  // const [followUpQuestions, setFollowUpQuestions] = useState<string[]>([]);
-  // const [followUpLoading, setFollowUpLoading] = useState(false);
 
   const useImperialUnits = useMemo(() => {
     return profile?.use_imperial_units || false;
@@ -185,25 +184,6 @@ const SearchPage: React.FC = () => {
     followUpLoading,
   ]);
 
-  // Listen for units changes from settings
-  useEffect(() => {
-    // const handleUnitsChange = () => {
-    //   setImperialUnits(getImperialUnits());
-    // };
-    // window.addEventListener("unitsChanged", handleUnitsChange);
-    // return () => window.removeEventListener("unitsChanged", handleUnitsChange);
-  }, []);
-
-  // Convert image to base64
-  // const convertImageToBase64 = (file: File): Promise<string> => {
-  //   return new Promise((resolve, reject) => {
-  //     const reader = new FileReader();
-  //     reader.onload = () => resolve(reader.result as string);
-  //     reader.onerror = reject;
-  //     reader.readAsDataURL(file);
-  //   });
-  // };
-
   // Extract the API call logic to a separate function
   const processQuery = async (
     queryText: string,
@@ -263,7 +243,7 @@ const SearchPage: React.FC = () => {
         });
       }
     } catch (err) {
-      console.error("Error fetching response:", err);
+      logError("Error fetching response:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
 
       // Add a fallback message when an error occurs
@@ -329,7 +309,7 @@ const SearchPage: React.FC = () => {
 
       refetchFollowUpQuestions();
     } catch (err) {
-      console.error("Error in handleSubmit:", err);
+      logError("Error in handleSubmit:", err);
       setLoading(false);
       setError("Failed to process your search. Please try again.");
     }
@@ -375,7 +355,7 @@ const SearchPage: React.FC = () => {
 
       refetchFollowUpQuestions();
     } catch (err) {
-      console.error("Error in handleSuggestionClick:", err);
+      logError("Error in handleSuggestionClick:", err);
       setLoading(false);
       setError("Failed to process your search. Please try again.");
     }

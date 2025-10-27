@@ -181,7 +181,7 @@ const MapClickHandler = ({
 
         onLocationSelect(lat, lng, locationName);
       } catch (error) {
-        console.error("Error getting location name:", error);
+        errorLog("getting location name:", error);
         // Display coordinates as fallback
         const formattedLat = lat.toFixed(6);
         const formattedLng = lng.toFixed(6);
@@ -215,8 +215,6 @@ export default function ProfilePage() {
 
   const updateProfile = useUpdateProfile();
   const uploadAvatar = useUploadAvatar();
-  // const uploadPhoto = useUploadPhoto();
-
   const deletePhoto = useDeletePhoto();
   const usernameValidation = useUsernameValidation();
 
@@ -405,73 +403,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Handle multiple gear upload
-  // const handleMultipleGearUpload = async (files: FileList) => {
-  //   const fileArray = Array.from(files).slice(0, 10); // Limit to 10 files
-  //   const totalFiles = fileArray.length;
-
-  //   if (totalFiles === 0) return;
-
-  //   setLoading(true);
-  //   setError(null);
-
-  //   let successCount = 0;
-  //   let failedCount = 0;
-  //   const results: string[] = [];
-
-  //   try {
-  //     // await handlePhotoUpload(file, {
-  //     //   type: "gear",
-  //     // }); // The context handles both photo and gear uploads
-  //     // Process files sequentially to avoid overwhelming the API
-  //     for (let i = 0; i < fileArray.length; i++) {
-  //       //const file = fileArray[i];
-
-  //       try {
-  //         // setSuccess(`Processing gear ${i + 1} of ${totalFiles}...`);
-  //         // const { metadata } = await uploadGear.mutateAsync(file);
-
-  //         // if (metadata.gearInfo && metadata.gearInfo.name !== "Unknown Gear") {
-  //         //   results.push(
-  //         //     `${metadata.gearInfo.name} (${Math.round((metadata.gearInfo.confidence || 0) * 100)}% confident)`
-  //         //   );
-  //         // } else {
-  //         //   results.push(`Gear item ${i + 1}`);
-  //         // }
-  //         successCount++;
-  //       } catch (err) {
-  //         console.error(`Failed to upload gear ${i + 1}:`, err);
-  //         failedCount++;
-  //       }
-
-  //       // Small delay between uploads to respect rate limits
-  //       if (i < fileArray.length - 1) {
-  //         await new Promise((resolve) => setTimeout(resolve, 1000));
-  //       }
-  //     }
-
-  //     // Show final results
-  //     if (successCount > 0) {
-  //       const successMsg = `Successfully uploaded ${successCount} gear item${successCount > 1 ? "s" : ""}!${results.length > 0 ? ` Identified: ${results.join(", ")}` : ""}`;
-  //       setSuccess(successMsg);
-  //     }
-
-  //     if (failedCount > 0) {
-  //       setError(
-  //         `${failedCount} gear item${failedCount > 1 ? "s" : ""} failed to upload. Please try again.`
-  //       );
-  //     }
-  //   } catch (err) {
-  //     setError(err instanceof Error ? err.message : "Failed to upload gear");
-  //   } finally {
-  //     setLoading(false);
-  //     setTimeout(() => {
-  //       setSuccess(null);
-  //       setError(null);
-  //     }, 8000);
-  //   }
-  // };
-
   // Handle gear upload
   const handleGearUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -537,10 +468,10 @@ export default function ProfilePage() {
           photoInputRef.current.click();
         }
       } catch (error) {
-        console.error("[ProfilePage] Error clicking file input:", error);
+        errorLog("[ProfilePage] Error clicking file input:", error);
       }
     } else {
-      console.error("[ProfilePage] photoInputRef.current is null");
+      errorLog("[ProfilePage] photoInputRef.current is null");
     }
   };
 
@@ -642,7 +573,7 @@ export default function ProfilePage() {
       });
       setCompletedCrop(undefined);
     } catch (err) {
-      console.error("Crop and upload error:", err);
+      errorLog("[ProfilePage] upload error:", err);
 
       // Handle timeout errors specifically
       if (err instanceof Error && err.message.includes("taking too long")) {
@@ -711,7 +642,7 @@ export default function ProfilePage() {
       setEditingMetadata(null);
       setTempLocationData(null);
     } catch (err) {
-      console.error("[ProfilePage] Error saving edited AI info:", err);
+      errorLog("[ProfilePage] Error saving edited AI info:", err);
       setError("Failed to update AI info. Please try again.");
     } finally {
       setLoading(false);
@@ -792,10 +723,7 @@ export default function ProfilePage() {
 
     // Simplified extraction - all photos should be ImageMetadata objects now
     if (typeof photo === "string") {
-      console.warn(
-        `[ProfilePage] Legacy string photo in edit function:`,
-        photo,
-      );
+      errorLog(`[ProfilePage] Legacy string photo in edit function:`, photo);
       const photoString = photo as string;
       if (photoString.startsWith("{") && photoString.includes('"url"')) {
         try {
@@ -871,7 +799,7 @@ export default function ProfilePage() {
             setBorderStyle({ left, width });
           }
         } catch (error) {
-          console.warn("Error calculating border position:", error);
+          errorLog("Error calculating border position:", error);
         }
       }
     }

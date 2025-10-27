@@ -1,6 +1,6 @@
 import { put } from "@vercel/blob";
 import { config } from "@/lib/config";
-import { log } from "./logging";
+import { error as logError, log, warn as warnLog } from "./logging";
 
 /**
  * Vercel Blob Storage Service
@@ -24,7 +24,7 @@ function getBlobToken(): string {
   const token = config.VITE_BLOB_READ_WRITE_TOKEN;
 
   if (!token) {
-    console.error("[BlobStorage] ❌ Token missing:", {
+    logError("[BlobStorage] ❌ Token missing:", {
       VITE_BLOB_READ_WRITE_TOKEN: config.VITE_BLOB_READ_WRITE_TOKEN,
       availableEnvVars: Object.keys(config).filter(
         (key) => key.includes("BLOB") || key.includes("VERCEL"),
@@ -38,7 +38,7 @@ function getBlobToken(): string {
   }
 
   if (typeof token !== "string" || token.trim() === "") {
-    console.error("[BlobStorage] ❌ Token invalid:", {
+    logError("[BlobStorage] ❌ Token invalid:", {
       tokenType: typeof token,
       tokenValue: token,
       tokenLength: token?.length || 0,
@@ -130,7 +130,7 @@ export async function uploadImage(file: File): Promise<string> {
         isMobile,
       });
     } catch (tokenError) {
-      console.error("[BlobStorage] ❌ Token validation failed:", {
+      logError("[BlobStorage] ❌ Token validation failed:", {
         error: tokenError.message,
         isMobile,
         availableEnvVars: {
@@ -145,7 +145,7 @@ export async function uploadImage(file: File): Promise<string> {
       validateFile(file);
       log("[BlobStorage] ✅ File validation passed", { isMobile });
     } catch (validationError) {
-      console.error("[BlobStorage] ❌ File validation failed:", {
+      logError("[BlobStorage] ❌ File validation failed:", {
         error: validationError.message,
         fileName: file.name,
         fileSize: file.size,
@@ -174,7 +174,7 @@ export async function uploadImage(file: File): Promise<string> {
 
     const timeoutPromise = new Promise<never>((_, reject) => {
       setTimeout(() => {
-        console.error("[BlobStorage] ⏰ Upload timeout:", {
+        logError("[BlobStorage] ⏰ Upload timeout:", {
           timeout: uploadTimeout,
           fileName,
           fileSize: file.size,
@@ -214,7 +214,7 @@ export async function uploadImage(file: File): Promise<string> {
 
     // Enhanced URL validation
     if (!blob.url) {
-      console.error("[BlobStorage] ❌ No URL in blob response:", {
+      logError("[BlobStorage] ❌ No URL in blob response:", {
         fullBlobResponse: blob,
         blobKeys: Object.keys(blob),
         isMobile,
@@ -225,14 +225,14 @@ export async function uploadImage(file: File): Promise<string> {
     }
 
     if (!blob.url.startsWith("https://")) {
-      console.warn("[BlobStorage] ⚠️ URL is not HTTPS:", {
+      logError("[BlobStorage] ⚠️ URL is not HTTPS:", {
         url: blob.url,
         isMobile,
       });
     }
 
     if (!blob.url.includes("blob.vercel-storage.com")) {
-      console.warn("[BlobStorage] ⚠️ URL is not from Vercel Blob domain:", {
+      warnLog("[BlobStorage] ⚠️ URL is not from Vercel Blob domain:", {
         url: blob.url,
         domain: new URL(blob.url).hostname,
         isMobile,
@@ -249,7 +249,7 @@ export async function uploadImage(file: File): Promise<string> {
         isMobile,
       });
     } catch (testError) {
-      console.warn("[BlobStorage] ⚠️ URL accessibility test failed:", {
+      warnLog("[BlobStorage] ⚠️ URL accessibility test failed:", {
         error: testError.message,
         url: blob.url,
         isMobile,
@@ -262,7 +262,7 @@ export async function uploadImage(file: File): Promise<string> {
     });
     return blob.url;
   } catch (error) {
-    console.error("[BlobStorage] 💥 Upload failed:", {
+    error("[BlobStorage] 💥 Upload failed:", {
       error: error instanceof Error ? error.message : String(error),
       errorType: error instanceof Error ? error.constructor.name : typeof error,
       fileName: file.name,
@@ -275,7 +275,7 @@ export async function uploadImage(file: File): Promise<string> {
 
     // Enhanced error logging
     if (error instanceof Error) {
-      console.error("[BlobStorage] 📋 Detailed error information:", {
+      logError("[BlobStorage] 📋 Detailed error information:", {
         name: error.name,
         message: error.message,
         stack: error.stack,
@@ -291,7 +291,7 @@ export async function uploadImage(file: File): Promise<string> {
         error.message.includes("network")
       ) {
         const networkError = `Network error during upload: ${error.message}. Please check your internet connection.`;
-        console.error("[BlobStorage] 🌐 Network error detected:", {
+        logError("[BlobStorage] 🌐 Network error detected:", {
           networkError,
           isMobile,
         });
@@ -305,7 +305,7 @@ export async function uploadImage(file: File): Promise<string> {
         error.message.includes("Unauthorized")
       ) {
         const authError = `Authentication error: ${error.message}. Please check your Vercel Blob token configuration.`;
-        console.error("[BlobStorage] 🔐 Authentication error detected:", {
+        logError("[BlobStorage] 🔐 Authentication error detected:", {
           authError,
           isMobile,
         });
@@ -319,7 +319,7 @@ export async function uploadImage(file: File): Promise<string> {
             ? "Mobile uploads may take longer due to slower connections."
             : "Please try again."
         }`;
-        console.error("[BlobStorage] ⏰ Timeout error detected:", {
+        logError("[BlobStorage] ⏰ Timeout error detected:", {
           timeoutError,
           isMobile,
         });
@@ -329,7 +329,7 @@ export async function uploadImage(file: File): Promise<string> {
       // Token-related errors
       if (error.message.includes("token") || error.message.includes("Token")) {
         const tokenError = `Token error: ${error.message}. Please check your VITE_BLOB_READ_WRITE_TOKEN environment variable.`;
-        console.error("[BlobStorage] 🔑 Token error detected:", {
+        logError("[BlobStorage] 🔑 Token error detected:", {
           tokenError,
           isMobile,
         });
@@ -342,7 +342,7 @@ export async function uploadImage(file: File): Promise<string> {
         error.message.includes("large") ||
         error.message.includes("validation")
       ) {
-        console.error("[BlobStorage] 📁 File validation error detected:", {
+        logError("[BlobStorage] 📁 File validation error detected:", {
           error: error.message,
           isMobile,
         });
@@ -358,7 +358,7 @@ export async function uploadImage(file: File): Promise<string> {
         ? "If you're on mobile, try switching to a stronger WiFi connection."
         : "Please try again."
     }`;
-    console.error("[BlobStorage] ❓ Generic error:", {
+    logError("[BlobStorage] ❓ Generic error:", {
       genericError,
       isMobile,
     });
@@ -406,7 +406,7 @@ export async function uploadAvatar(
     log("[BlobStorage] Avatar upload successful:", blob.url);
     return blob.url;
   } catch (error) {
-    console.error("[BlobStorage] Avatar upload failed:", error);
+    logError("[BlobStorage] Avatar upload failed:", error);
     throw error;
   }
 }

@@ -11,7 +11,7 @@ import React, {
 import { useAuth } from "@/contexts/auth-context";
 import { useStream } from "@/hooks/use-stream";
 import { useClassifyPhoto } from "@/hooks/queries";
-import { log, error as errorLog } from "@/lib/logging";
+import { log, error as logError, warn as warnLog } from "@/lib/logging";
 import { captureEvent } from "@/lib/posthog";
 
 // Constants for timeout values and configuration
@@ -301,12 +301,12 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       try {
         const data = JSON.parse(chunk);
         if (!isValidUploadPhotoStreamData(data)) {
-          console.warn("[UPLOAD] Invalid upload data structure:", data);
+          warnLog("[UPLOAD] Invalid upload data structure:", data);
           return null;
         }
         return data;
       } catch (error) {
-        console.error("[UPLOAD] Failed to parse upload data:", error);
+        logError("[UPLOAD] Failed to parse upload data:", error);
         // setError("Invalid server response", "upload", false);
         return null;
       }
@@ -317,7 +317,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
   const universalUploadStream = useStream({
     path: "user/universal-upload/stream",
     onData: (chunk) => {
-      console.log("[STREAM] Received chunk:", chunk);
+      log("[STREAM] Received chunk:", chunk);
       const data = parseUploadData(chunk);
       if (!data) return;
 
@@ -330,8 +330,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       clearError(); // Clear any previous errors on successful data
     },
     onError: (error) => {
-      log("[STREAM] Error uploading photo:", error);
-
+      logError("[STREAM] Error uploading photo:", error);
       setClassifyingImage(false);
       setIsUploadLocked(false);
 
@@ -358,7 +357,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
   const uploadGearItemsStream = useStream({
     path: "user/gear-items/batch-stream",
     onData: (chunk) => {
-      console.log("[STREAM] Received chunk:", chunk);
+      log("[STREAM] Received chunk:", chunk);
       const data = parseUploadData(chunk);
 
       if (!data) return;
@@ -371,7 +370,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       clearError(); // Clear any previous errors on successful data
     },
     onError: (error) => {
-      console.error("[STREAM] Error uploading gear item:", error);
+      logError("[STREAM] Error uploading gear item:", error);
       setClassifyingImage(false);
       setIsUploadLocked(false);
 
@@ -536,7 +535,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
           });
         }
       } catch (error: any) {
-        console.error("❌ [UPLOAD] Upload execution failed:", error);
+        logError("❌ [UPLOAD] Upload execution failed:", error);
         setIsUploadLocked(false);
         setError(error?.message || "Upload failed", "upload", true);
         throw error;
@@ -556,7 +555,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
     async (itemId: string): Promise<void> => {
       const queueItem = uploadQueue.find((item) => item.id === itemId);
       if (!queueItem) {
-        console.warn("[UPLOAD] Queue item not found for retry:", itemId);
+        warnLog("[UPLOAD] Queue item not found for retry:", itemId);
         return;
       }
 
@@ -581,7 +580,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
           await executeUpload(queueItem.files, queueItem.type);
           removeFromQueue(itemId);
         } catch (error) {
-          console.error("[UPLOAD] Retry failed:", error);
+          logError("[UPLOAD] Retry failed:", error);
           // The error is already handled in executeUpload
         }
         timeoutRefs.current.retry = null;
@@ -596,7 +595,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       removeFromQueue(itemId);
       // If this is the currently processing item, we should ideally cancel the stream
       // but the useStream hook may not support cancellation
-      console.log("[UPLOAD] Upload cancelled:", itemId);
+      log("[UPLOAD] Upload cancelled:", itemId);
     },
     [removeFromQueue],
   );
@@ -610,9 +609,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
     ) => {
       // Prevent multiple uploads with proper locking
       if (isUploadLocked || classifyingImage) {
-        console.warn(
-          "[UPLOAD] Upload already in progress, ignoring new upload",
-        );
+        warnLog("[UPLOAD] Upload already in progress, ignoring new upload");
         return;
       }
 
@@ -634,7 +631,6 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       } else {
         let filesTypes: UploadType[] = [];
 
-        // if (!options) {
         setClassifyingImage(true);
         clearError();
 
@@ -718,7 +714,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
             }
           }
         } catch (error: any) {
-          errorLog("❌ [UPLOAD] Smart upload failed:", error);
+          logError("❌ [UPLOAD] Smart upload failed:", error);
           setClassifyingImage(false);
           setIsUploadLocked(false);
 

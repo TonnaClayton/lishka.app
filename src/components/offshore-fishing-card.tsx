@@ -12,6 +12,7 @@ import {
 } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
+import { warn as warnLog } from "@/lib/logging";
 
 // Fix Leaflet default markers
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -143,7 +144,7 @@ const OffshoreFishingCard = ({
 
   // Ensure we have valid coordinates - if not provided, don't render the card
   if (!coordinates || !userCoordinates) {
-    console.warn("OffshoreFishingCard: Missing required coordinates");
+    warnLog("OffshoreFishingCard: Missing required coordinates");
     return null;
   }
 

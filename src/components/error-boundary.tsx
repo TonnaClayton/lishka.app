@@ -1,5 +1,6 @@
 import React from "react";
 import { Button } from "@/components/ui/button";
+import { error as logError } from "@/lib/logging";
 import { AlertTriangle, RefreshCw } from "lucide-react";
 
 interface ErrorBoundaryState {
@@ -25,8 +26,8 @@ class ErrorBoundary extends React.Component<
     return { hasError: true, error };
   }
 
-  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
-    console.error("Error caught by ErrorBoundary:", error, errorInfo);
+  coerrorch(error: Error, errorInfo: React.ErrorInfo) {
+    logError("Error caught by ErrorBoundary:", error, errorInfo);
   }
 
   resetError = () => {

@@ -87,7 +87,6 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   // Extract fish list from infinite query data
   const fishList = fishData?.pages.flatMap((page) => page) || [];
   const toxicFishList = toxicFishData || [];
-  //const debugInfo = toxicFishData?.debugInfo || null;
   const debugInfo = null;
 
   // Get current month
@@ -116,37 +115,9 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     return `${cleanLocation} & ${seaOcean} waters`;
   };
 
-  // Location validation and standardization
-  // const validateLocation = (location: string) => {
-  //   if (!location) return "Unknown Location";
-  //   try {
-  //     // Handle JSON string locations
-  //     const parsed = JSON.parse(location);
-  //     return parsed.name || location;
-  //   } catch {
-  //     // Not JSON, use as is
-  //     return location;
-  //   }
-  // };
-
   const handleLoadMore = () => {
     fetchNextPage();
   };
-
-  // Helper function to get user initials
-  // const getInitials = (name: string) => {
-  //   return name
-  //     .split(" ")
-  //     .map((n) => n[0])
-  //     .join("")
-  //     .toUpperCase()
-  //     .slice(0, 2);
-  // };
-
-  // Handle avatar click to navigate to profile
-  // const handleAvatarClick = () => {
-  //   navigate("/profile");
-  // };
 
   return (
     <div className="flex flex-col dark:bg-background h-full relative border-l-0 border-y-0 border-r-0 rounded-xl">

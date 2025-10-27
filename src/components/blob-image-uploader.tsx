@@ -47,11 +47,6 @@ const BlobImageUploader = () => {
       setUploading(true);
       setStatus({ type: "info", message: "Uploading..." });
 
-      // Normalize the scientific name (lowercase, remove spaces)
-      // const normalizedName = scientificName.toLowerCase().replace(/\s+/g, "");
-      // const fileExt = file.name.split(".").pop();
-      // const fileName = `${normalizedName}.${fileExt}`;
-
       // Upload file to Vercel Blob
       const imageUrl = await uploadImage(file);
 
@@ -61,7 +56,7 @@ const BlobImageUploader = () => {
         message: `Image uploaded successfully! It will be available for fish with scientific name: ${scientificName}`,
       });
     } catch (error) {
-      console.error("Error uploading image:", error);
+      error("Error uploading image:", error);
       setStatus({
         type: "destructive",
         message: `Upload failed: ${error instanceof Error ? error.message : String(error)}`,

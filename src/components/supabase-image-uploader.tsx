@@ -97,7 +97,7 @@ const SupabaseImageUploader: React.FC<SupabaseImageUploaderProps> = ({
         message: `Image uploaded successfully! It will be available for fish with scientific name: ${scientificName}`,
       });
     } catch (error) {
-      console.error("Error uploading image:", error);
+      error("Error uploading image:", error);
       setStatus({
         type: "error",
         message: `Upload failed: ${error.message || "Unknown error"}`,

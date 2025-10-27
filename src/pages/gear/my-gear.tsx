@@ -25,6 +25,7 @@ import { useAuth } from "@/contexts/auth-context";
 import BottomNav from "../../components/bottom-nav";
 import { toGearItem } from "@/lib/gear";
 import { Json } from "@/types/supabase";
+import { log, error as logError } from "@/lib/logging";
 import { captureEvent } from "@/lib/posthog";
 
 // Gear categories as specified
@@ -40,8 +41,6 @@ export const GEAR_CATEGORIES = [
 const MyGearPage: React.FC = () => {
   const navigate = useNavigate();
   const { user, profile, loading: authLoading, updateProfile } = useAuth();
-  // const fileInputRef = useRef<HTMLInputElement>(null);
-  // const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,11 +83,6 @@ const MyGearPage: React.FC = () => {
       return "You're in the top 5% of fishermen with this gear collection.";
     }
   };
-
-  // Handle gear click to show detail modal - store only the ID to ensure we always get fresh data
-  // const handleGearClick = (gear: GearItem) => {
-  //   setSelectedGearId(gear.id);
-  // };
 
   // Close gear modal
   const closeGearModal = () => {
@@ -153,7 +147,7 @@ const MyGearPage: React.FC = () => {
       setSuccess("Gear updated successfully!");
       setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
-      console.error("[MyGearPage] Error updating gear:", error);
+      logError("[MyGearPage] Error updating gear:", error);
       setError("Failed to update gear. Please try again.");
     } finally {
       setLoading(false);
@@ -183,7 +177,7 @@ const MyGearPage: React.FC = () => {
       setSuccess("Gear deleted successfully!");
       setTimeout(() => setSuccess(null), 3000);
     } catch (error) {
-      console.error("[MyGearPage] Error deleting gear:", error);
+      logError("[MyGearPage] Error deleting gear:", error);
       setError("Failed to delete gear. Please try again.");
     } finally {
       setLoading(false);
@@ -196,7 +190,7 @@ const MyGearPage: React.FC = () => {
       return gearItems;
     }
 
-    console.log("[MyGearPage] categoryId:", categoryId, gearItems);
+    log("[MyGearPage] categoryId:", categoryId, gearItems);
     return gearItems.filter((item) => item.category === categoryId);
   };
 
