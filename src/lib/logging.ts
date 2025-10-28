@@ -12,6 +12,6 @@ export const warn = (message: string, ...data: any[]) => {
 
 export const error = (message: string, ...data: any[]) => {
   if (process.env.NODE_ENV === "development") {
-    error(message, ...data);
+    console.error(message, ...data);
   }
 };

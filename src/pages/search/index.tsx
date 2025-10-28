@@ -32,6 +32,7 @@ import { useAuth } from "@/contexts/auth-context";
 import LocationBtn from "@/components/location-btn";
 import { captureEvent } from "@/lib/posthog";
 import SearchGearCard from "./gear-card";
+import { toGearItem } from "@/lib/gear";
 
 interface Message {
   id: string;
@@ -486,113 +487,12 @@ const SearchPage: React.FC = () => {
           <div className="p-4">
             <div className="max-w-2xl mx-auto space-y-6">
               <div className="h-[20px] md:hidden"></div>
-              {messagesMemo.map((message) => (
-                <div
-                  key={message.id}
-                  className={cn(
-                    "flex",
-                    message.user_role === "user"
-                      ? "justify-end"
-                      : "justify-start",
-                  )}
-                >
-                  <div
-                    // className={`max-w-[85%] rounded-lg px-4 py-3 ${message.role === "user" ? "text-white" : "dark:bg-gray-800 text-gray-900 dark:text-gray-100 bg-blue-500 bg-gray-100"}`}
-                    className={cn(
-                      "rounded-[16px] pt-3 w-fit max-w-[85%]",
-                      isMobile && "max-w-[95%]",
-                      message.user_role === "user"
-                        ? "bg-lishka-blue text-white"
-                        : "bg-[#F7F7F7] text-[#191B1F]",
-                    )}
-                  >
-                    {message.images && message.images.length > 0 && (
-                      <div className="mb-3 px-4">
-                        {message.images.length === 1 ? (
-                          <img
-                            src={message.images[0]}
-                            alt="Uploaded image"
-                            className="max-w-full h-auto rounded-lg max-h-64 object-contain"
-                          />
-                        ) : (
-                          <div className="grid grid-cols-2 gap-2 max-w-sm">
-                            {message.images.map((image, index) => (
-                              <img
-                                key={index}
-                                src={image}
-                                alt={`Uploaded image ${index + 1}`}
-                                className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
-                                onClick={() => setPreviewImage(image)}
-                              />
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                    <div className="px-4">
-                      <MemoizedContent content={message.content} />
-                    </div>
-
-                    {/* Display fish cards if available */}
-                    {message.fish_results &&
-                      message.fish_results.length > 0 && (
-                        <div className="mt-4 space-y-4 w-full">
-                          <h3 className="font-medium text-sm px-4">
-                            Fish Species:
-                          </h3>
-                          <div className="flex w-full overflow-x-auto gap-4 px-4 pb-3">
-                            {message.fish_results
-                              .filter((fish) => {
-                                // Filter out generic fish names
-                                const genericNames = [
-                                  "generic fish",
-                                  "unknown fish",
-                                  "fish",
-                                  "generic",
-                                  "unknown",
-                                ];
-                                const fishName = fish.name?.toLowerCase() || "";
-                                return (
-                                  !genericNames.includes(fishName) &&
-                                  fishName.trim() !== ""
-                                );
-                              })
-                              .map((fish) => (
-                                <FishCard
-                                  key={fish.id}
-                                  name={fish.name}
-                                  scientificName={fish.scientific_name}
-                                  habitat={fish.habitat}
-                                  difficulty={fish.difficulty}
-                                  isToxic={fish.is_toxic}
-                                  className="w-[200px] min-h-[250px] flex-shrink-0"
-                                  onClick={() => {
-                                    navigate(`/fish/${fish.slug}`, {
-                                      state: { fish },
-                                    });
-                                  }}
-                                />
-                              ))}
-                          </div>
-                        </div>
-                      )}
-
-                    {message.gear_results &&
-                      message.gear_results.length > 0 && (
-                        <div className="mt-4 space-y-4 w-full">
-                          <h3 className="font-medium text-sm px-4">
-                            Gear Items:
-                          </h3>
-                          <div className="flex w-full overflow-x-auto gap-4 px-4 pb-3">
-                            {message.gear_results.map((gear) => (
-                              <SearchGearCard key={gear.id} gearId={gear.id} />
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    <div className="pb-3 px-4"></div>
-                  </div>
-                </div>
+              {messagesMemo.map((message, index) => (
+                <SearchMessageCard
+                  key={index}
+                  message={message}
+                  setPreviewImage={setPreviewImage}
+                />
               ))}
 
               {isMobile && (
@@ -804,6 +704,130 @@ const SearchPage: React.FC = () => {
           </div>
         </div>
       )}
+    </div>
+  );
+};
+
+const SearchMessageCard = ({
+  message,
+  setPreviewImage,
+}: {
+  message: Message;
+  setPreviewImage: (image: string) => void;
+}) => {
+  const isMobile = useIsMobile();
+  const navigate = useNavigate();
+
+  const { profile } = useAuth();
+
+  const allGearItems = useMemo(() => {
+    const gearItems =
+      profile?.gear_items && Array.isArray(profile.gear_items)
+        ? profile.gear_items.map(toGearItem)
+        : [];
+
+    return gearItems.filter((item) =>
+      message.gear_results?.some((gear) => gear.id === item.id),
+    );
+  }, [profile?.gear_items]);
+
+  return (
+    <div
+      key={message.id}
+      className={cn(
+        "flex",
+        message.user_role === "user" ? "justify-end" : "justify-start",
+      )}
+    >
+      <div
+        // className={`max-w-[85%] rounded-lg px-4 py-3 ${message.role === "user" ? "text-white" : "dark:bg-gray-800 text-gray-900 dark:text-gray-100 bg-blue-500 bg-gray-100"}`}
+        className={cn(
+          "rounded-[16px] pt-3 w-fit max-w-[85%]",
+          isMobile && "max-w-[95%]",
+          message.user_role === "user"
+            ? "bg-lishka-blue text-white"
+            : "bg-[#F7F7F7] text-[#191B1F]",
+        )}
+      >
+        {message.images && message.images.length > 0 && (
+          <div className="mb-3 px-4">
+            {message.images.length === 1 ? (
+              <img
+                src={message.images[0]}
+                alt="Uploaded image"
+                className="max-w-full h-auto rounded-lg max-h-64 object-contain"
+              />
+            ) : (
+              <div className="grid grid-cols-2 gap-2 max-w-sm">
+                {message.images.map((image, index) => (
+                  <img
+                    key={index}
+                    src={image}
+                    alt={`Uploaded image ${index + 1}`}
+                    className="w-full h-24 object-cover rounded-lg cursor-pointer hover:opacity-80 transition-opacity"
+                    onClick={() => setPreviewImage(image)}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+        <div className="px-4">
+          <MemoizedContent content={message.content} />
+        </div>
+
+        {/* Display fish cards if available */}
+        {message.fish_results && message.fish_results.length > 0 && (
+          <div className="mt-4 space-y-4 w-full">
+            <h3 className="font-medium text-sm px-4">Fish Species:</h3>
+            <div className="flex w-full overflow-x-auto gap-4 px-4 pb-3">
+              {message.fish_results
+                .filter((fish) => {
+                  // Filter out generic fish names
+                  const genericNames = [
+                    "generic fish",
+                    "unknown fish",
+                    "fish",
+                    "generic",
+                    "unknown",
+                  ];
+                  const fishName = fish.name?.toLowerCase() || "";
+                  return (
+                    !genericNames.includes(fishName) && fishName.trim() !== ""
+                  );
+                })
+                .map((fish) => (
+                  <FishCard
+                    key={fish.id}
+                    name={fish.name}
+                    scientificName={fish.scientific_name}
+                    habitat={fish.habitat}
+                    difficulty={fish.difficulty}
+                    isToxic={fish.is_toxic}
+                    className="w-[200px] min-h-[250px] flex-shrink-0"
+                    onClick={() => {
+                      navigate(`/fish/${fish.slug}`, {
+                        state: { fish },
+                      });
+                    }}
+                  />
+                ))}
+            </div>
+          </div>
+        )}
+
+        {allGearItems && allGearItems.length > 0 && (
+          <div className="mt-4 space-y-4 w-full">
+            <h3 className="font-medium text-sm px-4">Gear Items:</h3>
+            <div className="flex w-full overflow-x-auto gap-4 px-4 pb-3">
+              {allGearItems.map((gear) => (
+                <SearchGearCard key={gear.id} gear={gear} />
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="pb-3 px-4"></div>
+      </div>
     </div>
   );
 };

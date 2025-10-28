@@ -15,6 +15,10 @@ function generateDynamicFishImageUrl(scientificName: string): string {
     .replace(/\s+/g, "") // Remove all spaces
     .replace(/[^a-z0-9]/g, ""); // Remove any non-alphanumeric characters
 
+  log(
+    `[FishImageService] Generating dynamic fish image URL for ${scientificName}: ${cleanName}`,
+  );
+
   return `https://ghep9tkuzzpsmczw.public.blob.vercel-storage.com/${cleanName}.png`;
 }
 
