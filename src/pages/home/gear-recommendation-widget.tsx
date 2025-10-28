@@ -85,13 +85,14 @@ const GearRecommendationWidget: React.FC = () => {
       });
     }
 
-    return filteredGear.sort((a: any, b: any) => {
-      const scoreA = getRecommendation(a.id)?.score || 0;
-      const scoreB = getRecommendation(b.id)?.score || 0;
+    // return filteredGear.sort((a: any, b: any) => {
+    //   const scoreA = getRecommendation(a.id)?.score || 0;
+    //   const scoreB = getRecommendation(b.id)?.score || 0;
 
-      if (scoreA !== scoreB) return scoreB - scoreA;
-      return a.name.localeCompare(b.name);
-    });
+    //   if (scoreA !== scoreB) return scoreB - scoreA;
+    //   return a.name.localeCompare(b.name);
+    // });
+    return filteredGear;
   }, [userGear, selectedTag, getRecommendation]);
 
   const handleGearClick = (gear: GearItem) => {
