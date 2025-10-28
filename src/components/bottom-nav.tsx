@@ -10,6 +10,7 @@ import ItemUploadBar from "@/pages/profile/item-upload-bar";
 import UploadedInfoMsg from "@/pages/profile/uploaded-info-msg";
 import { captureEvent } from "@/lib/posthog";
 import useIsMobile from "@/hooks/use-is-mobile";
+import EditInfoDialog from "@/components/edit-info-dialog";
 
 const BottomNav: React.FC = () => {
   const location = useLocation();
@@ -23,6 +24,8 @@ const BottomNav: React.FC = () => {
     uploadGearItemsStreamData,
     showUploadedInfoMsg,
     uploadedInfoMsg,
+    showEditInfoDialog,
+    clearEditInfoDialogTrigger,
     classifyingImage,
     isUploading,
     uploadError,
@@ -64,9 +67,11 @@ const BottomNav: React.FC = () => {
 
     try {
       await handlePhotoUpload(fileArray);
-    } catch (error: any) {
-      error("❌ [BOTTOMNAV] Smart upload failed:", error);
-      alert(error?.message || "Failed to process photo. Please try again.");
+    } catch (uploadError: any) {
+      warnLog("❌ [BOTTOMNAV] Smart upload failed:", uploadError);
+      alert(
+        uploadError?.message || "Failed to process photo. Please try again.",
+      );
     }
 
     // Reset file input
@@ -185,6 +190,13 @@ const BottomNav: React.FC = () => {
         className="hidden"
         disabled={isUploading || classifyingImage}
       />
+      {/* Edit Info Dialog - shown after upload completes */}
+      {currentPath !== "/profile" && (
+        <EditInfoDialog
+          trigger={showEditInfoDialog}
+          onTriggerHandled={clearEditInfoDialogTrigger}
+        />
+      )}
     </>
   );
 };

@@ -66,6 +66,7 @@ import { toImageMetadataItem } from "@/lib/gallery-photo";
 import UploadedInfoMsg from "./uploaded-info-msg";
 import { error as errorLog } from "@/lib/logging";
 import { captureEvent } from "@/lib/posthog";
+import EditInfoDialog from "@/components/edit-info-dialog";
 
 interface ImageMetadata {
   url: string;
@@ -87,6 +88,7 @@ interface LocationData {
   latitude: number;
   longitude: number;
   name: string;
+  countryCode?: string;
 }
 
 // Zod schema for profile form validation
@@ -111,13 +113,6 @@ const profileSchema = z.object({
 });
 
 type ProfileFormData = z.infer<typeof profileSchema>;
-
-interface LocationData {
-  latitude: number;
-  longitude: number;
-  name: string;
-  countryCode?: string;
-}
 
 // Fix Leaflet icon issue with proper CDN URLs
 if (typeof window !== "undefined") {
@@ -169,7 +164,7 @@ const MapClickHandler = ({
           data.address?.water ||
           data.address?.bay;
 
-        let locationName;
+        let locationName: string;
         if (isSeaLocation) {
           // For sea locations, display only coordinates
           const formattedLat = lat.toFixed(6);
@@ -203,6 +198,8 @@ export default function ProfilePage() {
     classifyingImage,
     showUploadedInfoMsg,
     uploadedInfoMsg,
+    showEditInfoDialog,
+    clearEditInfoDialogTrigger,
     isUploading,
     handlePhotoUpload,
     closeUploadedInfoMsg,
@@ -768,7 +765,7 @@ export default function ProfilePage() {
 
   // Update border position when active tab changes
   const updateBorderPosition = React.useCallback(() => {
-    let activeTabRef;
+    let activeTabRef: React.RefObject<HTMLButtonElement> | undefined;
     switch (activeTab) {
       case "fish-gallery":
         activeTabRef = fishGalleryTabRef;
@@ -1745,6 +1742,11 @@ export default function ProfilePage() {
           </div>
         </DialogContent>
       </Dialog>
+      {/* Edit Info Dialog - shown after upload completes */}
+      <EditInfoDialog
+        trigger={showEditInfoDialog}
+        onTriggerHandled={clearEditInfoDialogTrigger}
+      />
     </div>
   );
 }

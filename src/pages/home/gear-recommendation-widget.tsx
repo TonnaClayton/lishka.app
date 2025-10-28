@@ -7,16 +7,15 @@ import {
   AlertCircle,
   Sparkles,
 } from "lucide-react";
-import LoadingDots from "@/components/loading-dots";
 import { useAuth } from "@/contexts/auth-context";
 import { useNavigate } from "react-router-dom";
 import { useGetWeatherSummary } from "@/hooks/queries";
-import GearRecommendationSkeleton from "./gear-recommendation-skeleton";
 import { useGetGearRecommendation } from "@/hooks/queries/gear/use-gear-recommendation";
 import { GearItem } from "@/lib/gear";
 import { cn } from "@/lib/utils";
 import { captureEvent } from "@/lib/posthog";
 import { AIRecommendation } from "@/types/gear-recommendation";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const GearRecommendationWidget: React.FC = () => {
   const { profile } = useAuth();
@@ -108,9 +107,9 @@ const GearRecommendationWidget: React.FC = () => {
     navigate(`/gear-category/${gear.category}?gearId=${gear.id}`);
   };
 
-  if (isLoadingGearRecommendation || isRefetchingGearRecommendation) {
-    return <GearRecommendationSkeleton />;
-  }
+  // if (isLoadingGearRecommendation || isRefetchingGearRecommendation) {
+  //   return <GearRecommendationSkeleton />;
+  // }
 
   if (userGear.length === 0) {
     return (
@@ -184,7 +183,7 @@ const GearRecommendationWidget: React.FC = () => {
         </div>
       </div>
 
-      {isLoadingGearRecommendation || isRefetchingGearRecommendation ? (
+      {/* isLoadingGearRecommendation || isRefetchingGearRecommendation ? (
         <div className="flex flex-col items-center justify-center py-8 px-4 lg:px-6">
           <LoadingDots />
           <p className="text-sm text-muted-foreground mt-2">
@@ -192,7 +191,9 @@ const GearRecommendationWidget: React.FC = () => {
             {isRefetchingGearRecommendation && "AI is analyzing your gear..."}
           </p>
         </div>
-      ) : isErrorGearRecommendation ? (
+      )  */}
+
+      {isErrorGearRecommendation ? (
         <div className="flex items-center justify-center py-12 px-4 lg:px-6">
           <div className="text-center">
             <AlertCircle className="h-8 w-8 text-red-500 mx-auto mb-4" />
@@ -287,45 +288,58 @@ const GearRecommendationWidget: React.FC = () => {
                         </h3>
                       </div>
 
-                      {/* AI Reasoning - Only show if available */}
-                      {recommendation?.reasoning && (
-                        <div className="mb-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 p-3 rounded-lg border border-blue-100 dark:border-blue-900/50">
-                          <div className="flex items-start gap-2">
-                            <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                            <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-3 leading-relaxed">
-                              {recommendation.reasoning}
-                            </p>
+                      {isLoadingGearRecommendation ||
+                      isRefetchingGearRecommendation ? (
+                        <div className="flex flex-col gap-2">
+                          <Skeleton className="w-full h-[65px] rounded-lg" />
+                          <div className="flex gap-2 items-center">
+                            <Skeleton className="w-[56px] h-4 rounded-lg" />
+                            <Skeleton className="w-[56px] h-4 rounded-lg" />
                           </div>
                         </div>
-                      )}
+                      ) : (
+                        <>
+                          {/* AI Reasoning - Only show if available */}
+                          {recommendation?.reasoning && (
+                            <div className="mb-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 p-3 rounded-lg border border-blue-100 dark:border-blue-900/50">
+                              <div className="flex items-start gap-2">
+                                <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                                <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-3 leading-relaxed">
+                                  {recommendation.reasoning}
+                                </p>
+                              </div>
+                            </div>
+                          )}
 
-                      {/* Spacer to push tags to bottom */}
-                      <div className="flex-1" />
+                          {/* Spacer to push tags to bottom */}
+                          <div className="flex-1" />
 
-                      {/* Method Tags - Only show if available */}
-                      {recommendation?.method_tags &&
-                        recommendation.method_tags.length > 0 && (
-                          <div className="flex flex-wrap gap-1.5">
-                            {recommendation.method_tags
-                              .slice(0, 3)
-                              .map((tag, idx) => (
-                                <span
-                                  key={idx}
-                                  className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-md capitalize"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                          </div>
-                        )}
+                          {/* Method Tags - Only show if available */}
+                          {recommendation?.method_tags &&
+                            recommendation.method_tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {recommendation.method_tags
+                                  .slice(0, 3)
+                                  .map((tag, idx) => (
+                                    <span
+                                      key={idx}
+                                      className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-md capitalize"
+                                    >
+                                      {tag}
+                                    </span>
+                                  ))}
+                              </div>
+                            )}
 
-                      {/* No AI Data Available Message */}
-                      {!recommendation && (
-                        <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg">
-                          <p className="text-xs text-gray-500 dark:text-gray-400 text-center italic">
-                            No AI analysis available for current conditions
-                          </p>
-                        </div>
+                          {/* No AI Data Available Message */}
+                          {!recommendation && (
+                            <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg">
+                              <p className="text-xs text-gray-500 dark:text-gray-400 text-center italic">
+                                No AI analysis available for current conditions
+                              </p>
+                            </div>
+                          )}
+                        </>
                       )}
                     </div>
                   </div>

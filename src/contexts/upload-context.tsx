@@ -104,6 +104,10 @@ interface UploadContextType {
   showUploadedInfoMsg: boolean;
   uploadedInfoMsg: string | null;
 
+  // Edit info dialog trigger
+  showEditInfoDialog: boolean;
+  clearEditInfoDialogTrigger: () => void;
+
   // Upload status
   classifyingImage: boolean;
   isUploading: boolean;
@@ -157,6 +161,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
   );
   const [showUploadedInfoMsg, setShowUploadedInfoMsg] = useState(false);
   const [uploadedInfoMsg, setUploadedInfoMsg] = useState<string | null>(null);
+  const [showEditInfoDialog, setShowEditInfoDialog] = useState(false);
   const [classifyingImage, setClassifyingImage] = useState(false);
   const [totalGearItemsUploading, setTotalGearItemsUploading] = useState<
     number | undefined
@@ -295,6 +300,10 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
     setUploadError(null);
   }, []);
 
+  const clearEditInfoDialogTrigger = useCallback(() => {
+    setShowEditInfoDialog(false);
+  }, []);
+
   // Safe JSON parsing with validation
   const parseUploadData = useCallback(
     (chunk: string): UploadPhotoStreamData | null => {
@@ -311,7 +320,7 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
         return null;
       }
     },
-    [setError],
+    [],
   );
 
   const universalUploadStream = useStream({
@@ -406,6 +415,9 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
     setIsUploadLocked(false);
     clearError();
 
+    // Trigger edit info dialog
+    setShowEditInfoDialog(true);
+
     // Clear any existing timeouts
     clearAllTimeouts();
 
@@ -447,6 +459,9 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
     refreshProfile();
     setIsUploadLocked(false);
     clearError();
+
+    // Trigger edit info dialog
+    setShowEditInfoDialog(true);
 
     // Clear any existing timeouts
     clearAllTimeouts();
@@ -779,6 +794,8 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       identifyGearMessage,
       showUploadedInfoMsg,
       uploadedInfoMsg,
+      showEditInfoDialog,
+      clearEditInfoDialogTrigger,
       classifyingImage,
       isUploading,
       uploadError,
@@ -798,6 +815,8 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       identifyGearMessage,
       showUploadedInfoMsg,
       uploadedInfoMsg,
+      showEditInfoDialog,
+      clearEditInfoDialogTrigger,
       classifyingImage,
       isUploading,
       totalGearItemsUploading,
@@ -810,8 +829,6 @@ export const UploadProvider: React.FC<UploadProviderProps> = ({ children }) => {
       cancelUpload,
       clearQueue,
       closeUploadedInfoMsg,
-      totalPhotosUploading,
-      setTotalPhotosUploading,
     ],
   );
 

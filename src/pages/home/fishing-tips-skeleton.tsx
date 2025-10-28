@@ -4,11 +4,13 @@ import { Card, CardContent } from "@/components/ui/card";
 
 const FishingTipsSkeleton: React.FC = () => {
   return (
-    <div className="mb-8">
-      <div className="mb-4 pt-4">
-        <Skeleton className="h-6 w-48 mb-2" />
-        <Skeleton className="h-4 w-64" />
-      </div>
+    <div
+      className="mb-8"
+      role="status"
+      aria-live="polite"
+      aria-busy="true"
+      aria-label="Loading fishing tips"
+    >
       <Card className="overflow-hidden">
         <CardContent className="p-4">
           <div className="flex items-center justify-between mb-4">
@@ -30,6 +32,7 @@ const FishingTipsSkeleton: React.FC = () => {
           </div>
         </CardContent>
       </Card>
+      <span className="sr-only">Loading fishing tips...</span>
     </div>
   );
 };

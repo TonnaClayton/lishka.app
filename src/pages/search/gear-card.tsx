@@ -1,30 +1,9 @@
-import { GearItem, toGearItem } from "@/lib/gear";
-import { useMemo } from "react";
+import { GearItem } from "@/lib/gear";
 import { cn } from "@/lib/utils";
-import { useAuth } from "@/contexts/auth-context";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/routing";
 
-export default function SearchGearCard({ gearId }: { gearId: string }) {
-  const { profile } = useAuth();
-
-  const allGearItems = useMemo(() => {
-    const gearItems =
-      profile?.gear_items && Array.isArray(profile.gear_items)
-        ? profile.gear_items.map(toGearItem)
-        : [];
-
-    return gearItems;
-  }, [profile?.gear_items]);
-
-  const gear = useMemo(() => {
-    return allGearItems.find((item: GearItem) => item.id === gearId);
-  }, [allGearItems]);
-
-  if (!gear) {
-    return null;
-  }
-
+export default function SearchGearCard({ gear }: { gear: GearItem }) {
   return (
     <Link to={ROUTES.GEAR_DETAIL.replace(":gearId", gear.id)} target="_blank">
       <div
