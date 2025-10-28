@@ -545,7 +545,7 @@ export const useToxicFishData = (
         method: "GET",
       });
 
-      return data.data;
+      return data.data.filter((fish) => fish.is_toxic);
       //return fetchToxicFishData(location, userLatitude, userLongitude);
     },
     enabled: !!location,

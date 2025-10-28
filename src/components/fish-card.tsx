@@ -132,7 +132,7 @@ const FishCard = ({
             // For toxic fish, show danger type instead of habitat and difficulty
             <div className="flex items-start">
               <span className="text-foreground line-clamp-2 text-xs">
-                {dangerType}
+                {dangerType.charAt(0).toUpperCase() + dangerType.slice(1)}
               </span>
             </div>
           ) : (
