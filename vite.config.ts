@@ -188,9 +188,6 @@ export default defineConfig({
             "exif-js",
           ],
 
-          // AI/ML libraries
-          "ai-vendor": ["@ai-sdk/openai", "ai"],
-
           // Form libraries
           "form-vendor": ["react-hook-form", "@hookform/resolvers", "zod"],
 
