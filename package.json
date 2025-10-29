@@ -21,7 +21,6 @@
     "prepare": "husky"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.32",
     "@hookform/resolvers": "^3.6.0",
     "@radix-ui/react-accordion": "^1.1.2",
     "@radix-ui/react-alert-dialog": "^1.0.5",
@@ -56,7 +55,6 @@
     "@types/leaflet": "^1.9.17",
     "@vercel/blob": "^1.1.1",
     "@vercel/postgres": "^0.10.0",
-    "ai": "^5.0.44",
     "axios": "^1.9.0",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.0",
