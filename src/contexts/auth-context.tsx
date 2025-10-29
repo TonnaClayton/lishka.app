@@ -34,6 +34,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { ROUTES } from "@/lib/routing";
 import { identifyUser, captureEvent, resetUser } from "@/lib/posthog";
+import { api } from "@/hooks/queries/api";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 
@@ -818,49 +819,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       return { error: { message: "No user logged in" } };
     }
 
+    // eslint-disable-next-line no-useless-catch
     try {
       log("[AuthContext] Starting account deletion for user:", user.id);
 
-      // First delete the user's profile data
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .delete()
-        .eq("id", user.id);
+      await api(`user`, {
+        method: "DELETE",
+        body: JSON.stringify({}),
+      });
 
-      if (profileError) {
-        warnLog("[AuthContext] Profile deletion warning:", profileError);
-        // Continue with auth deletion even if profile deletion fails
-      }
-
-      // Delete the user's auth account
-      const { error: authError } = await supabase.auth.admin.deleteUser(
-        user.id,
-      );
-
-      if (authError) {
-        logError("[AuthContext] Auth deletion failed:", authError);
-        return { error: authError };
-      }
+      await authService.signOut();
 
       // Clear local state
       setUser(null);
       setSession(null);
-      setLoading(false);
 
       log("[AuthContext] Account deleted successfully");
 
       // Redirect to login page
       window.location.href = ROUTES.LOGIN;
-
-      return { error: null };
     } catch (err) {
-      logError("[AuthContext] Account deletion error:", err);
-      return {
-        error: {
-          message:
-            "Failed to delete account. Please try again or contact support.",
-        },
-      };
+      throw err;
     }
   };
 

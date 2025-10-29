@@ -125,12 +125,7 @@ const FishingTipsCarousel: React.FC<FishingTipsCarouselProps> = () => {
     isLoading: loadingFishingTips,
     isError: errorFishingTips,
     error: errorFishingTipsError,
-  } = useFishingTips({
-    temperature: weatherSummary?.temperature,
-    windSpeed: weatherSummary?.wind_speed,
-    waveHeight: weatherSummary?.wave_height,
-    weatherCondition: weatherSummary?.condition,
-  });
+  } = useFishingTips({});
 
   const tips = useMemo(() => {
     if (!fishingTips) {
