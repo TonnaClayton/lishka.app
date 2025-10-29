@@ -119,10 +119,10 @@ const FishCard = ({
       </div>
       <CardContent className="p-2 sm:p-3 flex flex-col flex-1">
         <div className="mb-1">
-          <h3 className="font-inter text-sm sm:text-base font-bold text-foreground line-clamp-1">
+          <h3 className="font-inter text-sm sm:text-base font-bold text-foreground truncate">
             {name}
           </h3>
-          <p className="text-muted-foreground text-xs italic line-clamp-1">
+          <p className="text-muted-foreground text-xs italic truncate">
             {scientificName}
           </p>
         </div>
