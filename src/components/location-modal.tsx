@@ -42,6 +42,13 @@ interface LocationModalProps {
   trigger?: React.ReactNode;
 }
 
+interface AlertState {
+  show: boolean;
+  title: string;
+  description: string;
+  variant?: "default" | "destructive";
+}
+
 // Fix Leaflet icon issue with proper CDN URLs
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -209,6 +216,23 @@ const LocationModal = ({
   const [loading, setLoading] = useState(false);
   const { updateLocationAsync } = useUserLocation();
   const { height } = useDeviceSize();
+  const [alert, setAlert] = useState<AlertState>({
+    show: false,
+    title: "",
+    description: "",
+    variant: "default",
+  });
+
+  const showAlert = (
+    title: string,
+    description: string,
+    variant: "default" | "destructive" = "default",
+  ) => {
+    setAlert({ show: true, title, description, variant });
+    setTimeout(() => {
+      setAlert({ show: false, title: "", description: "", variant: "default" });
+    }, 5000);
+  };
 
   const handleLocationUpdate = async (newLocation: LocationData) => {
     //startTransition(async () => {
@@ -250,10 +274,45 @@ const LocationModal = ({
     // });
   };
 
-  const handleDetectLocation = () => {
+  const handleDetectLocation = async () => {
     setLoading(true);
 
-    if (navigator.geolocation) {
+    // Check if geolocation is supported
+    if (!navigator.geolocation) {
+      showAlert(
+        "Geolocation Not Supported",
+        "Your browser doesn't support location detection. Please select your location manually on the map.",
+        "destructive",
+      );
+      setLoading(false);
+      return;
+    }
+
+    try {
+      // Check permission status if the Permissions API is supported
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const permissionStatus = await navigator.permissions.query({
+            name: "geolocation" as PermissionName,
+          });
+
+          if (permissionStatus.state === "denied") {
+            showAlert(
+              "Location Access Denied",
+              "Please enable location permissions in your browser settings to use this feature.",
+              "destructive",
+            );
+            setLoading(false);
+            return;
+          }
+        } catch (permError) {
+          // Some browsers might not support querying geolocation permission
+          // Continue with the geolocation request anyway
+          log("Permission query not supported:", permError);
+        }
+      }
+
+      // Attempt to get current position
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const lat = position.coords.latitude;
@@ -291,14 +350,7 @@ const LocationModal = ({
               data.address?.water ||
               data.address?.bay;
 
-            // if (isSeaLocation) {
-            //   // For sea locations, display only coordinates
-            //   const formattedLat = lat.toFixed(6);
-            //   const formattedLng = lng.toFixed(6);
-            //   locationName = `${formattedLat}, ${formattedLng}`;
-            // } else {
             locationName = name || "Current Location";
-            // }
           } catch (error) {
             logError("Error getting location name:", error);
           }
@@ -312,6 +364,10 @@ const LocationModal = ({
           };
 
           log("Setting new location:", newLocation);
+          showAlert(
+            "Location Detected",
+            `Your location has been set to ${locationName}`,
+          );
           handleLocationUpdate(newLocation);
           setLoading(false);
         },
@@ -319,9 +375,37 @@ const LocationModal = ({
           logError("Error getting location:", err);
           setLoading(false);
 
-          // If geolocation fails, set a default location instead of showing an alert
-
-          handleLocationUpdate(DEFAULT_LOCATION);
+          // Handle different error types
+          switch (err.code) {
+            case err.PERMISSION_DENIED:
+              showAlert(
+                "Location Access Denied",
+                "You denied the location request. Please enable location permissions in your browser settings or select your location manually on the map.",
+                "destructive",
+              );
+              break;
+            case err.POSITION_UNAVAILABLE:
+              showAlert(
+                "Location Unavailable",
+                "Your location information is currently unavailable. Please try again or select your location manually on the map.",
+                "destructive",
+              );
+              break;
+            case err.TIMEOUT:
+              showAlert(
+                "Location Request Timeout",
+                "The location request took too long. Please try again or select your location manually on the map.",
+                "destructive",
+              );
+              break;
+            default:
+              showAlert(
+                "Location Error",
+                "Unable to detect your location. Please select your location manually on the map.",
+                "destructive",
+              );
+              break;
+          }
         },
         {
           enableHighAccuracy: true,
@@ -329,8 +413,13 @@ const LocationModal = ({
           maximumAge: 0,
         },
       );
-    } else {
-      handleLocationUpdate(DEFAULT_LOCATION);
+    } catch (error) {
+      logError("Unexpected error in location detection:", error);
+      showAlert(
+        "Location Error",
+        "An unexpected error occurred. Please select your location manually on the map.",
+        "destructive",
+      );
       setLoading(false);
     }
   };
@@ -349,7 +438,11 @@ const LocationModal = ({
       log("Map location selected:", newLocation);
       handleLocationUpdate(newLocation);
     } else {
-      alert("Please select a location on the map first.");
+      showAlert(
+        "Error",
+        "Please select a location on the map first.",
+        "destructive",
+      );
     }
   };
 
@@ -385,6 +478,75 @@ const LocationModal = ({
             </svg>
           </button>
         </DialogHeader>
+
+        {/* Alert Container */}
+        {alert.show && (
+          <div
+            className={cn(
+              "p-4 rounded-lg mb-4 border animate-in fade-in slide-in-from-top-2 duration-300",
+              alert.variant === "destructive"
+                ? "bg-red-50 border-red-200 dark:bg-red-950 dark:border-red-800"
+                : "bg-green-50 border-green-200 dark:bg-green-950 dark:border-green-800",
+            )}
+          >
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                {alert.variant === "destructive" ? (
+                  <svg
+                    className="w-5 h-5 text-red-600 dark:text-red-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                    />
+                  </svg>
+                ) : (
+                  <svg
+                    className="w-5 h-5 text-green-600 dark:text-green-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                    />
+                  </svg>
+                )}
+              </div>
+              <div className="flex-1">
+                <h3
+                  className={cn(
+                    "font-semibold text-sm mb-1",
+                    alert.variant === "destructive"
+                      ? "text-red-800 dark:text-red-200"
+                      : "text-green-800 dark:text-green-200",
+                  )}
+                >
+                  {alert.title}
+                </h3>
+                <p
+                  className={cn(
+                    "text-sm",
+                    alert.variant === "destructive"
+                      ? "text-red-700 dark:text-red-300"
+                      : "text-green-700 dark:text-green-300",
+                  )}
+                >
+                  {alert.description}
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="w-full rounded-md overflow-hidden h-[400px] mb-4">
           <MapSelection
             onLocationSelect={handleLocationUpdate}
