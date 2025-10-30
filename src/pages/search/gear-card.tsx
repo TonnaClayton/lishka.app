@@ -12,14 +12,14 @@ export default function SearchGearCard({ gear }: { gear: GearItem }) {
         )}
       >
         <div className="flex items-start gap-3 sm:gap-4">
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-600 flex-shrink-0">
+          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-600 flex-shrink-0">
             <img
               src={gear.imageUrl}
               alt={gear.name}
               className="w-full h-full object-cover"
             />
           </div>
-          <div className="flex-1 min-w-0">
+          <div className="flex-1 flex flex-col gap-1.5 min-w-0">
             <h4 className="font-semibold text-[#191B1F] text-base sm:text-lg leading-tight line-clamp-1">
               {gear.name}
             </h4>
