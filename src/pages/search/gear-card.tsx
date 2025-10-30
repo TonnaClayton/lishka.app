@@ -23,12 +23,6 @@ export default function SearchGearCard({ gear }: { gear: GearItem }) {
             <h4 className="font-semibold text-[#191B1F] text-base sm:text-lg leading-tight line-clamp-1">
               {gear.name}
             </h4>
-            {gear.brand && (
-              <p className="text-sm text-[#191B1FCC] font-normal mb-2 leading-tight line-clamp-1">
-                {gear.brand}
-                {gear.model && ` ${gear.model}`}
-              </p>
-            )}
 
             {/* Main info badges */}
             <div className="flex flex-wrap gap-1 sm:gap-2 overflow-hidden">

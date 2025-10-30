@@ -1,5 +1,5 @@
 import { GearItem } from "@/lib/gear";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -78,12 +78,6 @@ export default function GearItemCard({
             <h4 className="font-semibold text-[#191B1F] text-base sm:text-lg leading-tight line-clamp-1">
               {gear.name}
             </h4>
-            {gear.brand && (
-              <p className="text-sm text-[#191B1FCC] font-normal mb-2 leading-tight line-clamp-1">
-                {gear.brand}
-                {gear.model && ` ${gear.model}`}
-              </p>
-            )}
 
             {/* Main info badges */}
             <div className="flex flex-wrap gap-1 sm:gap-2 overflow-hidden">
@@ -157,12 +151,6 @@ export default function GearItemCard({
               <h3 className="text-xl font-bold text-[#191B1F] mb-1 break-words">
                 {gear.name}
               </h3>
-              {gear.brand && (
-                <p className="text-[#191B1FCC] font-normal mb-3 break-words">
-                  {gear.brand}
-                  {gear.model && ` ${gear.model}`}
-                </p>
-              )}
             </div>
             <div className="flex-shrink-0">
               <DropdownMenu>

@@ -17,23 +17,6 @@ import { captureEvent } from "@/lib/posthog";
 import { AIRecommendation } from "@/types/gear-recommendation";
 import { Skeleton } from "@/components/ui/skeleton";
 
-const tagGearBasedOnCategory = (category: string) => {
-  const c = category.toLowerCase();
-
-  if (c.includes("jig") || c.includes("spoon")) return ["jigging"];
-  if (c.includes("popper") || c.includes("topwater") || c.includes("surface"))
-    return ["topwater", "spinning"];
-  if (c.includes("minnow") || c.includes("lure") || c.includes("crank"))
-    return ["spinning"];
-  if (c.includes("rod")) return ["cast"];
-  if (c.includes("reel")) return ["trolling"];
-  if (c.includes("bait") || c.includes("soft plastic"))
-    return ["spinning", "bottom"];
-  if (c.includes("trolling")) return ["trolling"];
-  if (c.includes("fly")) return ["fly"];
-  return ["general"];
-};
-
 const GearRecommendationWidget: React.FC = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
@@ -80,7 +63,7 @@ const GearRecommendationWidget: React.FC = () => {
 
     const aiTags = recommendations?.map((rec) => rec.method_tags).flat() || [];
 
-    return ["spinning", "jigging", "cast", "trolling", ...gearTags, ...aiTags];
+    return [...gearTags, ...aiTags];
   }, [recommendations, userGear]);
 
   const getRecommendation = useCallback(
@@ -98,9 +81,7 @@ const GearRecommendationWidget: React.FC = () => {
         ...gear,
         recommendation: {
           ...recommendation,
-          method_tags:
-            recommendation?.method_tags ||
-            tagGearBasedOnCategory(gear.category),
+          method_tags: recommendation?.method_tags,
         },
       };
     });
@@ -117,13 +98,6 @@ const GearRecommendationWidget: React.FC = () => {
       });
     }
 
-    // return filteredGear.sort((a: any, b: any) => {
-    //   const scoreA = getRecommendation(a.id)?.score || 0;
-    //   const scoreB = getRecommendation(b.id)?.score || 0;
-
-    //   if (scoreA !== scoreB) return scoreB - scoreA;
-    //   return a.name.localeCompare(b.name);
-    // });
     return filteredGear;
   }, [userGear, selectedTag, getRecommendation, newGearItems]);
 
@@ -149,10 +123,6 @@ const GearRecommendationWidget: React.FC = () => {
 
     navigate(`/gear-category/${gear.category}?gearId=${gear.id}`);
   };
-
-  // if (isLoadingGearRecommendation || isRefetchingGearRecommendation) {
-  //   return <GearRecommendationSkeleton />;
-  // }
 
   if (userGear.length === 0) {
     return (
