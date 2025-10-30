@@ -17,6 +17,19 @@ import { captureEvent } from "@/lib/posthog";
 import { AIRecommendation } from "@/types/gear-recommendation";
 import { Skeleton } from "@/components/ui/skeleton";
 
+const tagGearBasedOnCategory = (category: string) => {
+  switch (category) {
+    case "lure":
+      return ["spinning"];
+    case "rod":
+      return ["cast"];
+    case "reel":
+      return ["trolling"];
+    default:
+      return ["jigging"];
+  }
+};
+
 const GearRecommendationWidget: React.FC = () => {
   const { profile } = useAuth();
   const navigate = useNavigate();
@@ -63,7 +76,7 @@ const GearRecommendationWidget: React.FC = () => {
 
     const aiTags = recommendations?.map((rec) => rec.method_tags).flat() || [];
 
-    return [...gearTags, ...aiTags];
+    return ["spinning", "jigging", "cast", "trolling", ...gearTags, ...aiTags];
   }, [recommendations, userGear]);
 
   const getRecommendation = useCallback(
@@ -249,6 +262,12 @@ const GearRecommendationWidget: React.FC = () => {
                   gear.recommendation || getRecommendation(gear.id);
                 const score = recommendation?.score || 0;
 
+                const method_tags =
+                  recommendation?.method_tags &&
+                  recommendation.method_tags.length > 0
+                    ? recommendation.method_tags
+                    : tagGearBasedOnCategory(gear.category);
+
                 return (
                   <div
                     key={index}
@@ -316,21 +335,18 @@ const GearRecommendationWidget: React.FC = () => {
                           <div className="flex-1" />
 
                           {/* Method Tags - Only show if available */}
-                          {recommendation?.method_tags &&
-                            recommendation.method_tags.length > 0 && (
-                              <div className="flex flex-wrap gap-1.5">
-                                {recommendation.method_tags
-                                  .slice(0, 3)
-                                  .map((tag, idx) => (
-                                    <span
-                                      key={idx}
-                                      className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-md capitalize"
-                                    >
-                                      {tag}
-                                    </span>
-                                  ))}
-                              </div>
-                            )}
+                          {method_tags && method_tags.length > 0 && (
+                            <div className="flex flex-wrap gap-1.5">
+                              {method_tags.slice(0, 3).map((tag, idx) => (
+                                <span
+                                  key={idx}
+                                  className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-md capitalize"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
+                          )}
 
                           {/* No AI Data Available Message */}
                           {!recommendation && (
