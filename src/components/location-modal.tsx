@@ -364,10 +364,6 @@ const LocationModal = ({
           };
 
           log("Setting new location:", newLocation);
-          showAlert(
-            "Location Detected",
-            `Your location has been set to ${locationName}`,
-          );
           handleLocationUpdate(newLocation);
           setLoading(false);
         },
