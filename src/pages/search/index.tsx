@@ -25,7 +25,9 @@ import {
   useGetSearchSessionFollowQuestions,
   useGetSearchSessions,
   useUserLocation,
+  searchQueryKeys,
 } from "@/hooks/queries";
+import { useQueryClient } from "@tanstack/react-query";
 import SearchPageSkeleton from "@/hooks/queries/search/skeleton";
 import { SearchHistorySheet } from "./search-history-sheet";
 import { useAuth } from "@/contexts/auth-context";
@@ -72,6 +74,7 @@ const SearchPage: React.FC = () => {
   const { location } = useUserLocation();
   const { profile } = useAuth();
   const { id } = useParams<{ id?: string }>();
+  const queryClient = useQueryClient();
   const [hasGeneratedFollowUp, setHasGeneratedFollowUp] = useState(false);
   const [clickedFollowUpQuestions, setClickedFollowUpQuestions] = useState<
     Set<string>
@@ -88,6 +91,7 @@ const SearchPage: React.FC = () => {
     if (id) {
       try {
         const cached = sessionStorage.getItem(`search_messages_${id}`);
+
         if (cached) {
           // clear the cached messages and return the cached messages
           sessionStorage.removeItem(`search_messages_${id}`);
@@ -388,6 +392,17 @@ const SearchPage: React.FC = () => {
     setClickedFollowUpQuestions(new Set());
     setHideFollowUpQuestions(false);
   }, [id]);
+
+  // Invalidate search session query when user leaves the page
+  useEffect(() => {
+    return () => {
+      if (id) {
+        queryClient.invalidateQueries({
+          queryKey: searchQueryKeys.search(id),
+        });
+      }
+    };
+  }, [id, queryClient]);
 
   // Show skeleton while loading session only if we don't have messages from router state
   if (isLoadingSession && messages.length === 0) {

@@ -18,16 +18,20 @@ import { AIRecommendation } from "@/types/gear-recommendation";
 import { Skeleton } from "@/components/ui/skeleton";
 
 const tagGearBasedOnCategory = (category: string) => {
-  switch (category) {
-    case "lure":
-      return ["spinning"];
-    case "rod":
-      return ["cast"];
-    case "reel":
-      return ["trolling"];
-    default:
-      return ["jigging"];
-  }
+  const c = category.toLowerCase();
+
+  if (c.includes("jig") || c.includes("spoon")) return ["jigging"];
+  if (c.includes("popper") || c.includes("topwater") || c.includes("surface"))
+    return ["topwater", "spinning"];
+  if (c.includes("minnow") || c.includes("lure") || c.includes("crank"))
+    return ["spinning"];
+  if (c.includes("rod")) return ["cast"];
+  if (c.includes("reel")) return ["trolling"];
+  if (c.includes("bait") || c.includes("soft plastic"))
+    return ["spinning", "bottom"];
+  if (c.includes("trolling")) return ["trolling"];
+  if (c.includes("fly")) return ["fly"];
+  return ["general"];
 };
 
 const GearRecommendationWidget: React.FC = () => {
@@ -87,8 +91,23 @@ const GearRecommendationWidget: React.FC = () => {
     [recommendations],
   );
 
-  const getSortedGear = useCallback((): GearItem[] => {
-    let filteredGear = [...userGear];
+  const newGearItems = useMemo(() => {
+    return userGear.map((gear) => {
+      const recommendation = gear.recommendation || getRecommendation(gear.id);
+      return {
+        ...gear,
+        recommendation: {
+          ...recommendation,
+          method_tags:
+            recommendation?.method_tags ||
+            tagGearBasedOnCategory(gear.category),
+        },
+      };
+    });
+  }, [userGear, getRecommendation]);
+
+  const sortedGearItems = useMemo(() => {
+    let filteredGear = [...newGearItems];
 
     if (selectedTag) {
       filteredGear = filteredGear.filter((gear) => {
@@ -106,9 +125,19 @@ const GearRecommendationWidget: React.FC = () => {
     //   return a.name.localeCompare(b.name);
     // });
     return filteredGear;
-  }, [userGear, selectedTag, getRecommendation]);
+  }, [userGear, selectedTag, getRecommendation, newGearItems]);
 
-  const handleGearClick = (gear: GearItem) => {
+  const newGearItemTags = useMemo(() => {
+    return [
+      ...new Set(
+        newGearItems.map((gear) => gear.recommendation?.method_tags).flat(),
+      ),
+    ];
+  }, [newGearItems]);
+
+  const handleGearClick = (gearId: string) => {
+    const gear = userGear.find((gear) => gear.id === gearId);
+    if (!gear) return;
     captureEvent("gear_recommendation_clicked", {
       gear_id: gear.id,
       gear_name: gear.name,
@@ -237,131 +266,126 @@ const GearRecommendationWidget: React.FC = () => {
               >
                 All
               </Button>
-              {[...new Set(tags)].map((tag, index) => (
-                <Button
-                  key={index}
-                  type="button"
-                  className={cn(
-                    "bg-[#191B1F0D] shadow-none text-sm font-medium text-[#65758B] hover:bg-black hover:text-white h-[36px] capitalize rounded-[30px] py-2 px-4 w-fit flex-shrink-0",
-                    selectedTag === tag && "bg-black text-white",
-                  )}
-                  onClick={() =>
-                    setSelectedTag(selectedTag === tag ? null : tag)
-                  }
-                >
-                  {tag}
-                </Button>
-              ))}
+              {[...new Set(tags)]
+                .filter((tag) => newGearItemTags.includes(tag))
+                .map((tag, index) => (
+                  <Button
+                    key={index}
+                    type="button"
+                    className={cn(
+                      "bg-[#191B1F0D] shadow-none text-sm font-medium text-[#65758B] hover:bg-black hover:text-white h-[36px] capitalize rounded-[30px] py-2 px-4 w-fit flex-shrink-0",
+                      selectedTag === tag && "bg-black text-white",
+                    )}
+                    onClick={() =>
+                      setSelectedTag(selectedTag === tag ? null : tag)
+                    }
+                  >
+                    {tag}
+                  </Button>
+                ))}
             </div>
           )}
           <div className="flex gap-3 overflow-x-auto pb-4 scrollbar-thin scrollbar-track-transparent px-4 lg:px-6 scrollbar-thumb-gray-300">
-            {getSortedGear()
-              .slice(0, 20)
-              .map((gear, index) => {
-                const recommendation =
-                  gear.recommendation || getRecommendation(gear.id);
-                const score = recommendation?.score || 0;
+            {sortedGearItems.slice(0, 20).map((gear, index) => {
+              const score = gear.recommendation?.score || 0;
 
-                const method_tags =
-                  recommendation?.method_tags &&
-                  recommendation.method_tags.length > 0
-                    ? recommendation.method_tags
-                    : tagGearBasedOnCategory(gear.category);
+              const recommendation = gear.recommendation;
+              const method_tags = recommendation?.method_tags;
 
-                return (
-                  <div
-                    key={index}
-                    className="overflow-hidden flex flex-col border border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800 rounded-2xl flex-shrink-0 w-[320px] relative cursor-pointer hover:shadow-md transition-all"
-                    onClick={() => handleGearClick(gear)}
-                  >
-                    {/* Gear Image */}
-                    <div className="relative w-full aspect-square overflow-hidden">
-                      {gear.imageUrl ? (
-                        <img
-                          src={gear.imageUrl}
-                          alt={gear.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
-                          <Package className="h-12 w-12 text-gray-400" />
-                        </div>
-                      )}
+              return (
+                <div
+                  key={index}
+                  className="overflow-hidden flex flex-col border border-gray-200 dark:border-gray-700 shadow-sm bg-white dark:bg-gray-800 rounded-2xl flex-shrink-0 w-[320px] relative cursor-pointer hover:shadow-md transition-all"
+                  onClick={() => handleGearClick(gear.id)}
+                >
+                  {/* Gear Image */}
+                  <div className="relative w-full aspect-square overflow-hidden">
+                    {gear.imageUrl ? (
+                      <img
+                        src={gear.imageUrl}
+                        alt={gear.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center">
+                        <Package className="h-12 w-12 text-gray-400" />
+                      </div>
+                    )}
 
-                      {/* AI Score Badge */}
-                      {score > 0 && (
-                        <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
-                          <Sparkles className="h-3.5 w-3.5" />
-                          <span className="text-xs font-bold">
-                            {score}% Match
-                          </span>
-                        </div>
-                      )}
+                    {/* AI Score Badge */}
+                    {score > 0 && (
+                      <div className="absolute top-3 right-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-lg">
+                        <Sparkles className="h-3.5 w-3.5" />
+                        <span className="text-xs font-bold">
+                          {score}% Match
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Gear Info */}
+                  <div className="p-4 flex flex-col flex-1">
+                    {/* Gear Name */}
+                    <div className="mb-4">
+                      <h3 className="font-bold text-base text-foreground line-clamp-1">
+                        {gear.name}
+                      </h3>
                     </div>
 
-                    {/* Gear Info */}
-                    <div className="p-4 flex flex-col flex-1">
-                      {/* Gear Name */}
-                      <div className="mb-4">
-                        <h3 className="font-bold text-base text-foreground line-clamp-1">
-                          {gear.name}
-                        </h3>
-                      </div>
-
-                      {isLoadingGearRecommendation ||
-                      isRefetchingGearRecommendation ? (
-                        <div className="flex flex-col gap-2">
-                          <Skeleton className="w-full h-[65px] rounded-lg" />
-                          <div className="flex gap-2 items-center">
-                            <Skeleton className="w-[56px] h-4 rounded-lg" />
-                            <Skeleton className="w-[56px] h-4 rounded-lg" />
-                          </div>
+                    {isLoadingGearRecommendation ||
+                    isRefetchingGearRecommendation ? (
+                      <div className="flex flex-col gap-2">
+                        <Skeleton className="w-full h-[65px] rounded-lg" />
+                        <div className="flex gap-2 items-center">
+                          <Skeleton className="w-[56px] h-4 rounded-lg" />
+                          <Skeleton className="w-[56px] h-4 rounded-lg" />
                         </div>
-                      ) : (
-                        <>
-                          {/* AI Reasoning - Only show if available */}
-                          {recommendation?.reasoning && (
-                            <div className="mb-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 p-3 rounded-lg border border-blue-100 dark:border-blue-900/50">
-                              <div className="flex items-start gap-2">
-                                <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
-                                <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-3 leading-relaxed">
-                                  {recommendation.reasoning}
-                                </p>
-                              </div>
-                            </div>
-                          )}
-
-                          {/* Spacer to push tags to bottom */}
-                          <div className="flex-1" />
-
-                          {/* Method Tags - Only show if available */}
-                          {method_tags && method_tags.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5">
-                              {method_tags.slice(0, 3).map((tag, idx) => (
-                                <span
-                                  key={idx}
-                                  className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-md capitalize"
-                                >
-                                  {tag}
-                                </span>
-                              ))}
-                            </div>
-                          )}
-
-                          {/* No AI Data Available Message */}
-                          {!recommendation && (
-                            <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg">
-                              <p className="text-xs text-gray-500 dark:text-gray-400 text-center italic">
-                                No AI analysis available for current conditions
+                      </div>
+                    ) : (
+                      <>
+                        {/* AI Reasoning - Only show if available */}
+                        {recommendation?.reasoning && (
+                          <div className="mb-4 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30 p-3 rounded-lg border border-blue-100 dark:border-blue-900/50">
+                            <div className="flex items-start gap-2">
+                              <Sparkles className="h-4 w-4 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                              <p className="text-xs text-gray-700 dark:text-gray-300 line-clamp-3 leading-relaxed">
+                                {recommendation.reasoning}
                               </p>
                             </div>
-                          )}
-                        </>
-                      )}
-                    </div>
+                          </div>
+                        )}
+
+                        {/* Spacer to push tags to bottom */}
+                        <div className="flex-1" />
+
+                        {/* Method Tags - Only show if available */}
+                        {method_tags && method_tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {method_tags.slice(0, 3).map((tag, idx) => (
+                              <span
+                                key={idx}
+                                className="inline-flex items-center px-2 py-1 text-xs font-medium bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 rounded-md capitalize"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+
+                        {/* No AI Data Available Message */}
+                        {!recommendation && (
+                          <div className="bg-gray-50 dark:bg-gray-900/50 p-3 rounded-lg">
+                            <p className="text-xs text-gray-500 dark:text-gray-400 text-center italic">
+                              No AI analysis available for current conditions
+                            </p>
+                          </div>
+                        )}
+                      </>
+                    )}
                   </div>
-                );
-              })}
+                </div>
+              );
+            })}
           </div>
         </div>
       )}
