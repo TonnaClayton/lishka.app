@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { log } from "@/lib/logging";
+import { log, error as logError } from "@/lib/logging";
 import { useAuth } from "@/contexts/auth-context";
 import FishDetailSkeleton from "./fish-detail-skeleton";
 import { captureEvent } from "@/lib/posthog";
@@ -278,12 +278,12 @@ const FishDetailPage = () => {
   const displayData = fishBasicData;
   const isLoadingData = (isStreaming || isProfileLoading) && !fishBasicData;
 
-  console.log("[FISH DETAIL] Display data:", displayData);
+  log("[FISH DETAIL] Display data:", displayData);
 
   const { startStream, stopStream } = useStream({
     path: `fish/${fishName}/stream`,
     onData: (chunk) => {
-      console.log("[STREAM FISH DETAIL] Received chunk:", chunk);
+      log("[STREAM FISH DETAIL] Received chunk:", chunk);
       if (!chunk) return;
 
       try {
@@ -345,11 +345,11 @@ const FishDetailPage = () => {
             log(`[STREAM] Unknown event type: ${eventData.type}`);
         }
       } catch (error) {
-        console.error("[STREAM] Error parsing chunk:", error, chunk);
+        logError("[STREAM] Error parsing chunk:", error, chunk);
       }
     },
     onError: (error) => {
-      console.error("[STREAM] Stream error:", error);
+      logError("[STREAM] Stream error:", error);
       setIsStreaming(false);
       setStreamingStatus("");
     },
@@ -1211,7 +1211,7 @@ const FishDetailPage = () => {
                     },
                   )}
                 </>
-              ) : fishingInfoAccumulator ? (
+              ) : fishingInfoAccumulator || !streamComplete ? (
                 <>
                   {[...Array(3)].map((_, i) => (
                     <Card
@@ -1245,7 +1245,7 @@ const FishDetailPage = () => {
                     </Card>
                   ))}
                 </>
-              ) : (
+              ) : streamComplete ? (
                 <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
                   <div className="text-center py-8">
                     <p className="text-gray-500 dark:text-gray-400 mb-2">
@@ -1257,7 +1257,7 @@ const FishDetailPage = () => {
                     </p>
                   </div>
                 </Card>
-              )}
+              ) : null}
 
               {/* Fishing Regulations Card - Moved to last position */}
               {displayData?.fishing_regulations ? (

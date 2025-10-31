@@ -35,6 +35,8 @@ import LocationBtn from "@/components/location-btn";
 import { captureEvent } from "@/lib/posthog";
 import SearchGearCard from "./gear-card";
 import { toGearItem } from "@/lib/gear";
+import { toImageMetadataItem } from "@/lib/gallery-photo";
+import SearchPhotoCard from "./photo-card";
 
 interface Message {
   id: string;
@@ -45,6 +47,16 @@ interface Message {
   fish_results?: Fish[];
   gear_results?: Array<{
     id: string;
+  }>;
+  photo_gallery_results?: Array<{
+    url: string;
+    timestamp: string;
+    fishInfo: {
+      name: string;
+      estimatedSize: string;
+      estimatedWeight: string;
+      confidence: number;
+    };
   }>;
   image?: string;
 }
@@ -172,6 +184,7 @@ const SearchPage: React.FC = () => {
           timestamp: new Date(message.created_at),
           fish_results: message.metadata?.fish_results || [],
           gear_results: message.metadata?.gear_results || [],
+          photo_gallery_results: message.metadata?.photo_gallery_results || [],
         })) || []
       );
     }
@@ -213,6 +226,7 @@ const SearchPage: React.FC = () => {
         timestamp: new Date(),
         fish_results: response.metadata?.fish_results || [],
         gear_results: response.metadata?.gear_results || [],
+        photo_gallery_results: response.metadata?.photo_gallery_results || [],
       };
 
       if (
@@ -746,6 +760,17 @@ const SearchMessageCard = ({
     );
   }, [profile?.gear_items]);
 
+  const galleryPhotos = useMemo(() => {
+    const userGalleryPhotos =
+      profile?.gallery_photos && Array.isArray(profile.gallery_photos)
+        ? profile.gallery_photos.map(toImageMetadataItem)
+        : [];
+
+    return userGalleryPhotos.filter((photo) =>
+      message.photo_gallery_results?.some((result) => result.url === photo.url),
+    );
+  }, [profile?.gallery_photos]);
+
   return (
     <div
       key={message.id}
@@ -837,6 +862,21 @@ const SearchMessageCard = ({
             <div className="flex w-full overflow-x-auto gap-4 px-4 pb-3">
               {allGearItems.map((gear) => (
                 <SearchGearCard key={gear.id} gear={gear} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {galleryPhotos && galleryPhotos.length > 0 && (
+          <div className="mt-4 space-y-4 w-full">
+            <h3 className="font-medium text-sm px-4">Gallery Photos:</h3>
+            <div className="flex w-full overflow-x-auto gap-4 px-4 pb-3">
+              {galleryPhotos.map((photo) => (
+                <SearchPhotoCard
+                  key={photo.url}
+                  url={photo.url}
+                  name={photo.fishInfo?.name || ""}
+                />
               ))}
             </div>
           </div>
