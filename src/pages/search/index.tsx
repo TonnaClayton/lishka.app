@@ -859,7 +859,7 @@ const SearchMessageCard = ({
         {allGearItems && allGearItems.length > 0 && (
           <div className="mt-4 space-y-4 w-full">
             <h3 className="font-medium text-sm px-4">Gear Items:</h3>
-            <div className="flex w-full overflow-x-auto gap-4 px-4 pb-3">
+            <div className="flex w-full overflow-x-auto gap-2 lg:gap-4 px-4 pb-3">
               {allGearItems.map((gear) => (
                 <SearchGearCard key={gear.id} gear={gear} />
               ))}

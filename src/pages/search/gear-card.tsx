@@ -8,11 +8,11 @@ export default function SearchGearCard({ gear }: { gear: GearItem }) {
     <Link to={ROUTES.GEAR_DETAIL.replace(":gearId", gear.id)} target="_blank">
       <div
         className={cn(
-          `bg-white dark:bg-gray-800 rounded-xl shadow-sm cursor-pointer overflow-hidden p-4 w-[500px] flex-shrink-0`,
+          `bg-white dark:bg-gray-800 rounded-xl shadow-sm cursor-pointer overflow-hidden p-4 w-[300px] lg:w-[500px] flex-shrink-0`,
         )}
       >
         <div className="flex items-start gap-3 sm:gap-4">
-          <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-600 flex-shrink-0">
+          <div className="w-[78px] h-[78px] lg:h-16 lg:w-16 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-600 flex-shrink-0">
             <img
               src={gear.imageUrl}
               alt={gear.name}
