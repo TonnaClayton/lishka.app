@@ -72,8 +72,7 @@ export const useFishDataInfinite = (location: string) => {
         }
       }
 
-      // keep order stable
-      unique.sort((a, b) => a.scientific_name.localeCompare(b.scientific_name));
+      // keep the backend ordering (already popularity-ranked) intact
       return { ...data, pages: [unique] }; // consumers map over pages[0]
     },
     initialPageParam: 1,
