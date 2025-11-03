@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, AlertCircle, MapPin } from "lucide-react";
 import Lottie from "lottie-react";
@@ -280,6 +280,8 @@ const FishDetailPage = () => {
 
   log("[FISH DETAIL] Display data:", displayData);
 
+  const streamBufferRef = useRef<string>("");
+
   const { startStream, stopStream } = useStream({
     path: `fish/${fishName}/stream`,
     onData: (chunk) => {
@@ -287,62 +289,84 @@ const FishDetailPage = () => {
       if (!chunk) return;
 
       try {
-        const eventData = JSON.parse(chunk.replace("data: ", ""));
+        streamBufferRef.current += chunk;
+        const events = streamBufferRef.current.split("\n\n");
 
-        switch (eventData.type) {
-          case "status":
-            setStreamingStatus(eventData.message);
-            log(`[STREAM] Status: ${eventData.message}`);
-            break;
+        if (!streamBufferRef.current.endsWith("\n\n")) {
+          streamBufferRef.current = events.pop() ?? "";
+        } else {
+          streamBufferRef.current = "";
+        }
 
-          case "fish_basic":
-            log("[STREAM] Received fish_basic data");
-            setFishBasicData(eventData.data);
-            setStreamingStatus("");
-            break;
+        for (const event of events) {
+          const dataPayload = event
+            .split("\n")
+            .filter((line) => line.startsWith("data:"))
+            .map((line) => line.replace(/^data:\s?/, ""))
+            .join("\n")
+            .trim();
 
-          case "fishing_info_chunk":
-            // Accumulate fishing info chunks
-            setFishingInfoAccumulator((prev) => prev + eventData.chunk);
-            break;
+          if (!dataPayload) {
+            continue;
+          }
 
-          case "fishing_info":
-            log("[STREAM] Received complete fishing_info");
-            // Update fish basic data with complete fishing info
-            setFishBasicData((prev: any) => ({
-              ...prev,
-              ...eventData.data,
-            }));
-            // Clear accumulator
-            setFishingInfoAccumulator("");
-            break;
+          const eventData = JSON.parse(dataPayload);
 
-          case "regulations_chunk":
-            // Accumulate regulations chunks
-            setRegulationsAccumulator((prev) => prev + eventData.chunk);
-            break;
+          switch (eventData.type) {
+            case "status":
+              setStreamingStatus(eventData.message);
+              log(`[STREAM] Status: ${eventData.message}`);
+              break;
 
-          case "regulations":
-            log("[STREAM] Received complete regulations");
-            // Update fish data with regulations
-            setFishBasicData((prev: any) => ({
-              ...prev,
-              fishing_regulations: eventData.data,
-            }));
-            // Clear accumulator
-            setRegulationsAccumulator("");
-            break;
+            case "fish_basic":
+              log("[STREAM] Received fish_basic data");
+              setFishBasicData(eventData.data);
+              setStreamingStatus("");
+              break;
 
-          case "complete":
-            log("[STREAM] Stream complete");
-            setFishBasicData(eventData.data);
-            setStreamComplete(true);
-            setIsStreaming(false);
-            setStreamingStatus("");
-            break;
+            case "fishing_info_chunk":
+              // Accumulate fishing info chunks
+              setFishingInfoAccumulator((prev) => prev + eventData.chunk);
+              break;
 
-          default:
-            log(`[STREAM] Unknown event type: ${eventData.type}`);
+            case "fishing_info":
+              log("[STREAM] Received complete fishing_info");
+              // Update fish basic data with complete fishing info
+              setFishBasicData((prev: any) => ({
+                ...prev,
+                ...eventData.data,
+              }));
+              // Clear accumulator
+              setFishingInfoAccumulator("");
+              break;
+
+            case "regulations_chunk":
+              // Accumulate regulations chunks
+              setRegulationsAccumulator((prev) => prev + eventData.chunk);
+              break;
+
+            case "regulations":
+              log("[STREAM] Received complete regulations");
+              // Update fish data with regulations
+              setFishBasicData((prev: any) => ({
+                ...prev,
+                fishing_regulations: eventData.data,
+              }));
+              // Clear accumulator
+              setRegulationsAccumulator("");
+              break;
+
+            case "complete":
+              log("[STREAM] Stream complete");
+              setFishBasicData(eventData.data);
+              setStreamComplete(true);
+              setIsStreaming(false);
+              setStreamingStatus("");
+              break;
+
+            default:
+              log(`[STREAM] Unknown event type: ${eventData.type}`);
+          }
         }
       } catch (error) {
         logError("[STREAM] Error parsing chunk:", error, chunk);
