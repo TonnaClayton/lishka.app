@@ -14,7 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { log, error as logError } from "@/lib/logging";
+import { error as logError } from "@/lib/logging";
 import { useAuth } from "@/contexts/auth-context";
 import FishDetailSkeleton from "./fish-detail-skeleton";
 import { captureEvent } from "@/lib/posthog";
@@ -29,7 +29,6 @@ interface FishingSeasonCalendarProps {
 
 const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
   fishingSeasons,
-  fishName,
 }) => {
   // Month data
   const months = [
@@ -47,8 +46,6 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
     { short: "Dec", full: "December", index: 11 },
   ];
 
-  const currentMonthIndex = new Date().getMonth();
-
   // Function to determine if a month is in season
   const isMonthInSeason = (monthData: {
     short: string;
@@ -56,7 +53,6 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
     index: number;
   }): boolean => {
     if (!fishingSeasons?.inSeason || !Array.isArray(fishingSeasons.inSeason)) {
-      log(`No fishing seasons data available for ${fishName}`);
       return false;
     }
 
@@ -67,27 +63,20 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
       )
       .filter((season) => season.length > 0);
 
-    log(`Checking month ${monthData.full} against seasons:`, seasonEntries);
-
     // If no valid season entries, return false
     if (seasonEntries.length === 0) {
-      log(`No valid season entries found for ${fishName}`);
       return false;
     }
 
     // Check each season entry
     for (const season of seasonEntries) {
-      log(`Processing season entry: "${season}"`);
-
       // Direct match with full month name
       if (season === monthData.full.toLowerCase()) {
-        log(`✓ Direct match: ${season} === ${monthData.full.toLowerCase()}`);
         return true;
       }
 
       // Direct match with short month name
       if (season === monthData.short.toLowerCase()) {
-        log(`✓ Short match: ${season} === ${monthData.short.toLowerCase()}`);
         return true;
       }
 
@@ -96,9 +85,6 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
         season.includes(monthData.full.toLowerCase()) ||
         season.includes(monthData.short.toLowerCase())
       ) {
-        log(
-          `✓ Contains match: ${season} contains ${monthData.full.toLowerCase()}`,
-        );
         return true;
       }
 
@@ -113,7 +99,6 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
 
       if (seasonalMonths[season]) {
         if (seasonalMonths[season].includes(monthData.index)) {
-          log(`✓ Seasonal match: ${monthData.full} is in ${season}`);
           return true;
         }
       }
@@ -124,8 +109,6 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
         const [startSeason, endSeason] = season
           .split(separator)
           .map((s) => s.trim());
-
-        log(`Processing range: ${startSeason} to ${endSeason}`);
 
         // Find start and end month indices
         const startMonth = months.find(
@@ -149,10 +132,6 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
           const endIdx = endMonth.index;
           const currentIdx = monthData.index;
 
-          log(
-            `Range indices: start=${startIdx}, end=${endIdx}, current=${currentIdx}`,
-          );
-
           // Handle range that wraps around the year (e.g., Nov-Feb)
           let inRange = false;
           if (startIdx <= endIdx) {
@@ -164,15 +143,8 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
           }
 
           if (inRange) {
-            log(
-              `✓ Range match: ${monthData.full} is in range ${startSeason}-${endSeason}`,
-            );
             return true;
           }
-        } else {
-          log(
-            `Could not find months for range: ${startSeason} to ${endSeason}`,
-          );
         }
       }
 
@@ -186,16 +158,12 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
             monthData.full.toLowerCase().startsWith(monthName) ||
             monthData.short.toLowerCase().startsWith(monthName)
           ) {
-            log(
-              `✓ List match: ${monthData.full} found in comma-separated list`,
-            );
             return true;
           }
         }
       }
     }
 
-    log(`✗ No match found for ${monthData.full}`);
     return false;
   };
 
@@ -216,23 +184,10 @@ const FishingSeasonCalendar: React.FC<FishingSeasonCalendarProps> = ({
     }
   };
 
-  // Debug logging
-  log("=== FISHING SEASON CALENDAR DEBUG ===");
-  log("Fishing seasons data:", fishingSeasons);
-  log("In season array:", fishingSeasons?.inSeason);
-  log("Current month index:", currentMonthIndex);
-  log("Current month name:", months[currentMonthIndex].full);
-  log("=====================================");
-
   return (
     <div className="grid grid-cols-12 gap-0.5 sm:gap-1 text-center">
       {months.map((monthData) => {
         const styling = getMonthStyling(monthData);
-        const isInSeason = isMonthInSeason(monthData);
-
-        log(
-          `Month ${monthData.full}: in-season=${isInSeason}, styling=${styling}`,
-        );
 
         return (
           <div
@@ -266,6 +221,10 @@ const FishDetailPage = () => {
   const [streamComplete, setStreamComplete] = useState(false);
   const [hasAttemptedLoad, setHasAttemptedLoad] = useState(false);
 
+  // Ref to track the current fish name and prevent race conditions
+  const currentFishNameRef = useRef<string | undefined>(undefined);
+  const streamCompleteRef = useRef<boolean>(false);
+
   // Commenting out the traditional query hook since we're using streaming
   // const {
   //   data: fishDetailsData,
@@ -278,112 +237,123 @@ const FishDetailPage = () => {
   const displayData = fishBasicData;
   const isLoadingData = (isStreaming || isProfileLoading) && !fishBasicData;
 
-  log("[FISH DETAIL] Display data:", displayData);
-
   const streamBufferRef = useRef<string>("");
+
+  // Memoize callbacks to prevent useStream from recreating startStream/stopStream
+  const handleStreamData = React.useCallback((chunk: string) => {
+    if (!chunk) return;
+
+    try {
+      streamBufferRef.current += chunk;
+
+      // Split by newlines - backend sends newline-delimited JSON
+      const lines = streamBufferRef.current.split("\n");
+
+      // Keep the last line in the buffer if it's incomplete (doesn't end with \n)
+      if (!streamBufferRef.current.endsWith("\n")) {
+        streamBufferRef.current = lines.pop() ?? "";
+      } else {
+        streamBufferRef.current = "";
+      }
+
+      for (const line of lines) {
+        // Skip empty lines
+        if (!line.trim()) {
+          continue;
+        }
+
+        // Check if this is SSE format (data: prefix) or raw JSON
+        let jsonData = line.trim();
+        if (line.startsWith("data:")) {
+          jsonData = line.replace(/^data:\s?/, "").trim();
+        }
+
+        if (!jsonData) {
+          continue;
+        }
+
+        const eventData = JSON.parse(jsonData);
+
+        switch (eventData.type) {
+          case "status":
+            setStreamingStatus(eventData.message);
+            break;
+
+          case "fish_basic":
+            setFishBasicData(eventData.data);
+            setStreamingStatus("");
+            break;
+
+          case "fishing_info_chunk":
+            // Accumulate fishing info chunks
+            setFishingInfoAccumulator((prev) => prev + eventData.chunk);
+            break;
+
+          case "fishing_info":
+            // Update fish basic data with complete fishing info
+            setFishBasicData((prev: any) => ({
+              ...prev,
+              ...eventData.data,
+            }));
+            // Clear accumulator
+            setFishingInfoAccumulator("");
+            break;
+
+          case "regulations_chunk":
+            // Accumulate regulations chunks
+            setRegulationsAccumulator((prev) => prev + eventData.chunk);
+            break;
+
+          case "regulations":
+            // Update fish data with regulations
+            setFishBasicData((prev: any) => ({
+              ...prev,
+              fishing_regulations: eventData.data,
+            }));
+            // Clear accumulator
+            setRegulationsAccumulator("");
+            break;
+
+          case "complete":
+            if (eventData.data) {
+              setFishBasicData(eventData.data);
+              streamCompleteRef.current = true;
+            } else {
+              logError(
+                "[STREAM] Complete event has no data! Keeping existing data.",
+              );
+            }
+            setStreamComplete(true);
+            setIsStreaming(false);
+            setStreamingStatus("");
+            break;
+
+          default:
+            break;
+        }
+      }
+    } catch (error) {
+      logError("[STREAM] Error parsing chunk:", error, chunk);
+    }
+  }, []);
+
+  const handleStreamError = React.useCallback((error: Error) => {
+    logError("[STREAM] Stream error:", error);
+    setIsStreaming(false);
+    setStreamingStatus("");
+  }, []);
+
+  const handleStreamComplete = React.useCallback(() => {
+    // Don't set isStreaming to false here immediately
+    // The stream close is called even after successful data delivery
+    // Let the data presence determine the loading state
+  }, []);
 
   const { startStream, stopStream } = useStream({
     path: `fish/${fishName}/stream`,
-    onData: (chunk) => {
-      log("[STREAM FISH DETAIL] Received chunk:", chunk);
-      if (!chunk) return;
-
-      try {
-        streamBufferRef.current += chunk;
-        const events = streamBufferRef.current.split("\n\n");
-
-        if (!streamBufferRef.current.endsWith("\n\n")) {
-          streamBufferRef.current = events.pop() ?? "";
-        } else {
-          streamBufferRef.current = "";
-        }
-
-        for (const event of events) {
-          const dataPayload = event
-            .split("\n")
-            .filter((line) => line.startsWith("data:"))
-            .map((line) => line.replace(/^data:\s?/, ""))
-            .join("\n")
-            .trim();
-
-          if (!dataPayload) {
-            continue;
-          }
-
-          const eventData = JSON.parse(dataPayload);
-
-          switch (eventData.type) {
-            case "status":
-              setStreamingStatus(eventData.message);
-              log(`[STREAM] Status: ${eventData.message}`);
-              break;
-
-            case "fish_basic":
-              log("[STREAM] Received fish_basic data");
-              setFishBasicData(eventData.data);
-              setStreamingStatus("");
-              break;
-
-            case "fishing_info_chunk":
-              // Accumulate fishing info chunks
-              setFishingInfoAccumulator((prev) => prev + eventData.chunk);
-              break;
-
-            case "fishing_info":
-              log("[STREAM] Received complete fishing_info");
-              // Update fish basic data with complete fishing info
-              setFishBasicData((prev: any) => ({
-                ...prev,
-                ...eventData.data,
-              }));
-              // Clear accumulator
-              setFishingInfoAccumulator("");
-              break;
-
-            case "regulations_chunk":
-              // Accumulate regulations chunks
-              setRegulationsAccumulator((prev) => prev + eventData.chunk);
-              break;
-
-            case "regulations":
-              log("[STREAM] Received complete regulations");
-              // Update fish data with regulations
-              setFishBasicData((prev: any) => ({
-                ...prev,
-                fishing_regulations: eventData.data,
-              }));
-              // Clear accumulator
-              setRegulationsAccumulator("");
-              break;
-
-            case "complete":
-              log("[STREAM] Stream complete");
-              setFishBasicData(eventData.data);
-              setStreamComplete(true);
-              setIsStreaming(false);
-              setStreamingStatus("");
-              break;
-
-            default:
-              log(`[STREAM] Unknown event type: ${eventData.type}`);
-          }
-        }
-      } catch (error) {
-        logError("[STREAM] Error parsing chunk:", error, chunk);
-      }
-    },
-    onError: (error) => {
-      logError("[STREAM] Stream error:", error);
-      setIsStreaming(false);
-      setStreamingStatus("");
-    },
-    onComplete: () => {
-      log("[STREAM] Stream connection closed");
-      // Don't set isStreaming to false here immediately
-      // The stream close is called even after successful data delivery
-      // Let the data presence determine the loading state
-      // The error condition already checks for displayData, so this won't cause issues
-    },
+    onData: handleStreamData,
+    onError: handleStreamError,
+    onComplete: handleStreamComplete,
   });
 
   // Track fish detail page view
@@ -401,6 +371,14 @@ const FishDetailPage = () => {
 
   useEffect(() => {
     if (fishName) {
+      // Only start a new stream if the fish name has actually changed
+      if (currentFishNameRef.current === fishName) {
+        return;
+      }
+
+      currentFishNameRef.current = fishName;
+      streamCompleteRef.current = false;
+
       setIsStreaming(true);
       setStreamComplete(false);
       setFishBasicData(null);
@@ -417,25 +395,21 @@ const FishDetailPage = () => {
     return () => {
       stopStream();
     };
-  }, [fishName]);
+  }, [fishName, startStream, stopStream]);
 
   useEffect(() => {
     const loadFishImage = async () => {
       if (!displayData?.name) return;
 
       try {
-        log(
-          `FishCard: Starting image load for ${displayData.name} (${displayData.scientific_name})`,
-        );
         setImageLoading(true);
         const fishImageUrl = await getFishImageUrl(
           displayData.name,
           displayData.scientific_name,
         );
-        log(`FishCard: Got image URL for ${displayData.name}:`, fishImageUrl);
         setFishImageUrl(fishImageUrl);
       } catch (error) {
-        error(`FishCard: Error loading image for ${name}:`, error);
+        logError(`Error loading image for ${displayData.name}:`, error);
         setFishImageUrl(getPlaceholderFishImage());
       } finally {
         setImageLoading(false);
@@ -449,16 +423,8 @@ const FishDetailPage = () => {
       displayData.image.includes("unsplash") ||
       displayData.image.includes("placeholder")
     ) {
-      log(
-        `FishCard: Loading new image for ${displayData.name}, current image:`,
-        displayData.image,
-      );
       loadFishImage();
     } else {
-      log(
-        `FishCard: Using existing image for ${displayData.name}:`,
-        displayData.image,
-      );
       setFishImageUrl(displayData.image);
       setImageLoading(false);
     }
@@ -659,7 +625,6 @@ const FishDetailPage = () => {
                       alt={displayData?.name || "Fish"}
                       className="w-full h-full object-cover absolute top-0 left-0"
                       onError={(e) => {
-                        log(`Fish detail image error for ${displayData?.name}`);
                         handleFishImageError(e, displayData?.name || "fish");
                       }}
                     />
