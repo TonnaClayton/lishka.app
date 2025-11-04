@@ -97,6 +97,13 @@ export const useUserLocation = () => {
         updatedLocation,
       );
       setCurrentLocation(updatedLocation);
+
+      queryClient.invalidateQueries({
+        predicate: (q) =>
+          Array.isArray(q.queryKey) &&
+          (q.queryKey[0] === "fishDataInfinite" ||
+            q.queryKey[0] === "toxicFishData"),
+      });
     },
   });
 
@@ -123,6 +130,13 @@ export const useUserLocation = () => {
         refreshedLocation,
       );
       setCurrentLocation(refreshedLocation);
+
+      queryClient.invalidateQueries({
+        predicate: (q) =>
+          Array.isArray(q.queryKey) &&
+          (q.queryKey[0] === "fishDataInfinite" ||
+            q.queryKey[0] === "toxicFishData"),
+      });
     },
   });
 
