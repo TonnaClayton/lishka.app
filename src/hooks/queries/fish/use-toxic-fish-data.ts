@@ -29,9 +29,25 @@ export const useToxicFishData = (
       userLongitude,
     ),
     queryFn: async () => {
+      const queryParams = new URLSearchParams();
+
+      if (location) {
+        queryParams.set("location", location);
+      }
+
+      if (typeof userLatitude === "number") {
+        queryParams.set("latitude", String(userLatitude));
+      }
+
+      if (typeof userLongitude === "number") {
+        queryParams.set("longitude", String(userLongitude));
+      }
+
+      const queryString = queryParams.toString();
+
       const data = await api<{
         data: z.infer<typeof fishSchema>[];
-      }>("fish/toxic", {
+      }>(`fish/toxic${queryString ? `?${queryString}` : ""}`, {
         method: "GET",
       });
 

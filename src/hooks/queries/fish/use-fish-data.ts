@@ -24,8 +24,11 @@ export const fishQueryKeys = {
     userLatitude?: number,
     userLongitude?: number,
   ) => ["fishData", location, page, userLatitude, userLongitude] as const,
-  fishDataInfinite: (location: string) =>
-    ["fishDataInfinite", location] as const,
+  fishDataInfinite: (
+    location: string,
+    userLatitude?: number,
+    userLongitude?: number,
+  ) => ["fishDataInfinite", location, userLatitude, userLongitude] as const,
   toxicFishData: (
     location: string,
     userLatitude?: number,
@@ -39,15 +42,38 @@ export const fishQueryKeys = {
   }) => ["fishingTips", query] as const,
 };
 
-export const useFishDataInfinite = (location: string) => {
+export const useFishDataInfinite = (
+  location: string,
+  userLatitude?: number,
+  userLongitude?: number,
+) => {
   return useInfiniteQuery({
-    queryKey: fishQueryKeys.fishDataInfinite(location),
+    queryKey: fishQueryKeys.fishDataInfinite(
+      location,
+      userLatitude,
+      userLongitude,
+    ),
     queryFn: async ({ pageParam = 1 }) => {
-      // return fetchFishData(location, pageParam);
+      const queryParams = new URLSearchParams({
+        page: String(pageParam),
+        pageSize: "20",
+      });
+
+      if (location) {
+        queryParams.set("location", location);
+      }
+
+      if (typeof userLatitude === "number") {
+        queryParams.set("latitude", String(userLatitude));
+      }
+
+      if (typeof userLongitude === "number") {
+        queryParams.set("longitude", String(userLongitude));
+      }
 
       const data = await api<{
         data: z.infer<typeof fishSchema>[];
-      }>(`fish?page=${pageParam}&pageSize=20`, {
+      }>(`fish?${queryParams.toString()}`, {
         method: "GET",
       });
 
