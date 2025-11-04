@@ -14,6 +14,7 @@ import FishingTipsCarousel from "./fishing-tips-carousel";
 
 // Import Dialog components from ui folder
 import { useFishDataInfinite, useToxicFishData } from "@/hooks/queries";
+import { useUserLocation } from "@/hooks/queries/location/use-location";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,31 +30,12 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useAuth();
+  const { location: currentLocation } = useUserLocation();
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
-  const userLocation = useMemo(() => {
-    return profile?.location || DEFAULT_LOCATION.name;
-  }, [profile]);
-
-  const { latitude: userLatitude, longitude: userLongitude } = useMemo(() => {
-    const locationCoordinates = profile?.location_coordinates as any;
-
-    if (
-      locationCoordinates &&
-      typeof locationCoordinates.latitude === "number" &&
-      typeof locationCoordinates.longitude === "number"
-    ) {
-      return {
-        latitude: locationCoordinates.latitude,
-        longitude: locationCoordinates.longitude,
-      };
-    }
-
-    return {
-      latitude: DEFAULT_LOCATION.latitude,
-      longitude: DEFAULT_LOCATION.longitude,
-    };
-  }, [profile]);
+  const userLocation = currentLocation?.name ?? DEFAULT_LOCATION.name;
+  const userLatitude = currentLocation?.latitude;
+  const userLongitude = currentLocation?.longitude;
 
   const openLocationModal = useMemo(() => {
     if (profile === undefined) {
@@ -173,8 +155,8 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                 useLocationContext={true}
                 location={{
                   name: userLocation,
-                  latitude: 0,
-                  longitude: 0,
+                  latitude: userLatitude ?? 0,
+                  longitude: userLongitude ?? 0,
                 }}
               />
             </Button>
