@@ -401,17 +401,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
         onLocationSelect={(newLocation) => {
           onLocationChange(newLocation.name);
         }}
-        currentLocation={(() => {
-          const locationCoordinates = profile?.location_coordinates as any;
-
-          return locationCoordinates
-            ? {
-                latitude: locationCoordinates.latitude as number | undefined,
-                longitude: locationCoordinates.longitude as number | undefined,
-                name: profile.location,
-              }
-            : null;
-        })()}
+        currentLocation={currentLocation ?? null}
         title="Set Your Location"
       />
       <OnboardingDialog hasSeenOnboardingFlow={hasSeenOnboardingFlow} />
