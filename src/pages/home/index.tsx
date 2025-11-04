@@ -35,6 +35,26 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     return profile?.location || DEFAULT_LOCATION.name;
   }, [profile]);
 
+  const { latitude: userLatitude, longitude: userLongitude } = useMemo(() => {
+    const locationCoordinates = profile?.location_coordinates as any;
+
+    if (
+      locationCoordinates &&
+      typeof locationCoordinates.latitude === "number" &&
+      typeof locationCoordinates.longitude === "number"
+    ) {
+      return {
+        latitude: locationCoordinates.latitude,
+        longitude: locationCoordinates.longitude,
+      };
+    }
+
+    return {
+      latitude: DEFAULT_LOCATION.latitude,
+      longitude: DEFAULT_LOCATION.longitude,
+    };
+  }, [profile]);
+
   const openLocationModal = useMemo(() => {
     if (profile === undefined) {
       return false;
@@ -76,12 +96,12 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useFishDataInfinite(userLocation);
+  } = useFishDataInfinite(userLocation, userLatitude, userLongitude);
 
   const { data: toxicFishData, isLoading: loadingToxicFish } = useToxicFishData(
     userLocation,
-    (profile?.location_coordinates as any)?.latitude,
-    (profile?.location_coordinates as any)?.longitude,
+    userLatitude,
+    userLongitude,
   );
 
   // Extract fish list from infinite query data
