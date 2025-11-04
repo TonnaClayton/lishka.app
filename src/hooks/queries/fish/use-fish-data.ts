@@ -25,15 +25,27 @@ export const fishQueryKeys = {
     userLongitude?: number,
   ) => ["fishData", location, page, userLatitude, userLongitude] as const,
   fishDataInfinite: (
-    location: string,
+    location?: string,
     userLatitude?: number,
     userLongitude?: number,
-  ) => ["fishDataInfinite", location, userLatitude, userLongitude] as const,
+  ) =>
+    [
+      "fishDataInfinite",
+      location ?? "",
+      typeof userLatitude === "number" ? userLatitude : null,
+      typeof userLongitude === "number" ? userLongitude : null,
+    ] as const,
   toxicFishData: (
-    location: string,
+    location?: string,
     userLatitude?: number,
     userLongitude?: number,
-  ) => ["toxicFishData", location, userLatitude, userLongitude] as const,
+  ) =>
+    [
+      "toxicFishData",
+      location ?? "",
+      typeof userLatitude === "number" ? userLatitude : null,
+      typeof userLongitude === "number" ? userLongitude : null,
+    ] as const,
   fishingTips: (query: {
     temperature?: number;
     windSpeed?: number;
@@ -47,12 +59,14 @@ export const useFishDataInfinite = (
   userLatitude?: number,
   userLongitude?: number,
 ) => {
+  const queryKey = fishQueryKeys.fishDataInfinite(
+    location,
+    userLatitude,
+    userLongitude,
+  );
+
   return useInfiniteQuery({
-    queryKey: fishQueryKeys.fishDataInfinite(
-      location,
-      userLatitude,
-      userLongitude,
-    ),
+    queryKey,
     queryFn: async ({ pageParam = 1 }) => {
       const queryParams = new URLSearchParams({
         page: String(pageParam),
@@ -103,8 +117,9 @@ export const useFishDataInfinite = (
     },
     initialPageParam: 1,
     enabled: !!location,
-    staleTime: 12 * 60 * 60 * 1000, // 12 hours
-    gcTime: 24 * 60 * 60 * 1000, // 24 hours
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    retry: 1,
   });
 };
 

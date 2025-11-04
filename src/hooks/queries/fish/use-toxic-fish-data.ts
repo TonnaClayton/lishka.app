@@ -22,12 +22,14 @@ export const useToxicFishData = (
   userLatitude?: number,
   userLongitude?: number,
 ) => {
+  const queryKey = fishQueryKeys.toxicFishData(
+    location,
+    userLatitude,
+    userLongitude,
+  );
+
   return useQuery({
-    queryKey: fishQueryKeys.toxicFishData(
-      location,
-      userLatitude,
-      userLongitude,
-    ),
+    queryKey,
     queryFn: async () => {
       const queryParams = new URLSearchParams();
 
@@ -55,7 +57,8 @@ export const useToxicFishData = (
       //return fetchToxicFishData(location, userLatitude, userLongitude);
     },
     enabled: !!location,
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
-    gcTime: 48 * 60 * 60 * 1000, // 48 hours
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    retry: 1,
   });
 };
