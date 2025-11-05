@@ -91,14 +91,6 @@ interface LocationData {
   countryCode?: string;
 }
 
-const DEFAULT_CROP: Crop = {
-  unit: "%",
-  width: 90,
-  height: 90,
-  x: 5,
-  y: 10,
-};
-
 // Zod schema for profile form validation
 const profileSchema = z.object({
   full_name: z
@@ -227,7 +219,13 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [showCropDialog, setShowCropDialog] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
-  const [crop, setCrop] = useState<Crop>({ ...DEFAULT_CROP });
+  const [crop, setCrop] = useState<Crop>({
+    unit: "%",
+    width: 90,
+    height: 90,
+    x: 5,
+    y: 10,
+  });
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>();
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -270,14 +268,6 @@ export default function ProfilePage() {
   const [tempLocationData, setTempLocationData] = useState<LocationData | null>(
     null,
   );
-
-  useEffect(() => {
-    return () => {
-      if (imageToCrop && imageToCrop.startsWith("blob:")) {
-        URL.revokeObjectURL(imageToCrop);
-      }
-    };
-  }, [imageToCrop]);
 
   const galleryPhotos = useMemo(() => {
     if (!profile?.gallery_photos) return [];
@@ -350,27 +340,24 @@ export default function ProfilePage() {
   };
 
   // Handle avatar upload
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     if (file.size > 10 * 1024 * 1024) {
       setError("Image must be less than 10MB");
-      e.target.value = "";
       return;
     }
 
-    if (imageToCrop && imageToCrop.startsWith("blob:")) {
-      URL.revokeObjectURL(imageToCrop);
+    try {
+      await uploadAvatar.mutateAsync(file);
+      setSuccess("Profile picture updated successfully!");
+      setTimeout(() => setSuccess(null), 3000);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to upload avatar");
+    } finally {
+      e.target.value = "";
     }
-
-    const objectUrl = URL.createObjectURL(file);
-    setCrop({ ...DEFAULT_CROP });
-    setCompletedCrop(undefined);
-    setImageToCrop(objectUrl);
-    setShowCropDialog(true);
-    setError(null);
-    setSuccess(null);
   };
 
   // Handle photo upload
@@ -571,17 +558,17 @@ export default function ProfilePage() {
       log("Avatar upload successful");
       setSuccess("Profile picture updated successfully!");
       setTimeout(() => setSuccess(null), 3000);
-      if (imageToCrop && imageToCrop.startsWith("blob:")) {
-        URL.revokeObjectURL(imageToCrop);
-      }
       setShowCropDialog(false);
       setImageToCrop(null);
       // Reset crop state
-      setCrop({ ...DEFAULT_CROP });
+      setCrop({
+        unit: "%",
+        width: 90,
+        height: 90,
+        x: 5,
+        y: 10,
+      });
       setCompletedCrop(undefined);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = "";
-      }
     } catch (err) {
       errorLog("[ProfilePage] upload error:", err);
 
@@ -603,16 +590,16 @@ export default function ProfilePage() {
   };
 
   const handleCropCancel = () => {
-    if (imageToCrop && imageToCrop.startsWith("blob:")) {
-      URL.revokeObjectURL(imageToCrop);
-    }
     setShowCropDialog(false);
     setImageToCrop(null);
-    setCrop({ ...DEFAULT_CROP });
+    setCrop({
+      unit: "%",
+      width: 90,
+      height: 90,
+      x: 5,
+      y: 10,
+    });
     setCompletedCrop(undefined);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
-    }
   };
 
   const handleSaveEditedAIInfo = async () => {
