@@ -2,6 +2,7 @@ const env = import.meta.env;
 
 export const config = {
   DEV: env.DEV,
+  ENV: env.ENV,
   VITE_TEMPO: env.VITE_TEMPO,
   VITE_OPENAI_API_KEY: env.VITE_OPENAI_API_KEY,
   VITE_OPENAI_MODEL: env.VITE_OPENAI_MODEL,
@@ -18,7 +19,10 @@ export const config = {
   VITE_SUPABASE_PROJECT_ID: env.VITE_SUPABASE_PROJECT_ID,
   SUPABASE_KEY: env.SUPABASE_KEY,
   VITE_BLOB_READ_WRITE_TOKEN: env.VITE_BLOB_READ_WRITE_TOKEN,
-  BACKEND_URL: "https://api.lishka.dev",
+  BACKEND_URL:
+    env.ENV === "production"
+      ? "https://api.lishka.dev"
+      : "https://staging-api.lishka.dev",
   VITE_PUBLIC_POSTHOG_KEY: env.VITE_PUBLIC_POSTHOG_KEY,
   VITE_PUBLIC_POSTHOG_HOST: env.VITE_PUBLIC_POSTHOG_HOST,
 };
