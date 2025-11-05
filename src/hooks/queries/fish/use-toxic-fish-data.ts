@@ -22,16 +22,34 @@ export const useToxicFishData = (
   userLatitude?: number,
   userLongitude?: number,
 ) => {
+  const queryKey = fishQueryKeys.toxicFishData(
+    location,
+    userLatitude,
+    userLongitude,
+  );
+
   return useQuery({
-    queryKey: fishQueryKeys.toxicFishData(
-      location,
-      userLatitude,
-      userLongitude,
-    ),
+    queryKey,
     queryFn: async () => {
+      const queryParams = new URLSearchParams();
+
+      if (location) {
+        queryParams.set("location", location);
+      }
+
+      if (typeof userLatitude === "number") {
+        queryParams.set("latitude", String(userLatitude));
+      }
+
+      if (typeof userLongitude === "number") {
+        queryParams.set("longitude", String(userLongitude));
+      }
+
+      const queryString = queryParams.toString();
+
       const data = await api<{
         data: z.infer<typeof fishSchema>[];
-      }>("fish/toxic", {
+      }>(`fish/toxic${queryString ? `?${queryString}` : ""}`, {
         method: "GET",
       });
 
@@ -39,7 +57,8 @@ export const useToxicFishData = (
       //return fetchToxicFishData(location, userLatitude, userLongitude);
     },
     enabled: !!location,
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
-    gcTime: 48 * 60 * 60 * 1000, // 48 hours
+    staleTime: 0,
+    gcTime: 5 * 60 * 1000,
+    retry: 1,
   });
 };

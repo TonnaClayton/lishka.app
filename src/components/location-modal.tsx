@@ -448,7 +448,7 @@ const LocationModal = ({
       <DialogContent
         className={cn(
           "sm:max-w-[600px] w-[90%] rounded-[16px] shadow-xl dark:bg-card dark:border-border/30 [&>button]:hidden p-4",
-          height > 768 ? "max-h-[80vh]" : "max-h-auto",
+          height > 768 ? "max-h-[88vh]" : "max-h-auto",
           height < 600 && "max-h-full rounded-none w-full overflow-y-auto",
         )}
       >

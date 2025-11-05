@@ -14,6 +14,7 @@ import FishingTipsCarousel from "./fishing-tips-carousel";
 
 // Import Dialog components from ui folder
 import { useFishDataInfinite, useToxicFishData } from "@/hooks/queries";
+import { useUserLocation } from "@/hooks/queries/location/use-location";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
@@ -29,11 +30,12 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useAuth();
+  const { location: currentLocation } = useUserLocation();
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
-  const userLocation = useMemo(() => {
-    return profile?.location || DEFAULT_LOCATION.name;
-  }, [profile]);
+  const userLocation = currentLocation?.name ?? DEFAULT_LOCATION.name;
+  const userLatitude = currentLocation?.latitude;
+  const userLongitude = currentLocation?.longitude;
 
   const openLocationModal = useMemo(() => {
     if (profile === undefined) {
@@ -76,12 +78,12 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     fetchNextPage,
     hasNextPage,
     isFetchingNextPage,
-  } = useFishDataInfinite(userLocation);
+  } = useFishDataInfinite(userLocation, userLatitude, userLongitude);
 
   const { data: toxicFishData, isLoading: loadingToxicFish } = useToxicFishData(
     userLocation,
-    (profile?.location_coordinates as any)?.latitude,
-    (profile?.location_coordinates as any)?.longitude,
+    userLatitude,
+    userLongitude,
   );
 
   // Extract fish list from infinite query data
@@ -153,8 +155,8 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                 useLocationContext={true}
                 location={{
                   name: userLocation,
-                  latitude: 0,
-                  longitude: 0,
+                  latitude: userLatitude ?? 0,
+                  longitude: userLongitude ?? 0,
                 }}
               />
             </Button>
@@ -399,17 +401,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
         onLocationSelect={(newLocation) => {
           onLocationChange(newLocation.name);
         }}
-        currentLocation={(() => {
-          const locationCoordinates = profile?.location_coordinates as any;
-
-          return locationCoordinates
-            ? {
-                latitude: locationCoordinates.latitude as number | undefined,
-                longitude: locationCoordinates.longitude as number | undefined,
-                name: profile.location,
-              }
-            : null;
-        })()}
+        currentLocation={currentLocation ?? null}
         title="Set Your Location"
       />
       <OnboardingDialog hasSeenOnboardingFlow={hasSeenOnboardingFlow} />
