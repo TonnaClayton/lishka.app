@@ -13,3 +13,6 @@ CREATE POLICY "Users can view and insert their own catches" ON fish_catches
   FOR ALL USING (auth.uid() = user_id) WITH CHECK (auth.uid() = user_id);
 
 alter publication supabase_realtime add table fish_catches;
+
+
+CREATE UNIQUE INDEX fishes_slug_key ON public.fishes USING btree (slug)
