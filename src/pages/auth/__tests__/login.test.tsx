@@ -65,7 +65,6 @@ describe("LoginPage", () => {
 
     // Check for main sections
     expect(screen.getByText("Continue with Google")).toBeInTheDocument();
-    expect(screen.getByText("Continue with Apple")).toBeInTheDocument();
     expect(screen.getByText("Continue with Email")).toBeInTheDocument();
     expect(screen.getByText("Already have an account?")).toBeInTheDocument();
     expect(screen.getByText("Log In")).toBeInTheDocument();
@@ -78,7 +77,6 @@ describe("LoginPage", () => {
     render(<LoginPage />);
 
     expect(screen.getByText("Continue with Google")).toBeInTheDocument();
-    expect(screen.getByText("Continue with Apple")).toBeInTheDocument();
     expect(screen.getByText("Continue with Email")).toBeInTheDocument();
   });
 
@@ -100,16 +98,11 @@ describe("LoginPage", () => {
     const googleButton = screen.getByRole("button", {
       name: /continue with google/i,
     });
-    const appleButton = screen.getByRole("button", {
-      name: /continue with apple/i,
-    });
 
     expect(googleButton).toBeInTheDocument();
-    expect(appleButton).toBeInTheDocument();
 
-    // These buttons should be rendered but not have click handlers yet
+    // Button should be rendered and enabled
     expect(googleButton).toBeEnabled();
-    expect(appleButton).toBeEnabled();
   });
 
   it("displays proper icons for each authentication method", () => {
@@ -117,7 +110,7 @@ describe("LoginPage", () => {
 
     // Check for SVG icons (they should be present in the buttons)
     const buttons = screen.getAllByRole("button");
-    expect(buttons).toHaveLength(2); // Google and Apple buttons
+    expect(buttons).toHaveLength(1); // Google button only
 
     // Check for mail icon in email link
     const emailLink = screen.getByRole("link", {
@@ -133,7 +126,7 @@ describe("LoginPage", () => {
     const buttons = screen.getAllByRole("button");
     const links = screen.getAllByRole("link");
 
-    expect(buttons).toHaveLength(2); // Google and Apple
+    expect(buttons).toHaveLength(1); // Google button only
     expect(links).toHaveLength(3); // Logo, Email signup and signin links
 
     // Check that text content is accessible
@@ -157,7 +150,6 @@ describe("LoginPage", () => {
     // Main call to action should be prominent
     const primaryActions = [
       screen.getByText("Continue with Google"),
-      screen.getByText("Continue with Apple"),
       screen.getByText("Continue with Email"),
     ];
 
