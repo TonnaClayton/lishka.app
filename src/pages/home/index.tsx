@@ -5,7 +5,6 @@ import FishCard from "@/components/fish-card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 
-import LoadingDots from "@/components/loading-dots";
 import LocationModal from "@/components/location-modal";
 import EmailVerificationBanner from "@/components/email-verification-banner";
 import GearRecommendationWidget from "./gear-recommendation-widget";
@@ -75,9 +74,9 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     data: fishData,
     isLoading: loadingFish,
     error: fishError,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
+    // fetchNextPage,
+    // hasNextPage,
+    // isFetchingNextPage,
   } = useFishDataInfinite(userLocation, userLatitude, userLongitude);
 
   const { data: toxicFishData, isLoading: loadingToxicFish } = useToxicFishData(
@@ -117,9 +116,9 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     return `${cleanLocation} & ${seaOcean} waters`;
   };
 
-  const handleLoadMore = () => {
-    fetchNextPage();
-  };
+  // const handleLoadMore = () => {
+  //   fetchNextPage();
+  // };
 
   return (
     <div className="flex flex-col dark:bg-background h-full relative border-l-0 border-y-0 border-r-0 rounded-xl">
@@ -364,7 +363,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                   ))}
                 </div>
 
-                {fishList.length > 0 && hasNextPage && (
+                {/* {fishList.length > 0 && hasNextPage && (
                   <div className="flex justify-center mb-20 lg:mb-6">
                     <Button
                       variant="outline"
@@ -382,7 +381,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                       )}
                     </Button>
                   </div>
-                )}
+                )} */}
               </>
             )}
           </>
