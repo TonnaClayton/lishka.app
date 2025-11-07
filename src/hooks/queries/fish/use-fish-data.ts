@@ -3,6 +3,7 @@ import { log } from "@/lib/logging";
 import { api } from "../api";
 import { fishSchema } from "./type";
 import z from "zod";
+import { DEFAULT_LOCATION } from "@/lib/const";
 
 export interface FishData {
   name: string;
@@ -68,28 +69,34 @@ export const useFishDataInfinite = (
   return useInfiniteQuery({
     queryKey,
     queryFn: async ({ pageParam = 1 }) => {
-      const queryParams = new URLSearchParams({
-        page: String(pageParam),
-        pageSize: "20",
-      });
+      let data: { data: z.infer<typeof fishSchema>[] } = { data: [] };
 
-      if (location) {
-        queryParams.set("location", location);
+      if (location === DEFAULT_LOCATION.name) {
+        data = { data: [] };
+      } else {
+        const queryParams = new URLSearchParams({
+          page: String(pageParam),
+          pageSize: "20",
+        });
+
+        if (location) {
+          queryParams.set("location", location);
+        }
+
+        if (typeof userLatitude === "number") {
+          queryParams.set("latitude", String(userLatitude));
+        }
+
+        if (typeof userLongitude === "number") {
+          queryParams.set("longitude", String(userLongitude));
+        }
+
+        data = await api<{
+          data: z.infer<typeof fishSchema>[];
+        }>(`fish?${queryParams.toString()}`, {
+          method: "GET",
+        });
       }
-
-      if (typeof userLatitude === "number") {
-        queryParams.set("latitude", String(userLatitude));
-      }
-
-      if (typeof userLongitude === "number") {
-        queryParams.set("longitude", String(userLongitude));
-      }
-
-      const data = await api<{
-        data: z.infer<typeof fishSchema>[];
-      }>(`fish?${queryParams.toString()}`, {
-        method: "GET",
-      });
 
       return data.data;
     },
