@@ -70,7 +70,7 @@ export const useFishDataInfinite = (
     queryFn: async ({ pageParam = 1 }) => {
       const queryParams = new URLSearchParams({
         page: String(pageParam),
-        pageSize: "25",
+        pageSize: "20",
       });
 
       if (location) {
