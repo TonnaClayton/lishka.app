@@ -76,7 +76,7 @@ export const useFishDataInfinite = (
       } else {
         const queryParams = new URLSearchParams({
           page: String(pageParam),
-          pageSize: "20",
+          pageSize: "16",
         });
 
         if (location) {
