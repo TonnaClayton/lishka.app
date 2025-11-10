@@ -3,6 +3,7 @@ import { FishData, fishQueryKeys } from "./use-fish-data";
 import { api } from "../api";
 import z from "zod";
 import { fishSchema } from "./type";
+import { DEFAULT_LOCATION } from "@/lib/const";
 
 export interface ToxicFishData extends FishData {
   dangerType: string;
@@ -31,6 +32,10 @@ export const useToxicFishData = (
   return useQuery({
     queryKey,
     queryFn: async () => {
+      if (location == DEFAULT_LOCATION.name) {
+        return [];
+      }
+
       const queryParams = new URLSearchParams();
 
       if (location) {

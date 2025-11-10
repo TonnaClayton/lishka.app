@@ -118,7 +118,7 @@ export default function LoginPage() {
                     </svg>
                     {isGoogleLoading ? "Connecting..." : "Continue with Google"}
                   </button>
-                  <button
+                  {/* <button
                     disabled={isGoogleLoading}
                     className={
                       "flex-1 px-6 rounded-full font-semibold transition-colors size-full text-sm py-4 h-[46px] border bg-[#ffffff] border-[#d8dadc] text-[#243041] flex justify-center items-center"
@@ -138,7 +138,7 @@ export default function LoginPage() {
                       />
                     </svg>
                     Continue with Apple
-                  </button>
+                  </button> */}
                   <Link
                     to={"/signup"}
                     aria-disabled={isGoogleLoading}

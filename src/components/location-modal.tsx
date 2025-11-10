@@ -78,6 +78,11 @@ const MapSelection = ({
   // Make selectedPosition and locationName available to parent component
   React.useEffect(() => {
     // Store these values in window for the parent component to access
+    log("mapSelectionState", {
+      selectedPosition,
+      locationName,
+      isSeaLocation,
+    });
     (window as any).mapSelectionState = {
       selectedPosition,
       locationName,
@@ -116,6 +121,12 @@ const MapSelection = ({
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`,
           );
           const data = await response.json();
+
+          if (data.error) {
+            throw new Error(data.error);
+          }
+
+          log("Location geocode data:", data);
 
           // Extract city/town and country from address details
           const city =
@@ -162,6 +173,7 @@ const MapSelection = ({
           // Display coordinates as fallback
           const formattedLat = lat.toFixed(6);
           const formattedLng = lng.toFixed(6);
+          setIsSeaLocation(false);
           setLocationName(`${formattedLat}, ${formattedLng}`);
         }
       },
@@ -235,7 +247,6 @@ const LocationModal = ({
   };
 
   const handleLocationUpdate = async (newLocation: LocationData) => {
-    //startTransition(async () => {
     log("[LocationModal] Updating location:", newLocation);
 
     // Clean the location name
@@ -271,7 +282,9 @@ const LocationModal = ({
 
     // Close the modal
     onClose();
-    // });
+
+    // reload the page
+    window.location.reload();
   };
 
   const handleDetectLocation = async () => {
@@ -448,7 +461,7 @@ const LocationModal = ({
       <DialogContent
         className={cn(
           "sm:max-w-[600px] w-[90%] rounded-[16px] shadow-xl dark:bg-card dark:border-border/30 [&>button]:hidden p-4",
-          height > 768 ? "max-h-[80vh]" : "max-h-auto",
+          height > 768 ? "max-h-[88vh]" : "max-h-auto",
           height < 600 && "max-h-full rounded-none w-full overflow-y-auto",
         )}
       >

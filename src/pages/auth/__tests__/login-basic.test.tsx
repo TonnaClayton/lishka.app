@@ -44,7 +44,6 @@ describe("LoginPage - Basic UI Tests", () => {
     render(<LoginPage />);
 
     expect(screen.getByText("Continue with Google")).toBeInTheDocument();
-    expect(screen.getByText("Continue with Apple")).toBeInTheDocument();
     expect(screen.getByText("Continue with Email")).toBeInTheDocument();
     expect(screen.getByText("Log In")).toBeInTheDocument();
   });
