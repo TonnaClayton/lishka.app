@@ -20,7 +20,7 @@ export const config = {
   SUPABASE_KEY: env.SUPABASE_KEY,
   VITE_BLOB_READ_WRITE_TOKEN: env.VITE_BLOB_READ_WRITE_TOKEN,
   BACKEND_URL:
-    env.ENV === "production"
+    env.VITE_BACKEND_URL || env.ENV === "production"
       ? "https://api.lishka.dev"
       : "https://staging-api.lishka.dev",
   VITE_PUBLIC_POSTHOG_KEY: env.VITE_PUBLIC_POSTHOG_KEY,
