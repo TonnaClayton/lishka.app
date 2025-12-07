@@ -1,5 +1,12 @@
 const env = import.meta.env;
 
+// Debug logging for environment variables
+console.log("🔍 Environment Debug:", {
+  VITE_BACKEND_URL: env.VITE_BACKEND_URL,
+  ENV: env.ENV,
+  DEV: env.DEV,
+});
+
 export const config = {
   DEV: env.DEV,
   ENV: env.ENV,
