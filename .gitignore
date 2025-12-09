@@ -38,3 +38,5 @@ coverage
 dev-dist
 
 /supabase/.temp
+
+features_docs/*
