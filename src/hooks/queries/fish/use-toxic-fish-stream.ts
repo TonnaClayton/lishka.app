@@ -150,7 +150,13 @@ export function useToxicFishStream(
             image: event.data.image_url || event.data.image,
             slug: event.data.slug,
           };
-          setCachedFish((prev) => [...prev, transformedFish]);
+          // Only add if not already in the list (deduplicate by scientific name)
+          setCachedFish((prev) => {
+            const exists = prev.some(
+              (f) => f.scientificName === transformedFish.scientificName,
+            );
+            return exists ? prev : [...prev, transformedFish];
+          });
         }
         break;
 
@@ -170,7 +176,13 @@ export function useToxicFishStream(
             image: event.data.image_url || event.data.image,
             slug: event.data.slug,
           };
-          setNewFish((prev) => [...prev, transformedFish]);
+          // Only add if not already in the list (deduplicate by scientific name)
+          setNewFish((prev) => {
+            const exists = prev.some(
+              (f) => f.scientificName === transformedFish.scientificName,
+            );
+            return exists ? prev : [...prev, transformedFish];
+          });
         }
         break;
 
