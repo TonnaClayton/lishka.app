@@ -1,5 +1,6 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { FishData } from "./use-fish-data";
+import { apiStreamed } from "../api";
 
 export interface ToxicFishStreamEvent {
   type:
@@ -55,9 +56,7 @@ export interface UseToxicFishStreamReturn {
   reset: () => void;
 }
 
-export function useToxicFishStream(
-  baseUrl: string = "/fish/toxic/stream",
-): UseToxicFishStreamReturn {
+export function useToxicFishStream(): UseToxicFishStreamReturn {
   const [cachedFish, setCachedFish] = useState<FishData[]>([]);
   const [newFish, setNewFish] = useState<FishData[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -74,79 +73,42 @@ export function useToxicFishStream(
   });
 
   const abortControllerRef = useRef<AbortController | null>(null);
+  const streamBufferRef = useRef<string>("");
 
-  const startStream = useCallback(async () => {
-    if (isStreaming) return;
-
-    // Reset state
-    setCachedFish([]);
-    setNewFish([]);
-    setIsComplete(false);
-    setError(null);
-    setProgress(0);
-    setStatusMessage("");
-    setStats({
-      checked: 0,
-      found: 0,
-      newFound: 0,
-      total: 0,
-      cachedCount: 0,
-    });
-
-    setIsStreaming(true);
+  const handleStreamChunk = useCallback((chunk: string) => {
+    if (!chunk) return;
 
     try {
-      abortControllerRef.current = new AbortController();
+      streamBufferRef.current += chunk;
 
-      const response = await fetch(baseUrl, {
-        headers: {
-          Accept: "text/event-stream",
-          Authorization: `Bearer ${localStorage.getItem("access_token")}`,
-        },
-        signal: abortControllerRef.current.signal,
-      });
+      // Split by newlines - backend sends newline-delimited JSON or SSE format
+      const lines = streamBufferRef.current.split("\n");
 
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      // Keep the last line in the buffer if it's incomplete
+      if (!streamBufferRef.current.endsWith("\n")) {
+        streamBufferRef.current = lines.pop() ?? "";
+      } else {
+        streamBufferRef.current = "";
       }
 
-      const reader = response.body?.getReader();
-      if (!reader) {
-        throw new Error("Response body is not readable");
-      }
+      for (const line of lines) {
+        if (!line.trim()) continue;
 
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n");
-        buffer = lines.pop() || "";
-
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const event: ToxicFishStreamEvent = JSON.parse(line.slice(6));
-              handleEvent(event);
-            } catch (e: unknown) {
-              console.error("Failed to parse SSE event:", line, e);
-            }
-          }
+        // Check if this is SSE format (data: prefix) or raw JSON
+        let jsonData = line.trim();
+        if (line.startsWith("data:")) {
+          jsonData = line.replace(/^data:\s?/, "").trim();
         }
+
+        if (!jsonData) continue;
+
+        const event: ToxicFishStreamEvent = JSON.parse(jsonData);
+        handleEvent(event);
       }
-    } catch (err) {
-      if (err instanceof Error && err.name !== "AbortError") {
-        setError(err.message);
-        console.error("Stream error:", err);
-      }
-    } finally {
-      setIsStreaming(false);
-      abortControllerRef.current = null;
+    } catch (e) {
+      console.error("Failed to parse stream chunk:", e);
     }
-  }, [baseUrl, isStreaming]);
+  }, []);
 
   const handleEvent = (event: ToxicFishStreamEvent) => {
     switch (event.type) {
@@ -241,6 +203,65 @@ export function useToxicFishStream(
     }
   };
 
+  const startStream = useCallback(async () => {
+    if (isStreaming) return;
+
+    // Reset state
+    setCachedFish([]);
+    setNewFish([]);
+    setIsComplete(false);
+    setError(null);
+    setProgress(0);
+    setStatusMessage("");
+    setStats({
+      checked: 0,
+      found: 0,
+      newFound: 0,
+      total: 0,
+      cachedCount: 0,
+    });
+    streamBufferRef.current = "";
+
+    setIsStreaming(true);
+
+    try {
+      abortControllerRef.current = new AbortController();
+
+      // Use the existing apiStreamed function
+      const stream = await apiStreamed(
+        "fish/toxic/stream",
+        {
+          method: "GET",
+          signal: abortControllerRef.current.signal,
+        },
+        false,
+      );
+
+      if (!stream) {
+        throw new Error("Failed to create stream");
+      }
+
+      const reader = stream.getReader();
+      const decoder = new TextDecoder();
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value, { stream: true });
+        handleStreamChunk(chunk);
+      }
+    } catch (err) {
+      if (err instanceof Error && err.name !== "AbortError") {
+        setError(err.message);
+        console.error("Stream error:", err);
+      }
+    } finally {
+      setIsStreaming(false);
+      abortControllerRef.current = null;
+    }
+  }, [isStreaming, handleStreamChunk]);
+
   const stopStream = useCallback(() => {
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -264,6 +285,14 @@ export function useToxicFishStream(
       total: 0,
       cachedCount: 0,
     });
+    streamBufferRef.current = "";
+  }, [stopStream]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      stopStream();
+    };
   }, [stopStream]);
 
   const allFish = [...cachedFish, ...newFish];

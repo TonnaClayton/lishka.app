@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/bottom-nav";
 import FishCard from "@/components/fish-card";
@@ -23,7 +23,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { OnboardingDialog } from "./onboarding-dialog";
 import LocationBtn from "@/components/location-btn";
-import { Loader2, Sparkles, Zap } from "lucide-react";
 
 interface HomePageProps {
   location?: string;
@@ -91,9 +90,14 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   );
 
   // Streaming toxic fish hook
-  const toxicStream = useToxicFishStream(
-    `${import.meta.env.VITE_API_URL || ""}/fish/toxic/stream`,
-  );
+  const toxicStream = useToxicFishStream();
+
+  // Auto-start streaming when component mounts or location changes
+  useEffect(() => {
+    if (userLocation && userLocation !== DEFAULT_LOCATION.name) {
+      toxicStream.startStream();
+    }
+  }, [userLocation]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Extract fish list from infinite query data
   const fishList = fishData?.pages.flatMap((page) => page) || [];
@@ -265,209 +269,77 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
 
         {/* Toxic Fish Stream Section - NEW STREAMING VERSION! */}
         <div className="mb-8">
-          <div className="px-4 lg:px-6 mb-4">
-            <div className="flex items-center justify-between mb-2">
-              <div className="flex items-center gap-2">
-                <h2 className="text-xl font-bold text-black dark:text-white">
-                  Toxic Fish (Live Stream)
-                </h2>
-                <Sparkles className="w-5 h-5 text-lishka-blue animate-pulse" />
-              </div>
-              {!toxicStream.isStreaming && !toxicStream.isComplete && (
-                <Button
-                  onClick={toxicStream.startStream}
-                  size="sm"
-                  className="bg-lishka-blue hover:bg-lishka-blue/90 text-white"
-                >
-                  <Zap className="w-4 h-4 mr-1" />
-                  Start Discovery
-                </Button>
-              )}
-              {toxicStream.isStreaming && (
-                <Button
-                  onClick={toxicStream.stopStream}
-                  size="sm"
-                  variant="outline"
-                  className="text-red-600 border-red-300 hover:bg-red-50"
-                >
-                  Stop
-                </Button>
-              )}
-              {toxicStream.isComplete && (
-                <Button onClick={toxicStream.reset} size="sm" variant="outline">
-                  Reset
-                </Button>
-              )}
-            </div>
-            <p className="text-sm text-gray-600">
-              Real-time discovery of venomous and toxic fish
+          <div className="px-4 lg:px-6">
+            <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
+              Toxic & Risky Catches (Streaming)
+            </h2>
+            <p className="text-sm mb-4 text-gray-600">
+              Venomous and toxic fish found in {getSeaName(userLocation)}.
             </p>
           </div>
 
-          {/* Progress Bar */}
-          {toxicStream.isStreaming && (
-            <div className="px-4 lg:px-6 mb-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600 flex items-center gap-2">
-                    <Loader2 className="w-4 h-4 animate-spin text-lishka-blue" />
-                    {toxicStream.statusMessage}
-                  </span>
-                  <span className="font-semibold text-lishka-blue">
-                    {toxicStream.progress}%
-                  </span>
+          {/* Debug Info */}
+          {toxicStream.allFish.length > 0 &&
+            localStorage.getItem("showToxicFishDebug") === "true" && (
+              <div className="mb-2 p-2 bg-blue-50 px-4 lg:px-6 /20 border border-blue-200 dark:border-blue-800 rounded text-xs space-y-1">
+                <div className="font-mono text-lishka-blue">
+                  DEBUG: Streaming - {toxicStream.allFish.length} total (
+                  {toxicStream.cachedFish.length} cached,{" "}
+                  {toxicStream.newFish.length} new)
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
-                  <div
-                    className="bg-lishka-blue h-2 rounded-full transition-all duration-300 ease-out"
-                    style={{ width: `${toxicStream.progress}%` }}
+                <div className="font-mono text-lishka-blue">
+                  Progress: {toxicStream.progress}% | Status:{" "}
+                  {toxicStream.statusMessage}
+                </div>
+              </div>
+            )}
+
+          {toxicStream.isStreaming ? (
+            <div className="mb-8">
+              <div className="mb-4 px-4 lg:px-6">
+                <Skeleton className="h-6 w-48 mb-2" />
+                <Skeleton className="h-4 w-64" />
+              </div>
+              <ToxicFishSkeleton />
+            </div>
+          ) : toxicStream.error ? (
+            <div className="bg-yellow-50 px-4 lg:px-6 mx-4 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <p className="text-yellow-700 dark:text-yellow-400 text-sm">
+                Unable to load toxic fish data: {toxicStream.error}
+              </p>
+            </div>
+          ) : toxicStream.allFish.length === 0 ? (
+            <div className="bg-yellow-50 px-4 lg:px-6 mx-4 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <p className="text-yellow-700 dark:text-yellow-400 text-sm">
+                Unable to load toxic fish data at the moment. Please check your
+                connection and try refreshing the page.
+              </p>
+            </div>
+          ) : (
+            <div className="flex gap-3 overflow-x-auto pb-4 px-4 lg:px-6 scrollbar-hide">
+              {toxicStream.allFish.map((fish, index) => (
+                <div
+                  key={`stream-toxic-${fish.scientificName}-${index}`}
+                  className="flex-shrink-0 w-40"
+                >
+                  <FishCard
+                    name={fish.name}
+                    scientificName={fish.scientificName}
+                    habitat={fish.habitat}
+                    difficulty={fish.difficulty}
+                    isToxic={fish.isToxic}
+                    dangerType={fish.dangerType}
+                    image={fish.image}
+                    onClick={() =>
+                      navigate(`/fish/${fish.slug}`, {
+                        state: { fish },
+                      })
+                    }
                   />
                 </div>
-                <div className="flex items-center justify-between text-xs text-gray-500">
-                  <span>
-                    Checked: {toxicStream.stats.checked}/
-                    {toxicStream.stats.total}
-                  </span>
-                  <span>
-                    Found: {toxicStream.stats.found} (
-                    {toxicStream.stats.newFound} new)
-                  </span>
-                </div>
-              </div>
+              ))}
             </div>
           )}
-
-          {/* Error State */}
-          {toxicStream.error && (
-            <div className="px-4 lg:px-6 mb-4">
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p className="text-red-700 dark:text-red-400 text-sm">
-                  Error: {toxicStream.error}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Comparison Stats */}
-          {toxicStream.isComplete && (
-            <div className="px-4 lg:px-6 mb-4">
-              <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm font-semibold text-green-700 dark:text-green-400">
-                      ✅ Discovery Complete!
-                    </p>
-                    <p className="text-xs text-green-600 dark:text-green-500 mt-1">
-                      Found {toxicStream.stats.found} toxic species (
-                      {toxicStream.stats.cachedCount} cached,{" "}
-                      {toxicStream.stats.newFound} newly discovered)
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-xs text-gray-500">vs Non-Streaming</p>
-                    <p className="text-lg font-bold text-lishka-blue">
-                      {toxicStream.allFish.length} vs {toxicFishList.length}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Fish Cards - Show as they stream in! */}
-          {toxicStream.allFish.length > 0 ? (
-            <div className="space-y-4">
-              {/* Cached Fish */}
-              {toxicStream.cachedFish.length > 0 && (
-                <div>
-                  <div className="px-4 lg:px-6 mb-2">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                      💾 From Cache ({toxicStream.cachedFish.length})
-                    </h3>
-                  </div>
-                  <div className="flex gap-3 overflow-x-auto pb-4 px-4 lg:px-6 scrollbar-hide">
-                    {toxicStream.cachedFish.map((fish, index) => (
-                      <div
-                        key={`cached-${fish.scientificName}-${index}`}
-                        className="flex-shrink-0 w-40 animate-fade-in"
-                      >
-                        <FishCard
-                          name={fish.name}
-                          scientificName={fish.scientificName}
-                          habitat={fish.habitat}
-                          difficulty={fish.difficulty}
-                          isToxic={fish.isToxic}
-                          dangerType={fish.dangerType}
-                          image={fish.image}
-                          onClick={() =>
-                            navigate(`/fish/${fish.slug}`, {
-                              state: { fish },
-                            })
-                          }
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Newly Discovered Fish */}
-              {toxicStream.newFish.length > 0 && (
-                <div>
-                  <div className="px-4 lg:px-6 mb-2">
-                    <h3 className="text-sm font-semibold text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                      <Sparkles className="w-4 h-4 text-lishka-blue" />
-                      Newly Discovered ({toxicStream.newFish.length})
-                    </h3>
-                  </div>
-                  <div className="flex gap-3 overflow-x-auto pb-4 px-4 lg:px-6 scrollbar-hide">
-                    {toxicStream.newFish.map((fish, index) => (
-                      <div
-                        key={`new-${fish.scientificName}-${index}`}
-                        className="flex-shrink-0 w-40 animate-slide-up"
-                        style={{
-                          animationDelay: `${index * 0.05}s`,
-                        }}
-                      >
-                        <div className="relative">
-                          <div className="absolute -top-2 -right-2 z-10 bg-lishka-blue text-white text-xs px-2 py-0.5 rounded-full font-bold animate-bounce">
-                            NEW
-                          </div>
-                          <FishCard
-                            name={fish.name}
-                            scientificName={fish.scientificName}
-                            habitat={fish.habitat}
-                            difficulty={fish.difficulty}
-                            isToxic={fish.isToxic}
-                            dangerType={fish.dangerType}
-                            image={fish.image}
-                            onClick={() =>
-                              navigate(`/fish/${fish.slug}`, {
-                                state: { fish },
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          ) : !toxicStream.isStreaming && !toxicStream.error ? (
-            <div className="px-4 lg:px-6">
-              <div className="bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-8 text-center">
-                <Zap className="w-12 h-12 mx-auto mb-3 text-gray-400" />
-                <p className="text-gray-600 dark:text-gray-400 text-sm mb-3">
-                  Click "Start Discovery" to see real-time toxic fish streaming!
-                </p>
-                <p className="text-xs text-gray-500">
-                  Watch as fish are discovered one by one, just like ChatGPT
-                  streaming ⚡
-                </p>
-              </div>
-            </div>
-          ) : null}
         </div>
 
         {/* Offshore Fishing Locations Section - TEMPORARILY HIDDEN */}
