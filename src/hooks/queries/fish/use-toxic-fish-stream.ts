@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { FishData } from "./use-fish-data";
 import { apiStreamed } from "../api";
+import { DEFAULT_LOCATION } from "@/lib/const";
 
 export interface ToxicFishStreamEvent {
   type:
@@ -56,7 +57,16 @@ export interface UseToxicFishStreamReturn {
   reset: () => void;
 }
 
-export function useToxicFishStream(): UseToxicFishStreamReturn {
+export interface UseToxicFishStreamOptions {
+  userLocation?: string;
+  autoStart?: boolean;
+}
+
+export function useToxicFishStream(
+  options?: UseToxicFishStreamOptions,
+): UseToxicFishStreamReturn {
+  const { userLocation, autoStart = true } = options || {};
+
   const [cachedFish, setCachedFish] = useState<FishData[]>([]);
   const [newFish, setNewFish] = useState<FishData[]>([]);
   const [isStreaming, setIsStreaming] = useState(false);
@@ -74,6 +84,7 @@ export function useToxicFishStream(): UseToxicFishStreamReturn {
 
   const abortControllerRef = useRef<AbortController | null>(null);
   const streamBufferRef = useRef<string>("");
+  const hasAutoStartedRef = useRef(false);
 
   const handleStreamChunk = useCallback((chunk: string) => {
     if (!chunk) return;
@@ -286,9 +297,27 @@ export function useToxicFishStream(): UseToxicFishStreamReturn {
       cachedCount: 0,
     });
     streamBufferRef.current = "";
+    hasAutoStartedRef.current = false;
   }, [stopStream]);
 
-  // Cleanup on unmount
+  useEffect(() => {
+    if (
+      autoStart &&
+      userLocation &&
+      userLocation !== DEFAULT_LOCATION.name &&
+      !isStreaming &&
+      !isComplete &&
+      !hasAutoStartedRef.current
+    ) {
+      console.log(
+        "🎯 [Toxic Fish Stream] Auto-starting for location:",
+        userLocation,
+      );
+      hasAutoStartedRef.current = true;
+      startStream();
+    }
+  }, [userLocation, autoStart, isStreaming, isComplete, startStream]);
+
   useEffect(() => {
     return () => {
       stopStream();

@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/bottom-nav";
 import FishCard from "@/components/fish-card";
@@ -89,15 +89,10 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     userLongitude,
   );
 
-  // Streaming toxic fish hook
-  const toxicStream = useToxicFishStream();
-
-  // Auto-start streaming when component mounts or location changes
-  useEffect(() => {
-    if (userLocation && userLocation !== DEFAULT_LOCATION.name) {
-      toxicStream.startStream();
-    }
-  }, [userLocation]); // eslint-disable-line react-hooks/exhaustive-deps
+  const toxicStream = useToxicFishStream({
+    userLocation,
+    autoStart: true,
+  });
 
   // Extract fish list from infinite query data
   const fishList = fishData?.pages.flatMap((page) => page) || [];
