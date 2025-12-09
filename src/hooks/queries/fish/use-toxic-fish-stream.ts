@@ -1,4 +1,4 @@
-import { useState, useCallback, useRef, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { FishData } from "./use-fish-data";
 import { apiStreamed } from "../api";
 import { DEFAULT_LOCATION } from "@/lib/const";
@@ -85,6 +85,7 @@ export function useToxicFishStream(
   const abortControllerRef = useRef<AbortController | null>(null);
   const streamBufferRef = useRef<string>("");
   const hasAutoStartedRef = useRef(false);
+  const seenFishRef = useRef<Set<string>>(new Set()); // Track all scientific names we've seen
 
   const handleStreamChunk = useCallback((chunk: string) => {
     if (!chunk) return;
@@ -150,13 +151,16 @@ export function useToxicFishStream(
             image: event.data.image_url || event.data.image,
             slug: event.data.slug,
           };
-          // Only add if not already in the list (deduplicate by scientific name)
-          setCachedFish((prev) => {
-            const exists = prev.some(
-              (f) => f.scientificName === transformedFish.scientificName,
+
+          // Check if we've seen this scientific name before (in either array)
+          if (!seenFishRef.current.has(transformedFish.scientificName)) {
+            seenFishRef.current.add(transformedFish.scientificName);
+            setCachedFish((prev) => [...prev, transformedFish]);
+          } else {
+            console.warn(
+              `⚠️  Duplicate cached fish ignored: ${transformedFish.scientificName}`,
             );
-            return exists ? prev : [...prev, transformedFish];
-          });
+          }
         }
         break;
 
@@ -176,13 +180,16 @@ export function useToxicFishStream(
             image: event.data.image_url || event.data.image,
             slug: event.data.slug,
           };
-          // Only add if not already in the list (deduplicate by scientific name)
-          setNewFish((prev) => {
-            const exists = prev.some(
-              (f) => f.scientificName === transformedFish.scientificName,
+
+          // Check if we've seen this scientific name before (in either array)
+          if (!seenFishRef.current.has(transformedFish.scientificName)) {
+            seenFishRef.current.add(transformedFish.scientificName);
+            setNewFish((prev) => [...prev, transformedFish]);
+          } else {
+            console.warn(
+              `⚠️  Duplicate toxic fish ignored: ${transformedFish.scientificName}`,
             );
-            return exists ? prev : [...prev, transformedFish];
-          });
+          }
         }
         break;
 
@@ -244,6 +251,7 @@ export function useToxicFishStream(
       cachedCount: 0,
     });
     streamBufferRef.current = "";
+    seenFishRef.current.clear(); // Reset the seen fish tracker
 
     setIsStreaming(true);
 
@@ -309,6 +317,7 @@ export function useToxicFishStream(
       cachedCount: 0,
     });
     streamBufferRef.current = "";
+    seenFishRef.current.clear(); // Reset the seen fish tracker
     hasAutoStartedRef.current = false;
   }, [stopStream]);
 
@@ -336,7 +345,22 @@ export function useToxicFishStream(
     };
   }, [stopStream]);
 
-  const allFish = [...cachedFish, ...newFish];
+  // Combine and deduplicate cached + new fish
+  const allFish = useMemo(() => {
+    const fishMap = new Map<string, FishData>();
+
+    // Add cached fish first
+    cachedFish.forEach((fish) => {
+      fishMap.set(fish.scientificName, fish);
+    });
+
+    // Add new fish (will overwrite if duplicate)
+    newFish.forEach((fish) => {
+      fishMap.set(fish.scientificName, fish);
+    });
+
+    return Array.from(fishMap.values());
+  }, [cachedFish, newFish]);
 
   return {
     cachedFish,
