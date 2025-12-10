@@ -12,11 +12,7 @@ import ToxicFishSkeleton from "./toxic-fish-skeleton";
 import FishingTipsCarousel from "./fishing-tips-carousel";
 
 // Import Dialog components from ui folder
-import {
-  useFishDataInfinite,
-  useToxicFishData,
-  useToxicFishStream,
-} from "@/hooks/queries";
+import { useFishDataInfinite, useToxicFishStream } from "@/hooks/queries";
 import { useUserLocation } from "@/hooks/queries/location/use-location";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -83,12 +79,6 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     // isFetchingNextPage,
   } = useFishDataInfinite(userLocation, userLatitude, userLongitude);
 
-  const { data: toxicFishData, isLoading: loadingToxicFish } = useToxicFishData(
-    userLocation,
-    userLatitude,
-    userLongitude,
-  );
-
   const toxicStream = useToxicFishStream({
     userLocation,
     autoStart: true,
@@ -96,8 +86,6 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
 
   // Extract fish list from infinite query data
   const fishList = fishData?.pages.flatMap((page) => page) || [];
-  const toxicFishList = toxicFishData || [];
-  const debugInfo = null;
 
   // Get current month
   const getCurrentMonth = () => {
@@ -183,90 +171,11 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
           <GearRecommendationWidget />
         </div>
 
-        {/* Toxic Fish Section */}
+        {/* Toxic Fish Stream Section -  */}
         <div className="mb-8">
           <div className="px-4 lg:px-6">
             <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
               Toxic & Risky Catches
-            </h2>
-            <p className="text-sm mb-4 text-gray-600">
-              Venomous and toxic fish found in {getSeaName(userLocation)}.
-            </p>
-          </div>
-
-          {/* Debug Info */}
-          {toxicFishList.length > 0 &&
-            localStorage.getItem("showToxicFishDebug") === "true" && (
-              <div className="mb-2 p-2 bg-blue-50 px-4 lg:px-6 /20 border border-blue-200 dark:border-blue-800 rounded text-xs space-y-1">
-                <div className="font-mono text-lishka-blue ">
-                  DEBUG: Final toxic fish count: {toxicFishList.length}
-                </div>
-                {/* Show debug info from state if available */}
-                {debugInfo && (
-                  <>
-                    <div className="font-mono text-lishka-blue ">
-                      Location: {getSeaName(userLocation)}
-                    </div>
-                    <div className="font-mono text-lishka-blue ">
-                      Original count from OpenAI: {debugInfo.originalCount}
-                    </div>
-                    {debugInfo.filteredOut.length > 0 && (
-                      <div className="font-mono text-orange-700 dark:text-orange-400">
-                        Filtered out {debugInfo.filteredOut.length} fish:{" "}
-                        {debugInfo.filteredOut.map((f) => f.name).join(", ")}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            )}
-          {loadingToxicFish ? (
-            <div className="mb-8">
-              <div className="mb-4 px-4 lg:px-6">
-                <Skeleton className="h-6 w-48 mb-2" />
-                <Skeleton className="h-4 w-64" />
-              </div>
-              <ToxicFishSkeleton />
-            </div>
-          ) : toxicFishList.length === 0 ? (
-            <div className="bg-yellow-50 px-4 lg:px-6 mx-4 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-              <p className="text-yellow-700 dark:text-yellow-400 text-sm">
-                Unable to load toxic fish data at the moment. Please check your
-                connection and try refreshing the page.
-              </p>
-            </div>
-          ) : (
-            <div className="flex gap-3 overflow-x-auto pb-4 px-4 lg:px-6 scrollbar-hide">
-              {toxicFishList.map((fish, index) => (
-                <div
-                  key={`toxic-${fish.scientific_name}-${index}`}
-                  className="flex-shrink-0 w-40"
-                >
-                  <FishCard
-                    name={fish.name}
-                    scientificName={fish.scientific_name}
-                    habitat={fish.habitat}
-                    difficulty={fish.difficulty}
-                    isToxic={fish.is_toxic}
-                    dangerType={fish.danger_type}
-                    image={fish.image}
-                    onClick={() =>
-                      navigate(`/fish/${fish.slug}`, {
-                        state: { fish },
-                      })
-                    }
-                  />
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Toxic Fish Stream Section - NEW STREAMING VERSION! */}
-        <div className="mb-8">
-          <div className="px-4 lg:px-6">
-            <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
-              Toxic & Risky Catches (Streaming)
             </h2>
             <p className="text-sm mb-4 text-gray-600">
               Venomous and toxic fish found in {getSeaName(userLocation)}.
