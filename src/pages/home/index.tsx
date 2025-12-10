@@ -12,7 +12,7 @@ import ToxicFishSkeleton from "./toxic-fish-skeleton";
 import FishingTipsCarousel from "./fishing-tips-carousel";
 
 // Import Dialog components from ui folder
-import { useFishDataInfinite, useToxicFishStream } from "@/hooks/queries";
+import { useFishStream, useToxicFishStream } from "@/hooks/queries";
 import { useUserLocation } from "@/hooks/queries/location/use-location";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -69,23 +69,16 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     return profile?.has_seen_onboarding_flow === true;
   }, [profile, location.state]);
 
-  // React Query hooks
-  const {
-    data: fishData,
-    isLoading: loadingFish,
-    error: fishError,
-    // fetchNextPage,
-    // hasNextPage,
-    // isFetchingNextPage,
-  } = useFishDataInfinite(userLocation, userLatitude, userLongitude);
+  // React Query hooks - Replaced with streaming
+  const fishStream = useFishStream({
+    userLocation,
+    autoStart: true,
+  });
 
   const toxicStream = useToxicFishStream({
     userLocation,
     autoStart: true,
   });
-
-  // Extract fish list from infinite query data
-  const fishList = fishData?.pages.flatMap((page) => page) || [];
 
   // Get current month
   const getCurrentMonth = () => {
@@ -276,81 +269,80 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
         </div>
         */}
 
-        {/* Active Fish Section */}
-        {loadingFish ? (
-          <div className="px-4 lg:px-6">
-            <div className="mb-6">
-              <Skeleton className="h-6 w-48 mb-2" />
-              <Skeleton className="h-4 w-64 mb-4" />
-            </div>
-
-            {/* Fish Grid Skeleton */}
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
-              {[...Array(8)].map((_, index) => (
-                <Card key={index} className="overflow-hidden h-full">
-                  <div className="relative w-full aspect-[3/2] overflow-hidden">
-                    <Skeleton className="w-full h-full" />
-                  </div>
-                  <CardContent className="p-2 sm:p-3 flex flex-col flex-1">
-                    <div className="mb-1">
-                      <Skeleton className="h-4 w-3/4 mb-1" />
-                      <Skeleton className="h-3 w-full" />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center">
-                        <Skeleton className="h-3 w-3 mr-1" />
-                        <Skeleton className="h-3 w-2/3" />
-                      </div>
-                      <div className="flex items-center">
-                        <Skeleton className="h-3 w-3 mr-1" />
-                        <Skeleton className="h-3 w-1/2" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Load More Button Skeleton */}
-            <div className="flex justify-center mb-20 lg:mb-6">
-              <Skeleton className="h-10 w-32 rounded-md" />
-            </div>
+        {/* Active Fish Section - Streaming */}
+        <div className="mb-8">
+          <div className="mb-6 px-4 lg:px-6">
+            <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
+              Active fish in {getCurrentMonth()}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-4">
+              Discover fish species available in your area this month
+            </p>
           </div>
-        ) : (
-          <>
-            <div className="mb-6 px-4 lg:px-6">
-              <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
-                Active fish in {getCurrentMonth()}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                Discover fish species available in your area this month
+
+          {fishStream.error ? (
+            <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mx-4 rounded-lg p-4 mb-6 flex flex-col">
+              <p className="text-red-700 dark:text-red-400 break-words whitespace-normal">
+                {fishStream.error}
+              </p>
+              <Button
+                variant="outline"
+                className="mt-2 w-fit"
+                onClick={() => fishStream.reset()}
+              >
+                Try Again
+              </Button>
+            </div>
+          ) : fishStream.isStreaming && fishStream.allFish.length === 0 ? (
+            <div className="px-4 lg:px-6">
+              {/* Fish Grid Skeleton */}
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
+                {[...Array(8)].map((_, index) => (
+                  <Card key={index} className="overflow-hidden h-full">
+                    <div className="relative w-full aspect-[3/2] overflow-hidden">
+                      <Skeleton className="w-full h-full" />
+                    </div>
+                    <CardContent className="p-2 sm:p-3 flex flex-col flex-1">
+                      <div className="mb-1">
+                        <Skeleton className="h-4 w-3/4 mb-1" />
+                        <Skeleton className="h-3 w-full" />
+                      </div>
+                      <div className="space-y-1">
+                        <div className="flex items-center">
+                          <Skeleton className="h-3 w-3 mr-1" />
+                          <Skeleton className="h-3 w-2/3" />
+                        </div>
+                        <div className="flex items-center">
+                          <Skeleton className="h-3 w-3 mr-1" />
+                          <Skeleton className="h-3 w-1/2" />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+          ) : fishStream.allFish.length === 0 && !fishStream.isStreaming ? (
+            <div className="bg-yellow-50 px-4 lg:px-6 mx-4 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <p className="text-yellow-700 dark:text-yellow-400 text-sm">
+                Unable to load fish data. Please check your connection and try
+                refreshing.
               </p>
             </div>
-
-            {fishError ? (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mx-4 rounded-lg p-4 mb-6 flex flex-col">
-                <p className="text-red-700 dark:text-red-400 break-words whitespace-normal">
-                  {fishError.message}
-                </p>
-                <Button
-                  variant="outline"
-                  className="mt-2 w-fit"
-                  onClick={() => window.location.reload()}
-                >
-                  Try Again
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 px-4 lg:px-6">
-                  {fishList.map((fish, index) => (
+          ) : (
+            <>
+              <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 px-4 lg:px-6">
+                {fishStream.allFish.map((fish, index) => (
+                  <div
+                    key={`stream-fish-${fish.scientificName}-${index}`}
+                    className="animate-fadeIn"
+                  >
                     <FishCard
-                      key={`${fish.scientific_name}-${index}`}
                       name={fish.name}
-                      scientificName={fish.scientific_name}
+                      scientificName={fish.scientificName}
                       habitat={fish.habitat}
                       difficulty={fish.difficulty}
-                      isToxic={fish.is_toxic}
+                      isToxic={fish.isToxic}
                       image={fish.image}
                       onClick={() =>
                         navigate(`/fish/${fish.slug}`, {
@@ -358,32 +350,42 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                         })
                       }
                     />
-                  ))}
-                </div>
-
-                {/* {fishList.length > 0 && hasNextPage && (
-                  <div className="flex justify-center mb-20 lg:mb-6">
-                    <Button
-                      variant="outline"
-                      onClick={handleLoadMore}
-                      disabled={isFetchingNextPage}
-                      className="w-fit bg-[#025DFB1A] text-lishka-blue hover:bg-[#025DFB33] hover:text-lishka-blue rounded-[24px] h-[39px] py-3 px-4 font-semibold text-xs shadow-none"
-                    >
-                      {isFetchingNextPage ? (
-                        <div className="flex items-center gap-2">
-                          <LoadingDots />
-                          <p className="">Loading...</p>
-                        </div>
-                      ) : (
-                        "Load more fish"
-                      )}
-                    </Button>
                   </div>
-                )} */}
-              </>
-            )}
-          </>
-        )}
+                ))}
+                {fishStream.isStreaming && (
+                  <>
+                    {[...Array(4)].map((_, index) => (
+                      <Card
+                        key={`skeleton-${index}`}
+                        className="overflow-hidden h-full"
+                      >
+                        <div className="relative w-full aspect-[3/2] overflow-hidden">
+                          <Skeleton className="w-full h-full" />
+                        </div>
+                        <CardContent className="p-2 sm:p-3 flex flex-col flex-1">
+                          <div className="mb-1">
+                            <Skeleton className="h-4 w-3/4 mb-1" />
+                            <Skeleton className="h-3 w-full" />
+                          </div>
+                          <div className="space-y-1">
+                            <div className="flex items-center">
+                              <Skeleton className="h-3 w-3 mr-1" />
+                              <Skeleton className="h-3 w-2/3" />
+                            </div>
+                            <div className="flex items-center">
+                              <Skeleton className="h-3 w-3 mr-1" />
+                              <Skeleton className="h-3 w-1/2" />
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </div>
       {/* Bottom Navigation */}
       <BottomNav />
