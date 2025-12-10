@@ -289,7 +289,13 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
               </div>
             )}
 
-          {toxicStream.isStreaming ? (
+          {toxicStream.error ? (
+            <div className="bg-yellow-50 px-4 lg:px-6 mx-4 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+              <p className="text-yellow-700 dark:text-yellow-400 text-sm">
+                Unable to load toxic fish data: {toxicStream.error}
+              </p>
+            </div>
+          ) : toxicStream.isStreaming && toxicStream.allFish.length === 0 ? (
             <div className="mb-8">
               <div className="mb-4 px-4 lg:px-6">
                 <Skeleton className="h-6 w-48 mb-2" />
@@ -297,13 +303,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
               </div>
               <ToxicFishSkeleton />
             </div>
-          ) : toxicStream.error ? (
-            <div className="bg-yellow-50 px-4 lg:px-6 mx-4 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
-              <p className="text-yellow-700 dark:text-yellow-400 text-sm">
-                Unable to load toxic fish data: {toxicStream.error}
-              </p>
-            </div>
-          ) : toxicStream.allFish.length === 0 ? (
+          ) : toxicStream.allFish.length === 0 && !toxicStream.isStreaming ? (
             <div className="bg-yellow-50 px-4 lg:px-6 mx-4 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
               <p className="text-yellow-700 dark:text-yellow-400 text-sm">
                 Unable to load toxic fish data at the moment. Please check your
@@ -315,7 +315,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
               {toxicStream.allFish.map((fish, index) => (
                 <div
                   key={`stream-toxic-${fish.scientificName}-${index}`}
-                  className="flex-shrink-0 w-40"
+                  className="flex-shrink-0 w-40 animate-fadeIn"
                 >
                   <FishCard
                     name={fish.name}
@@ -333,6 +333,11 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                   />
                 </div>
               ))}
+              {toxicStream.isStreaming && (
+                <div className="flex-shrink-0 w-40">
+                  <ToxicFishSkeleton />
+                </div>
+              )}
             </div>
           )}
         </div>
