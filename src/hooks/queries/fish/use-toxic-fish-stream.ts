@@ -146,8 +146,13 @@ export function useToxicFishStream(
             habitat: event.data.habitat || "",
             difficulty: (event.data.difficulty as any) || "Easy",
             season: event.data.season || "",
-            isToxic: event.data.is_toxic ?? event.data.isToxic ?? false,
-            dangerType: event.data.danger_type || event.data.dangerType,
+            isToxic: event.data.is_toxic ?? event.data.isToxic ?? true, // Default to true since cached fish in toxic section should all be toxic
+            dangerType:
+              event.data.danger_type ||
+              event.data.dangerType ||
+              (event.data.is_toxic || event.data.isToxic
+                ? "Toxic - handle with caution"
+                : undefined),
             image: event.data.image_url || event.data.image,
             slug: event.data.slug,
           };
@@ -176,7 +181,12 @@ export function useToxicFishStream(
             difficulty: (event.data.difficulty as any) || "Easy",
             season: event.data.season || "",
             isToxic: event.data.is_toxic ?? event.data.isToxic ?? true,
-            dangerType: event.data.danger_type || event.data.dangerType,
+            dangerType:
+              event.data.danger_type ||
+              event.data.dangerType ||
+              (event.data.is_toxic || event.data.isToxic
+                ? "Toxic - handle with caution"
+                : undefined),
             image: event.data.image_url || event.data.image,
             slug: event.data.slug,
           };
