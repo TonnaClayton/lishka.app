@@ -19,6 +19,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 import { OnboardingDialog } from "./onboarding-dialog";
 import LocationBtn from "@/components/location-btn";
+import { generateFishSlug } from "@/lib/utils";
 
 interface HomePageProps {
   location?: string;
@@ -227,11 +228,14 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                     isToxic={fish.isToxic}
                     dangerType={fish.dangerType}
                     image={fish.image}
-                    onClick={() =>
-                      navigate(`/fish/${fish.slug}`, {
+                    onClick={() => {
+                      const slug =
+                        fish.slug ||
+                        generateFishSlug(fish.scientificName || fish.name);
+                      navigate(`/fish/${slug}`, {
                         state: { fish },
-                      })
-                    }
+                      });
+                    }}
                   />
                 </div>
               ))}

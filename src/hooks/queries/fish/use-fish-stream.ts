@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { FishData } from "./use-fish-data";
 import { apiStreamed } from "../api";
 import { DEFAULT_LOCATION } from "@/lib/const";
+import { generateFishSlug } from "@/lib/utils";
 
 interface FishStreamEvent {
   type:
@@ -129,17 +130,20 @@ export function useFishStream(
       case "cached_fish":
         if (event.data) {
           // Transform snake_case API response to camelCase FishData
+          const fishName = event.data.name || event.data.common_name || "";
+          const scientificName =
+            event.data.scientific_name || event.data.scientificName || "";
           const transformedFish: FishData = {
-            name: event.data.name || event.data.common_name || "",
-            scientificName:
-              event.data.scientific_name || event.data.scientificName || "",
+            name: fishName,
+            scientificName: scientificName,
             localName: event.data.local_name || event.data.localName,
             habitat: event.data.habitat || "",
             difficulty: (event.data.difficulty as any) || "Easy",
             season: event.data.season || "",
             isToxic: false,
             image: event.data.image,
-            slug: event.data.slug,
+            slug:
+              event.data.slug || generateFishSlug(scientificName || fishName),
           };
 
           // Check if we've seen this scientific name before (in either array)
@@ -153,16 +157,20 @@ export function useFishStream(
       case "fish":
         if (event.data) {
           // Transform snake_case API response to camelCase FishData
+          const fishName = event.data.name || event.data.common_name || "";
+          const scientificName =
+            event.data.scientific_name || event.data.scientificName || "";
           const transformedFish: FishData = {
-            name: event.data.name || event.data.common_name || "",
-            scientificName:
-              event.data.scientific_name || event.data.scientificName || "",
+            name: fishName,
+            scientificName: scientificName,
             habitat:
               event.data.water_type === "saltwater" ? "Marine" : "Freshwater",
             difficulty: "Easy", // Default for now
             season: "Year-round", // Default for now
             isToxic: false,
             image: event.data.image,
+            slug:
+              event.data.slug || generateFishSlug(scientificName || fishName),
           };
 
           // Check if we've seen this scientific name before (in either array)

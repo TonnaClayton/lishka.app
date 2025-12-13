@@ -11,7 +11,7 @@ import remarkGfm from "remark-gfm";
 import BottomNav from "@/components/bottom-nav";
 import useDeviceSize from "@/hooks/use-device-size";
 import useIsMobile from "@/hooks/use-is-mobile";
-import { cn } from "@/lib/utils";
+import { cn, generateFishSlug } from "@/lib/utils";
 import { error as logError } from "@/lib/logging";
 import {
   Tooltip,
@@ -846,7 +846,12 @@ const SearchMessageCard = ({
                     isToxic={fish.is_toxic}
                     className="w-[200px] min-h-[250px] flex-shrink-0"
                     onClick={() => {
-                      navigate(`/fish/${fish.slug}`, {
+                      const slug =
+                        fish.slug ||
+                        generateFishSlug(
+                          fish.scientific_name || fish.name || "",
+                        );
+                      navigate(`/fish/${slug}`, {
                         state: { fish },
                       });
                     }}
