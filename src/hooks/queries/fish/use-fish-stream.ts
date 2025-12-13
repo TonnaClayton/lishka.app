@@ -138,7 +138,7 @@ export function useFishStream(
             difficulty: (event.data.difficulty as any) || "Easy",
             season: event.data.season || "",
             isToxic: false,
-            image: event.data.image_url || event.data.image,
+            image: event.data.image,
             slug: event.data.slug,
           };
 
@@ -162,7 +162,7 @@ export function useFishStream(
             difficulty: "Easy", // Default for now
             season: "Year-round", // Default for now
             isToxic: false,
-            image: event.data.image_url || event.data.image,
+            image: event.data.image,
           };
 
           // Check if we've seen this scientific name before (in either array)

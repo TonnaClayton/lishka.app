@@ -153,7 +153,7 @@ export function useToxicFishStream(
               (event.data.is_toxic || event.data.isToxic
                 ? "Toxic - handle with caution"
                 : undefined),
-            image: event.data.image_url || event.data.image,
+            image: event.data.image,
             slug: event.data.slug,
           };
 
@@ -187,7 +187,7 @@ export function useToxicFishStream(
               (event.data.is_toxic || event.data.isToxic
                 ? "Toxic - handle with caution"
                 : undefined),
-            image: event.data.image_url || event.data.image,
+            image: event.data.image,
             slug: event.data.slug,
           };
 

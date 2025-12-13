@@ -58,16 +58,8 @@ const FishCard = ({
       }
     };
 
-    // Only load if we don't already have a good image URL
-    if (!image || image.includes("unsplash") || image.includes("placeholder")) {
-      log(`FishCard: Loading new image for ${name}, current image:`, image);
-      loadFishImage();
-    } else {
-      log(`FishCard: Using existing image for ${name}:`, image);
-      setActualImageUrl(image);
-      setImageLoading(false);
-    }
-  }, [name, scientificName, image]);
+    loadFishImage();
+  }, [name, scientificName]);
   const handleClick = () => {
     // Track fish card click event
     captureEvent("fish_card_clicked", {

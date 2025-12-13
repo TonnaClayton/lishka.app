@@ -416,18 +416,8 @@ const FishDetailPage = () => {
       }
     };
 
-    // Only load if we don't already have a good image URL
     if (!displayData) return;
-    if (
-      !displayData.image ||
-      displayData.image.includes("unsplash") ||
-      displayData.image.includes("placeholder")
-    ) {
-      loadFishImage();
-    } else {
-      setFishImageUrl(displayData.image);
-      setImageLoading(false);
-    }
+    loadFishImage();
   }, [displayData, fishName]);
 
   if (isLoadingData) {
@@ -617,11 +607,7 @@ const FishDetailPage = () => {
                     </div>
                   ) : (
                     <img
-                      src={
-                        fishImageUrl ||
-                        displayData?.image ||
-                        getPlaceholderFishImage()
-                      }
+                      src={fishImageUrl || getPlaceholderFishImage()}
                       alt={displayData?.name || "Fish"}
                       className="w-full h-full object-cover absolute top-0 left-0"
                       onError={(e) => {
