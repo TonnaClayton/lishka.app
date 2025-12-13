@@ -164,10 +164,11 @@ export function useFishStream(
             name: fishName,
             scientificName: scientificName,
             habitat:
-              event.data.water_type === "saltwater" ? "Marine" : "Freshwater",
-            difficulty: "Easy", // Default for now
-            season: "Year-round", // Default for now
-            isToxic: false,
+              event.data.habitat ||
+              (event.data.water_type === "saltwater" ? "Marine" : "Freshwater"),
+            difficulty: (event.data.difficulty as any) || "Easy",
+            season: event.data.season || "Year-round",
+            isToxic: event.data.isToxic ?? event.data.is_toxic ?? false,
             image: event.data.image,
             slug:
               event.data.slug || generateFishSlug(scientificName || fishName),
