@@ -40,3 +40,5 @@ dev-dist
 /supabase/.temp
 
 features_docs/*
+
+scripts/*
