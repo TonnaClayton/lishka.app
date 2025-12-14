@@ -27,7 +27,7 @@ interface FishCardProps {
 }
 
 const FishCard = ({
-  image = "https://images.unsplash.com/photo-1545816250-3ea6e37da790?w=400&q=80",
+  image: _image, // Unused - we start with placeholder to prevent FishBase flash
   name = "Atlantic Salmon",
   scientificName = "Salmo salar",
   habitat = "Freshwater, Coastal",
@@ -38,7 +38,11 @@ const FishCard = ({
 
   onClick = () => {},
 }: FishCardProps) => {
-  const [actualImageUrl, setActualImageUrl] = useState<string>(image);
+  // Don't use the initial image prop to avoid showing FishBase images
+  // Start with placeholder and load the correct image immediately
+  const [actualImageUrl, setActualImageUrl] = useState<string>(
+    getPlaceholderFishImage(),
+  );
   const [imageLoading, setImageLoading] = useState(true);
 
   // Load the actual fish image on component mount
