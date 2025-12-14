@@ -592,7 +592,10 @@ function App() {
           </Suspense>
           <ReactQueryDevtools initialIsOpen={false} />
           <Toaster />
-          {/* <AddToHomeScreenPrompt /> */}
+          {/* TODO: Re-enable AddToHomeScreenPrompt when ready
+           * Temporarily hidden per commit b5a8afc
+           * Issue: Install banner was hidden temporarily - needs re-enabling
+           * <AddToHomeScreenPrompt /> */}
         </QueryClientProvider>
         {/* </ErrorBoundary> */}
       </PostHogErrorBoundary>

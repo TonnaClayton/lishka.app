@@ -3,6 +3,11 @@ import { FishData } from "./use-fish-data";
 import { apiStreamed } from "../api";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import { generateFishSlug } from "@/lib/utils";
+import {
+  parseStreamChunk,
+  combineAndDeduplicateFish,
+  isNewFish,
+} from "./fish-stream-utils";
 
 interface FishStreamEvent {
   type:
@@ -79,42 +84,7 @@ export function useFishStream(
   const hasAutoStartedRef = useRef(false);
   const seenFishRef = useRef<Set<string>>(new Set());
 
-  const handleStreamChunk = useCallback((chunk: string) => {
-    if (!chunk) return;
-
-    try {
-      streamBufferRef.current += chunk;
-
-      // Split by newlines - backend sends newline-delimited JSON or SSE format
-      const lines = streamBufferRef.current.split("\n");
-
-      // Keep the last line in the buffer if it's incomplete
-      if (!streamBufferRef.current.endsWith("\n")) {
-        streamBufferRef.current = lines.pop() ?? "";
-      } else {
-        streamBufferRef.current = "";
-      }
-
-      for (const line of lines) {
-        if (!line.trim()) continue;
-
-        // Check if this is SSE format (data: prefix) or raw JSON
-        let jsonData = line.trim();
-        if (line.startsWith("data:")) {
-          jsonData = line.replace(/^data:\s?/, "").trim();
-        }
-
-        if (!jsonData) continue;
-
-        const event: FishStreamEvent = JSON.parse(jsonData);
-        handleEvent(event);
-      }
-    } catch (e) {
-      console.error("Failed to parse stream chunk:", e);
-    }
-  }, []);
-
-  const handleEvent = (event: FishStreamEvent) => {
+  const handleEvent = useCallback((event: FishStreamEvent) => {
     switch (event.type) {
       case "init":
         setStatusMessage(event.message || "Initializing...");
@@ -147,8 +117,7 @@ export function useFishStream(
           };
 
           // Check if we've seen this scientific name before (in either array)
-          if (!seenFishRef.current.has(transformedFish.scientificName)) {
-            seenFishRef.current.add(transformedFish.scientificName);
+          if (isNewFish(transformedFish.scientificName, seenFishRef)) {
             setCachedFish((prev) => [...prev, transformedFish]);
           }
         }
@@ -175,8 +144,7 @@ export function useFishStream(
           };
 
           // Check if we've seen this scientific name before (in either array)
-          if (!seenFishRef.current.has(transformedFish.scientificName)) {
-            seenFishRef.current.add(transformedFish.scientificName);
+          if (isNewFish(transformedFish.scientificName, seenFishRef)) {
             setNewFish((prev) => [...prev, transformedFish]);
           }
         }
@@ -222,7 +190,14 @@ export function useFishStream(
         setIsStreaming(false);
         break;
     }
-  };
+  }, []);
+
+  const handleStreamChunk = useCallback(
+    (chunk: string) => {
+      parseStreamChunk<FishStreamEvent>(chunk, streamBufferRef, handleEvent);
+    },
+    [handleEvent],
+  );
 
   const startStream = useCallback(async () => {
     if (isStreaming) return;
@@ -335,21 +310,10 @@ export function useFishStream(
     };
   }, [stopStream]);
 
-  const allFish = useMemo(() => {
-    const fishMap = new Map<string, FishData>();
-
-    // Add cached fish first
-    cachedFish.forEach((fish) => {
-      fishMap.set(fish.scientificName, fish);
-    });
-
-    // Add new fish (will overwrite if duplicate)
-    newFish.forEach((fish) => {
-      fishMap.set(fish.scientificName, fish);
-    });
-
-    return Array.from(fishMap.values());
-  }, [cachedFish, newFish]);
+  const allFish = useMemo(
+    () => combineAndDeduplicateFish(cachedFish, newFish),
+    [cachedFish, newFish],
+  );
 
   return {
     cachedFish,
