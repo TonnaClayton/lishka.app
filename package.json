@@ -18,6 +18,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "types:supabase": "npx supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/supabase.ts",
+    "check-missing-images": "node --loader tsx scripts/check-missing-fish-images.ts",
+    "check-missing-images-filtered": "node --loader tsx scripts/check-missing-images-filtered.ts",
     "prepare": "husky"
   },
   "dependencies": {
@@ -107,6 +109,7 @@
     "@vitejs/plugin-react-swc": "^3.10.1",
     "@vitest/coverage-v8": "^3.2.4",
     "autoprefixer": "^10.4.19",
+    "dotenv": "^17.2.3",
     "eslint": "^9.32.0",
     "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
@@ -121,6 +124,7 @@
     "supabase": "^2.33.9",
     "tailwindcss": "3.4.1",
     "tempo-devtools": "^2.0.109",
+    "tsx": "^4.21.0",
     "typescript": "^5.8.2",
     "typescript-eslint": "^8.39.1",
     "vite": "^6.2.3",

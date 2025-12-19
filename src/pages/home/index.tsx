@@ -7,12 +7,12 @@ import { useAuth } from "@/contexts/auth-context";
 
 import LocationModal from "@/components/location-modal";
 import EmailVerificationBanner from "@/components/email-verification-banner";
-import GearRecommendationWidget from "./gear-recommendation-widget";
+// import GearRecommendationWidget from "./gear-recommendation-widget";
 import ToxicFishSkeleton from "./toxic-fish-skeleton";
 import FishingTipsCarousel from "./fishing-tips-carousel";
 
 // Import Dialog components from ui folder
-import { useFishStream, useToxicFishStream } from "@/hooks/queries";
+import { useFAOFishStream, useFAOToxicFishStream } from "@/hooks/queries";
 import { useUserLocation } from "@/hooks/queries/location/use-location";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -70,14 +70,17 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     return profile?.has_seen_onboarding_flow === true;
   }, [profile, location.state]);
 
-  // React Query hooks - Replaced with streaming
-  const fishStream = useFishStream({
-    userLocation,
+  // FAO-based fish streams using PostGIS spatial queries
+  // Automatically uses authenticated user's location, or coordinates if provided
+  const fishStream = useFAOFishStream({
+    latitude: userLatitude,
+    longitude: userLongitude,
     autoStart: true,
   });
 
-  const toxicStream = useToxicFishStream({
-    userLocation,
+  const toxicStream = useFAOToxicFishStream({
+    latitude: userLatitude,
+    longitude: userLongitude,
     autoStart: true,
   });
 
@@ -161,9 +164,9 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
         </div>
 
         {/* Gear Recommendation Widget */}
-        <div className="mb-8">
+        {/* <div className="mb-8">
           <GearRecommendationWidget />
-        </div>
+        </div> */}
 
         {/* Toxic Fish Stream Section -  */}
         <div className="mb-8">
@@ -172,7 +175,10 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
               Toxic & Risky Catches
             </h2>
             <p className="text-sm mb-4 text-gray-600">
-              Venomous and toxic fish found in {getSeaName(userLocation)}.
+              Venomous and toxic fish found in {getSeaName(userLocation)}
+              {toxicStream.faoAreas.length > 0 && (
+                <> ({toxicStream.faoAreas.map(a => a.fao_name).join(", ")})</>
+              )}.
             </p>
           </div>
 
@@ -181,9 +187,10 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
             localStorage.getItem("showToxicFishDebug") === "true" && (
               <div className="mb-2 p-2 bg-blue-50 px-4 lg:px-6 /20 border border-blue-200 dark:border-blue-800 rounded text-xs space-y-1">
                 <div className="font-mono text-lishka-blue">
-                  DEBUG: Streaming - {toxicStream.allFish.length} total (
-                  {toxicStream.cachedFish.length} cached,{" "}
-                  {toxicStream.newFish.length} new)
+                  DEBUG: FAO Streaming - {toxicStream.allFish.length} total toxic fish
+                  {toxicStream.faoAreas.length > 0 && (
+                    <> | FAO Areas: {toxicStream.faoAreas.map(a => a.fao_name).join(", ")}</>
+                  )}
                 </div>
                 <div className="font-mono text-lishka-blue">
                   Progress: {toxicStream.progress}% | Status:{" "}
@@ -277,10 +284,10 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
         <div className="mb-8">
           <div className="mb-6 px-4 lg:px-6">
             <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
-              Active fish in {getCurrentMonth()}
+              Fish within your area
             </h2>
             <p className="text-sm text-muted-foreground mb-4">
-              Discover fish species available in your area this month
+              Discover fish species available in your area
             </p>
           </div>
 
