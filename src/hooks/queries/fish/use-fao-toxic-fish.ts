@@ -8,6 +8,7 @@ import { FishData } from "./use-fish-data";
 /**
  * Schema for FAO toxic fish API response
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const faoToxicFishResponseSchema = z.object({
   user_location: z.object({
     latitude: z.number(),
@@ -19,7 +20,7 @@ const faoToxicFishResponseSchema = z.object({
       fao_code: z.string(),
       major_code: z.string(),
       fao_name: z.string(),
-    })
+    }),
   ),
   toxic_fish_count: z.number(),
   toxic_fish: z.array(fishSchema),
@@ -43,13 +44,11 @@ export const faoToxicFishQueryKeys = {
  * Hook to fetch toxic fish data using FAO areas (PostGIS-based)
  * Uses authenticated user's location by default, or provided coordinates
  */
-export const useFAOToxicFishData = (
-  options?: {
-    latitude?: number;
-    longitude?: number;
-    enabled?: boolean;
-  }
-) => {
+export const useFAOToxicFishData = (options?: {
+  latitude?: number;
+  longitude?: number;
+  enabled?: boolean;
+}) => {
   const { latitude, longitude, enabled = true } = options || {};
 
   const queryKey = faoToxicFishQueryKeys.faoToxicFishData(latitude, longitude);
@@ -71,7 +70,7 @@ export const useFAOToxicFishData = (
         `fao/fish/toxic?${queryParams.toString()}`,
         {
           method: "GET",
-        }
+        },
       );
 
       log("[FAO TOXIC FISH DATA]", data);
@@ -102,4 +101,3 @@ export const useFAOToxicFishData = (
     retry: 1,
   });
 };
-

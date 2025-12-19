@@ -84,25 +84,6 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     autoStart: true,
   });
 
-  // Get current month
-  const getCurrentMonth = () => {
-    const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    return months[new Date().getMonth()];
-  };
-
   // Helper function to format the subtitle
   const getSeaName = (location: string) => {
     const cleanLocation = location.split(/[,\s]+/).pop() || location;
@@ -177,8 +158,9 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
             <p className="text-sm mb-4 text-gray-600">
               Venomous and toxic fish found in {getSeaName(userLocation)}
               {toxicStream.faoAreas.length > 0 && (
-                <> ({toxicStream.faoAreas.map(a => a.fao_name).join(", ")})</>
-              )}.
+                <> ({toxicStream.faoAreas.map((a) => a.fao_name).join(", ")})</>
+              )}
+              .
             </p>
           </div>
 
@@ -187,9 +169,14 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
             localStorage.getItem("showToxicFishDebug") === "true" && (
               <div className="mb-2 p-2 bg-blue-50 px-4 lg:px-6 /20 border border-blue-200 dark:border-blue-800 rounded text-xs space-y-1">
                 <div className="font-mono text-lishka-blue">
-                  DEBUG: FAO Streaming - {toxicStream.allFish.length} total toxic fish
+                  DEBUG: FAO Streaming - {toxicStream.allFish.length} total
+                  toxic fish
                   {toxicStream.faoAreas.length > 0 && (
-                    <> | FAO Areas: {toxicStream.faoAreas.map(a => a.fao_name).join(", ")}</>
+                    <>
+                      {" "}
+                      | FAO Areas:{" "}
+                      {toxicStream.faoAreas.map((a) => a.fao_name).join(", ")}
+                    </>
                   )}
                 </div>
                 <div className="font-mono text-lishka-blue">

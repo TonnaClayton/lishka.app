@@ -8,6 +8,7 @@ import { FishData } from "./use-fish-data";
 /**
  * Schema for FAO fish API response
  */
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const faoFishResponseSchema = z.object({
   user_location: z.object({
     latitude: z.number(),
@@ -19,7 +20,7 @@ const faoFishResponseSchema = z.object({
       fao_code: z.string(),
       major_code: z.string(),
       fao_name: z.string(),
-    })
+    }),
   ),
   fish_count: z.number(),
   fish: z.array(fishSchema),
@@ -31,7 +32,12 @@ const faoFishResponseSchema = z.object({
 });
 
 export const faoFishQueryKeys = {
-  faoFishData: (latitude?: number, longitude?: number, limit?: number, offset?: number) =>
+  faoFishData: (
+    latitude?: number,
+    longitude?: number,
+    limit?: number,
+    offset?: number,
+  ) =>
     [
       "faoFishData",
       typeof latitude === "number" ? latitude : null,
@@ -45,18 +51,27 @@ export const faoFishQueryKeys = {
  * Hook to fetch fish data using FAO areas (PostGIS-based)
  * Uses authenticated user's location by default, or provided coordinates
  */
-export const useFAOFishData = (
-  options?: {
-    latitude?: number;
-    longitude?: number;
-    limit?: number;
-    offset?: number;
-    enabled?: boolean;
-  }
-) => {
-  const { latitude, longitude, limit = 100, offset = 0, enabled = true } = options || {};
+export const useFAOFishData = (options?: {
+  latitude?: number;
+  longitude?: number;
+  limit?: number;
+  offset?: number;
+  enabled?: boolean;
+}) => {
+  const {
+    latitude,
+    longitude,
+    limit = 100,
+    offset = 0,
+    enabled = true,
+  } = options || {};
 
-  const queryKey = faoFishQueryKeys.faoFishData(latitude, longitude, limit, offset);
+  const queryKey = faoFishQueryKeys.faoFishData(
+    latitude,
+    longitude,
+    limit,
+    offset,
+  );
 
   return useQuery({
     queryKey,
@@ -83,7 +98,7 @@ export const useFAOFishData = (
         `fao/fish?${queryParams.toString()}`,
         {
           method: "GET",
-        }
+        },
       );
 
       log("[FAO FISH DATA]", data);
@@ -114,4 +129,3 @@ export const useFAOFishData = (
     retry: 1,
   });
 };
-

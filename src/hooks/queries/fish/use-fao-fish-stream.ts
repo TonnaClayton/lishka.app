@@ -2,11 +2,7 @@ import { useState, useCallback, useRef, useEffect, useMemo } from "react";
 import { FishData } from "./use-fish-data";
 import { apiStreamed } from "../api";
 import { generateFishSlug } from "@/lib/utils";
-import {
-  parseStreamChunk,
-  combineAndDeduplicateFish,
-  isNewFish,
-} from "./fish-stream-utils";
+import { parseStreamChunk, isNewFish } from "./fish-stream-utils";
 
 export interface FAOFishStreamEvent {
   type: "init" | "status" | "fish" | "progress" | "complete" | "error";
@@ -57,7 +53,10 @@ export interface UseFAOFishStreamReturn {
   } | null;
 
   // Controls
-  startStream: (options?: { latitude?: number; longitude?: number }) => Promise<void>;
+  startStream: (options?: {
+    latitude?: number;
+    longitude?: number;
+  }) => Promise<void>;
   stopStream: () => void;
   reset: () => void;
 }
@@ -79,11 +78,13 @@ export function useFAOFishStream(
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState(0);
   const [statusMessage, setStatusMessage] = useState("");
-  const [faoAreas, setFaoAreas] = useState<Array<{
-    fao_code: string;
-    major_code: string;
-    fao_name: string;
-  }>>([]);
+  const [faoAreas, setFaoAreas] = useState<
+    Array<{
+      fao_code: string;
+      major_code: string;
+      fao_name: string;
+    }>
+  >([]);
   const [userLocation, setUserLocation] = useState<{
     latitude: number;
     longitude: number;
@@ -178,11 +179,7 @@ export function useFAOFishStream(
 
   const handleStreamChunk = useCallback(
     (chunk: string) => {
-      parseStreamChunk<FAOFishStreamEvent>(
-        chunk,
-        streamBufferRef,
-        handleEvent,
-      );
+      parseStreamChunk<FAOFishStreamEvent>(chunk, streamBufferRef, handleEvent);
     },
     [handleEvent],
   );
@@ -326,4 +323,3 @@ export function useFAOFishStream(
     reset,
   };
 }
-

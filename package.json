@@ -18,8 +18,6 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "types:supabase": "npx supabase gen types typescript --project-id $SUPABASE_PROJECT_ID > src/types/supabase.ts",
-    "check-missing-images": "node --loader tsx scripts/check-missing-fish-images.ts",
-    "check-missing-images-filtered": "node --loader tsx scripts/check-missing-images-filtered.ts",
     "prepare": "husky"
   },
   "dependencies": {
