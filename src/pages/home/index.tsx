@@ -11,7 +11,7 @@ import ToxicFishSkeleton from "./toxic-fish-skeleton";
 import FishingTipsCarousel from "./fishing-tips-carousel";
 
 // Import Dialog components from ui folder
-import { useFishDataInfinite, useToxicFishData } from "@/hooks/queries";
+import { useFAOFishStream, useFAOToxicFishStream } from "@/hooks/queries";
 import { useUserLocation } from "@/hooks/queries/location/use-location";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -68,25 +68,28 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     return profile?.has_seen_onboarding_flow === true;
   }, [profile, location.state]);
 
-  // React Query hooks
+  // FAO-based fish streams using PostGIS spatial queries
+  // Automatically uses authenticated user's location
   const {
-    data: fishData,
-    isLoading: loadingFish,
-    error: fishError,
-    // fetchNextPage,
-    // hasNextPage,
-    // isFetchingNextPage,
-  } = useFishDataInfinite(userLocation, userLatitude, userLongitude);
+    fish: fishList,
+    isStreaming: loadingFish,
+    error: fishErrorMsg,
+  } = useFAOFishStream({
+    latitude: userLatitude,
+    longitude: userLongitude,
+    autoStart: true,
+  });
 
-  const { data: toxicFishData, isLoading: loadingToxicFish } = useToxicFishData(
-    userLocation,
-    userLatitude,
-    userLongitude,
-  );
+  const { toxicFish: toxicFishList, isStreaming: loadingToxicFish } =
+    useFAOToxicFishStream({
+      latitude: userLatitude,
+      longitude: userLongitude,
+      autoStart: true,
+    });
 
-  // Extract fish list from infinite query data
-  const fishList = fishData?.pages.flatMap((page) => page) || [];
-  const toxicFishList = toxicFishData || [];
+  // Convert error message to error object for consistency
+  const fishError = fishErrorMsg ? { message: fishErrorMsg } : null;
+
   const debugInfo = null;
 
   // Get current month
@@ -224,16 +227,16 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
             <div className="flex gap-3 overflow-x-auto pb-4 px-4 lg:px-6 scrollbar-hide">
               {toxicFishList.map((fish, index) => (
                 <div
-                  key={`toxic-${fish.scientific_name}-${index}`}
+                  key={`toxic-${fish.scientificName}-${index}`}
                   className="flex-shrink-0 w-40"
                 >
                   <FishCard
                     name={fish.name}
-                    scientificName={fish.scientific_name}
+                    scientificName={fish.scientificName}
                     habitat={fish.habitat}
                     difficulty={fish.difficulty}
-                    isToxic={fish.is_toxic}
-                    dangerType={fish.danger_type}
+                    isToxic={fish.isToxic}
+                    dangerType={fish.dangerType}
                     image={fish.image}
                     onClick={() =>
                       navigate(`/fish/${fish.slug}`, {
@@ -341,12 +344,12 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                 <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 px-4 lg:px-6">
                   {fishList.map((fish, index) => (
                     <FishCard
-                      key={`${fish.scientific_name}-${index}`}
+                      key={`${fish.scientificName}-${index}`}
                       name={fish.name}
-                      scientificName={fish.scientific_name}
+                      scientificName={fish.scientificName}
                       habitat={fish.habitat}
                       difficulty={fish.difficulty}
-                      isToxic={fish.is_toxic}
+                      isToxic={fish.isToxic}
                       image={fish.image}
                       onClick={() =>
                         navigate(`/fish/${fish.slug}`, {
