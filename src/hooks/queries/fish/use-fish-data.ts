@@ -15,6 +15,7 @@ export interface FishData {
   isToxic: boolean;
   dangerType?: string;
   image?: string;
+  slug?: string;
   probabilityScore?: number;
 }
 

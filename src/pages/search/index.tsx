@@ -37,6 +37,7 @@ import SearchGearCard from "./gear-card";
 import { toGearItem } from "@/lib/gear";
 import { toImageMetadataItem } from "@/lib/gallery-photo";
 import SearchPhotoCard from "./photo-card";
+import { generateFishSlug } from "@/hooks/queries/fish/utils";
 
 interface Message {
   id: string;
@@ -846,7 +847,12 @@ const SearchMessageCard = ({
                     isToxic={fish.is_toxic}
                     className="w-[200px] min-h-[250px] flex-shrink-0"
                     onClick={() => {
-                      navigate(`/fish/${fish.slug}`, {
+                      const slug =
+                        fish.slug ||
+                        generateFishSlug(
+                          fish.scientific_name || fish.name || "",
+                        );
+                      navigate(`/fish/${slug}`, {
                         state: { fish },
                       });
                     }}
