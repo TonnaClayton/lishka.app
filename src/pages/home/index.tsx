@@ -7,7 +7,6 @@ import { useAuth } from "@/contexts/auth-context";
 
 import LocationModal from "@/components/location-modal";
 import EmailVerificationBanner from "@/components/email-verification-banner";
-import GearRecommendationWidget from "./gear-recommendation-widget";
 import ToxicFishSkeleton from "./toxic-fish-skeleton";
 import FishingTipsCarousel from "./fishing-tips-carousel";
 
@@ -167,11 +166,6 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
         {/* Fishing Tips Carousel Section */}
         <div className="px-4 lg:px-6 mb-9">
           <FishingTipsCarousel location={userLocation} />
-        </div>
-
-        {/* Gear Recommendation Widget */}
-        <div className="mb-8">
-          <GearRecommendationWidget />
         </div>
 
         {/* Toxic Fish Section */}
