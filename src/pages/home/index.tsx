@@ -92,25 +92,6 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
 
   const debugInfo = null;
 
-  // Get current month
-  const getCurrentMonth = () => {
-    const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    return months[new Date().getMonth()];
-  };
-
   // Helper function to format the subtitle
   const getSeaName = (location: string) => {
     const cleanLocation = location.split(/[,\s]+/).pop() || location;
@@ -319,7 +300,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
           <>
             <div className="mb-6 px-4 lg:px-6">
               <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
-                Active fish in {getCurrentMonth()}
+                fish in your area
               </h2>
               <p className="text-sm text-muted-foreground mb-4">
                 Discover fish species available in your area this month
