@@ -9,6 +9,7 @@ import LocationModal from "@/components/location-modal";
 import EmailVerificationBanner from "@/components/email-verification-banner";
 import ToxicFishSkeleton from "./toxic-fish-skeleton";
 import FishingTipsCarousel from "./fishing-tips-carousel";
+import GearRecommendationWidget from "./gear-recommendation-widget";
 
 // Import Dialog components from ui folder
 import { useFAOFishStream, useFAOToxicFishStream } from "@/hooks/queries";
@@ -300,10 +301,11 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
           <>
             <div className="mb-6 px-4 lg:px-6">
               <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
-                fish in your area
+                Discover fish in your area.
               </h2>
               <p className="text-sm text-muted-foreground mb-4">
-                Discover fish species available in your area this month
+                From familiar species to rare sightings that share the
+                Mediterranean.
               </p>
             </div>
 
@@ -364,6 +366,11 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
             )}
           </>
         )}
+
+        {/* Gear Recommendation Widget */}
+        <div className="mb-8">
+          <GearRecommendationWidget />
+        </div>
       </div>
       {/* Bottom Navigation */}
       <BottomNav />

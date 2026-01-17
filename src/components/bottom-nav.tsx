@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Home, Search, Cloud, ChevronLeft, User, Camera } from "lucide-react";
+import { Home, Bot, Cloud, ChevronLeft, User, Camera } from "lucide-react";
 import { useAuth } from "@/contexts/auth-context";
 import { useUpload } from "@/contexts/upload-context";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -128,7 +128,7 @@ const BottomNav: React.FC = () => {
             )}
             onClick={() => captureEvent("navigation_search_clicked")}
           >
-            <Search size={24} />
+            <Bot size={24} />
           </Link>
           {/* Camera button */}
           <button
@@ -345,7 +345,7 @@ export const SideNav: React.FC = () => {
                     : "text-[#191B1F] hover:bg-gray-100 ",
                 )}
               >
-                <Search className={isCollapsed ? "" : "mr-3"} size={20} />
+                <Bot className={isCollapsed ? "" : "mr-3"} size={20} />
                 {!isCollapsed && <span>Search</span>}
               </Link>
             </>
@@ -366,7 +366,7 @@ export const SideNav: React.FC = () => {
                   isCollapsed ? "justify-center" : "px-4",
                 )}
               >
-                <Search className={isCollapsed ? "" : "mr-3"} size={20} />
+                <Bot className={isCollapsed ? "" : "mr-3"} size={20} />
                 {!isCollapsed && <span>Search</span>}
               </div>
             </>
