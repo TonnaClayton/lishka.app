@@ -266,25 +266,25 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
             </div>
 
             {/* Fish Grid Skeleton */}
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
               {[...Array(8)].map((_, index) => (
-                <Card key={index} className="overflow-hidden h-full">
+                <Card key={index} className="overflow-hidden h-full rounded-xl">
                   <div className="relative w-full aspect-[3/2] overflow-hidden">
                     <Skeleton className="w-full h-full" />
                   </div>
-                  <CardContent className="p-2 sm:p-3 flex flex-col flex-1">
-                    <div className="mb-1">
-                      <Skeleton className="h-4 w-3/4 mb-1" />
-                      <Skeleton className="h-3 w-full" />
+                  <CardContent className="p-2 sm:p-3 lg:p-4 flex flex-col flex-1">
+                    <div className="mb-1 lg:mb-2">
+                      <Skeleton className="h-4 lg:h-5 w-3/4 mb-1" />
+                      <Skeleton className="h-3 lg:h-4 w-full" />
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1 lg:space-y-2">
                       <div className="flex items-center">
-                        <Skeleton className="h-3 w-3 mr-1" />
-                        <Skeleton className="h-3 w-2/3" />
+                        <Skeleton className="h-3 lg:h-4 w-3 lg:w-4 mr-1" />
+                        <Skeleton className="h-3 lg:h-4 w-2/3" />
                       </div>
                       <div className="flex items-center">
-                        <Skeleton className="h-3 w-3 mr-1" />
-                        <Skeleton className="h-3 w-1/2" />
+                        <Skeleton className="h-3 lg:h-4 w-3 lg:w-4 mr-1" />
+                        <Skeleton className="h-3 lg:h-4 w-1/2" />
                       </div>
                     </div>
                   </CardContent>
@@ -324,7 +324,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 px-4 lg:px-6">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 px-4 lg:px-6">
                   {fishList.map((fish, index) => (
                     <FishCard
                       key={`${fish.scientificName}-${index}`}
