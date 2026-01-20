@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/bottom-nav";
 import FishCard from "@/components/fish-card";
+import FishSearch from "@/components/fish-search";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 
@@ -307,6 +308,23 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                 From familiar species to rare sightings that share the
                 Mediterranean.
               </p>
+              <FishSearch
+                onFishSelect={(fish) =>
+                  navigate(
+                    `/fish/${fish.scientificName.toLowerCase().replace(/\s+/g, "-")}`,
+                    {
+                      state: {
+                        fish: {
+                          name: fish.commonName,
+                          scientificName: fish.scientificName,
+                          image: fish.image,
+                        },
+                      },
+                    },
+                  )
+                }
+                className="mb-4"
+              />
             </div>
 
             {fishError ? (
