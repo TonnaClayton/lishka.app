@@ -291,10 +291,21 @@ const FishDetailPage = () => {
 
           case "fishing_info":
             // Update fish basic data with complete fishing info
-            setFishBasicData((prev: any) => ({
-              ...prev,
-              ...eventData.data,
-            }));
+            // Preserve name, scientific_name, and description from original data
+            // These should come from database, not AI-generated content
+            setFishBasicData((prev: any) => {
+              if (!prev) return eventData.data;
+
+              return {
+                ...prev,
+                ...eventData.data,
+                // Preserve these fields from original data to prevent flicker
+                name: prev.name,
+                scientific_name: prev.scientific_name,
+                // Only update description if it wasn't in original data
+                description: prev.description || eventData.data.description,
+              };
+            });
             // Clear accumulator
             setFishingInfoAccumulator("");
             break;
@@ -316,7 +327,20 @@ const FishDetailPage = () => {
 
           case "complete":
             if (eventData.data) {
-              setFishBasicData(eventData.data);
+              // Preserve name, scientific_name, and description from original fish_basic data
+              // to prevent flicker - these should come from database, not AI
+              setFishBasicData((prev: any) => {
+                if (!prev) return eventData.data;
+
+                return {
+                  ...eventData.data,
+                  // Preserve these fields from original data
+                  name: prev.name || eventData.data.name,
+                  scientific_name:
+                    prev.scientific_name || eventData.data.scientific_name,
+                  description: prev.description || eventData.data.description,
+                };
+              });
               streamCompleteRef.current = true;
             } else {
               logError(
