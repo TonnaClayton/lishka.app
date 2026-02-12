@@ -83,12 +83,12 @@ const FishCard = ({
   return (
     <Card
       className={cn(
-        "overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full border-0 shadow bg-white rounded-xl",
+        "overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-none flex flex-col h-full border-0 shadow-none bg-transparent rounded-xl",
         className,
       )}
       onClick={handleClick}
     >
-      <div className="relative w-full aspect-[3/2] overflow-hidden max-w-full">
+      <div className="relative w-full aspect-[3/2] overflow-hidden max-w-full rounded-xl">
         {/* Using aspect ratio for consistent 3:2 ratio */}
         {imageLoading && (
           <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
@@ -136,7 +136,7 @@ const FishCard = ({
               </span>
             </div>
           ) : (
-            // For non-toxic fish, show habitat and difficulty as before
+            // For non-toxic fish, show habitat and difficulty
             <>
               <div className="flex items-center">
                 <Waves className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 text-lishka-blue mr-1 sm:mr-1.5 lg:mr-2 shrink-0" />

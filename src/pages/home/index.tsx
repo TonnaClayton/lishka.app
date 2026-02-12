@@ -11,13 +11,14 @@ import EmailVerificationBanner from "@/components/email-verification-banner";
 import ToxicFishSkeleton from "./toxic-fish-skeleton";
 import FishingTipsCarousel from "./fishing-tips-carousel";
 import GearRecommendationWidget from "./gear-recommendation-widget";
+import DiscoverSection from "./discover-section";
 
 // Import Dialog components from ui folder
 import { useFAOFishStream, useFAOToxicFishStream } from "@/hooks/queries";
 import { useUserLocation } from "@/hooks/queries/location/use-location";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+// import { Card, CardContent } from "@/components/ui/card"; // Hidden with fish grid
 import { OnboardingDialog } from "./onboarding-dialog";
 import LocationBtn from "@/components/location-btn";
 
@@ -71,12 +72,9 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   }, [profile, location.state]);
 
   // FAO-based fish streams using PostGIS spatial queries
-  // Automatically uses authenticated user's location
-  const {
-    fish: fishList,
-    isStreaming: loadingFish,
-    error: fishErrorMsg,
-  } = useFAOFishStream({
+  // Fish grid is currently hidden (category browsing replaces it),
+  // but keep the hook so the data is pre-fetched for search/detail.
+  useFAOFishStream({
     latitude: userLatitude,
     longitude: userLongitude,
     autoStart: true,
@@ -89,9 +87,6 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
       autoStart: true,
     });
 
-  // Convert error message to error object for consistency
-  const fishError = fishErrorMsg ? { message: fishErrorMsg } : null;
-
   const debugInfo = null;
 
   // Helper function to format the subtitle
@@ -100,10 +95,6 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     const seaOcean = "Regional Waters"; // Simplified for now
     return `${cleanLocation} & ${seaOcean} waters`;
   };
-
-  // const handleLoadMore = () => {
-  //   fetchNextPage();
-  // };
 
   return (
     <div className="flex flex-col dark:bg-background h-full relative border-l-0 border-y-0 border-r-0 rounded-xl">
@@ -258,132 +249,47 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
         </div>
         */}
 
-        {/* Active Fish Section */}
-        {loadingFish ? (
-          <div className="px-4 lg:px-6">
-            <div className="mb-6">
-              <Skeleton className="h-6 w-48 mb-2" />
-              <Skeleton className="h-4 w-64 mb-4" />
-            </div>
-
-            {/* Fish Grid Skeleton */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
-              {[...Array(8)].map((_, index) => (
-                <Card key={index} className="overflow-hidden h-full rounded-xl">
-                  <div className="relative w-full aspect-[3/2] overflow-hidden">
-                    <Skeleton className="w-full h-full" />
-                  </div>
-                  <CardContent className="p-2 sm:p-3 lg:p-4 flex flex-col flex-1">
-                    <div className="mb-1 lg:mb-2">
-                      <Skeleton className="h-4 lg:h-5 w-3/4 mb-1" />
-                      <Skeleton className="h-3 lg:h-4 w-full" />
-                    </div>
-                    <div className="space-y-1 lg:space-y-2">
-                      <div className="flex items-center">
-                        <Skeleton className="h-3 lg:h-4 w-3 lg:w-4 mr-1" />
-                        <Skeleton className="h-3 lg:h-4 w-2/3" />
-                      </div>
-                      <div className="flex items-center">
-                        <Skeleton className="h-3 lg:h-4 w-3 lg:w-4 mr-1" />
-                        <Skeleton className="h-3 lg:h-4 w-1/2" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Load More Button Skeleton */}
-            <div className="flex justify-center mb-20 lg:mb-6">
-              <Skeleton className="h-10 w-32 rounded-md" />
-            </div>
-          </div>
-        ) : (
-          <>
-            <div className="mb-6 px-4 lg:px-6">
-              <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
-                Discover fish in your area.
-              </h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                From familiar species to rare sightings that share the
-                Mediterranean.
-              </p>
-              <FishSearch
-                onFishSelect={(fish) =>
-                  navigate(
-                    `/fish/${fish.scientificName.toLowerCase().replace(/\s+/g, "-")}`,
-                    {
-                      state: {
-                        fish: {
-                          name: fish.commonName,
-                          scientificName: fish.scientificName,
-                          image: fish.image,
-                        },
-                      },
+        {/* Active Fish Section — heading + search kept, grid hidden */}
+        <div className="mb-6 px-4 lg:px-6">
+          <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
+            Discover fish in your area.
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            From familiar species to rare sightings that share the
+            Mediterranean.
+          </p>
+          <FishSearch
+            onFishSelect={(fish) =>
+              navigate(
+                `/fish/${fish.scientificName.toLowerCase().replace(/\s+/g, "-")}`,
+                {
+                  state: {
+                    fish: {
+                      name: fish.commonName,
+                      scientificName: fish.scientificName,
+                      image: fish.image,
                     },
-                  )
-                }
-                className="mb-4"
-              />
-            </div>
+                  },
+                },
+              )
+            }
+            className="mb-4"
+          />
+        </div>
 
-            {fishError ? (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mx-4 rounded-lg p-4 mb-6 flex flex-col">
-                <p className="text-red-700 dark:text-red-400 break-words whitespace-normal">
-                  {fishError.message}
-                </p>
-                <Button
-                  variant="outline"
-                  className="mt-2 w-fit"
-                  onClick={() => window.location.reload()}
-                >
-                  Try Again
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 px-4 lg:px-6">
-                  {fishList.map((fish, index) => (
-                    <FishCard
-                      key={`${fish.scientificName}-${index}`}
-                      name={fish.name}
-                      scientificName={fish.scientificName}
-                      habitat={fish.habitat}
-                      difficulty={fish.difficulty}
-                      isToxic={fish.isToxic}
-                      image={fish.image}
-                      onClick={() =>
-                        navigate(`/fish/${fish.slug}`, {
-                          state: { fish },
-                        })
-                      }
-                    />
-                  ))}
-                </div>
+        {/* Fish grid hidden for now — category browsing replaces it */}
+        {/* {loadingFish ? (
+          <FishGridSkeleton />
+        ) : fishError ? (
+          <FishErrorState />
+        ) : (
+          <FishGrid fishList={fishList} />
+        )} */}
 
-                {/* {fishList.length > 0 && hasNextPage && (
-                  <div className="flex justify-center mb-20 lg:mb-6">
-                    <Button
-                      variant="outline"
-                      onClick={handleLoadMore}
-                      disabled={isFetchingNextPage}
-                      className="w-fit bg-[#025DFB1A] text-lishka-blue hover:bg-[#025DFB33] hover:text-lishka-blue rounded-[24px] h-[39px] py-3 px-4 font-semibold text-xs shadow-none"
-                    >
-                      {isFetchingNextPage ? (
-                        <div className="flex items-center gap-2">
-                          <LoadingDots />
-                          <p className="">Loading...</p>
-                        </div>
-                      ) : (
-                        "Load more fish"
-                      )}
-                    </Button>
-                  </div>
-                )} */}
-              </>
-            )}
-          </>
-        )}
+        {/* Discover by Category Section */}
+        <div className="mb-8">
+          <DiscoverSection />
+        </div>
 
         {/* Gear Recommendation Widget */}
         <div className="mb-8">
