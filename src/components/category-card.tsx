@@ -15,6 +15,8 @@ interface CategoryCardProps {
   onClick?: () => void;
   /** Additional classes for sizing overrides */
   className?: string;
+  /** Use smaller 11px description text (e.g. for Catch Profile section) */
+  smallDescription?: boolean;
 }
 
 /**
@@ -29,6 +31,7 @@ const CategoryCard = ({
   tag,
   onClick,
   className,
+  smallDescription = false,
 }: CategoryCardProps) => {
   const [imageLoaded, setImageLoaded] = useState(false);
 
@@ -37,7 +40,8 @@ const CategoryCard = ({
       type="button"
       onClick={onClick}
       className={cn(
-        "w-full text-left cursor-pointer",
+        "bg-white dark:bg-gray-900 w-full text-left cursor-pointer rounded-xl",
+        "flex flex-col gap-2 items-start",
         "group transition-transform duration-200 active:scale-[0.98]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lishka-blue focus-visible:ring-offset-2",
         className,
@@ -68,18 +72,25 @@ const CategoryCard = ({
       </div>
 
       {/* Text content — below the image */}
-      <div className="mt-2">
+      <div className="w-full p-2">
         <div className="flex items-baseline justify-between gap-1">
-          <h3 className="text-sm font-semibold text-foreground leading-tight">
+          <h3 className="text-sm font-bold text-foreground leading-5">
             {title}
           </h3>
           {tag && (
-            <span className="text-xs text-foreground font-semibold whitespace-nowrap">
+            <span className="text-xs text-foreground font-bold whitespace-nowrap">
               {tag}
             </span>
           )}
         </div>
-        <p className="text-[11px] text-muted-foreground leading-snug mt-0.5 line-clamp-2">
+        <p
+          className={cn(
+            "text-foreground dark:text-gray-300 line-clamp-2",
+            smallDescription
+              ? "text-[11px] leading-[13px]"
+              : "text-xs leading-normal",
+          )}
+        >
           {description}
         </p>
       </div>

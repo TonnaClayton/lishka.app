@@ -80,12 +80,15 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     autoStart: true,
   });
 
-  const { toxicFish: toxicFishList, isStreaming: loadingToxicFish } =
-    useFAOToxicFishStream({
-      latitude: userLatitude,
-      longitude: userLongitude,
-      autoStart: true,
-    });
+  const {
+    toxicFish: toxicFishList,
+    isStreaming: loadingToxicFish,
+    isComplete: toxicFishComplete,
+  } = useFAOToxicFishStream({
+    latitude: userLatitude,
+    longitude: userLongitude,
+    autoStart: true,
+  });
 
   const debugInfo = null;
 
@@ -182,7 +185,8 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                 )}
               </div>
             )}
-          {loadingToxicFish ? (
+          {loadingToxicFish ||
+          (!toxicFishComplete && toxicFishList.length === 0) ? (
             <div className="mb-8">
               <div className="mb-4 px-4 lg:px-6">
                 <Skeleton className="h-6 w-48 mb-2" />
@@ -190,7 +194,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
               </div>
               <ToxicFishSkeleton />
             </div>
-          ) : toxicFishList.length === 0 ? (
+          ) : toxicFishComplete && toxicFishList.length === 0 ? (
             <div className="bg-yellow-50 px-4 lg:px-6 mx-4 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
               <p className="text-yellow-700 dark:text-yellow-400 text-sm">
                 Unable to load toxic fish data at the moment. Please check your
@@ -198,7 +202,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
               </p>
             </div>
           ) : (
-            <div className="flex gap-3 overflow-x-auto pb-4 px-4 lg:px-6 scrollbar-hide">
+            <div className="flex gap-2 overflow-x-auto pb-4 px-4 lg:px-6 scrollbar-hide">
               {toxicFishList.map((fish, index) => (
                 <div
                   key={`toxic-${fish.scientificName}-${index}`}
