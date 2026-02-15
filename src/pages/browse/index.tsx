@@ -29,7 +29,7 @@ const BrowsePage = () => {
   // Extract filter from query string + user's coordinates for geographic scoping
   const filters: BrowseFilters = useMemo(() => {
     const f: BrowseFilters = {};
-    const keys: (keyof BrowseFilters)[] = [
+    const keys = [
       "habitats",
       "depthBands",
       "techniques",
@@ -37,7 +37,7 @@ const BrowsePage = () => {
       "catchRarity",
       "feedingStyles",
       "freshwaterHabitats",
-    ];
+    ] as const;
     for (const key of keys) {
       const val = searchParams.get(key);
       if (val) {
