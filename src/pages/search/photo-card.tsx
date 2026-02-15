@@ -31,7 +31,7 @@ export default function SearchPhotoCard({
             src={url}
             alt={name}
             className={cn(
-              `w-full transition-opacity duration-200 h-[100px] rounded-[8px] aspect-square`,
+              `w-full transition-all duration-200 hover:scale-[1.03] h-[100px] rounded-[8px] aspect-square`,
               imageLoadingState ? "opacity-0" : "opacity-100",
               imageError ? "hidden" : "",
             )}

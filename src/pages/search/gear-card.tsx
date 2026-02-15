@@ -8,7 +8,7 @@ export default function SearchGearCard({ gear }: { gear: GearItem }) {
     <Link to={ROUTES.GEAR_DETAIL.replace(":gearId", gear.id)} target="_blank">
       <div
         className={cn(
-          `bg-white dark:bg-gray-800 rounded-xl shadow-sm cursor-pointer overflow-hidden p-4 w-[300px] md:w-[500px] flex-shrink-0`,
+          `bg-white dark:bg-gray-800 rounded-xl shadow-sm cursor-pointer overflow-hidden p-4 w-[300px] md:w-[500px] flex-shrink-0 transition-transform duration-200 hover:scale-[1.03]`,
         )}
       >
         <div className="flex items-start gap-3 sm:gap-4">

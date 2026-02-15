@@ -83,7 +83,7 @@ const FishCard = ({
   return (
     <Card
       className={cn(
-        "overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-none flex flex-col h-full border-0 shadow-none bg-transparent rounded-xl",
+        "overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.03] flex flex-col h-full border-0 shadow-none bg-transparent rounded-xl",
         className,
       )}
       onClick={handleClick}
