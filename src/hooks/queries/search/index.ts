@@ -8,8 +8,14 @@ export interface SearchStreamResult {
   content: string;
   session_id: string;
   fish_results?: any[];
+  fish_title?: string;
+  fish_subtitle?: string;
   gear_results?: any[];
+  gear_title?: string;
+  gear_subtitle?: string;
   photo_gallery_results?: any[];
+  photo_gallery_title?: string;
+  photo_gallery_subtitle?: string;
 }
 
 export interface SearchStreamCallbacks {

@@ -1,6 +1,6 @@
 import { useMemo, useEffect, useRef, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft, Cloud, Sun, CloudRain, CloudSnow } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import FishCard from "@/components/fish-card";
 import BottomNav from "@/components/bottom-nav";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,11 @@ import {
   useBrowseFish,
   type BrowseFilters,
 } from "@/hooks/queries/fish/use-browse-fish";
-import { getCategoryDisplayTitle } from "@/lib/fish-categories";
-import { useUserLocation, useGetWeatherSummary } from "@/hooks/queries";
+import {
+  getCategoryDisplayTitle,
+  getCategoryDisplayInfo,
+} from "@/lib/fish-categories";
+import { useUserLocation } from "@/hooks/queries";
 
 /**
  * Browse Results Page
@@ -65,15 +68,18 @@ const BrowsePage = () => {
     return getCategoryDisplayTitle(key, value as string);
   }, [filters]);
 
-  const {
-    data: weatherSummary,
-    isLoading: loadingWeather,
-    isError: errorWeather,
-  } = useGetWeatherSummary({
-    latitude: currentLocation?.latitude,
-    longitude: currentLocation?.longitude,
-    name: currentLocation?.name,
-  });
+  // Derive the category info (title + subtitle) for the content area
+  const categoryInfo = useMemo(() => {
+    const geoKeys = new Set(["latitude", "longitude"]);
+    const entries = Object.entries(filters).filter(
+      ([k, v]) => !geoKeys.has(k) && v !== undefined && v !== "",
+    );
+    if (entries.length === 0) {
+      return { title: "Browse Fish", subtitle: "" };
+    }
+    const [key, value] = entries[0];
+    return getCategoryDisplayInfo(key, value as string);
+  }, [filters]);
 
   const {
     data,
@@ -128,97 +134,6 @@ const BrowsePage = () => {
               {pageTitle}
             </h1>
           </div>
-        </div>
-
-        {/* Weather strip */}
-        <div className="mt-2 lg:hidden">
-          {loadingWeather ? (
-            <div className="flex items-center gap-1">
-              <div className="w-3 h-3 bg-muted rounded-full animate-pulse" />
-              <p className="text-xs text-muted-foreground">
-                Loading weather...
-              </p>
-            </div>
-          ) : weatherSummary && typeof weatherSummary === "object" ? (
-            <div className="flex items-center gap-3 px-1 gap-x-[16px]">
-              {/* Weather icon + temperature */}
-              <div className="flex items-center gap-x-[4px]">
-                {weatherSummary.condition === "Clear" && (
-                  <Sun className="w-6 h-6 text-[#FFBF00]" />
-                )}
-                {weatherSummary.condition === "Partly cloudy" && (
-                  <Cloud className="w-6 h-6 text-lishka-blue" />
-                )}
-                {weatherSummary.condition === "Rainy" && (
-                  <CloudRain className="w-6 h-6 text-lishka-blue" />
-                )}
-                {weatherSummary.condition === "Snowy" && (
-                  <CloudSnow className="w-6 h-6 text-lishka-blue" />
-                )}
-                {!["Clear", "Partly cloudy", "Rainy", "Snowy"].includes(
-                  weatherSummary.condition,
-                ) && <Cloud className="w-6 h-6 text-lishka-blue" />}
-                <span className="text-foreground text-lg font-normal">
-                  {weatherSummary.temperature !== null
-                    ? `${weatherSummary.temperature}°`
-                    : "--°"}
-                </span>
-              </div>
-
-              {/* Wind */}
-              <div className="flex items-center gap-1">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  className="text-[#A855F7] rotate-45"
-                >
-                  <path d="M5 12h14" />
-                  <path d="m12 5 7 7-7 7" />
-                </svg>
-                <span className="text-foreground text-lg">
-                  {weatherSummary.wind_speed !== null
-                    ? `${weatherSummary.wind_speed} km/h`
-                    : "--"}
-                </span>
-              </div>
-
-              {/* Wave height */}
-              {weatherSummary.wave_height !== null && (
-                <div className="flex items-center gap-1">
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    className="text-lishka-blue"
-                  >
-                    <path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
-                    <path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
-                    <path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1" />
-                  </svg>
-                  <span className="text-foreground text-lg">
-                    {weatherSummary.wave_height}m
-                  </span>
-                </div>
-              )}
-            </div>
-          ) : errorWeather ? (
-            <p className="text-xs text-muted-foreground italic">
-              Weather unavailable
-            </p>
-          ) : null}
         </div>
       </header>
 
@@ -286,9 +201,17 @@ const BrowsePage = () => {
           </div>
         ) : (
           <div className="px-4 lg:px-6">
-            <p className="text-sm text-muted-foreground mb-4">
-              {fishList.length} species found
-            </p>
+            {/* Category Title and Subtitle */}
+            <div className="mb-6">
+              <h2 className="text-2xl font-bold text-foreground mb-2">
+                {categoryInfo.title}
+              </h2>
+              {categoryInfo.subtitle && (
+                <p className="text-sm text-muted-foreground">
+                  {categoryInfo.subtitle}
+                </p>
+              )}
+            </div>
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
               {fishList.map((fish, index) => (

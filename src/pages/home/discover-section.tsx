@@ -82,12 +82,23 @@ const DiscoverSection = () => {
                     ? "w-[175px]"
                     : "w-[160px]";
 
+              // Desktop grid columns: match the card count so every card
+              // stays the same width — no lone card stretching a whole row.
+              const desktopGridCols =
+                cardCount <= 3
+                  ? "lg:grid-cols-3"
+                  : cardCount <= 4
+                    ? "lg:grid-cols-4"
+                    : "lg:grid-cols-5";
+
               return (
                 <div
                   className={
                     "flex gap-2 pb-1 px-4 lg:px-6 " +
                     "overflow-x-auto scrollbar-hide " +
-                    (canFitDesktop ? "lg:flex-wrap lg:overflow-visible" : "")
+                    (canFitDesktop
+                      ? `lg:grid ${desktopGridCols} lg:overflow-visible`
+                      : "")
                   }
                 >
                   {section.cards.map((card) => (
@@ -95,9 +106,7 @@ const DiscoverSection = () => {
                       key={card.id}
                       className={
                         `flex-shrink-0 ${mobileWidth}` +
-                        (canFitDesktop
-                          ? " lg:flex-shrink lg:flex-grow lg:basis-0 lg:min-w-[160px] lg:max-w-[286px]"
-                          : "")
+                        (canFitDesktop ? " lg:w-auto" : "")
                       }
                     >
                       <CategoryCard

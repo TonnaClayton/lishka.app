@@ -46,9 +46,13 @@ interface Message {
   timestamp: Date;
   images?: string[];
   fish_results?: Fish[];
+  fish_title?: string;
+  fish_subtitle?: string;
   gear_results?: Array<{
     id: string;
   }>;
+  gear_title?: string;
+  gear_subtitle?: string;
   photo_gallery_results?: Array<{
     url: string;
     timestamp: string;
@@ -59,6 +63,8 @@ interface Message {
       confidence: number;
     };
   }>;
+  photo_gallery_title?: string;
+  photo_gallery_subtitle?: string;
   image?: string;
 }
 
@@ -185,8 +191,14 @@ const SearchPage: React.FC = () => {
           content: message.content,
           timestamp: new Date(message.created_at),
           fish_results: message.metadata?.fish_results || [],
+          fish_title: message.metadata?.fish_title,
+          fish_subtitle: message.metadata?.fish_subtitle,
           gear_results: message.metadata?.gear_results || [],
+          gear_title: message.metadata?.gear_title,
+          gear_subtitle: message.metadata?.gear_subtitle,
           photo_gallery_results: message.metadata?.photo_gallery_results || [],
+          photo_gallery_title: message.metadata?.photo_gallery_title,
+          photo_gallery_subtitle: message.metadata?.photo_gallery_subtitle,
         })) || []
       );
     }
@@ -287,8 +299,14 @@ const SearchPage: React.FC = () => {
               content: result.content || "",
               timestamp: new Date(),
               fish_results: result.fish_results || [],
+              fish_title: result.fish_title,
+              fish_subtitle: result.fish_subtitle,
               gear_results: result.gear_results || [],
+              gear_title: result.gear_title,
+              gear_subtitle: result.gear_subtitle,
               photo_gallery_results: result.photo_gallery_results || [],
+              photo_gallery_title: result.photo_gallery_title,
+              photo_gallery_subtitle: result.photo_gallery_subtitle,
             };
 
             setMessages((prev) =>
@@ -903,7 +921,16 @@ const SearchMessageCard = ({
         {/* Display fish cards if available */}
         {message.fish_results && message.fish_results.length > 0 && (
           <div className="mt-4 space-y-4 w-full">
-            <h3 className="font-medium text-sm px-4">Fish Species:</h3>
+            <div className="px-4">
+              <h3 className="font-medium text-sm">
+                {message.fish_title || "Fish Species"}
+              </h3>
+              {message.fish_subtitle && (
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  {message.fish_subtitle}
+                </p>
+              )}
+            </div>
             <div className="flex w-full overflow-x-auto gap-4 px-4 py-3">
               {message.fish_results
                 .filter((fish) => {
@@ -947,7 +974,16 @@ const SearchMessageCard = ({
 
         {allGearItems && allGearItems.length > 0 && (
           <div className="mt-4 space-y-4 w-full">
-            <h3 className="font-medium text-sm px-4">Gear Items:</h3>
+            <div className="px-4">
+              <h3 className="font-medium text-sm">
+                {message.gear_title || "Gear Items"}
+              </h3>
+              {message.gear_subtitle && (
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  {message.gear_subtitle}
+                </p>
+              )}
+            </div>
             <div className="flex w-full overflow-x-auto gap-2 lg:gap-4 px-4 py-3">
               {allGearItems.map((gear) => (
                 <SearchGearCard key={gear.id} gear={gear} />
@@ -958,7 +994,16 @@ const SearchMessageCard = ({
 
         {galleryPhotos && galleryPhotos.length > 0 && (
           <div className="mt-4 space-y-4 w-full">
-            <h3 className="font-medium text-sm px-4">Gallery Photos:</h3>
+            <div className="px-4">
+              <h3 className="font-medium text-sm">
+                {message.photo_gallery_title || "Gallery Photos"}
+              </h3>
+              {message.photo_gallery_subtitle && (
+                <p className="text-xs text-gray-600 dark:text-gray-400 mt-1">
+                  {message.photo_gallery_subtitle}
+                </p>
+              )}
+            </div>
             <div className="flex w-full overflow-x-auto gap-4 px-4 py-3">
               {galleryPhotos.map((photo) => (
                 <SearchPhotoCard
@@ -1056,14 +1101,16 @@ const FollowUpQuestions = ({
                 <Button
                   key={`followup-${i}`}
                   variant="outline"
-                  className="rounded-full px-2 py-2 text-xs truncate justify-start flex-shrink-0 overflow-hidden whitespace-nowrap bg-[#0251FB1A] hover:bg-[#0251FB33] text-lishka-blue hover:text-lishka-blue shadow-none border-none"
+                  className="rounded-full px-3 py-2 text-xs justify-start flex-shrink-0 bg-[#0251FB1A] hover:bg-[#0251FB33] text-lishka-blue hover:text-lishka-blue shadow-none border-none max-w-[280px] h-auto min-h-[32px]"
                   onClick={() => handleSuggestionClick(q)}
                   disabled={loading}
                 >
-                  <span className="">{q}</span>
+                  <span className="line-clamp-2 text-left">{q}</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent side="top">{q}</TooltipContent>
+              <TooltipContent side="top" className="max-w-xs">
+                {q}
+              </TooltipContent>
             </Tooltip>
           ))}
         </div>

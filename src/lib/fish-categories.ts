@@ -12,6 +12,10 @@ export interface CategoryCard {
   label: string;
   /** Short description shown below the label */
   description: string;
+  /** Browse page title - engaging, curated heading */
+  browseTitle?: string;
+  /** Browse page subtitle - descriptive text for the category */
+  browseSubtitle?: string;
   /** Optional right-aligned tag shown next to the label (e.g. "0 - 10m") */
   tag?: string;
   /** Query parameter key for the browse API */
@@ -91,6 +95,9 @@ export const HABITAT_CARDS: CategoryCard[] = [
     label: "Pelagic",
     description:
       "Open water, mid-surface to surface; often fast-moving, migratory.",
+    browseTitle: "Open Water Hunters",
+    browseSubtitle:
+      "Here's a list of pelagic fish found in the Mediterranean Sea. These species inhabit the open water column, often migrating long distances and swimming in schools near the surface.",
     filterKey: "habitats",
     image: IMG.pelagic,
   },
@@ -99,6 +106,9 @@ export const HABITAT_CARDS: CategoryCard[] = [
     label: "Demersal",
     description:
       "Near the seabed; soft bottoms, slopes, deeper inshore/offshore.",
+    browseTitle: "Bottom Dwellers",
+    browseSubtitle:
+      "Discover demersal fish species that live near the seabed. These fish thrive on soft bottoms, slopes, and deeper waters where they feed and find shelter.",
     filterKey: "habitats",
     image: IMG.demersal,
   },
@@ -107,6 +117,9 @@ export const HABITAT_CARDS: CategoryCard[] = [
     label: "Reef-associated",
     description:
       "Rocky reefs, structures, wrecks; strong cover and ambush zones.",
+    browseTitle: "Reef Residents",
+    browseSubtitle:
+      "Explore fish that call rocky reefs and structures home. These species use reefs, wrecks, and rocky formations for cover, feeding, and ambush hunting.",
     filterKey: "habitats",
     image: IMG.reef,
   },
@@ -115,6 +128,9 @@ export const HABITAT_CARDS: CategoryCard[] = [
     label: "Benthic",
     description:
       "Bottom-dwelling; often resting or buried on sand, mud, or rock.",
+    browseTitle: "Seafloor Specialists",
+    browseSubtitle:
+      "Meet the benthic species that spend their lives on the bottom. These fish rest, hide, or bury themselves in sand, mud, and rocky seafloors.",
     filterKey: "habitats",
     image: IMG.benthic,
   },
@@ -123,6 +139,9 @@ export const HABITAT_CARDS: CategoryCard[] = [
     label: "Estuarine",
     description:
       "River mouths, lagoons, brackish water; highly seasonal and dynamic.",
+    browseTitle: "Coastal Wanderers",
+    browseSubtitle:
+      "Find fish adapted to estuarine environments. These species thrive in river mouths, lagoons, and brackish waters where conditions change with the seasons.",
     filterKey: "habitats",
     image: IMG.estuarine,
   },
@@ -134,6 +153,9 @@ export const DEPTH_BAND_CARDS: CategoryCard[] = [
     label: "Shallow",
     tag: "0 – 10m",
     description: "Spinning, bottom bait, light jigging.",
+    browseTitle: "Shallow Water Species",
+    browseSubtitle:
+      "Fish the shallows (0-10m) with spinning gear, bottom bait, and light jigging. Perfect for shore fishing and accessible boat locations.",
     filterKey: "depthBands",
     image: IMG.shallow,
   },
@@ -142,6 +164,9 @@ export const DEPTH_BAND_CARDS: CategoryCard[] = [
     label: "Inshore",
     tag: "10 - 30m",
     description: "Jigging, drifting, bottom fishing.",
+    browseTitle: "Inshore Catches",
+    browseSubtitle:
+      "Target fish in 10-30m depth using jigging, drifting, and bottom fishing techniques. Ideal depths for diverse species and varied approaches.",
     filterKey: "depthBands",
     image: IMG.inshore,
   },
@@ -150,6 +175,9 @@ export const DEPTH_BAND_CARDS: CategoryCard[] = [
     label: "Mid-Depth",
     tag: "30 - 60m",
     description: "Heavy jigging, trolling, deep bait.",
+    browseTitle: "Mid-Depth Targets",
+    browseSubtitle:
+      "Explore the mid-depths (30-60m) with heavy jigging, trolling, and deep bait presentations. Home to powerful fighters and quality fish.",
     filterKey: "depthBands",
     image: IMG.midDepth,
   },
@@ -158,6 +186,9 @@ export const DEPTH_BAND_CARDS: CategoryCard[] = [
     label: "Offshore",
     tag: "60 - 150m",
     description: "Heavy jigging, trolling, deep bait.",
+    browseTitle: "Offshore Trophy Fish",
+    browseSubtitle:
+      "Venture offshore (60-150m) for trophy-sized catches. Requires specialized gear and techniques including heavy jigging and deep trolling.",
     filterKey: "depthBands",
     image: IMG.offshore,
   },
@@ -166,6 +197,9 @@ export const DEPTH_BAND_CARDS: CategoryCard[] = [
     label: "Deep Sea",
     tag: "150m+",
     description: "Deep dropping, electric reels.",
+    browseTitle: "Deep Sea Giants",
+    browseSubtitle:
+      "Challenge the depths (150m+) with deep dropping and electric reels. These deep-dwelling species offer unique challenges and rewards.",
     filterKey: "depthBands",
     image: IMG.deepSea,
   },
@@ -176,6 +210,9 @@ export const TECHNIQUE_CARDS: CategoryCard[] = [
     id: "spinning",
     label: "Spinning",
     description: "Casting and retrieving artificial lures.",
+    browseTitle: "Spinning Targets",
+    browseSubtitle:
+      "Species perfect for spin fishing with artificial lures. Master the art of casting and retrieving for these active predators.",
     filterKey: "techniques",
     image: "",
   },
@@ -183,6 +220,9 @@ export const TECHNIQUE_CARDS: CategoryCard[] = [
     id: "jigging",
     label: "Jigging",
     description: "Vertical or speed jigging with metal jigs.",
+    browseTitle: "Jigging Species",
+    browseSubtitle:
+      "Fish that respond to vertical and speed jigging techniques. These species ambush metal jigs presented at various depths.",
     filterKey: "techniques",
     image: "",
   },
@@ -190,6 +230,9 @@ export const TECHNIQUE_CARDS: CategoryCard[] = [
     id: "trolling",
     label: "Trolling",
     description: "Dragging lures or baits behind a moving boat.",
+    browseTitle: "Trolling Catches",
+    browseSubtitle:
+      "Pelagic species caught by dragging lures or baits behind a boat. Cover water efficiently to find actively feeding fish.",
     filterKey: "techniques",
     image: "",
   },
@@ -197,6 +240,9 @@ export const TECHNIQUE_CARDS: CategoryCard[] = [
     id: "bottom_fishing",
     label: "Bottom Fishing",
     description: "Fishing with bait on or near the seabed.",
+    browseTitle: "Bottom Fish",
+    browseSubtitle:
+      "Species targeted with bait presented on or near the seabed. Perfect for patient anglers seeking quality bottom-dwelling catches.",
     filterKey: "techniques",
     image: "",
   },
@@ -204,6 +250,9 @@ export const TECHNIQUE_CARDS: CategoryCard[] = [
     id: "float_fishing",
     label: "Float Fishing",
     description: "Using a float to suspend bait at a set depth.",
+    browseTitle: "Float Fishing Favorites",
+    browseSubtitle:
+      "Fish that respond to suspended bait at specific depths. Control your presentation with floats for precise depth targeting.",
     filterKey: "techniques",
     image: "",
   },
@@ -211,6 +260,9 @@ export const TECHNIQUE_CARDS: CategoryCard[] = [
     id: "spearfishing",
     label: "Spearfishing",
     description: "Freediving or scuba with speargun.",
+    browseTitle: "Spearfishing Targets",
+    browseSubtitle:
+      "Species suitable for freediving and spearfishing. Combine stealth, skill, and underwater hunting techniques for these catches.",
     filterKey: "techniques",
     image: "",
   },
@@ -221,6 +273,9 @@ export const FRESHWATER_CARDS: CategoryCard[] = [
     id: "river",
     label: "River Species",
     description: "Spinning, drifting, float fishing, light bottom bait.",
+    browseTitle: "River Runners",
+    browseSubtitle:
+      "Species thriving in flowing river environments. Use spinning, drifting, and float fishing techniques in current-rich waters.",
     filterKey: "freshwaterHabitats",
     image: IMG.river,
   },
@@ -228,6 +283,9 @@ export const FRESHWATER_CARDS: CategoryCard[] = [
     id: "lake",
     label: "Lakes",
     description: "Spinning, jigging, trolling, bottom fishing.",
+    browseTitle: "Lake Dwellers",
+    browseSubtitle:
+      "Fish adapted to still or slow-moving lake environments. Employ diverse tactics from spinning to trolling in these calm waters.",
     filterKey: "freshwaterHabitats",
     image: IMG.lake,
   },
@@ -235,6 +293,9 @@ export const FRESHWATER_CARDS: CategoryCard[] = [
     id: "fast_flowing",
     label: "Fast Flowing Water",
     description: "Drift fishing, weighted rigs, upstream spinning.",
+    browseTitle: "Current Lovers",
+    browseSubtitle:
+      "Species that thrive in fast-flowing streams and rapids. Master drift fishing and upstream techniques for these powerful swimmers.",
     filterKey: "freshwaterHabitats",
     image: IMG.fastFlowing,
   },
@@ -242,6 +303,9 @@ export const FRESHWATER_CARDS: CategoryCard[] = [
     id: "still_water",
     label: "Still Water",
     description: "Float fishing, bottom bait, slow jigging.",
+    browseTitle: "Stillwater Specialists",
+    browseSubtitle:
+      "Fish found in ponds, slow rivers, and calm lake areas. Patience and finesse with float fishing and bottom bait yield results.",
     filterKey: "freshwaterHabitats",
     image: IMG.stillWater,
   },
@@ -252,6 +316,9 @@ export const CATCH_PROFILE_CARDS: CategoryCard[] = [
     id: "light_tackle",
     label: "Light Tackle Fish",
     description: "Small to medium species suited for UL / finesse setups.",
+    browseTitle: "Light Tackle Favorites",
+    browseSubtitle:
+      "Perfect for ultralight and finesse setups. These small to medium species provide excellent sport on lighter gear and refined techniques.",
     filterKey: "catchProfile",
     image: IMG.lightTackle,
   },
@@ -259,6 +326,9 @@ export const CATCH_PROFILE_CARDS: CategoryCard[] = [
     id: "everyday_catches",
     label: "Everyday Catches",
     description: "Commonly encountered, reliable targets.",
+    browseTitle: "Reliable Catches",
+    browseSubtitle:
+      "Consistent and commonly encountered species that provide reliable action. Perfect targets for building experience and enjoying regular success.",
     filterKey: "catchProfile",
     image: IMG.everyday,
   },
@@ -266,6 +336,9 @@ export const CATCH_PROFILE_CARDS: CategoryCard[] = [
     id: "strong_fighters",
     label: "Strong Fighters",
     description: "Species known for aggressive runs and power.",
+    browseTitle: "Power Players",
+    browseSubtitle:
+      "Known for explosive runs and determined fights. These species test your skills and tackle with their raw power and aggressive nature.",
     filterKey: "catchProfile",
     image: IMG.strongFighters,
   },
@@ -273,6 +346,9 @@ export const CATCH_PROFILE_CARDS: CategoryCard[] = [
     id: "big_and_powerful",
     label: "Big & Powerful",
     description: "Heavy gear, endurance battles, serious tackle required.",
+    browseTitle: "Trophy-Class Battlers",
+    browseSubtitle:
+      "The ultimate challenge requiring heavy gear and serious tackle. These giants demand endurance, skill, and determination for epic battles.",
     filterKey: "catchProfile",
     image: IMG.bigPowerful,
   },
@@ -283,6 +359,9 @@ export const CATCH_RARITY_CARDS: CategoryCard[] = [
     id: "legendary",
     label: "Legendary",
     description: "Catches worth the chase.",
+    browseTitle: "Legendary Pursuits",
+    browseSubtitle:
+      "The most prized catches in Mediterranean waters. Rare, challenging, and worth every moment of pursuit for dedicated anglers.",
     filterKey: "catchRarity",
     image: IMG.legendary,
   },
@@ -290,6 +369,9 @@ export const CATCH_RARITY_CARDS: CategoryCard[] = [
     id: "epic",
     label: "Epic",
     description: "Exceptional and hard-earned.",
+    browseTitle: "Epic Encounters",
+    browseSubtitle:
+      "Exceptional species that require skill, patience, and dedication. These hard-earned catches create unforgettable fishing memories.",
     filterKey: "catchRarity",
     image: IMG.epic,
   },
@@ -297,6 +379,9 @@ export const CATCH_RARITY_CARDS: CategoryCard[] = [
     id: "rare",
     label: "Rare",
     description: "Catches few anglers experience firsthand.",
+    browseTitle: "Rare Opportunities",
+    browseSubtitle:
+      "Special species that few anglers encounter. These catches require knowledge of specific conditions, locations, and seasonal patterns.",
     filterKey: "catchRarity",
     image: IMG.rare,
   },
@@ -304,6 +389,9 @@ export const CATCH_RARITY_CARDS: CategoryCard[] = [
     id: "uncommon",
     label: "Uncommon",
     description: "Catches under the right conditions.",
+    browseTitle: "Seasonal Specialties",
+    browseSubtitle:
+      "Species that appear under specific conditions and seasons. Understanding their patterns increases your chances of success.",
     filterKey: "catchRarity",
     image: IMG.uncommon,
   },
@@ -311,6 +399,9 @@ export const CATCH_RARITY_CARDS: CategoryCard[] = [
     id: "common",
     label: "Common",
     description: "Regularly caught in local waters.",
+    browseTitle: "Local Favorites",
+    browseSubtitle:
+      "Abundant and regularly encountered in Mediterranean waters. Perfect for building skills and enjoying consistent fishing action.",
     filterKey: "catchRarity",
     image: IMG.common,
   },
@@ -321,6 +412,9 @@ export const FEEDING_STYLE_CARDS: CategoryCard[] = [
     id: "predator",
     label: "Predators",
     description: "Active hunters chasing live prey.",
+    browseTitle: "Active Predators",
+    browseSubtitle:
+      "Discover aggressive hunters that actively chase and capture live prey. These fast-moving fish are the apex predators of Mediterranean waters.",
     filterKey: "feedingStyles",
     image: IMG.predator,
   },
@@ -328,6 +422,9 @@ export const FEEDING_STYLE_CARDS: CategoryCard[] = [
     id: "ambush_hunter",
     label: "Ambush Hunters",
     description: "Strike suddenly from cover.",
+    browseTitle: "Masters of Stealth",
+    browseSubtitle:
+      "Meet the patient hunters that strike suddenly from hiding spots. These species use camouflage and cover to ambush unsuspecting prey.",
     filterKey: "feedingStyles",
     image: IMG.ambush,
   },
@@ -335,6 +432,9 @@ export const FEEDING_STYLE_CARDS: CategoryCard[] = [
     id: "bottom_feeder",
     label: "Bottom Feeders",
     description: "Feed along sand and seabed.",
+    browseTitle: "Seafloor Foragers",
+    browseSubtitle:
+      "Explore fish that search for food along the sandy bottom and seabed. These species use specialized senses to locate prey in sediment and sand.",
     filterKey: "feedingStyles",
     image: IMG.bottomFeeder,
   },
@@ -342,6 +442,9 @@ export const FEEDING_STYLE_CARDS: CategoryCard[] = [
     id: "plankton_feeder",
     label: "Plankton Feeders",
     description: "Feed on plankton and small organisms.",
+    browseTitle: "Filter Feeders",
+    browseSubtitle:
+      "Find species that feed on plankton and tiny organisms. These fish swim in large schools, filtering microscopic food from the water column.",
     filterKey: "feedingStyles",
     image: IMG.plankton,
   },
@@ -349,6 +452,9 @@ export const FEEDING_STYLE_CARDS: CategoryCard[] = [
     id: "omnivore",
     label: "Omnivores",
     description: "Flexible feeders adapting to conditions.",
+    browseTitle: "Opportunistic Feeders",
+    browseSubtitle:
+      "Discover versatile fish that adapt their diet to available food. These species eat both plant and animal matter, thriving in varied conditions.",
     filterKey: "feedingStyles",
     image: IMG.omnivore,
   },
@@ -356,6 +462,9 @@ export const FEEDING_STYLE_CARDS: CategoryCard[] = [
     id: "herbivore",
     label: "Herbivores",
     description: "Feed mainly on algae and plants.",
+    browseTitle: "Plant Grazers",
+    browseSubtitle:
+      "Meet the vegetarians of the sea that feed on algae and marine plants. These fish play a crucial role in maintaining reef health and balance.",
     filterKey: "feedingStyles",
     image: IMG.herbivore,
   },
@@ -363,6 +472,9 @@ export const FEEDING_STYLE_CARDS: CategoryCard[] = [
     id: "scavenger",
     label: "Scavengers",
     description: "Feed on remains and discarded food.",
+    browseTitle: "Ocean Cleaners",
+    browseSubtitle:
+      "Find fish that feed on dead organic matter and leftovers. These important species help keep the marine ecosystem clean and balanced.",
     filterKey: "feedingStyles",
     image: IMG.scavenger,
   },
@@ -444,8 +556,45 @@ export function getDifficultyFromProfile(catchProfile: string | null): {
 }
 
 /**
+ * Build a display-friendly title and subtitle for a browse results page.
+ * Uses pre-written browseTitle and browseSubtitle if available.
+ * e.g. ("habitats", "pelagic") → { title: "Open Water Hunters", subtitle: "Here's a list of pelagic fish..." }
+ */
+export function getCategoryDisplayInfo(
+  filterKey: string,
+  filterValue: string,
+): { title: string; subtitle: string } {
+  const allCards = [
+    ...HABITAT_CARDS,
+    ...DEPTH_BAND_CARDS,
+    ...TECHNIQUE_CARDS,
+    ...FRESHWATER_CARDS,
+    ...CATCH_PROFILE_CARDS,
+    ...CATCH_RARITY_CARDS,
+    ...FEEDING_STYLE_CARDS,
+  ];
+
+  const match = allCards.find(
+    (c) => c.filterKey === filterKey && c.id === filterValue,
+  );
+
+  if (match) {
+    return {
+      title: match.browseTitle || match.label,
+      subtitle: match.browseSubtitle || match.description,
+    };
+  }
+
+  return {
+    title: filterValue.replace(/_/g, " "),
+    subtitle: "",
+  };
+}
+
+/**
  * Build a display-friendly title for a browse results page.
- * e.g. ("habitats", "pelagic") → "Pelagic Fish"
+ * Returns the simple label for use in headers/navigation.
+ * e.g. ("habitats", "pelagic") → "Pelagic"
  */
 export function getCategoryDisplayTitle(
   filterKey: string,
