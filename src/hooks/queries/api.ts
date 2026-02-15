@@ -153,6 +153,28 @@ export async function apiStreamed(
     // Handle HTTP error status codes
 
     if (!response.ok) {
+      if (response.status === 429) {
+        // Rate limit exceeded — try to parse quota details from the backend
+        try {
+          const body = await response.text();
+          const details = JSON.parse(body);
+          if (details.error === "Daily AI quota exceeded") {
+            throw new Error(
+              `You've reached your daily limit of ${details.limit} AI queries. Your quota resets tomorrow — try again then!`,
+            );
+          }
+        } catch (parseErr) {
+          if (
+            parseErr instanceof Error &&
+            parseErr.message.includes("daily limit")
+          ) {
+            throw parseErr;
+          }
+        }
+        throw new Error(
+          "Too many requests — please wait a moment and try again.",
+        );
+      }
       if (response.status === 413) {
         throw new Error("content is too large");
       }
