@@ -20,7 +20,7 @@ import {
   TooltipProvider,
 } from "@/components/ui/tooltip";
 import {
-  useCreateSearchSession,
+  useSearchAgentStream,
   useGetSearchSession,
   useGetSearchSessionFollowQuestions,
   useGetSearchSessions,
@@ -138,7 +138,8 @@ const SearchPage: React.FC = () => {
     isRefetching: isRefetchingFollowUpQuestions,
   } = useGetSearchSessionFollowQuestions(id);
   const { refetch: refetchSessions } = useGetSearchSessions();
-  const mutation = useCreateSearchSession();
+  const { sendMessage: sendStreamMessage, isStreaming } =
+    useSearchAgentStream();
 
   const useImperialUnits = useMemo(() => {
     return profile?.use_imperial_units || false;
@@ -203,79 +204,161 @@ const SearchPage: React.FC = () => {
     followUpLoading,
   ]);
 
-  // Extract the API call logic to a separate function
+  // Ref to track the streaming session id for new sessions
+  const streamSessionIdRef = useRef<string | null>(null);
+  // Raw stream buffer — keeps full text including data tags for proper tracking
+  const rawStreamTextRef = useRef<string>("");
+
+  // Strip [FISH_DATA], [GEAR_DATA], [PHOTO_GALLERY_DATA] tags and their JSON content
+  // from the streaming text so users never see raw tags during streaming
+  const cleanStreamingContent = (text: string): string => {
+    // Remove complete tag blocks: [TAG_DATA] ... [/TAG_DATA]
+    let cleaned = text.replace(
+      /\[(FISH_DATA|GEAR_DATA|PHOTO_GALLERY_DATA)\][\s\S]*?\[\/\1\]/gi,
+      "",
+    );
+    // Remove incomplete tag blocks at the end (tag opened but not yet closed)
+    cleaned = cleaned.replace(
+      /\[(FISH_DATA|GEAR_DATA|PHOTO_GALLERY_DATA)\][\s\S]*$/gi,
+      "",
+    );
+    return cleaned.trim();
+  };
+
+  // Extract the API call logic to a separate function — now uses streaming
   const processQuery = async (
     queryText: string,
     userMessage: Message,
     imageFiles?: File[],
   ) => {
-    try {
-      const response = await mutation.mutateAsync({
-        message: queryText,
-        attachments: imageFiles,
-        use_location_context: useLocationContext,
-        use_imperial_units: useImperialUnits,
-        session_id: id,
-      });
+    // Create a placeholder streaming message
+    const streamingMessageId = `streaming-${Date.now()}`;
+    const streamingMessage: Message = {
+      id: streamingMessageId,
+      user_role: "assistant",
+      content: "",
+      timestamp: new Date(),
+    };
 
-      const content: Message = {
-        id: response.id,
-        user_role: "assistant",
-        content: response.content,
-        image: fixBrokenBase64Url(response.image),
-        images: response.metadata?.images?.map(fixBrokenBase64Url) || [],
-        timestamp: new Date(),
-        fish_results: response.metadata?.fish_results || [],
-        gear_results: response.metadata?.gear_results || [],
-        photo_gallery_results: response.metadata?.photo_gallery_results || [],
-      };
-
-      if (
-        id == undefined ||
-        id == null ||
-        id == "" ||
-        (response.session_id && id != response.session_id)
-      ) {
-        // Cache the initial two messages so they persist across navigation
-        try {
-          sessionStorage.setItem(
-            `search_messages_${response.session_id}`,
-            JSON.stringify([userMessage, content]),
-          );
-        } catch {
-          //
-        }
-
-        refetchSessions();
-        // Update local state so both messages render immediately before navigation
-        setMessages([userMessage, content]);
-        // Navigate to the canonical session URL without relying on router state
-        navigate(`/search/${response.session_id}`, {
-          replace: true,
-        });
-      } else {
-        setMessages((prev) => {
-          if (prev.length == 0) {
-            return [...messagesMemo, content];
-          }
-
-          return [...prev, content];
-        });
+    // Add the empty assistant message that will be progressively updated
+    setMessages((prev) => {
+      if (prev.length === 0) {
+        return [...messagesMemo, streamingMessage];
       }
+      return [...prev, streamingMessage];
+    });
+
+    streamSessionIdRef.current = null;
+    rawStreamTextRef.current = "";
+
+    try {
+      await sendStreamMessage(
+        {
+          message: queryText,
+          sessionId: id,
+          attachments: imageFiles,
+          useLocationContext: useLocationContext,
+          useImperialUnits: useImperialUnits,
+        },
+        {
+          onChunk: (chunk: string) => {
+            // Accumulate raw text (with tags) and display cleaned version
+            rawStreamTextRef.current += chunk;
+            const cleanedContent = cleanStreamingContent(
+              rawStreamTextRef.current,
+            );
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === streamingMessageId
+                  ? { ...msg, content: cleanedContent }
+                  : msg,
+              ),
+            );
+          },
+          onSessionCreated: (sessionId: string) => {
+            // Track the new session id for navigation after streaming completes
+            streamSessionIdRef.current = sessionId;
+          },
+          onResult: (result) => {
+            // Replace the streaming message with the final clean content + structured data
+            const finalMessage: Message = {
+              id: streamingMessageId,
+              user_role: "assistant",
+              content: result.content || "",
+              timestamp: new Date(),
+              fish_results: result.fish_results || [],
+              gear_results: result.gear_results || [],
+              photo_gallery_results: result.photo_gallery_results || [],
+            };
+
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === streamingMessageId ? finalMessage : msg,
+              ),
+            );
+
+            const newSessionId =
+              streamSessionIdRef.current || result.session_id;
+
+            // Handle new session navigation
+            if (
+              id == undefined ||
+              id == null ||
+              id == "" ||
+              (newSessionId && id != newSessionId)
+            ) {
+              // Cache messages for the new session
+              try {
+                sessionStorage.setItem(
+                  `search_messages_${newSessionId}`,
+                  JSON.stringify([userMessage, finalMessage]),
+                );
+              } catch {
+                //
+              }
+
+              refetchSessions();
+              setMessages([userMessage, finalMessage]);
+              navigate(`/search/${newSessionId}`, { replace: true });
+            }
+
+            setLoading(false);
+          },
+          onError: (errorMsg: string) => {
+            logError("Stream error:", errorMsg);
+            setError(errorMsg);
+
+            // Replace the streaming message with an error message
+            setMessages((prev) =>
+              prev.map((msg) =>
+                msg.id === streamingMessageId
+                  ? {
+                      ...msg,
+                      content:
+                        "I'm sorry, I encountered an error processing your request. Please try again or ask a different question.",
+                    }
+                  : msg,
+              ),
+            );
+            setLoading(false);
+          },
+        },
+      );
     } catch (err) {
-      logError("Error fetching response:", err);
+      logError("Error in stream:", err);
       setError(err instanceof Error ? err.message : "An error occurred");
 
-      // Add a fallback message when an error occurs
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        user_role: "assistant",
-        content:
-          "I'm sorry, I encountered an error processing your request. Please try again or ask a different question.",
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) =>
+        prev.map((msg) =>
+          msg.id === streamingMessageId
+            ? {
+                ...msg,
+                content:
+                  "I'm sorry, I encountered an error processing your request. Please try again or ask a different question.",
+              }
+            : msg,
+        ),
+      );
     } finally {
       setLoading(false);
     }
@@ -545,7 +628,7 @@ const SearchPage: React.FC = () => {
                 </div>
               )}
 
-              {loading && (
+              {loading && !isStreaming && (
                 <div className="flex justify-start">
                   <div className="max-w-[85%] rounded-lg px-4 py-3 bg-gray-100 dark:bg-gray-800">
                     <div className="flex items-center space-x-2">
