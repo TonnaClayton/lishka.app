@@ -134,9 +134,11 @@ export async function apiStreamed(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { headers: _headers, ...restOptions } = options ?? {};
 
-  // Add timeout for fetch request (30 seconds)
+  // Add timeout for initial connection (60 seconds).
+  // AI streaming endpoints need extra time for auth, rate-limit check,
+  // session creation, and AI model warm-up before the first byte arrives.
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), 60000);
 
   try {
     const response = await fetch(url, {
@@ -168,7 +170,7 @@ export async function apiStreamed(
     log("[API STREAMED] Error:", error);
     clearTimeout(timeoutId);
     if (error instanceof Error && error.name === "AbortError") {
-      throw new Error("Upload request timed out after 30 seconds");
+      throw new Error("Request timed out — please try again");
     }
     throw error;
   }
