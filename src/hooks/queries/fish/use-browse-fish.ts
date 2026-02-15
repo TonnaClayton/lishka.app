@@ -62,6 +62,10 @@ export interface BrowseFilters {
   catchRarity?: string;
   feedingStyles?: string;
   freshwaterHabitats?: string;
+  /** User latitude — backend resolves to country for geographic scoping */
+  latitude?: number;
+  /** User longitude — backend resolves to country for geographic scoping */
+  longitude?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -114,8 +118,9 @@ export const browseQueryKeys = {
 export const useBrowseFish = (filters: BrowseFilters) => {
   const queryKey = browseQueryKeys.browse(filters);
 
-  const hasActiveFilter = Object.values(filters).some(
-    (v) => v !== undefined && v !== "",
+  const hasActiveCategoryFilter = Object.entries(filters).some(
+    ([k, v]) =>
+      k !== "latitude" && k !== "longitude" && v !== undefined && v !== "",
   );
 
   return useInfiniteQuery<BrowseFishItem[]>({
@@ -126,10 +131,10 @@ export const useBrowseFish = (filters: BrowseFilters) => {
         pageSize: "20",
       });
 
-      // Append category filters
+      // Append category + geographic filters
       for (const [key, value] of Object.entries(filters)) {
-        if (value) {
-          params.set(key, value);
+        if (value != null && value !== "") {
+          params.set(key, String(value));
         }
       }
 
@@ -160,7 +165,7 @@ export const useBrowseFish = (filters: BrowseFilters) => {
       return { ...data, pages: [unique] };
     },
     initialPageParam: 1,
-    enabled: hasActiveFilter,
+    enabled: hasActiveCategoryFilter,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 1,

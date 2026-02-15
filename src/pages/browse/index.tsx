@@ -23,7 +23,10 @@ const BrowsePage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  // Extract filter from query string
+  // Location & weather
+  const { location: currentLocation } = useUserLocation();
+
+  // Extract filter from query string + user's coordinates for geographic scoping
   const filters: BrowseFilters = useMemo(() => {
     const f: BrowseFilters = {};
     const keys: (keyof BrowseFilters)[] = [
@@ -41,21 +44,26 @@ const BrowsePage = () => {
         f[key] = val;
       }
     }
-    return f;
-  }, [searchParams]);
 
-  // Derive the page title from filters
+    // Send coordinates so the backend can resolve the country and scope results
+    if (currentLocation?.latitude && currentLocation?.longitude) {
+      f.latitude = currentLocation.latitude;
+      f.longitude = currentLocation.longitude;
+    }
+
+    return f;
+  }, [searchParams, currentLocation?.latitude, currentLocation?.longitude]);
+
+  // Derive the page title from the category filter (ignoring geo fields)
   const pageTitle = useMemo(() => {
+    const geoKeys = new Set(["latitude", "longitude"]);
     const entries = Object.entries(filters).filter(
-      ([, v]) => v !== undefined && v !== "",
+      ([k, v]) => !geoKeys.has(k) && v !== undefined && v !== "",
     );
     if (entries.length === 0) return "Browse Fish";
     const [key, value] = entries[0];
     return getCategoryDisplayTitle(key, value as string);
   }, [filters]);
-
-  // Location & weather
-  const { location: currentLocation } = useUserLocation();
 
   const {
     data: weatherSummary,
