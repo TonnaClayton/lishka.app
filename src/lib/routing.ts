@@ -23,6 +23,7 @@ export const ROUTES = {
   GEAR_DETAIL: "/gear-detail/:gearId",
   GEAR_CATEGORY: "/gear-category",
   SINGLE_GEAR_CATEGORY: "/gear-category/:categoryId",
+  BROWSE: "/browse",
   BLOB_TEST: "/blob-test",
   BLOB_UPLOAD: "/blob-upload",
   BLOB_IMAGE_TEST: "/blob-image-test",

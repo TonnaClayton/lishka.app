@@ -32,10 +32,11 @@ import AuthWrapper from "./pages/auth/auth-wrapper";
 import { PostHogProvider, PostHogErrorBoundary } from "posthog-js/react";
 import { initPosthog, posthog } from "./lib/posthog";
 import { Toaster } from "./components/ui/toaster";
-import AddToHomeScreenPrompt from "./components/add-to-homescreen";
+// import AddToHomeScreenPrompt from "./components/add-to-homescreen";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./pages/home"));
+const BrowsePage = lazy(() => import("./pages/browse"));
 const FishDetailPage = lazy(() => import("./pages/fish-detail"));
 const MenuPage = lazy(() => import("./pages/menu"));
 const SearchPage = lazy(() => import("./pages/search"));
@@ -116,7 +117,9 @@ function AppContent() {
 
   // Check if current route should have the weather widget in desktop layout
   const shouldShowWeatherWidget =
-    location.pathname.includes("/search") || location.pathname == "/";
+    location.pathname.includes("/search") ||
+    location.pathname.includes("/browse") ||
+    location.pathname == "/";
 
   // Check if we're on auth pages (login/signup) to hide sidebar
   const isAuthPage = [
@@ -400,6 +403,14 @@ const router = createBrowserRouter(
           ),
         },
         {
+          path: ROUTES.BROWSE,
+          element: (
+            <ProtectedRoute>
+              <BrowsePage />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: ROUTES.PROFILE,
           element: (
             <ProtectedRoute>
@@ -592,7 +603,7 @@ function App() {
           </Suspense>
           <ReactQueryDevtools initialIsOpen={false} />
           <Toaster />
-          <AddToHomeScreenPrompt />
+          {/* <AddToHomeScreenPrompt /> */}
         </QueryClientProvider>
         {/* </ErrorBoundary> */}
       </PostHogErrorBoundary>

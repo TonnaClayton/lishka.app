@@ -83,12 +83,12 @@ const FishCard = ({
   return (
     <Card
       className={cn(
-        "overflow-hidden cursor-pointer transition-all duration-200 hover:shadow-lg flex flex-col h-full border-0 shadow bg-white rounded-xl",
+        "overflow-hidden cursor-pointer transition-transform duration-200 hover:scale-[1.03] flex flex-col h-full border-0 shadow-none bg-transparent rounded-xl",
         className,
       )}
       onClick={handleClick}
     >
-      <div className="relative w-full aspect-[3/2] overflow-hidden max-w-full">
+      <div className="relative w-full aspect-[3/2] overflow-hidden max-w-full rounded-xl">
         {/* Using aspect ratio for consistent 3:2 ratio */}
         {imageLoading && (
           <div className="w-full h-full bg-gray-200 animate-pulse flex items-center justify-center">
@@ -117,37 +117,37 @@ const FishCard = ({
           </Badge>
         )}
       </div>
-      <CardContent className="p-2 sm:p-3 flex flex-col flex-1">
-        <div className="mb-1">
-          <h3 className="font-inter text-sm sm:text-base font-bold text-foreground truncate">
+      <CardContent className="p-2 sm:p-3 lg:p-4 flex flex-col flex-1">
+        <div className="mb-1 lg:mb-2">
+          <h3 className="font-inter text-sm sm:text-base lg:text-lg font-bold text-foreground truncate">
             {name}
           </h3>
-          <p className="text-muted-foreground text-xs italic truncate">
+          <p className="text-muted-foreground text-xs lg:text-sm italic truncate">
             {scientificName}
           </p>
         </div>
 
-        <div className="text-xs space-y-1 sm:space-y-1.5">
+        <div className="text-xs lg:text-sm space-y-1 sm:space-y-1.5 lg:space-y-2">
           {isToxic && dangerType ? (
             // For toxic fish, show danger type instead of habitat and difficulty
             <div className="flex items-start">
-              <span className="text-foreground line-clamp-2 text-xs">
+              <span className="text-foreground line-clamp-2 text-xs lg:text-sm">
                 {dangerType.charAt(0).toUpperCase() + dangerType.slice(1)}
               </span>
             </div>
           ) : (
-            // For non-toxic fish, show habitat and difficulty as before
+            // For non-toxic fish, show habitat and difficulty
             <>
               <div className="flex items-center">
-                <Waves className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-lishka-blue mr-1 sm:mr-1.5 shrink-0" />
-                <span className="text-foreground line-clamp-1 text-xs">
+                <Waves className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 text-lishka-blue mr-1 sm:mr-1.5 lg:mr-2 shrink-0" />
+                <span className="text-foreground line-clamp-1 text-xs lg:text-sm">
                   {habitat}
                 </span>
               </div>
 
               <div className="flex items-center">
-                <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#F97316] mr-1 sm:mr-1.5 shrink-0" />
-                <span className="text-foreground line-clamp-1 text-xs">
+                <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 text-[#F97316] mr-1 sm:mr-1.5 lg:mr-2 shrink-0" />
+                <span className="text-foreground line-clamp-1 text-xs lg:text-sm">
                   {difficulty}
                 </span>
               </div>

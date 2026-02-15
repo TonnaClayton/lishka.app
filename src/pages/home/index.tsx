@@ -2,21 +2,23 @@ import React, { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import BottomNav from "@/components/bottom-nav";
 import FishCard from "@/components/fish-card";
+import FishSearch from "@/components/fish-search";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
 
 import LocationModal from "@/components/location-modal";
 import EmailVerificationBanner from "@/components/email-verification-banner";
-import GearRecommendationWidget from "./gear-recommendation-widget";
 import ToxicFishSkeleton from "./toxic-fish-skeleton";
 import FishingTipsCarousel from "./fishing-tips-carousel";
+import GearRecommendationWidget from "./gear-recommendation-widget";
+import DiscoverSection from "./discover-section";
 
 // Import Dialog components from ui folder
-import { useFishDataInfinite, useToxicFishData } from "@/hooks/queries";
+import { useFAOFishStream, useFAOToxicFishStream } from "@/hooks/queries";
 import { useUserLocation } from "@/hooks/queries/location/use-location";
 import { DEFAULT_LOCATION } from "@/lib/const";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Card, CardContent } from "@/components/ui/card";
+// import { Card, CardContent } from "@/components/ui/card"; // Hidden with fish grid
 import { OnboardingDialog } from "./onboarding-dialog";
 import LocationBtn from "@/components/location-btn";
 
@@ -69,45 +71,26 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     return profile?.has_seen_onboarding_flow === true;
   }, [profile, location.state]);
 
-  // React Query hooks
+  // FAO-based fish streams using PostGIS spatial queries
+  // Fish grid is currently hidden (category browsing replaces it),
+  // but keep the hook so the data is pre-fetched for search/detail.
+  useFAOFishStream({
+    latitude: userLatitude,
+    longitude: userLongitude,
+    autoStart: true,
+  });
+
   const {
-    data: fishData,
-    isLoading: loadingFish,
-    error: fishError,
-    // fetchNextPage,
-    // hasNextPage,
-    // isFetchingNextPage,
-  } = useFishDataInfinite(userLocation, userLatitude, userLongitude);
+    toxicFish: toxicFishList,
+    isStreaming: loadingToxicFish,
+    isComplete: toxicFishComplete,
+  } = useFAOToxicFishStream({
+    latitude: userLatitude,
+    longitude: userLongitude,
+    autoStart: true,
+  });
 
-  const { data: toxicFishData, isLoading: loadingToxicFish } = useToxicFishData(
-    userLocation,
-    userLatitude,
-    userLongitude,
-  );
-
-  // Extract fish list from infinite query data
-  const fishList = fishData?.pages.flatMap((page) => page) || [];
-  const toxicFishList = toxicFishData || [];
   const debugInfo = null;
-
-  // Get current month
-  const getCurrentMonth = () => {
-    const months = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
-    return months[new Date().getMonth()];
-  };
 
   // Helper function to format the subtitle
   const getSeaName = (location: string) => {
@@ -115,10 +98,6 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     const seaOcean = "Regional Waters"; // Simplified for now
     return `${cleanLocation} & ${seaOcean} waters`;
   };
-
-  // const handleLoadMore = () => {
-  //   fetchNextPage();
-  // };
 
   return (
     <div className="flex flex-col dark:bg-background h-full relative border-l-0 border-y-0 border-r-0 rounded-xl">
@@ -169,11 +148,6 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
           <FishingTipsCarousel location={userLocation} />
         </div>
 
-        {/* Gear Recommendation Widget */}
-        <div className="mb-8">
-          <GearRecommendationWidget />
-        </div>
-
         {/* Toxic Fish Section */}
         <div className="mb-8">
           <div className="px-4 lg:px-6">
@@ -211,7 +185,8 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                 )}
               </div>
             )}
-          {loadingToxicFish ? (
+          {loadingToxicFish ||
+          (!toxicFishComplete && toxicFishList.length === 0) ? (
             <div className="mb-8">
               <div className="mb-4 px-4 lg:px-6">
                 <Skeleton className="h-6 w-48 mb-2" />
@@ -219,7 +194,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
               </div>
               <ToxicFishSkeleton />
             </div>
-          ) : toxicFishList.length === 0 ? (
+          ) : toxicFishComplete && toxicFishList.length === 0 ? (
             <div className="bg-yellow-50 px-4 lg:px-6 mx-4 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
               <p className="text-yellow-700 dark:text-yellow-400 text-sm">
                 Unable to load toxic fish data at the moment. Please check your
@@ -227,19 +202,19 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
               </p>
             </div>
           ) : (
-            <div className="flex gap-3 overflow-x-auto pb-4 px-4 lg:px-6 scrollbar-hide">
+            <div className="flex gap-2 overflow-x-auto pb-4 px-4 lg:px-6 scrollbar-hide">
               {toxicFishList.map((fish, index) => (
                 <div
-                  key={`toxic-${fish.scientific_name}-${index}`}
+                  key={`toxic-${fish.scientificName}-${index}`}
                   className="flex-shrink-0 w-40"
                 >
                   <FishCard
                     name={fish.name}
-                    scientificName={fish.scientific_name}
+                    scientificName={fish.scientificName}
                     habitat={fish.habitat}
                     difficulty={fish.difficulty}
-                    isToxic={fish.is_toxic}
-                    dangerType={fish.danger_type}
+                    isToxic={fish.isToxic}
+                    dangerType={fish.dangerType}
                     image={fish.image}
                     onClick={() =>
                       navigate(`/fish/${fish.slug}`, {
@@ -278,114 +253,52 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
         </div>
         */}
 
-        {/* Active Fish Section */}
-        {loadingFish ? (
-          <div className="px-4 lg:px-6">
-            <div className="mb-6">
-              <Skeleton className="h-6 w-48 mb-2" />
-              <Skeleton className="h-4 w-64 mb-4" />
-            </div>
+        {/* Active Fish Section — heading + search kept, grid hidden */}
+        <div className="mb-6 px-4 lg:px-6">
+          <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
+            Discover fish in your area.
+          </h2>
+          <p className="text-sm text-muted-foreground mb-4">
+            From familiar species to rare sightings that share the
+            Mediterranean.
+          </p>
+          <FishSearch
+            onFishSelect={(fish) =>
+              navigate(
+                `/fish/${fish.scientificName.toLowerCase().replace(/\s+/g, "-")}`,
+                {
+                  state: {
+                    fish: {
+                      name: fish.commonName,
+                      scientificName: fish.scientificName,
+                      image: fish.image,
+                    },
+                  },
+                },
+              )
+            }
+            className="mb-4"
+          />
+        </div>
 
-            {/* Fish Grid Skeleton */}
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
-              {[...Array(8)].map((_, index) => (
-                <Card key={index} className="overflow-hidden h-full">
-                  <div className="relative w-full aspect-[3/2] overflow-hidden">
-                    <Skeleton className="w-full h-full" />
-                  </div>
-                  <CardContent className="p-2 sm:p-3 flex flex-col flex-1">
-                    <div className="mb-1">
-                      <Skeleton className="h-4 w-3/4 mb-1" />
-                      <Skeleton className="h-3 w-full" />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center">
-                        <Skeleton className="h-3 w-3 mr-1" />
-                        <Skeleton className="h-3 w-2/3" />
-                      </div>
-                      <div className="flex items-center">
-                        <Skeleton className="h-3 w-3 mr-1" />
-                        <Skeleton className="h-3 w-1/2" />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Load More Button Skeleton */}
-            <div className="flex justify-center mb-20 lg:mb-6">
-              <Skeleton className="h-10 w-32 rounded-md" />
-            </div>
-          </div>
+        {/* Fish grid hidden for now — category browsing replaces it */}
+        {/* {loadingFish ? (
+          <FishGridSkeleton />
+        ) : fishError ? (
+          <FishErrorState />
         ) : (
-          <>
-            <div className="mb-6 px-4 lg:px-6">
-              <h2 className="text-xl font-bold mb-1 text-black dark:text-white">
-                Active fish in {getCurrentMonth()}
-              </h2>
-              <p className="text-sm text-muted-foreground mb-4">
-                Discover fish species available in your area this month
-              </p>
-            </div>
+          <FishGrid fishList={fishList} />
+        )} */}
 
-            {fishError ? (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mx-4 rounded-lg p-4 mb-6 flex flex-col">
-                <p className="text-red-700 dark:text-red-400 break-words whitespace-normal">
-                  {fishError.message}
-                </p>
-                <Button
-                  variant="outline"
-                  className="mt-2 w-fit"
-                  onClick={() => window.location.reload()}
-                >
-                  Try Again
-                </Button>
-              </div>
-            ) : (
-              <>
-                <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 px-4 lg:px-6">
-                  {fishList.map((fish, index) => (
-                    <FishCard
-                      key={`${fish.scientific_name}-${index}`}
-                      name={fish.name}
-                      scientificName={fish.scientific_name}
-                      habitat={fish.habitat}
-                      difficulty={fish.difficulty}
-                      isToxic={fish.is_toxic}
-                      image={fish.image}
-                      onClick={() =>
-                        navigate(`/fish/${fish.slug}`, {
-                          state: { fish },
-                        })
-                      }
-                    />
-                  ))}
-                </div>
+        {/* Discover by Category Section */}
+        <div className="mb-8">
+          <DiscoverSection />
+        </div>
 
-                {/* {fishList.length > 0 && hasNextPage && (
-                  <div className="flex justify-center mb-20 lg:mb-6">
-                    <Button
-                      variant="outline"
-                      onClick={handleLoadMore}
-                      disabled={isFetchingNextPage}
-                      className="w-fit bg-[#025DFB1A] text-lishka-blue hover:bg-[#025DFB33] hover:text-lishka-blue rounded-[24px] h-[39px] py-3 px-4 font-semibold text-xs shadow-none"
-                    >
-                      {isFetchingNextPage ? (
-                        <div className="flex items-center gap-2">
-                          <LoadingDots />
-                          <p className="">Loading...</p>
-                        </div>
-                      ) : (
-                        "Load more fish"
-                      )}
-                    </Button>
-                  </div>
-                )} */}
-              </>
-            )}
-          </>
-        )}
+        {/* Gear Recommendation Widget */}
+        <div className="mb-8">
+          <GearRecommendationWidget />
+        </div>
       </div>
       {/* Bottom Navigation */}
       <BottomNav />
