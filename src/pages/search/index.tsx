@@ -860,7 +860,7 @@ const SearchMessageCard = ({
     return gearItems.filter((item) =>
       message.gear_results?.some((gear) => gear.id === item.id),
     );
-  }, [profile?.gear_items]);
+  }, [profile?.gear_items, message.gear_results]);
 
   const galleryPhotos = useMemo(() => {
     const userGalleryPhotos =
@@ -871,7 +871,7 @@ const SearchMessageCard = ({
     return userGalleryPhotos.filter((photo) =>
       message.photo_gallery_results?.some((result) => result.url === photo.url),
     );
-  }, [profile?.gallery_photos]);
+  }, [profile?.gallery_photos, message.photo_gallery_results]);
 
   return (
     <div
@@ -1025,26 +1025,33 @@ const MemoizedContent = React.memo(({ content }: { content: string }) => {
   return (
     <ReactMarkdown
       components={{
-        ol: ({ children }) => <ol className="list-decimal">{children}</ol>,
-        ul: ({ children }) => <ul className="list-disc">{children}</ul>,
-        li: ({ children }) => <li className="ml-4">{children}</li>,
+        ol: ({ children }) => <ol className="list-decimal mb-3">{children}</ol>,
+        ul: ({ children }) => <ul className="list-disc mb-3">{children}</ul>,
+        li: ({ children }) => (
+          <li className="ml-4 mb-1 text-[15px] lg:text-base">{children}</li>
+        ),
         p: ({ children }) => (
-          <p className="mb-0.5 text-sm text-text">{children}</p>
+          <p className="mb-3 text-[15px] lg:text-base text-text leading-relaxed">
+            {children}
+          </p>
         ),
         h1: ({ children }) => (
-          <h1 className="text-2xl font-bold mb-1 dark:text-white lg:text-3xl">
+          <h1 className="text-2xl font-bold mb-2 dark:text-white lg:text-3xl">
             {children}
           </h1>
         ),
         h2: ({ children }) => (
-          <h2 className="text-xl font-bold mb-1 dark:text-white lg:text-2xl">
+          <h2 className="text-xl font-bold mb-2 dark:text-white lg:text-2xl">
             {children}
           </h2>
         ),
         h3: ({ children }) => (
-          <h3 className="text-lg font-bold mb-1 dark:text-white lg:text-xl">
+          <h3 className="text-lg font-bold mb-2 dark:text-white lg:text-xl">
             {children}
           </h3>
+        ),
+        strong: ({ children }) => (
+          <strong className="font-semibold">{children}</strong>
         ),
       }}
       remarkPlugins={[remarkGfm]}

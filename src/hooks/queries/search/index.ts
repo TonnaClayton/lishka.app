@@ -264,8 +264,14 @@ function parseSearchStreamChunk(
             content: event.content,
             session_id: event.session_id,
             fish_results: event.fish_results,
+            fish_title: event.fish_title,
+            fish_subtitle: event.fish_subtitle,
             gear_results: event.gear_results,
+            gear_title: event.gear_title,
+            gear_subtitle: event.gear_subtitle,
             photo_gallery_results: event.photo_gallery_results,
+            photo_gallery_title: event.photo_gallery_title,
+            photo_gallery_subtitle: event.photo_gallery_subtitle,
           });
           break;
         case "search_agent_session_created":
