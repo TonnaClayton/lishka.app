@@ -118,6 +118,7 @@ export function useFAOFishStream(
           const scientificName =
             event.data.scientific_name || event.data.scientificName || "";
           const transformedFish: FishData = {
+            id: event.data.id,
             name: fishName,
             scientificName: scientificName,
             localName: event.data.local_name || event.data.localName,
@@ -129,6 +130,7 @@ export function useFAOFishStream(
             image: event.data.image,
             slug:
               event.data.slug || generateFishSlug(scientificName || fishName),
+            flaggedForReview: event.data.flagged_for_review ?? false,
           };
 
           if (isNewFish(transformedFish.scientificName, seenFishRef)) {

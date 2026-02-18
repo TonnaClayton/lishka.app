@@ -11,6 +11,7 @@ import {
 
 /** Raw item returned by the backend API */
 interface BrowseFishApiItem {
+  id: string;
   scientificName: string;
   commonName: string;
   specCode: number;
@@ -25,6 +26,7 @@ interface BrowseFishApiItem {
   catchProfile: string | null;
   catchRarity: string | null;
   feedingStyles: string[];
+  flaggedForReview: boolean;
 }
 
 interface BrowseFishApiResponse {
@@ -37,6 +39,7 @@ interface BrowseFishApiResponse {
 
 /** Item consumed by frontend components (FishCard-compatible) */
 export interface BrowseFishItem {
+  id: string;
   name: string;
   scientificName: string;
   habitat: string;
@@ -52,6 +55,7 @@ export interface BrowseFishItem {
   catchRarity: string | null;
   feedingStyles: string[];
   freshwaterHabitats: string[];
+  flaggedForReview: boolean;
 }
 
 export interface BrowseFilters {
@@ -81,6 +85,7 @@ function mapApiItemToFishItem(item: BrowseFishApiItem): BrowseFishItem {
   const habitat = getHabitatDescription(item.habitats) || item.waterType || "";
 
   return {
+    id: item.id,
     name: item.commonName || item.scientificName,
     scientificName: item.scientificName,
     habitat,
@@ -96,6 +101,7 @@ function mapApiItemToFishItem(item: BrowseFishApiItem): BrowseFishItem {
     catchRarity: item.catchRarity,
     feedingStyles: item.feedingStyles,
     freshwaterHabitats: [],
+    flaggedForReview: item.flaggedForReview || false,
   };
 }
 

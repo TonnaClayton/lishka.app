@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, AlertCircle, MapPin } from "lucide-react";
+import { ChevronLeft, AlertCircle, MapPin, Flag } from "lucide-react";
 import Lottie from "lottie-react";
 import bookmarkAnimation from "@/assets/animations/bookmark-icon.json";
 import BottomNav, { SideNav } from "@/components/bottom-nav";
@@ -19,6 +19,8 @@ import { useAuth } from "@/contexts/auth-context";
 import FishDetailSkeleton from "./fish-detail-skeleton";
 import { captureEvent } from "@/lib/posthog";
 import { useStream } from "@/hooks/use-stream";
+import { useReviewAccess } from "@/hooks/queries/fish/use-review-access";
+import { FlagFishDialog } from "@/components/flag-fish-dialog";
 
 // Fishing Season Calendar Component
 interface FishingSeasonCalendarProps {
@@ -206,6 +208,11 @@ const FishDetailPage = () => {
   const navigate = useNavigate();
   const { profile, loading: isProfileLoading } = useAuth();
   const { fishName } = useParams<{ fishName: string }>();
+
+  // Curator review access
+  const { data: reviewAccess } = useReviewAccess();
+  const canReview = reviewAccess?.canReview ?? false;
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
 
   const [fishImageUrl, setFishImageUrl] = useState<string>("");
   const [imageLoading, setImageLoading] = useState(false);
@@ -587,13 +594,35 @@ const FishDetailPage = () => {
     <div className="flex flex-col h-full bg-white dark:bg-gray-950">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 w-full lg:hidden border-b border-[#e8e8e9]">
-        <div className="flex items-center">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="text-xl font-bold ml-2 dark:text-white">
-            {displayData?.name || "Fish Details"}
-          </h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ChevronLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="text-xl font-bold ml-2 dark:text-white">
+              {displayData?.name || "Fish Details"}
+            </h1>
+          </div>
+          {canReview && displayData?.id && (
+            <button
+              type="button"
+              onClick={() => setFlagDialogOpen(true)}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label={
+                displayData?.flagged_for_review
+                  ? "Remove investigation flag"
+                  : "Flag for investigation"
+              }
+            >
+              <Flag
+                className={`h-5 w-5 ${
+                  displayData?.flagged_for_review
+                    ? "text-amber-500 fill-amber-500"
+                    : "text-gray-400"
+                }`}
+              />
+            </button>
+          )}
         </div>
       </header>
       <div className="flex-1 flex h-full">
@@ -621,12 +650,34 @@ const FishDetailPage = () => {
                     {displayData?.name || "Fish Details"}
                   </h1>
                 </div>
-                {streamingStatus && (
-                  <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-                    <div className="h-2 w-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse"></div>
-                    {streamingStatus}
-                  </div>
-                )}
+                <div className="flex items-center gap-3">
+                  {streamingStatus && (
+                    <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                      <div className="h-2 w-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse"></div>
+                      {streamingStatus}
+                    </div>
+                  )}
+                  {canReview && displayData?.id && (
+                    <button
+                      type="button"
+                      onClick={() => setFlagDialogOpen(true)}
+                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      aria-label={
+                        displayData?.flagged_for_review
+                          ? "Remove investigation flag"
+                          : "Flag for investigation"
+                      }
+                    >
+                      <Flag
+                        className={`h-5 w-5 ${
+                          displayData?.flagged_for_review
+                            ? "text-amber-500 fill-amber-500"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -1428,6 +1479,17 @@ const FishDetailPage = () => {
       </div>
       {/* Bottom Navigation - Mobile only */}
       <BottomNav />
+
+      {/* Flag Fish Dialog */}
+      {displayData?.id && (
+        <FlagFishDialog
+          open={flagDialogOpen}
+          onOpenChange={setFlagDialogOpen}
+          fishId={displayData.id}
+          fishName={displayData.name || "Unknown Fish"}
+          currentlyFlagged={displayData.flagged_for_review || false}
+        />
+      )}
     </div>
   );
 };

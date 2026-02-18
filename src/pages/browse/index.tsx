@@ -1,6 +1,6 @@
-import { useMemo, useEffect, useRef, useCallback } from "react";
+import { useMemo, useEffect, useRef, useCallback, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Flag } from "lucide-react";
 import FishCard from "@/components/fish-card";
 import BottomNav from "@/components/bottom-nav";
 import { Button } from "@/components/ui/button";
@@ -9,12 +9,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import {
   useBrowseFish,
   type BrowseFilters,
+  type BrowseFishItem,
 } from "@/hooks/queries/fish/use-browse-fish";
 import {
   getCategoryDisplayTitle,
   getCategoryDisplayInfo,
 } from "@/lib/fish-categories";
 import { useUserLocation } from "@/hooks/queries";
+import { useReviewAccess } from "@/hooks/queries/fish/use-review-access";
+import { FlagFishDialog } from "@/components/flag-fish-dialog";
 
 /**
  * Browse Results Page
@@ -25,6 +28,14 @@ import { useUserLocation } from "@/hooks/queries";
 const BrowsePage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+
+  // Curator review access
+  const { data: reviewAccess } = useReviewAccess();
+  const canReview = reviewAccess?.canReview ?? false;
+
+  // Flag dialog state
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+  const [selectedFish, setSelectedFish] = useState<BrowseFishItem | null>(null);
 
   // Location & weather
   const { location: currentLocation } = useUserLocation();
@@ -215,20 +226,48 @@ const BrowsePage = () => {
 
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6">
               {fishList.map((fish, index) => (
-                <FishCard
+                <div
                   key={`${fish.scientificName}-${index}`}
-                  name={fish.name}
-                  scientificName={fish.scientificName}
-                  habitat={fish.habitat}
-                  difficulty={fish.difficulty}
-                  isToxic={fish.isToxic}
-                  image={fish.image}
-                  onClick={() =>
-                    navigate(`/fish/${fish.slug}`, {
-                      state: { fish },
-                    })
-                  }
-                />
+                  className="relative"
+                >
+                  <FishCard
+                    name={fish.name}
+                    scientificName={fish.scientificName}
+                    habitat={fish.habitat}
+                    difficulty={fish.difficulty}
+                    isToxic={fish.isToxic}
+                    image={fish.image}
+                    onClick={() =>
+                      navigate(`/fish/${fish.slug}`, {
+                        state: { fish },
+                      })
+                    }
+                  />
+                  {canReview && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedFish(fish);
+                        setFlagDialogOpen(true);
+                      }}
+                      className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                      aria-label={
+                        fish.flaggedForReview
+                          ? "Remove investigation flag"
+                          : "Flag for investigation"
+                      }
+                    >
+                      <Flag
+                        className={`h-4 w-4 ${
+                          fish.flaggedForReview
+                            ? "text-amber-500 fill-amber-500"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
 
@@ -246,6 +285,20 @@ const BrowsePage = () => {
       </div>
 
       <BottomNav />
+
+      {/* Flag Fish Dialog */}
+      {selectedFish && (
+        <FlagFishDialog
+          open={flagDialogOpen}
+          onOpenChange={(open) => {
+            setFlagDialogOpen(open);
+            if (!open) setSelectedFish(null);
+          }}
+          fishId={selectedFish.id}
+          fishName={selectedFish.name}
+          currentlyFlagged={selectedFish.flaggedForReview}
+        />
+      )}
     </div>
   );
 };

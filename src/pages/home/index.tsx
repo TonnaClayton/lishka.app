@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Flag } from "lucide-react";
 import BottomNav from "@/components/bottom-nav";
 import FishCard from "@/components/fish-card";
 import FishSearch from "@/components/fish-search";
@@ -21,6 +22,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 // import { Card, CardContent } from "@/components/ui/card"; // Hidden with fish grid
 import { OnboardingDialog } from "./onboarding-dialog";
 import LocationBtn from "@/components/location-btn";
+import { useReviewAccess } from "@/hooks/queries/fish/use-review-access";
+import { FlagFishDialog } from "@/components/flag-fish-dialog";
+import type { FishData } from "@/hooks/queries/fish/use-fish-data";
 
 interface HomePageProps {
   location?: string;
@@ -33,6 +37,14 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const { profile } = useAuth();
   const { location: currentLocation } = useUserLocation();
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+
+  // Curator review access
+  const { data: reviewAccess } = useReviewAccess();
+  const canReview = reviewAccess?.canReview ?? false;
+
+  // Flag dialog state
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+  const [selectedFish, setSelectedFish] = useState<FishData | null>(null);
 
   const userLocation = currentLocation?.name ?? DEFAULT_LOCATION.name;
   const userLatitude = currentLocation?.latitude;
@@ -206,7 +218,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
               {toxicFishList.map((fish, index) => (
                 <div
                   key={`toxic-${fish.scientificName}-${index}`}
-                  className="flex-shrink-0 w-40"
+                  className="flex-shrink-0 w-40 relative"
                 >
                   <FishCard
                     name={fish.name}
@@ -222,6 +234,30 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                       })
                     }
                   />
+                  {canReview && fish.id && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedFish(fish);
+                        setFlagDialogOpen(true);
+                      }}
+                      className="absolute top-2 right-2 z-10 p-1.5 rounded-full bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm shadow-sm hover:bg-white dark:hover:bg-gray-800 transition-colors"
+                      aria-label={
+                        fish.flaggedForReview
+                          ? "Remove investigation flag"
+                          : "Flag for investigation"
+                      }
+                    >
+                      <Flag
+                        className={`h-4 w-4 ${
+                          fish.flaggedForReview
+                            ? "text-amber-500 fill-amber-500"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
@@ -317,6 +353,20 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
         title="Set Your Location"
       />
       <OnboardingDialog hasSeenOnboardingFlow={hasSeenOnboardingFlow} />
+
+      {/* Flag Fish Dialog */}
+      {selectedFish && selectedFish.id && (
+        <FlagFishDialog
+          open={flagDialogOpen}
+          onOpenChange={(open) => {
+            setFlagDialogOpen(open);
+            if (!open) setSelectedFish(null);
+          }}
+          fishId={selectedFish.id}
+          fishName={selectedFish.name}
+          currentlyFlagged={selectedFish.flaggedForReview ?? false}
+        />
+      )}
     </div>
   );
 };
