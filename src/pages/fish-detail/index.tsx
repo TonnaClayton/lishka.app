@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { ChevronLeft, AlertCircle, MapPin, Flag } from "lucide-react";
 import Lottie from "lottie-react";
@@ -213,6 +213,12 @@ const FishDetailPage = () => {
   const { data: reviewAccess } = useReviewAccess();
   const canReview = reviewAccess?.canReview ?? false;
   const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+
+  const handleFlagSuccess = useCallback((flagged: boolean) => {
+    setFishBasicData((prev: any) =>
+      prev ? { ...prev, flagged_for_review: flagged } : prev,
+    );
+  }, []);
 
   const [fishImageUrl, setFishImageUrl] = useState<string>("");
   const [imageLoading, setImageLoading] = useState(false);
@@ -1488,6 +1494,7 @@ const FishDetailPage = () => {
           fishId={displayData.id}
           fishName={displayData.name || "Unknown Fish"}
           currentlyFlagged={displayData.flagged_for_review || false}
+          onSuccess={handleFlagSuccess}
         />
       )}
     </div>

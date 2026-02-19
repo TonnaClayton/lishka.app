@@ -1,6 +1,11 @@
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  type InfiniteData,
+} from "@tanstack/react-query";
 import { api } from "../api";
 import { useToast } from "@/components/ui/use-toast";
+import type { BrowseFishItem } from "./use-browse-fish";
 
 interface FlagFishParams {
   fishId: string;
@@ -16,10 +21,6 @@ interface FlagFishResponse {
   flaggedAt: string | null;
 }
 
-/**
- * Mutation hook to flag or unflag a fish for investigation.
- * Only available to curators (backend enforces this).
- */
 export const useFlagFish = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -30,7 +31,46 @@ export const useFlagFish = () => {
         method: "PATCH",
         body: JSON.stringify({ flagged, reason }),
       }),
-    onSuccess: (data) => {
+    onMutate: async ({ fishId, flagged }) => {
+      await queryClient.cancelQueries({ queryKey: ["browseFish"] });
+
+      const previousBrowseData = queryClient.getQueriesData<
+        InfiniteData<BrowseFishItem[]>
+      >({ queryKey: ["browseFish"] });
+
+      queryClient.setQueriesData<InfiniteData<BrowseFishItem[]>>(
+        { queryKey: ["browseFish"] },
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            pages: old.pages.map((page) =>
+              page.map((fish) =>
+                fish.id === fishId
+                  ? { ...fish, flaggedForReview: flagged }
+                  : fish,
+              ),
+            ),
+          };
+        },
+      );
+
+      return { previousBrowseData };
+    },
+    onError: (error, _variables, context) => {
+      if (context?.previousBrowseData) {
+        for (const [queryKey, data] of context.previousBrowseData) {
+          queryClient.setQueryData(queryKey, data);
+        }
+      }
+      toast({
+        title: "Error",
+        description:
+          error.message || "Failed to update fish flag. Please try again.",
+        variant: "destructive",
+      });
+    },
+    onSuccess: (data, { fishId }) => {
       const action = data.flaggedForReview ? "flagged" : "unflagged";
       toast({
         title: `Fish ${action}`,
@@ -39,13 +79,8 @@ export const useFlagFish = () => {
           : "The investigation flag has been removed.",
       });
       queryClient.invalidateQueries({ queryKey: ["browseFish"] });
-    },
-    onError: (error) => {
-      toast({
-        title: "Error",
-        description:
-          error.message || "Failed to update fish flag. Please try again.",
-        variant: "destructive",
+      queryClient.invalidateQueries({
+        queryKey: ["fishFlagDetails", fishId],
       });
     },
   });

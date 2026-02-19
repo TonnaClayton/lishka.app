@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Flag } from "lucide-react";
 import BottomNav from "@/components/bottom-nav";
@@ -45,6 +45,17 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   // Flag dialog state
   const [flagDialogOpen, setFlagDialogOpen] = useState(false);
   const [selectedFish, setSelectedFish] = useState<FishData | null>(null);
+  const [flagOverrides, setFlagOverrides] = useState<Map<string, boolean>>(
+    new Map(),
+  );
+
+  const handleFlagSuccess = useCallback(
+    (flagged: boolean) => {
+      if (!selectedFish?.id) return;
+      setFlagOverrides((prev) => new Map(prev).set(selectedFish.id!, flagged));
+    },
+    [selectedFish],
+  );
 
   const userLocation = currentLocation?.name ?? DEFAULT_LOCATION.name;
   const userLatitude = currentLocation?.latitude;
@@ -93,7 +104,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   });
 
   const {
-    toxicFish: toxicFishList,
+    toxicFish: rawToxicFishList,
     isStreaming: loadingToxicFish,
     isComplete: toxicFishComplete,
   } = useFAOToxicFishStream({
@@ -101,6 +112,16 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     longitude: userLongitude,
     autoStart: true,
   });
+
+  const toxicFishList = useMemo(
+    () =>
+      rawToxicFishList.map((fish) =>
+        fish.id && flagOverrides.has(fish.id)
+          ? { ...fish, flaggedForReview: flagOverrides.get(fish.id) }
+          : fish,
+      ),
+    [rawToxicFishList, flagOverrides],
+  );
 
   const debugInfo = null;
 
@@ -365,6 +386,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
           fishId={selectedFish.id}
           fishName={selectedFish.name}
           currentlyFlagged={selectedFish.flaggedForReview ?? false}
+          onSuccess={handleFlagSuccess}
         />
       )}
     </div>

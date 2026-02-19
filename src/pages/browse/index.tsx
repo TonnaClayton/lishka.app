@@ -1,5 +1,13 @@
-import { useMemo, useEffect, useRef, useCallback, useState } from "react";
+import {
+  useMemo,
+  useEffect,
+  useRef,
+  useCallback,
+  useState,
+  useLayoutEffect,
+} from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { useScrollRestoration } from "use-scroll-restoration";
 import { ArrowLeft, Flag } from "lucide-react";
 import FishCard from "@/components/fish-card";
 import BottomNav from "@/components/bottom-nav";
@@ -103,6 +111,52 @@ const BrowsePage = () => {
 
   const fishList = data?.pages.flat() ?? [];
 
+  // Scroll restoration
+  const scrollKey = `browse-scroll-${searchParams.toString()}`;
+  const { ref: scrollRef, setScroll } = useScrollRestoration(scrollKey, {
+    debounceTime: 100,
+    persist: "sessionStorage",
+  });
+
+  const scrollContainerRef = useRef<HTMLDivElement | null>(null);
+  const restoredRef = useRef(false);
+
+  const mergedRef = useCallback(
+    (node: HTMLDivElement | null) => {
+      scrollContainerRef.current = node;
+      scrollRef(node);
+    },
+    [scrollRef],
+  );
+
+  const ready = !isLoading && fishList.length > 0;
+
+  useLayoutEffect(() => {
+    if (!ready || restoredRef.current) return;
+    restoredRef.current = true;
+
+    const saved = sessionStorage.getItem(scrollKey);
+    if (!saved) return;
+
+    const y = parseInt(saved, 10);
+    if (y > 0) {
+      requestAnimationFrame(() => {
+        setScroll({ y });
+      });
+    }
+  }, [ready, scrollKey, setScroll]);
+
+  const saveScrollAndNavigate = useCallback(
+    (path: string, state?: Record<string, unknown>) => {
+      const el = scrollContainerRef.current;
+      if (el) {
+        sessionStorage.setItem(scrollKey, String(el.scrollTop));
+      }
+      navigate(path, { state });
+    },
+    [scrollKey, navigate],
+  );
+
   // Infinite scroll via IntersectionObserver
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -149,7 +203,10 @@ const BrowsePage = () => {
       </header>
 
       {/* Content */}
-      <div className="flex-1 w-full py-4 lg:py-6 pb-20 overflow-y-auto">
+      <div
+        ref={mergedRef}
+        className="flex-1 w-full py-4 lg:py-6 pb-20 overflow-y-auto"
+      >
         {isLoading ? (
           <div className="px-4 lg:px-6">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
@@ -238,9 +295,7 @@ const BrowsePage = () => {
                     isToxic={fish.isToxic}
                     image={fish.image}
                     onClick={() =>
-                      navigate(`/fish/${fish.slug}`, {
-                        state: { fish },
-                      })
+                      saveScrollAndNavigate(`/fish/${fish.slug}`, { fish })
                     }
                   />
                   {canReview && (
