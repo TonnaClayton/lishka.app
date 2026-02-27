@@ -13,6 +13,7 @@ export interface Fish {
   difficulty: "Easy" | "Intermediate" | "Hard" | "Advanced" | "Expert";
   season: string;
   is_toxic: boolean;
+  risk_badge?: string | null;
 }
 
 // Location related types

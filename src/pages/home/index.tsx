@@ -248,6 +248,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                     difficulty={fish.difficulty}
                     isToxic={fish.isToxic}
                     dangerType={fish.dangerType}
+                    riskBadge={fish.riskBadge}
                     image={fish.image}
                     onClick={() =>
                       navigate(`/fish/${fish.slug}`, {

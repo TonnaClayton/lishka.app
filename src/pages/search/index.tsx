@@ -78,6 +78,7 @@ interface Fish {
   difficulty: "Easy" | "Intermediate" | "Hard" | "Advanced" | "Expert";
   season: string;
   is_toxic: boolean;
+  risk_badge?: string | null;
 }
 
 const DEFAULT_SUGGESTIONS = [
@@ -955,6 +956,7 @@ const SearchMessageCard = ({
                     habitat={fish.habitat}
                     difficulty={fish.difficulty}
                     isToxic={fish.is_toxic}
+                    riskBadge={fish.risk_badge}
                     className="w-[200px] min-h-[250px] flex-shrink-0"
                     onClick={() => {
                       const slug =

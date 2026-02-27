@@ -127,6 +127,7 @@ export function useFAOFishStream(
             season: event.data.season || "",
             isToxic: event.data.is_toxic ?? event.data.isToxic ?? false,
             dangerType: event.data.danger_type || event.data.dangerType,
+            riskBadge: event.data.risk_badge || event.data.riskBadge || null,
             image: event.data.image,
             slug:
               event.data.slug || generateFishSlug(scientificName || fishName),

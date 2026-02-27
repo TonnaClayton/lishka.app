@@ -20,6 +20,12 @@ interface BrowseFishApiItem {
   family: string | null;
   isToxic: boolean;
   isRecreationallyAccessible: boolean;
+  toxicToEat: boolean;
+  isVenomous: boolean;
+  hazardousToHandle: boolean;
+  isProtected: boolean;
+  protectionDetails: string | null;
+  riskBadge: string | null;
   habitats: string[];
   depthBands: string[];
   techniques: string[];
@@ -48,6 +54,7 @@ export interface BrowseFishItem {
   slug: string;
   isToxic: boolean;
   dangerType?: string;
+  riskBadge?: string | null;
   habitats: string[];
   depthBands: string[];
   techniques: string[];
@@ -94,6 +101,7 @@ function mapApiItemToFishItem(item: BrowseFishApiItem): BrowseFishItem {
     slug: generateSlug(item.scientificName),
     isToxic: item.isToxic,
     dangerType: undefined,
+    riskBadge: item.riskBadge,
     habitats: item.habitats,
     depthBands: item.depthBands,
     techniques: item.techniques,

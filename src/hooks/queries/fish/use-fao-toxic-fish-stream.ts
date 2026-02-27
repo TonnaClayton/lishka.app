@@ -131,6 +131,7 @@ export function useFAOToxicFishStream(
               event.data.dangerType ||
               "Toxic - handle with caution",
             image: event.data.image,
+            riskBadge: event.data.risk_badge || event.data.riskBadge || null,
             slug:
               event.data.slug || generateFishSlug(scientificName || fishName),
             flaggedForReview: event.data.flagged_for_review ?? false,

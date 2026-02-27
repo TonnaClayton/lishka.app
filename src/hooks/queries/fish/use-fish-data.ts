@@ -15,6 +15,7 @@ export interface FishData {
   season: string;
   isToxic: boolean;
   dangerType?: string;
+  riskBadge?: string | null;
   image?: string;
   slug?: string;
   probabilityScore?: number;

@@ -10,6 +10,7 @@ import { Waves, Target } from "lucide-react";
 import { log } from "@/lib/logging";
 import { cn } from "@/lib/utils";
 import { captureEvent } from "@/lib/posthog";
+import { RISK_BADGE_CONFIG, type RiskBadgeType } from "@/lib/constants";
 
 interface FishCardProps {
   image?: string;
@@ -21,6 +22,7 @@ interface FishCardProps {
   difficulty?: string;
   isToxic?: boolean;
   dangerType?: string;
+  riskBadge?: string | null;
   className?: string;
 
   onClick?: () => void;
@@ -33,7 +35,8 @@ const FishCard = ({
   habitat = "Freshwater, Coastal",
   difficulty = "Intermediate",
   isToxic = false,
-  dangerType,
+  dangerType: _dangerType,
+  riskBadge,
   className,
 
   onClick = () => {},
@@ -108,14 +111,20 @@ const FishCard = ({
             handleFishImageError(e, name);
           }}
         />
-        {isToxic && (
-          <Badge
-            variant="destructive"
-            className="absolute bottom-2 right-2 text-xs py-0 shadow-lg rounded-[32px] bg-[#FF004D] text-white"
-          >
-            Toxic
-          </Badge>
-        )}
+        {(() => {
+          const badge = riskBadge || (isToxic ? "toxic" : null);
+          if (!badge || !RISK_BADGE_CONFIG[badge as RiskBadgeType]) return null;
+          const cfg = RISK_BADGE_CONFIG[badge as RiskBadgeType];
+          return (
+            <Badge
+              variant="destructive"
+              className="absolute bottom-2 right-2 text-xs py-0 shadow-lg rounded-[32px]"
+              style={{ backgroundColor: cfg.color, color: cfg.textColor }}
+            >
+              {cfg.label}
+            </Badge>
+          );
+        })()}
       </div>
       <CardContent className="p-2 sm:p-3 lg:p-4 flex flex-col flex-1">
         <div className="mb-1 lg:mb-2">
@@ -128,31 +137,19 @@ const FishCard = ({
         </div>
 
         <div className="text-xs lg:text-sm space-y-1 sm:space-y-1.5 lg:space-y-2">
-          {isToxic && dangerType ? (
-            // For toxic fish, show danger type instead of habitat and difficulty
-            <div className="flex items-start">
-              <span className="text-foreground line-clamp-2 text-xs lg:text-sm">
-                {dangerType.charAt(0).toUpperCase() + dangerType.slice(1)}
-              </span>
-            </div>
-          ) : (
-            // For non-toxic fish, show habitat and difficulty
-            <>
-              <div className="flex items-center">
-                <Waves className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 text-lishka-blue mr-1 sm:mr-1.5 lg:mr-2 shrink-0" />
-                <span className="text-foreground line-clamp-1 text-xs lg:text-sm">
-                  {habitat}
-                </span>
-              </div>
+          <div className="flex items-center">
+            <Waves className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 text-lishka-blue mr-1 sm:mr-1.5 lg:mr-2 shrink-0" />
+            <span className="text-foreground line-clamp-1 text-xs lg:text-sm">
+              {habitat}
+            </span>
+          </div>
 
-              <div className="flex items-center">
-                <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 text-[#F97316] mr-1 sm:mr-1.5 lg:mr-2 shrink-0" />
-                <span className="text-foreground line-clamp-1 text-xs lg:text-sm">
-                  {difficulty}
-                </span>
-              </div>
-            </>
-          )}
+          <div className="flex items-center">
+            <Target className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 text-[#F97316] mr-1 sm:mr-1.5 lg:mr-2 shrink-0" />
+            <span className="text-foreground line-clamp-1 text-xs lg:text-sm">
+              {difficulty}
+            </span>
+          </div>
         </div>
       </CardContent>
     </Card>

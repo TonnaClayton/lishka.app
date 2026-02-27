@@ -293,6 +293,7 @@ const BrowsePage = () => {
                     habitat={fish.habitat}
                     difficulty={fish.difficulty}
                     isToxic={fish.isToxic}
+                    riskBadge={fish.riskBadge}
                     image={fish.image}
                     onClick={() =>
                       saveScrollAndNavigate(`/fish/${fish.slug}`, { fish })

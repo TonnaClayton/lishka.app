@@ -25,7 +25,17 @@ export const useFlagFish = () => {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  return useMutation<FlagFishResponse, Error, FlagFishParams>({
+  return useMutation<
+    FlagFishResponse,
+    Error,
+    FlagFishParams,
+    {
+      previousBrowseData: [
+        unknown,
+        InfiniteData<BrowseFishItem[]> | undefined,
+      ][];
+    }
+  >({
     mutationFn: ({ fishId, flagged, reason }) =>
       api<FlagFishResponse>(`fish/${fishId}/flag`, {
         method: "PATCH",
@@ -60,7 +70,7 @@ export const useFlagFish = () => {
     onError: (error, _variables, context) => {
       if (context?.previousBrowseData) {
         for (const [queryKey, data] of context.previousBrowseData) {
-          queryClient.setQueryData(queryKey, data);
+          queryClient.setQueryData(queryKey as readonly unknown[], data);
         }
       }
       toast({

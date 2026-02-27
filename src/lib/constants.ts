@@ -29,6 +29,19 @@ export const COLORS = {
   WARNING_YELLOW: "#F59E0B",
 } as const;
 
+// Risk Badge Configuration
+export type RiskBadgeType = "protected" | "toxic" | "venomous" | "risky";
+
+export const RISK_BADGE_CONFIG: Record<
+  RiskBadgeType,
+  { label: string; color: string; textColor: string }
+> = {
+  protected: { label: "Protected", color: "#7C3AED", textColor: "#FFFFFF" },
+  toxic: { label: "Toxic", color: "#FF004D", textColor: "#FFFFFF" },
+  venomous: { label: "Venomous", color: "#F97316", textColor: "#FFFFFF" },
+  risky: { label: "Risky", color: "#EAB308", textColor: "#18181B" },
+} as const;
+
 // Timeouts (in milliseconds)
 export const TIMEOUTS = {
   DEBOUNCE_DEFAULT: 300,

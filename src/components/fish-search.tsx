@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { api } from "@/hooks/queries/api";
 import { Badge } from "@/components/ui/badge";
+import { RISK_BADGE_CONFIG, type RiskBadgeType } from "@/lib/constants";
 import {
   getFishImageUrl,
   getPlaceholderFishImage,
@@ -34,6 +35,7 @@ interface FishSpecies {
   waterType?: string | null;
   family?: string | null;
   isToxic?: boolean;
+  riskBadge?: string | null;
 }
 
 interface SearchResponse {
@@ -358,14 +360,25 @@ export function FishSearch({
                     scientificName={fish.scientificName}
                     initialImage={fish.image}
                   />
-                  {fish.isToxic && (
-                    <Badge
-                      variant="destructive"
-                      className="absolute bottom-1 right-1 text-[10px] py-0 px-1.5 rounded-full bg-[#FF004D] text-white"
-                    >
-                      Toxic
-                    </Badge>
-                  )}
+                  {(() => {
+                    const badge =
+                      fish.riskBadge || (fish.isToxic ? "toxic" : null);
+                    if (!badge || !RISK_BADGE_CONFIG[badge as RiskBadgeType])
+                      return null;
+                    const cfg = RISK_BADGE_CONFIG[badge as RiskBadgeType];
+                    return (
+                      <Badge
+                        variant="destructive"
+                        className="absolute bottom-1 right-1 text-[10px] py-0 px-1.5 rounded-full"
+                        style={{
+                          backgroundColor: cfg.color,
+                          color: cfg.textColor,
+                        }}
+                      >
+                        {cfg.label}
+                      </Badge>
+                    );
+                  })()}
                 </motion.div>
 
                 {/* Fish Info */}

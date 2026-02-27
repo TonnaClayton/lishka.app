@@ -21,6 +21,7 @@ import { captureEvent } from "@/lib/posthog";
 import { useStream } from "@/hooks/use-stream";
 import { useReviewAccess } from "@/hooks/queries/fish/use-review-access";
 import { FlagFishDialog } from "@/components/flag-fish-dialog";
+import { RISK_BADGE_CONFIG, type RiskBadgeType } from "@/lib/constants";
 
 // Fishing Season Calendar Component
 interface FishingSeasonCalendarProps {
@@ -710,12 +711,25 @@ const FishDetailPage = () => {
                       }}
                     />
                   )}
-                  {/* Toxic label for toxic fish */}
-                  {displayData?.is_toxic && (
-                    <div className="absolute bottom-4 right-4 bg-red-600 px-3 py-1 rounded-3xl text-xs font-medium text-white z-10">
-                      TOXIC
-                    </div>
-                  )}
+                  {(() => {
+                    const badge =
+                      displayData?.risk_badge ||
+                      (displayData?.is_toxic ? "toxic" : null);
+                    if (!badge || !RISK_BADGE_CONFIG[badge as RiskBadgeType])
+                      return null;
+                    const cfg = RISK_BADGE_CONFIG[badge as RiskBadgeType];
+                    return (
+                      <div
+                        className="absolute bottom-4 right-4 px-3 py-1 rounded-3xl text-xs font-medium z-10"
+                        style={{
+                          backgroundColor: cfg.color,
+                          color: cfg.textColor,
+                        }}
+                      >
+                        {cfg.label.toUpperCase()}
+                      </div>
+                    );
+                  })()}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                     <h1 className="font-semibold text-xl text-white">
                       {displayData?.name || "Loading..."}
@@ -732,40 +746,103 @@ const FishDetailPage = () => {
                 </div>
               </Card>
 
-              {/* Toxicity Information Card - Only visible for toxic fish */}
-              {displayData?.is_toxic && (
-                <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                    Toxicity Information
-                  </h2>
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                      {displayData?.danger_type ||
-                        "This fish poses potential health risks. Exercise extreme caution when handling."}
-                    </p>
-                    <div>
-                      <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
-                        Safe Handling
-                      </h3>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                        Always wear protective gloves, avoid contact with spines
-                        or secretions, use tools to remove hooks, and wash hands
-                        thoroughly after contact.
-                      </p>
+              {/* Risk Information Card - Visible for any fish with a risk badge */}
+              {(() => {
+                const detailBadge =
+                  displayData?.risk_badge ||
+                  (displayData?.is_toxic ? "toxic" : null);
+                if (!detailBadge) return null;
+                return (
+                  <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                      {detailBadge === "protected" && "Protection Status"}
+                      {detailBadge === "toxic" && "Toxicity Information"}
+                      {detailBadge === "venomous" && "Venom Warning"}
+                      {detailBadge === "risky" && "Handling Risks"}
+                    </h2>
+                    <div className="space-y-4">
+                      {detailBadge === "protected" && (
+                        <>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            {displayData.protection_details ||
+                              "This species is regulated by local, EU, or international law. Check regulations before targeting."}
+                          </p>
+                          <div>
+                            <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
+                              What to do
+                            </h3>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                              Check local regulations for season closures, size
+                              limits, and bag limits. If catch-and-release only,
+                              handle with wet hands, minimise air exposure, and
+                              release quickly.
+                            </p>
+                          </div>
+                        </>
+                      )}
+
+                      {detailBadge === "toxic" && (
+                        <>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            {displayData.toxicity_mechanism ||
+                              displayData.danger_type ||
+                              "This fish is harmful when consumed. Do not eat."}
+                          </p>
+                          <div>
+                            <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
+                              Safe Handling
+                            </h3>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                              Do not consume this fish. Wear gloves when
+                              handling, avoid contact with bodily fluids, and
+                              wash hands thoroughly.
+                            </p>
+                          </div>
+                        </>
+                      )}
+
+                      {detailBadge === "venomous" && (
+                        <>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            {displayData.toxicity_mechanism ||
+                              displayData.danger_type ||
+                              "This fish can actively inject venom through spines, stingers, or barbs."}
+                          </p>
+                          <div>
+                            <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
+                              If Stung
+                            </h3>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                              Immerse the wound in hot water (as hot as
+                              tolerable) for 30-90 minutes. Seek immediate
+                              medical attention if symptoms are severe.
+                            </p>
+                          </div>
+                        </>
+                      )}
+
+                      {detailBadge === "risky" && (
+                        <>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            {displayData.danger_type ||
+                              "This fish poses physical injury risks such as bites, tail strikes, or abrasive skin."}
+                          </p>
+                          <div>
+                            <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
+                              Safe Handling
+                            </h3>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                              Wear protective gloves, use long pliers to remove
+                              hooks, and control the fish firmly. Avoid placing
+                              fingers near the mouth or tail.
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
-                    <div>
-                      <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
-                        If Injured
-                      </h3>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                        Rinse wound with hot water, apply pressure to control
-                        bleeding, and seek immediate medical attention. Call
-                        emergency services if symptoms are severe.
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              )}
+                  </Card>
+                );
+              })()}
 
               {/* Description Card */}
               <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
