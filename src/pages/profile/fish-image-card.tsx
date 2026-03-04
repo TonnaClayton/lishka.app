@@ -2,7 +2,7 @@ import { log, error, warn as warnLog } from "@/lib/logging";
 import React, { useState, useMemo } from "react";
 import { useLazyLoading } from "@/hooks/use-lazy-loading";
 import { useDualRef } from "@/hooks/use-dual-ref";
-import { Share, Pencil, Trash2, MoreVertical } from "lucide-react";
+import { Send, Trash2, MoreVertical } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -137,6 +137,153 @@ function FishImageCard({
     }
 
     return blob;
+  };
+
+  const getShareableFile = async (): Promise<{
+    file: File;
+    shareText: string;
+  } | null> => {
+    try {
+      let localPhotoUrl: string;
+      let localMetadata: ImageMetadata | null = null;
+
+      if (typeof photo === "string") {
+        const photoString = photo as string;
+        if (photoString.startsWith("{") && photoString.includes('"url"')) {
+          try {
+            const parsed = JSON.parse(photoString);
+            localPhotoUrl = parsed.url || photo;
+            localMetadata = parsed;
+          } catch {
+            localPhotoUrl = photo;
+          }
+        } else {
+          localPhotoUrl = photo;
+        }
+      } else {
+        localPhotoUrl = photo.url || String(photo);
+        localMetadata = photo as ImageMetadata;
+      }
+
+      let file: File;
+      let shareText = "Check out this fish photo from Lishka!";
+
+      if (
+        localMetadata &&
+        (localMetadata.fishInfo || localMetadata.location) &&
+        fishInfoOverlayRef.current
+      ) {
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        fishInfoOverlayRef.current.style.borderRadius = "0px";
+        fishInfoOverlayRef.current.style.overflow = "hidden";
+        const image = fishInfoOverlayRef.current.querySelector("img");
+        if (image) image.style.borderRadius = "0px";
+
+        const overlayBlob = await buildBlobWithRetry(
+          fishInfoOverlayRef.current,
+        );
+        file = new File([overlayBlob], "fish-catch-with-info.png", {
+          type: "image/png",
+        });
+
+        fishInfoOverlayRef.current.style.borderRadius = "8px";
+        fishInfoOverlayRef.current.style.overflow = "hidden";
+        if (image) image.style.borderRadius = "8px";
+
+        if (
+          localMetadata?.fishInfo?.name &&
+          localMetadata.fishInfo.name !== "Unknown"
+        ) {
+          shareText = `Check out this ${localMetadata.fishInfo.name} I caught! 🎣`;
+          if (
+            localMetadata.fishInfo.estimatedSize &&
+            localMetadata.fishInfo.estimatedSize !== "Unknown"
+          ) {
+            shareText += ` Size: ${localMetadata.fishInfo.estimatedSize}`;
+          }
+          if (
+            localMetadata.fishInfo.estimatedWeight &&
+            localMetadata.fishInfo.estimatedWeight !== "Unknown"
+          ) {
+            shareText += ` Weight: ${localMetadata.fishInfo.estimatedWeight}`;
+          }
+        }
+      } else {
+        const response = await fetch(localPhotoUrl);
+        const blob = await response.blob();
+        file = new File([blob], "fish-photo.jpg", { type: blob.type });
+      }
+
+      return { file, shareText };
+    } catch (err) {
+      error("[ProfilePage] Error building shareable file:", err);
+      return null;
+    }
+  };
+
+  const saveImageAndOpenApp = async (
+    appUrl: string,
+    fallbackUrl: string,
+    appName: string,
+  ) => {
+    const result = await getShareableFile();
+    if (!result) return;
+
+    const blobUrl = URL.createObjectURL(result.file);
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = "fish-catch-lishka.png";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    setTimeout(() => {
+      URL.revokeObjectURL(blobUrl);
+    }, 1000);
+
+    setSuccess(
+      `Image saved to your device! Opening ${appName}... Share it as a Story and tag @lishka.app`,
+    );
+
+    setTimeout(() => {
+      const start = Date.now();
+      window.location.href = appUrl;
+
+      setTimeout(() => {
+        if (Date.now() - start < 2500) {
+          window.open(fallbackUrl, "_blank");
+        }
+      }, 2000);
+    }, 500);
+
+    captureEvent(`fish_image_share_${appName.toLowerCase()}_clicked`);
+    setTimeout(() => setSuccess(null), 6000);
+  };
+
+  const handleShareToInstagram = async () => {
+    try {
+      await saveImageAndOpenApp(
+        "instagram://camera",
+        "https://www.instagram.com/",
+        "Instagram",
+      );
+    } catch (err) {
+      error("[ProfilePage] Error sharing to Instagram:", err);
+      setError("Failed to share to Instagram. Please try again.");
+    }
+  };
+
+  const handleShareToFacebook = async () => {
+    try {
+      await saveImageAndOpenApp(
+        "fb://camera",
+        "https://www.facebook.com/",
+        "Facebook",
+      );
+    } catch (err) {
+      error("[ProfilePage] Error sharing to Facebook:", err);
+      setError("Failed to share to Facebook. Please try again.");
+    }
   };
 
   const handleSharePhoto = async () => {
@@ -441,7 +588,66 @@ function FishImageCard({
         </div>
       </button>
 
-      {/* 3-dots menu - only show in single column mode */}
+      {/* Action bar below image - only show in single column mode */}
+      {isSingleColumn && (
+        <div className="flex items-center justify-between px-3 py-2">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSharePhoto();
+                captureEvent("fish_image_share_clicked");
+              }}
+              disabled={loading}
+              className="text-gray-700 dark:text-gray-300 hover:text-lishka-blue disabled:opacity-50 transition-colors"
+              aria-label="Save & Share"
+            >
+              <Send className="w-5 h-5" />
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleShareToInstagram();
+                captureEvent("fish_image_share_instagram_clicked");
+              }}
+              disabled={loading}
+              className="text-gray-700 dark:text-gray-300 hover:text-lishka-blue disabled:opacity-50 transition-colors"
+              aria-label="Share to Instagram"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z" />
+              </svg>
+            </button>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                handleShareToFacebook();
+                captureEvent("fish_image_share_facebook_clicked");
+              }}
+              disabled={loading}
+              className="text-gray-700 dark:text-gray-300 hover:text-lishka-blue disabled:opacity-50 transition-colors"
+              aria-label="Share to Facebook"
+            >
+              <svg className="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+              </svg>
+            </button>
+          </div>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditAIInfo();
+              captureEvent("fish_image_edit_clicked");
+            }}
+            disabled={loading}
+            className="text-lishka-blue font-medium text-sm hover:text-blue-700 disabled:opacity-50 transition-colors"
+          >
+            Edit AI Info
+          </button>
+        </div>
+      )}
+
+      {/* 3-dots menu (Delete only) - only show in single column mode */}
       {isSingleColumn && (
         <div className={cn("absolute right-0 h-10 w-full z-20", "top-2")}>
           <div className="flex items-center justify-end pr-5">
@@ -452,28 +658,6 @@ function FishImageCard({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSharePhoto();
-                    captureEvent("fish_image_share_clicked");
-                  }}
-                  disabled={loading}
-                >
-                  <Share className="w-4 h-4 mr-2" />
-                  Share
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditAIInfo();
-                    captureEvent("fish_image_edit_clicked");
-                  }}
-                  disabled={loading}
-                >
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Edit AI Info
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();

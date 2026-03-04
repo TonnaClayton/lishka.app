@@ -92,7 +92,7 @@ const IMG = {
 export const HABITAT_CARDS: CategoryCard[] = [
   {
     id: "pelagic",
-    label: "Pelagic",
+    label: "Open Water",
     description:
       "Open water, mid-surface to surface; often fast-moving, migratory.",
     browseTitle: "Open Water Hunters",
@@ -103,7 +103,7 @@ export const HABITAT_CARDS: CategoryCard[] = [
   },
   {
     id: "demersal",
-    label: "Demersal",
+    label: "Near Bottom",
     description:
       "Near the seabed; soft bottoms, slopes, deeper inshore/offshore.",
     browseTitle: "Bottom Dwellers",
@@ -114,7 +114,7 @@ export const HABITAT_CARDS: CategoryCard[] = [
   },
   {
     id: "reef_associated",
-    label: "Reef-associated",
+    label: "Reef & Structure",
     description:
       "Rocky reefs, structures, wrecks; strong cover and ambush zones.",
     browseTitle: "Reef Residents",
@@ -125,7 +125,7 @@ export const HABITAT_CARDS: CategoryCard[] = [
   },
   {
     id: "benthic",
-    label: "Benthic",
+    label: "Bottom Sitters",
     description:
       "Bottom-dwelling; often resting or buried on sand, mud, or rock.",
     browseTitle: "Seafloor Specialists",
@@ -136,7 +136,7 @@ export const HABITAT_CARDS: CategoryCard[] = [
   },
   {
     id: "estuarine",
-    label: "Estuarine",
+    label: "Brackish Waters",
     description:
       "River mouths, lagoons, brackish water; highly seasonal and dynamic.",
     browseTitle: "Coastal Wanderers",

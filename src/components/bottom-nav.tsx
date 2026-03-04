@@ -346,7 +346,7 @@ export const SideNav: React.FC = () => {
                 )}
               >
                 <Bot className={isCollapsed ? "" : "mr-3"} size={20} />
-                {!isCollapsed && <span>Search</span>}
+                {!isCollapsed && <span>Ask AI</span>}
               </Link>
             </>
           ) : (
@@ -367,7 +367,7 @@ export const SideNav: React.FC = () => {
                 )}
               >
                 <Bot className={isCollapsed ? "" : "mr-3"} size={20} />
-                {!isCollapsed && <span>Search</span>}
+                {!isCollapsed && <span>Ask AI</span>}
               </div>
             </>
           )}
