@@ -6,6 +6,7 @@ import z from "zod";
 import { DEFAULT_LOCATION } from "@/lib/const";
 
 export interface FishData {
+  id?: string;
   name: string;
   scientificName: string;
   localName?: string;
@@ -14,8 +15,11 @@ export interface FishData {
   season: string;
   isToxic: boolean;
   dangerType?: string;
+  riskBadge?: string | null;
   image?: string;
+  slug?: string;
   probabilityScore?: number;
+  flaggedForReview?: boolean;
 }
 
 export const fishQueryKeys = {

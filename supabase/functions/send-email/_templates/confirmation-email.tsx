@@ -31,7 +31,7 @@ const AccountConfirmationEmail = (props: {
         <Body className="bg-white font-sans pb-[40px]">
           <Container className="bg-[#f8fafc] border border-[#e2e8f0] rounded-b-[8px] shadow-sm max-w-[600px] mx-auto pb-[40px]">
             {/* Header */}
-            <Section className="text-center mb-[32px] bg-lishka-blue rounded-t-[8px] p-[40px]">
+            <Section className="text-center mb-[32px] bg-[#0251fb] rounded-t-[8px] p-[40px]">
               <Img
                 src="https://lmjlmyqbwgxmiguxqdhi.supabase.co/storage/v1/object/public/assets/logo.png"
                 alt="Lishka Logo"
@@ -60,7 +60,7 @@ const AccountConfirmationEmail = (props: {
 
               <Button
                 href={verificationLink}
-                className="bg-lishka-blue text-white px-[32px] py-[12px] rounded-[24px] text-[16px] font-medium no-underline box-border"
+                className="bg-[#0251fb] text-white px-[32px] py-[12px] rounded-[24px] text-[16px] font-medium no-underline box-border"
               >
                 Confirm Email Address
               </Button>

@@ -2,7 +2,7 @@ import { log, error, warn as warnLog } from "@/lib/logging";
 import React, { useState, useMemo } from "react";
 import { useLazyLoading } from "@/hooks/use-lazy-loading";
 import { useDualRef } from "@/hooks/use-dual-ref";
-import { Share, Pencil, Trash2, MoreVertical } from "lucide-react";
+import { Send, Trash2, MoreVertical } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -441,7 +441,36 @@ function FishImageCard({
         </div>
       </button>
 
-      {/* 3-dots menu - only show in single column mode */}
+      {/* Action bar below image - only show in single column mode */}
+      {isSingleColumn && (
+        <div className="flex items-center justify-between px-3 pt-2 pb-6">
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleSharePhoto();
+              captureEvent("fish_image_share_clicked");
+            }}
+            disabled={loading}
+            className="flex items-center gap-1.5 text-lishka-blue font-medium text-sm hover:text-blue-700 disabled:opacity-50 transition-colors"
+          >
+            <Send className="w-4 h-4" />
+            Share Catch
+          </button>
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleEditAIInfo();
+              captureEvent("fish_image_edit_clicked");
+            }}
+            disabled={loading}
+            className="text-lishka-blue font-medium text-sm hover:text-blue-700 disabled:opacity-50 transition-colors"
+          >
+            Edit AI Info
+          </button>
+        </div>
+      )}
+
+      {/* 3-dots menu (Delete only) - only show in single column mode */}
       {isSingleColumn && (
         <div className={cn("absolute right-0 h-10 w-full z-20", "top-2")}>
           <div className="flex items-center justify-end pr-5">
@@ -452,28 +481,6 @@ function FishImageCard({
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-40">
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleSharePhoto();
-                    captureEvent("fish_image_share_clicked");
-                  }}
-                  disabled={loading}
-                >
-                  <Share className="w-4 h-4 mr-2" />
-                  Share
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditAIInfo();
-                    captureEvent("fish_image_edit_clicked");
-                  }}
-                  disabled={loading}
-                >
-                  <Pencil className="w-4 h-4 mr-2" />
-                  Edit AI Info
-                </DropdownMenuItem>
                 <DropdownMenuItem
                   onClick={(e) => {
                     e.stopPropagation();

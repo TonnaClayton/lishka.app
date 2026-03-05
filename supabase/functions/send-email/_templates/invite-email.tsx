@@ -74,7 +74,7 @@ const InviteEmail = (props: {
 
               <Button
                 href={inviteLink}
-                className="bg-lishka-blue text-white px-[32px] py-[12px] rounded-[24px] text-[16px] font-medium no-underline box-border"
+                className="bg-[#0251fb] text-white px-[32px] py-[12px] rounded-[24px] text-[16px] font-medium no-underline box-border"
               >
                 Accept Invitation
               </Button>

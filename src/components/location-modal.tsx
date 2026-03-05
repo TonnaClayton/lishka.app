@@ -71,6 +71,7 @@ const MapSelection = ({
     [number, number] | null
   >(null);
   const [locationName, setLocationName] = useState("");
+  const [countryCode, setCountryCode] = useState("");
   const [map, setMap] = useState<L.Map | null>(null);
   const [isSeaLocation, setIsSeaLocation] = useState(false);
   const [hasInitialized, setHasInitialized] = useState(false);
@@ -81,14 +82,16 @@ const MapSelection = ({
     log("mapSelectionState", {
       selectedPosition,
       locationName,
+      countryCode,
       isSeaLocation,
     });
     (window as any).mapSelectionState = {
       selectedPosition,
       locationName,
+      countryCode,
       isSeaLocation,
     };
-  }, [selectedPosition, locationName, isSeaLocation]);
+  }, [selectedPosition, locationName, countryCode, isSeaLocation]);
 
   // Set initial marker and center map only once when component mounts
   useEffect(() => {
@@ -136,6 +139,7 @@ const MapSelection = ({
             data.address?.hamlet ||
             "";
           const country = data.address?.country || "";
+          const cc = (data.address?.country_code || "").toUpperCase();
 
           // Format as "city, country"
           const name = [city, country].filter(Boolean).join(", ");
@@ -152,12 +156,14 @@ const MapSelection = ({
             isSeaLocation,
             city,
             country,
+            countryCode: cc,
             address: data.address,
             lat,
             lng,
           });
 
           setIsSeaLocation(isSeaLocation);
+          setCountryCode(cc);
 
           // if (isSeaLocation) {
           //   // For sea locations, display only coordinates
@@ -439,10 +445,11 @@ const LocationModal = ({
     log("mapState", mapState);
     if (mapState && mapState.selectedPosition) {
       const [lat, lng] = mapState.selectedPosition;
-      const newLocation = {
+      const newLocation: LocationData = {
         latitude: lat,
         longitude: lng,
         name: mapState.locationName || `${lat.toFixed(6)}, ${lng.toFixed(6)}`,
+        countryCode: mapState.countryCode || undefined,
       };
       log("Map location selected:", newLocation);
       handleLocationUpdate(newLocation);

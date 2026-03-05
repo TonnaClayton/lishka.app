@@ -25,16 +25,18 @@ import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { cn } from "./lib/utils";
 import { ROUTES } from "./lib/routing";
-// import ErrorBoundary from "./components/error-boundary";
+import ErrorBoundary from "./components/error-boundary";
 import LandingPage from "./pages/landing";
 import Page404 from "./pages/404";
 import AuthWrapper from "./pages/auth/auth-wrapper";
 import { PostHogProvider, PostHogErrorBoundary } from "posthog-js/react";
 import { initPosthog, posthog } from "./lib/posthog";
 import { Toaster } from "./components/ui/toaster";
+// import AddToHomeScreenPrompt from "./components/add-to-homescreen";
 
 // Lazy load heavy components for better initial loading performance
 const HomePage = lazy(() => import("./pages/home"));
+const BrowsePage = lazy(() => import("./pages/browse"));
 const FishDetailPage = lazy(() => import("./pages/fish-detail"));
 const MenuPage = lazy(() => import("./pages/menu"));
 const SearchPage = lazy(() => import("./pages/search"));
@@ -115,7 +117,9 @@ function AppContent() {
 
   // Check if current route should have the weather widget in desktop layout
   const shouldShowWeatherWidget =
-    location.pathname.includes("/search") || location.pathname == "/";
+    location.pathname.includes("/search") ||
+    location.pathname.includes("/browse") ||
+    location.pathname == "/";
 
   // Check if we're on auth pages (login/signup) to hide sidebar
   const isAuthPage = [
@@ -399,6 +403,14 @@ const router = createBrowserRouter(
           ),
         },
         {
+          path: ROUTES.BROWSE,
+          element: (
+            <ProtectedRoute>
+              <BrowsePage />
+            </ProtectedRoute>
+          ),
+        },
+        {
           path: ROUTES.PROFILE,
           element: (
             <ProtectedRoute>
@@ -578,21 +590,21 @@ function App() {
   return (
     <PostHogProvider client={posthog}>
       <PostHogErrorBoundary>
-        {/* <ErrorBoundary> */}
-        <QueryClientProvider client={queryClient}>
-          <Suspense
-            fallback={
-              <div className="flex items-center justify-center h-screen">
-                <p>Loading...</p>
-              </div>
-            }
-          >
-            <RouterProvider router={router} />
-          </Suspense>
-          <ReactQueryDevtools initialIsOpen={false} />
-          <Toaster />
-        </QueryClientProvider>
-        {/* </ErrorBoundary> */}
+        <ErrorBoundary>
+          <QueryClientProvider client={queryClient}>
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center h-screen">
+                  <p>Loading...</p>
+                </div>
+              }
+            >
+              <RouterProvider router={router} />
+            </Suspense>
+            <ReactQueryDevtools initialIsOpen={false} />
+            <Toaster />
+          </QueryClientProvider>
+        </ErrorBoundary>
       </PostHogErrorBoundary>
     </PostHogProvider>
   );

@@ -1,6 +1,6 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ChevronLeft, AlertCircle, MapPin } from "lucide-react";
+import { ChevronLeft, AlertCircle, MapPin, Flag } from "lucide-react";
 import Lottie from "lottie-react";
 import bookmarkAnimation from "@/assets/animations/bookmark-icon.json";
 import BottomNav, { SideNav } from "@/components/bottom-nav";
@@ -19,6 +19,9 @@ import { useAuth } from "@/contexts/auth-context";
 import FishDetailSkeleton from "./fish-detail-skeleton";
 import { captureEvent } from "@/lib/posthog";
 import { useStream } from "@/hooks/use-stream";
+import { useReviewAccess } from "@/hooks/queries/fish/use-review-access";
+import { FlagFishDialog } from "@/components/flag-fish-dialog";
+import { RISK_BADGE_CONFIG, type RiskBadgeType } from "@/lib/constants";
 
 // Fishing Season Calendar Component
 interface FishingSeasonCalendarProps {
@@ -207,6 +210,17 @@ const FishDetailPage = () => {
   const { profile, loading: isProfileLoading } = useAuth();
   const { fishName } = useParams<{ fishName: string }>();
 
+  // Curator review access
+  const { data: reviewAccess } = useReviewAccess();
+  const canReview = reviewAccess?.canReview ?? false;
+  const [flagDialogOpen, setFlagDialogOpen] = useState(false);
+
+  const handleFlagSuccess = useCallback((flagged: boolean) => {
+    setFishBasicData((prev: any) =>
+      prev ? { ...prev, flagged_for_review: flagged } : prev,
+    );
+  }, []);
+
   const [fishImageUrl, setFishImageUrl] = useState<string>("");
   const [imageLoading, setImageLoading] = useState(false);
 
@@ -291,10 +305,21 @@ const FishDetailPage = () => {
 
           case "fishing_info":
             // Update fish basic data with complete fishing info
-            setFishBasicData((prev: any) => ({
-              ...prev,
-              ...eventData.data,
-            }));
+            // Preserve name, scientific_name, and description from original data
+            // These should come from database, not AI-generated content
+            setFishBasicData((prev: any) => {
+              if (!prev) return eventData.data;
+
+              return {
+                ...prev,
+                ...eventData.data,
+                // Preserve these fields from original data to prevent flicker
+                name: prev.name,
+                scientific_name: prev.scientific_name,
+                // Only update description if it wasn't in original data
+                description: prev.description || eventData.data.description,
+              };
+            });
             // Clear accumulator
             setFishingInfoAccumulator("");
             break;
@@ -316,7 +341,20 @@ const FishDetailPage = () => {
 
           case "complete":
             if (eventData.data) {
-              setFishBasicData(eventData.data);
+              // Preserve name, scientific_name, and description from original fish_basic data
+              // to prevent flicker - these should come from database, not AI
+              setFishBasicData((prev: any) => {
+                if (!prev) return eventData.data;
+
+                return {
+                  ...eventData.data,
+                  // Preserve these fields from original data
+                  name: prev.name || eventData.data.name,
+                  scientific_name:
+                    prev.scientific_name || eventData.data.scientific_name,
+                  description: prev.description || eventData.data.description,
+                };
+              });
               streamCompleteRef.current = true;
             } else {
               logError(
@@ -563,13 +601,35 @@ const FishDetailPage = () => {
     <div className="flex flex-col h-full bg-white dark:bg-gray-950">
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 p-4 w-full lg:hidden border-b border-[#e8e8e9]">
-        <div className="flex items-center">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ChevronLeft className="h-6 w-6" />
-          </Button>
-          <h1 className="text-xl font-bold ml-2 dark:text-white">
-            {displayData?.name || "Fish Details"}
-          </h1>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center">
+            <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
+              <ChevronLeft className="h-6 w-6" />
+            </Button>
+            <h1 className="text-xl font-bold ml-2 dark:text-white">
+              {displayData?.name || "Fish Details"}
+            </h1>
+          </div>
+          {canReview && displayData?.id && (
+            <button
+              type="button"
+              onClick={() => setFlagDialogOpen(true)}
+              className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label={
+                displayData?.flagged_for_review
+                  ? "Remove investigation flag"
+                  : "Flag for investigation"
+              }
+            >
+              <Flag
+                className={`h-5 w-5 ${
+                  displayData?.flagged_for_review
+                    ? "text-amber-500 fill-amber-500"
+                    : "text-gray-400"
+                }`}
+              />
+            </button>
+          )}
         </div>
       </header>
       <div className="flex-1 flex h-full">
@@ -597,12 +657,34 @@ const FishDetailPage = () => {
                     {displayData?.name || "Fish Details"}
                   </h1>
                 </div>
-                {streamingStatus && (
-                  <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
-                    <div className="h-2 w-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse"></div>
-                    {streamingStatus}
-                  </div>
-                )}
+                <div className="flex items-center gap-3">
+                  {streamingStatus && (
+                    <div className="flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400">
+                      <div className="h-2 w-2 bg-blue-600 dark:bg-blue-400 rounded-full animate-pulse"></div>
+                      {streamingStatus}
+                    </div>
+                  )}
+                  {canReview && displayData?.id && (
+                    <button
+                      type="button"
+                      onClick={() => setFlagDialogOpen(true)}
+                      className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      aria-label={
+                        displayData?.flagged_for_review
+                          ? "Remove investigation flag"
+                          : "Flag for investigation"
+                      }
+                    >
+                      <Flag
+                        className={`h-5 w-5 ${
+                          displayData?.flagged_for_review
+                            ? "text-amber-500 fill-amber-500"
+                            : "text-gray-400"
+                        }`}
+                      />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -629,12 +711,25 @@ const FishDetailPage = () => {
                       }}
                     />
                   )}
-                  {/* Toxic label for toxic fish */}
-                  {displayData?.is_toxic && (
-                    <div className="absolute bottom-4 right-4 bg-red-600 px-3 py-1 rounded-3xl text-xs font-medium text-white z-10">
-                      TOXIC
-                    </div>
-                  )}
+                  {(() => {
+                    const badge =
+                      displayData?.risk_badge ||
+                      (displayData?.is_toxic ? "toxic" : null);
+                    if (!badge || !RISK_BADGE_CONFIG[badge as RiskBadgeType])
+                      return null;
+                    const cfg = RISK_BADGE_CONFIG[badge as RiskBadgeType];
+                    return (
+                      <div
+                        className="absolute bottom-4 right-4 px-3 py-1 rounded-3xl text-xs font-medium z-10"
+                        style={{
+                          backgroundColor: cfg.color,
+                          color: cfg.textColor,
+                        }}
+                      >
+                        {cfg.label.toUpperCase()}
+                      </div>
+                    );
+                  })()}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
                     <h1 className="font-semibold text-xl text-white">
                       {displayData?.name || "Loading..."}
@@ -651,40 +746,103 @@ const FishDetailPage = () => {
                 </div>
               </Card>
 
-              {/* Toxicity Information Card - Only visible for toxic fish */}
-              {displayData?.is_toxic && (
-                <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
-                  <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
-                    Toxicity Information
-                  </h2>
-                  <div className="space-y-4">
-                    <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
-                      {displayData?.danger_type ||
-                        "This fish poses potential health risks. Exercise extreme caution when handling."}
-                    </p>
-                    <div>
-                      <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
-                        Safe Handling
-                      </h3>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                        Always wear protective gloves, avoid contact with spines
-                        or secretions, use tools to remove hooks, and wash hands
-                        thoroughly after contact.
-                      </p>
+              {/* Risk Information Card - Visible for any fish with a risk badge */}
+              {(() => {
+                const detailBadge =
+                  displayData?.risk_badge ||
+                  (displayData?.is_toxic ? "toxic" : null);
+                if (!detailBadge) return null;
+                return (
+                  <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
+                    <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-4">
+                      {detailBadge === "protected" && "Protection Status"}
+                      {detailBadge === "toxic" && "Toxicity Information"}
+                      {detailBadge === "venomous" && "Venom Warning"}
+                      {detailBadge === "risky" && "Handling Risks"}
+                    </h2>
+                    <div className="space-y-4">
+                      {detailBadge === "protected" && (
+                        <>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            {displayData.protection_details ||
+                              "This species is regulated by local, EU, or international law. Check regulations before targeting."}
+                          </p>
+                          <div>
+                            <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
+                              What to do
+                            </h3>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                              Check local regulations for season closures, size
+                              limits, and bag limits. If catch-and-release only,
+                              handle with wet hands, minimise air exposure, and
+                              release quickly.
+                            </p>
+                          </div>
+                        </>
+                      )}
+
+                      {detailBadge === "toxic" && (
+                        <>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            {displayData.toxicity_mechanism ||
+                              displayData.danger_type ||
+                              "This fish is harmful when consumed. Do not eat."}
+                          </p>
+                          <div>
+                            <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
+                              Safe Handling
+                            </h3>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                              Do not consume this fish. Wear gloves when
+                              handling, avoid contact with bodily fluids, and
+                              wash hands thoroughly.
+                            </p>
+                          </div>
+                        </>
+                      )}
+
+                      {detailBadge === "venomous" && (
+                        <>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            {displayData.toxicity_mechanism ||
+                              displayData.danger_type ||
+                              "This fish can actively inject venom through spines, stingers, or barbs."}
+                          </p>
+                          <div>
+                            <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
+                              If Stung
+                            </h3>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                              Immerse the wound in hot water (as hot as
+                              tolerable) for 30-90 minutes. Seek immediate
+                              medical attention if symptoms are severe.
+                            </p>
+                          </div>
+                        </>
+                      )}
+
+                      {detailBadge === "risky" && (
+                        <>
+                          <p className="text-sm text-gray-600 dark:text-gray-300 leading-relaxed">
+                            {displayData.danger_type ||
+                              "This fish poses physical injury risks such as bites, tail strikes, or abrasive skin."}
+                          </p>
+                          <div>
+                            <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
+                              Safe Handling
+                            </h3>
+                            <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
+                              Wear protective gloves, use long pliers to remove
+                              hooks, and control the fish firmly. Avoid placing
+                              fingers near the mouth or tail.
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
-                    <div>
-                      <h3 className="font-medium text-sm text-gray-900 dark:text-gray-100 mb-1">
-                        If Injured
-                      </h3>
-                      <p className="text-xs text-gray-600 dark:text-gray-300 leading-relaxed">
-                        Rinse wound with hot water, apply pressure to control
-                        bleeding, and seek immediate medical attention. Call
-                        emergency services if symptoms are severe.
-                      </p>
-                    </div>
-                  </div>
-                </Card>
-              )}
+                  </Card>
+                );
+              })()}
 
               {/* Description Card */}
               <Card className="p-6 rounded-xl border border-gray-200 dark:border-gray-800">
@@ -1404,6 +1562,18 @@ const FishDetailPage = () => {
       </div>
       {/* Bottom Navigation - Mobile only */}
       <BottomNav />
+
+      {/* Flag Fish Dialog */}
+      {displayData?.id && (
+        <FlagFishDialog
+          open={flagDialogOpen}
+          onOpenChange={setFlagDialogOpen}
+          fishId={displayData.id}
+          fishName={displayData.name || "Unknown Fish"}
+          currentlyFlagged={displayData.flagged_for_review || false}
+          onSuccess={handleFlagSuccess}
+        />
+      )}
     </div>
   );
 };

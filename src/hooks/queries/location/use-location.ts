@@ -10,6 +10,7 @@ const DEFAULT_LOCATION: LocationData = {
   latitude: 35.8997,
   longitude: 14.5146,
   name: "Malta",
+  countryCode: "MT",
 };
 
 export const useUserLocation = () => {
@@ -26,6 +27,7 @@ export const useUserLocation = () => {
           latitude: locationCoordinates.latitude,
           longitude: locationCoordinates.longitude,
           name: profile.location || "Unknown Location",
+          countryCode: locationCoordinates.countryCode,
         }
       : null;
   }, [profile]);
