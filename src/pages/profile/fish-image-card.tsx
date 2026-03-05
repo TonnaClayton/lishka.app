@@ -443,7 +443,7 @@ function FishImageCard({
 
       {/* Action bar below image - only show in single column mode */}
       {isSingleColumn && (
-        <div className="flex items-center justify-between px-3 py-2">
+        <div className="flex items-center justify-between px-3 pt-2 pb-6">
           <button
             onClick={(e) => {
               e.stopPropagation();
