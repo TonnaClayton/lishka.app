@@ -126,8 +126,8 @@ const FishCard = ({
           );
         })()}
       </div>
-      <CardContent className="p-2 sm:p-3 lg:p-4 flex flex-col flex-1">
-        <div className="mb-1 lg:mb-2">
+      <CardContent className="px-1 pt-1.5 pb-1 sm:px-2 sm:pt-2 lg:px-3 lg:pt-3 flex flex-col flex-1">
+        <div className="mb-0.5 lg:mb-1">
           <h3 className="font-inter text-sm sm:text-base lg:text-lg font-bold text-foreground truncate">
             {name}
           </h3>
@@ -136,7 +136,7 @@ const FishCard = ({
           </p>
         </div>
 
-        <div className="text-xs lg:text-sm space-y-1 sm:space-y-1.5 lg:space-y-2">
+        <div className="text-xs lg:text-sm space-y-0.5 sm:space-y-1 lg:space-y-1.5">
           <div className="flex items-center">
             <Waves className="h-3 w-3 sm:h-3.5 sm:w-3.5 lg:h-4 lg:w-4 text-lishka-blue mr-1 sm:mr-1.5 lg:mr-2 shrink-0" />
             <span className="text-foreground line-clamp-1 text-xs lg:text-sm">
