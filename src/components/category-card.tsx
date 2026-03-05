@@ -41,7 +41,7 @@ const CategoryCard = ({
       onClick={onClick}
       className={cn(
         "bg-white dark:bg-gray-900 w-full text-left cursor-pointer rounded-xl",
-        "flex flex-col gap-2 items-start",
+        "flex flex-col gap-1 items-start",
         "group transition-transform duration-200 active:scale-[0.98]",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-lishka-blue focus-visible:ring-offset-2",
         className,
@@ -72,7 +72,7 @@ const CategoryCard = ({
       </div>
 
       {/* Text content — below the image */}
-      <div className="w-full p-2">
+      <div className="w-full px-1">
         <div className="flex items-baseline justify-between gap-1">
           <h3 className="text-sm font-bold text-foreground leading-5">
             {title}
