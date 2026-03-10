@@ -107,25 +107,12 @@ const fetchWeatherData = async (
   lng?: number,
   name?: string,
 ): Promise<WeatherData> => {
-  let path = "weather";
+  const params = new URLSearchParams();
+  if (name) params.set("location", name);
+  if (lat != null) params.set("latitude", String(lat));
+  if (lng != null) params.set("longitude", String(lng));
 
-  let query = "";
-
-  if (name) {
-    query = `name=${name}`;
-  }
-
-  if (lat) {
-    query = `latitude=${lat}`;
-  }
-
-  if (lng) {
-    query = `longitude=${lng}`;
-  }
-
-  if (query) {
-    path = `${path}?${query}`;
-  }
+  const path = params.toString() ? `weather?${params.toString()}` : "weather";
 
   const data = await api<{
     data: WeatherData;

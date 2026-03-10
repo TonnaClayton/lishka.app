@@ -104,7 +104,8 @@ export const useUserLocation = () => {
         predicate: (q) =>
           Array.isArray(q.queryKey) &&
           (q.queryKey[0] === "fishDataInfinite" ||
-            q.queryKey[0] === "toxicFishData"),
+            q.queryKey[0] === "toxicFishData" ||
+            q.queryKey[0] === "weather"),
       });
     },
   });
@@ -137,7 +138,8 @@ export const useUserLocation = () => {
         predicate: (q) =>
           Array.isArray(q.queryKey) &&
           (q.queryKey[0] === "fishDataInfinite" ||
-            q.queryKey[0] === "toxicFishData"),
+            q.queryKey[0] === "toxicFishData" ||
+            q.queryKey[0] === "weather"),
       });
     },
   });
