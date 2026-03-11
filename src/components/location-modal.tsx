@@ -288,9 +288,6 @@ const LocationModal = ({
 
     // Close the modal
     onClose();
-
-    // reload the page
-    window.location.reload();
   };
 
   const handleDetectLocation = async () => {

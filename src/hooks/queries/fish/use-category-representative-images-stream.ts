@@ -128,7 +128,7 @@ export function useCategoryRepresentativeImagesStream(
     }
   }, [enabled, isStreaming, isComplete, startStream]);
 
-  // When location changes, allow a new stream to start for the new coordinates
+  // When location changes, abort any in-flight stream and reset so a new stream starts
   const prevCoordsRef = useRef({ lat: latitude, lon: longitude });
   useEffect(() => {
     if (
@@ -137,6 +137,14 @@ export function useCategoryRepresentativeImagesStream(
     ) {
       prevCoordsRef.current = { lat: latitude, lon: longitude };
       hasAutoStartedRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+        abortControllerRef.current = null;
+      }
+      setImages(new Map());
+      setIsComplete(false);
+      setIsStreaming(false);
+      setError(null);
     }
   }, [latitude, longitude]);
 

@@ -17,13 +17,12 @@ interface LocationData {
 
 const WeatherPage: React.FC = () => {
   const { profile } = useAuth();
-  const [location, setLocation] = useState<string>(
-    profile.location || DEFAULT_LOCATION.name,
-  );
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [dataLoaded, setDataLoaded] = useState(false);
-
+  const { location: locationFromHook, updateLocation } = useUserLocation();
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
+
+  // Single source of truth: use hook's location so it updates as soon as user saves in modal
+  const locationDisplayName =
+    locationFromHook?.name || profile?.location || DEFAULT_LOCATION.name;
 
   const openLocationModal = useMemo(() => {
     if (profile == undefined) {
@@ -41,26 +40,13 @@ const WeatherPage: React.FC = () => {
     return false;
   }, [profile, isLocationModalOpen]);
 
-  const { updateLocation } = useUserLocation();
-
-  // Handle location update from the weather widget
   const handleLocationUpdate = (newLocation: LocationData) => {
     log("[WeatherPage] Location updated to:", newLocation);
-
-    setLocation(newLocation.name);
-
-    try {
-      updateLocation({
-        name: newLocation.name,
-        latitude: newLocation.latitude,
-        longitude: newLocation.longitude,
-      });
-      log("[WeatherPage] Saved location to database:", newLocation);
-    } catch (error) {
-      error("[WeatherPage] Error saving location:", error);
-    }
-
-    setDataLoaded(true);
+    updateLocation({
+      name: newLocation.name,
+      latitude: newLocation.latitude,
+      longitude: newLocation.longitude,
+    });
   };
 
   return (
@@ -94,9 +80,9 @@ const WeatherPage: React.FC = () => {
               <LocationBtn
                 useLocationContext={true}
                 location={{
-                  name: location,
-                  latitude: 0,
-                  longitude: 0,
+                  name: locationDisplayName,
+                  latitude: locationFromHook?.latitude ?? 0,
+                  longitude: locationFromHook?.longitude ?? 0,
                 }}
               />
             </Button>
@@ -108,7 +94,7 @@ const WeatherPage: React.FC = () => {
         <div className=" p-4 lg:p-6 lg:max-w-3xl lg:mx-auto pb-20 w-full">
           <div className="mb-2">
             <h1 className="text-2xl font-bold mb-1 text-[#191B1F] lg:text-3xl">
-              {location} Weather
+              {locationDisplayName} Weather
             </h1>
             <p className="text-sm text-[#65758B] dark:text-gray-300 lg:text-base">
               Marine conditions for fishing
@@ -117,13 +103,7 @@ const WeatherPage: React.FC = () => {
 
           <WeatherWidget
             hideLocation={true}
-            userLocation={{
-              latitude: (profile.location_coordinates as any)
-                .latitude as number,
-              longitude: (profile.location_coordinates as any)
-                .longitude as number,
-              name: profile.location,
-            }}
+            userLocation={locationFromHook ?? undefined}
             onLocationUpdate={handleLocationUpdate}
             className="px-0 lg:px-0"
           />
@@ -138,17 +118,7 @@ const WeatherPage: React.FC = () => {
           }
         }}
         onLocationSelect={() => {}}
-        currentLocation={(() => {
-          const locationCoordinates = profile?.location_coordinates as any;
-
-          return locationCoordinates
-            ? {
-                latitude: locationCoordinates.latitude as number | undefined,
-                longitude: locationCoordinates.longitude as number | undefined,
-                name: profile.location,
-              }
-            : null;
-        })()}
+        currentLocation={locationFromHook ?? null}
         title="Set Your Location"
       />
 
