@@ -297,8 +297,11 @@ export function useFAOToxicFishStream(
   }, [stopStream]);
 
   useEffect(() => {
+    const hasCoords =
+      typeof latitude === "number" && typeof longitude === "number";
     if (
       autoStart &&
+      hasCoords &&
       !isStreaming &&
       !isComplete &&
       !hasAutoStartedRef.current
@@ -306,7 +309,7 @@ export function useFAOToxicFishStream(
       hasAutoStartedRef.current = true;
       startStream();
     }
-  }, [autoStart, isStreaming, isComplete, startStream]);
+  }, [autoStart, isStreaming, isComplete, startStream, latitude, longitude]);
 
   useEffect(() => {
     return () => {

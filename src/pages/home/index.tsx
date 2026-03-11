@@ -35,7 +35,8 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { profile } = useAuth();
-  const { location: currentLocation } = useUserLocation();
+  const { location: currentLocation, isLoading: isLocationLoading } =
+    useUserLocation();
   const [isLocationModalOpen, setIsLocationModalOpen] = useState(false);
 
   // Curator review access
@@ -60,6 +61,10 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   const userLocation = currentLocation?.name ?? DEFAULT_LOCATION.name;
   const userLatitude = currentLocation?.latitude;
   const userLongitude = currentLocation?.longitude;
+  const hasResolvedLocation =
+    !isLocationLoading &&
+    typeof userLatitude === "number" &&
+    typeof userLongitude === "number";
 
   const openLocationModal = useMemo(() => {
     if (profile === undefined) {
@@ -94,13 +99,11 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
     return profile?.has_seen_onboarding_flow === true;
   }, [profile, location.state]);
 
-  // FAO-based fish streams using PostGIS spatial queries
-  // Fish grid is currently hidden (category browsing replaces it),
-  // but keep the hook so the data is pre-fetched for search/detail.
+  // FAO-based fish streams — only start when location is resolved so we never load fish for a default (e.g. Malta) while location is loading.
   useFAOFishStream({
     latitude: userLatitude,
     longitude: userLongitude,
-    autoStart: true,
+    autoStart: hasResolvedLocation,
   });
 
   const {
@@ -110,7 +113,7 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
   } = useFAOToxicFishStream({
     latitude: userLatitude,
     longitude: userLongitude,
-    autoStart: true,
+    autoStart: hasResolvedLocation,
   });
 
   const toxicFishList = useMemo(
@@ -218,7 +221,8 @@ const HomePage: React.FC<HomePageProps> = ({ onLocationChange = () => {} }) => {
                 )}
               </div>
             )}
-          {loadingToxicFish ||
+          {!hasResolvedLocation ||
+          loadingToxicFish ||
           (!toxicFishComplete && toxicFishList.length === 0) ? (
             <div className="mb-8">
               <div className="mb-4 px-4 lg:px-6">
