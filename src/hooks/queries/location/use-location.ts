@@ -153,9 +153,11 @@ export const useUserLocation = () => {
     },
   });
 
-  // Effect to sync current location with query data
+  // Effect to hydrate current location from query (initial load only).
+  // Do not overwrite when locationQuery.data changes after a user-initiated update,
+  // or profile refetch could restore stale data and revert the selected location.
   useEffect(() => {
-    if (locationQuery.data && locationQuery.data !== currentLocation) {
+    if (locationQuery.data && !currentLocation) {
       setCurrentLocation(locationQuery.data);
     }
   }, [locationQuery.data, currentLocation]);

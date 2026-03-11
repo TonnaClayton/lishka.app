@@ -5,6 +5,7 @@ import {
   DISCOVER_SECTIONS,
   type CategoryCard as CategoryCardType,
 } from "@/lib/fish-categories";
+import { useCategoryRepresentativeImagesStream } from "@/hooks/queries/fish/use-category-representative-images-stream";
 import { useFreshwaterNearby } from "@/hooks/queries/location/use-freshwater-nearby";
 import { useUserLocation } from "@/hooks/queries/location/use-location";
 
@@ -19,16 +20,45 @@ const FRESHWATER_SECTION_TITLE = "Where to Find Them in Freshwater";
  * The Freshwater section is only shown when there are rivers/lakes
  * nearby the user's location (checked via Overpass API).
  *
+ * Category fish images are only shown when the user has a location set;
+ * with no location we show no fish images on the cards.
+ *
  * Mobile:  horizontal scrollable carousels per section.
  * Desktop: all cards visible in a single row per section.
  */
 const DiscoverSection = () => {
   const navigate = useNavigate();
-  const { location: userLocation } = useUserLocation();
+  const { location: userLocation, isLoading: isLocationLoading } =
+    useUserLocation();
+  // Only request region-specific images when we have a location; no location => no fish images
+  const lat = userLocation?.latitude;
+  const lon = userLocation?.longitude;
+  const hasLocation = lat != null && lon != null && !isLocationLoading;
+  const {
+    data: representativeImages,
+    isLoading: isLoadingRepresentativeImages,
+  } = useCategoryRepresentativeImagesStream(
+    hasLocation ? lat : undefined,
+    hasLocation ? lon : undefined,
+  );
   const { data: freshwaterData } = useFreshwaterNearby(
     userLocation?.latitude,
     userLocation?.longitude,
   );
+
+  // When we have a location, show images from the stream (region-specific, no duplicate fish).
+  // For freshwater categories, fall back to static images when the region has no freshwater fish in the DB.
+  const getCardImage = (card: CategoryCardType): string => {
+    if (!card.image) return card.image;
+    if (!hasLocation) return "";
+    if (isLoadingRepresentativeImages && representativeImages.size === 0)
+      return "";
+    const key = `${card.filterKey}:${card.id}`;
+    const streamed = representativeImages?.get(key) ?? "";
+    if (streamed) return streamed;
+    if (card.filterKey === "freshwaterHabitats") return card.image;
+    return "";
+  };
 
   const handleCardClick = (card: CategoryCardType) => {
     const params = new URLSearchParams({
@@ -110,7 +140,7 @@ const DiscoverSection = () => {
                       }
                     >
                       <CategoryCard
-                        image={card.image}
+                        image={getCardImage(card)}
                         title={card.label}
                         description={card.description}
                         tag={card.tag}

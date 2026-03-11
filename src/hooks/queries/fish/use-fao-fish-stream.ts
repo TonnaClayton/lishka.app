@@ -290,8 +290,11 @@ export function useFAOFishStream(
   }, [stopStream]);
 
   useEffect(() => {
+    const hasCoords =
+      typeof latitude === "number" && typeof longitude === "number";
     if (
       autoStart &&
+      hasCoords &&
       !isStreaming &&
       !isComplete &&
       !hasAutoStartedRef.current
@@ -299,7 +302,7 @@ export function useFAOFishStream(
       hasAutoStartedRef.current = true;
       startStream();
     }
-  }, [autoStart, isStreaming, isComplete, startStream]);
+  }, [autoStart, isStreaming, isComplete, startStream, latitude, longitude]);
 
   useEffect(() => {
     return () => {

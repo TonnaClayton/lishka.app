@@ -47,28 +47,37 @@ const CategoryCard = ({
         className,
       )}
     >
-      {/* Image */}
+      {/* Image — omit img when no image URL (e.g. no location set) */}
       <div className="relative overflow-hidden rounded-xl aspect-[4/3] w-full bg-gray-100 dark:bg-gray-800">
-        {!imageLoaded && (
-          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-xl" />
+        {image ? (
+          <>
+            {!imageLoaded && (
+              <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse rounded-xl" />
+            )}
+            <img
+              src={image}
+              alt={title}
+              loading="lazy"
+              onLoad={() => setImageLoaded(true)}
+              onError={(e) => {
+                const img = e.currentTarget;
+                if (!img.src.includes("default-image.jpg")) {
+                  img.src = getPlaceholderFishImage();
+                }
+              }}
+              className={cn(
+                "w-full h-full object-cover transition-all duration-300 rounded-xl",
+                "group-hover:scale-105",
+                imageLoaded ? "opacity-100" : "opacity-0",
+              )}
+            />
+          </>
+        ) : (
+          <div
+            className="w-full h-full rounded-xl bg-gray-200 dark:bg-gray-700"
+            aria-hidden
+          />
         )}
-        <img
-          src={image}
-          alt={title}
-          loading="lazy"
-          onLoad={() => setImageLoaded(true)}
-          onError={(e) => {
-            const img = e.currentTarget;
-            if (!img.src.includes("default-image.jpg")) {
-              img.src = getPlaceholderFishImage();
-            }
-          }}
-          className={cn(
-            "w-full h-full object-cover transition-all duration-300 rounded-xl",
-            "group-hover:scale-105",
-            imageLoaded ? "opacity-100" : "opacity-0",
-          )}
-        />
       </div>
 
       {/* Text content — below the image */}

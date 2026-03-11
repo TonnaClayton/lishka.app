@@ -125,17 +125,40 @@ export const browseQueryKeys = {
 // Hook
 // ---------------------------------------------------------------------------
 
+export interface UseBrowseFishOptions {
+  /**
+   * When true, the query only runs once location (lat/lon) is in filters.
+   * Use on the browse page to avoid sending one request without coords (empty)
+   * and a second with coords (filled), which can leave the UI showing the empty result.
+   */
+  requireLocation?: boolean;
+}
+
 /**
  * Fetches fish from the GET /fish/browse endpoint with category-based filters.
  * Supports infinite scroll pagination.
  */
-export const useBrowseFish = (filters: BrowseFilters) => {
+export const useBrowseFish = (
+  filters: BrowseFilters,
+  options: UseBrowseFishOptions = {},
+) => {
+  const { requireLocation = false } = options;
   const queryKey = browseQueryKeys.browse(filters);
 
   const hasActiveCategoryFilter = Object.entries(filters).some(
     ([k, v]) =>
       k !== "latitude" && k !== "longitude" && v !== undefined && v !== "",
   );
+
+  const hasLocation =
+    filters.latitude != null &&
+    filters.longitude != null &&
+    Number.isFinite(filters.latitude) &&
+    Number.isFinite(filters.longitude);
+
+  const enabled = requireLocation
+    ? hasActiveCategoryFilter && hasLocation
+    : hasActiveCategoryFilter;
 
   return useInfiniteQuery<BrowseFishItem[]>({
     queryKey,
@@ -179,7 +202,7 @@ export const useBrowseFish = (filters: BrowseFilters) => {
       return { ...data, pages: [unique] };
     },
     initialPageParam: 1,
-    enabled: hasActiveCategoryFilter,
+    enabled,
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes
     retry: 1,

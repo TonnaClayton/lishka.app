@@ -46,7 +46,8 @@ const BrowsePage = () => {
   const [selectedFish, setSelectedFish] = useState<BrowseFishItem | null>(null);
 
   // Location & weather
-  const { location: currentLocation } = useUserLocation();
+  const { location: currentLocation, isLoading: isLocationLoading } =
+    useUserLocation();
 
   // Extract filter from query string + user's coordinates for geographic scoping
   const filters: BrowseFilters = useMemo(() => {
@@ -107,9 +108,23 @@ const BrowsePage = () => {
     hasNextPage,
     fetchNextPage,
     error,
-  } = useBrowseFish(filters);
+  } = useBrowseFish(filters, { requireLocation: true });
 
   const fishList = data?.pages.flat() ?? [];
+
+  const hasLocation =
+    currentLocation?.latitude != null && currentLocation?.longitude != null;
+  const hasCategoryFromUrl = [
+    "habitats",
+    "depthBands",
+    "techniques",
+    "catchProfile",
+    "catchRarity",
+    "feedingStyles",
+    "freshwaterHabitats",
+  ].some((k) => searchParams.get(k));
+  const waitingForLocation =
+    hasCategoryFromUrl && !hasLocation && isLocationLoading;
 
   // Scroll restoration
   const scrollKey = `browse-scroll-${searchParams.toString()}`;
@@ -207,7 +222,7 @@ const BrowsePage = () => {
         ref={mergedRef}
         className="flex-1 w-full py-4 lg:py-6 pb-20 overflow-y-auto"
       >
-        {isLoading ? (
+        {isLoading || waitingForLocation ? (
           <div className="px-4 lg:px-6">
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
               {[...Array(8)].map((_, i) => (
@@ -252,6 +267,30 @@ const BrowsePage = () => {
                 Try Again
               </Button>
             </div>
+          </div>
+        ) : hasCategoryFromUrl && !hasLocation && !isLocationLoading ? (
+          <div className="px-4 lg:px-6 text-center py-12">
+            <p className="text-muted-foreground text-sm">
+              Set your location to see fish in your area.
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-4"
+              onClick={() =>
+                navigate("/", { state: { openLocationModal: true } })
+              }
+            >
+              Set location
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="mt-4 ml-2"
+              onClick={() => navigate(-1)}
+            >
+              Go Back
+            </Button>
           </div>
         ) : fishList.length === 0 ? (
           <div className="px-4 lg:px-6 text-center py-12">
