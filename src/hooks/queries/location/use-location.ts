@@ -4,6 +4,7 @@ import { log } from "@/lib/logging";
 import { LocationData, locationQueryKeys } from "./use-location-storage";
 import { useAuth } from "@/contexts/auth-context";
 import { captureEvent } from "@/lib/posthog";
+import { profileQueryKeys } from "@/hooks/queries/profile";
 
 // Default location (Malta)
 const DEFAULT_LOCATION: LocationData = {
@@ -18,7 +19,7 @@ export const useUserLocation = () => {
   const [currentLocation, setCurrentLocation] = useState<LocationData | null>(
     null,
   );
-  const { profile, loading: isLoadingProfile, updateProfile } = useAuth();
+  const { user, profile, loading: isLoadingProfile, updateProfile } = useAuth();
   const userLocation = useMemo(() => {
     const locationCoordinates = profile?.location_coordinates as any;
 
@@ -100,12 +101,21 @@ export const useUserLocation = () => {
       );
       setCurrentLocation(updatedLocation);
 
+      // Invalidate profile so userLocation (from profile) stays in sync
+      if (user?.id) {
+        queryClient.invalidateQueries({
+          queryKey: profileQueryKeys.useProfile(user.id),
+        });
+      }
+
       queryClient.invalidateQueries({
         predicate: (q) =>
           Array.isArray(q.queryKey) &&
           (q.queryKey[0] === "fishDataInfinite" ||
             q.queryKey[0] === "toxicFishData" ||
-            q.queryKey[0] === "weather"),
+            q.queryKey[0] === "weather" ||
+            q.queryKey[0] === "categoryRepresentativeImages" ||
+            q.queryKey[0] === "browseFish"),
       });
     },
   });
@@ -139,7 +149,9 @@ export const useUserLocation = () => {
           Array.isArray(q.queryKey) &&
           (q.queryKey[0] === "fishDataInfinite" ||
             q.queryKey[0] === "toxicFishData" ||
-            q.queryKey[0] === "weather"),
+            q.queryKey[0] === "weather" ||
+            q.queryKey[0] === "categoryRepresentativeImages" ||
+            q.queryKey[0] === "browseFish"),
       });
     },
   });
@@ -176,9 +188,11 @@ export const useUserLocation = () => {
     };
   }, [queryClient]);
 
+  // Prefer query cache so all consumers (header, widget, modal) see updates when any one saves
+  const location = locationQuery.data ?? currentLocation;
+
   return {
-    // Current location state
-    location: currentLocation,
+    location,
     isLoading: locationQuery.isLoading || isLoadingProfile,
     error: locationQuery.error,
 
@@ -195,7 +209,7 @@ export const useUserLocation = () => {
     isRefreshing: refreshLocationMutation.isPending,
 
     // Helper functions
-    hasLocation: !!currentLocation,
-    isDefaultLocation: currentLocation?.name === DEFAULT_LOCATION.name,
+    hasLocation: !!location,
+    isDefaultLocation: location?.name === DEFAULT_LOCATION.name,
   };
 };

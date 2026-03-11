@@ -311,6 +311,29 @@ export function useFAOToxicFishStream(
     }
   }, [autoStart, isStreaming, isComplete, startStream, latitude, longitude]);
 
+  // When location changes, stop any in-flight stream and reset so a new stream can start
+  const prevCoordsRef = useRef({ lat: latitude, lon: longitude });
+  useEffect(() => {
+    if (
+      latitude !== prevCoordsRef.current.lat ||
+      longitude !== prevCoordsRef.current.lon
+    ) {
+      prevCoordsRef.current = { lat: latitude, lon: longitude };
+      hasAutoStartedRef.current = false;
+      stopStream();
+      setToxicFish([]);
+      setIsComplete(false);
+      setError(null);
+      setProgress(0);
+      setStatusMessage("");
+      setFaoAreas([]);
+      setUserLocation(null);
+      setStats({ checked: 0, found: 0, newFound: 0, total: 0 });
+      streamBufferRef.current = "";
+      seenFishRef.current.clear();
+    }
+  }, [latitude, longitude, stopStream]);
+
   useEffect(() => {
     return () => {
       stopStream();

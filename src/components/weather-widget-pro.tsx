@@ -49,7 +49,7 @@ const WeatherWidget: React.FC<{
   onLocationUpdate?: (location: LocationData) => void;
   className?: string;
   hideLocation?: boolean;
-}> = ({ className, hideLocation = false }) => {
+}> = ({ className, hideLocation = false, userLocation: userLocationProp }) => {
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [isLoadingRecommendation] = useState(false);
   const [activeTab, setActiveTab] = useState("inshore");
@@ -67,6 +67,9 @@ const WeatherWidget: React.FC<{
     refreshLocationAsync,
   } = useUserLocation();
 
+  // Prefer explicit userLocation prop (e.g. from Weather page) so widget reflects the same location
+  const locationToUse = userLocationProp ?? location;
+
   // Use React Query weather data hook
   const {
     weatherData,
@@ -76,11 +79,11 @@ const WeatherWidget: React.FC<{
     isRefreshing: isRefreshingWeather,
     getWeatherCondition,
     lastUpdated,
-  } = useWeatherData(location);
+  } = useWeatherData(locationToUse);
 
   // Create current conditions object for fishing advice
   const currentConditions: CurrentConditions | null = useMemo(() => {
-    if (!weatherData || !location) return null;
+    if (!weatherData || !locationToUse) return null;
 
     const currentHourIndex = findCurrentHourIndex(
       weatherData.hourly?.time || [],
@@ -130,10 +133,10 @@ const WeatherWidget: React.FC<{
       swellWavePeriod: swellWavePeriods[0] ?? null,
       weatherCondition: getWeatherCondition(),
     };
-  }, [weatherData, location, getWeatherCondition]);
+  }, [weatherData, locationToUse, getWeatherCondition]);
 
   const handleRefresh = async () => {
-    if (location && location.latitude && location.longitude) {
+    if (locationToUse && locationToUse.latitude && locationToUse.longitude) {
       try {
         // Reset states and clear cached data
 
@@ -194,7 +197,7 @@ const WeatherWidget: React.FC<{
 
   // Log the data for debugging
   log("Current weather data for display:", {
-    location: location?.name,
+    location: locationToUse?.name,
     temperature: temperatures[0],
     windSpeed: windSpeeds[0],
     waveHeight: waveHeights[0],
@@ -239,7 +242,7 @@ const WeatherWidget: React.FC<{
     return <WeatherWidgetProSkeleton />;
   }
 
-  if (!location && !isLoadingLocation) {
+  if (!locationToUse && !isLoadingLocation) {
     return (
       <div className="flex flex-col justify-center items-center h-64 bg-gray-50 dark:bg-gray-800 rounded-lg p-6 border-r-0">
         <MapPin className="h-12 w-12 text-gray-400 dark:text-gray-500 mb-4" />
@@ -299,7 +302,7 @@ const WeatherWidget: React.FC<{
           >
             <LocationBtn
               useLocationContext={true}
-              location={location}
+              location={locationToUse}
               iconClassName="ml-1"
             />
           </Button>
@@ -445,7 +448,7 @@ const WeatherWidget: React.FC<{
               <Layers className="h-4 w-4 text-[#191B1FCC] " />
               <span>Open-Meteo Weather & Marine API</span>
             </div>
-            {location && (
+            {locationToUse && (
               <div className="text-xs text-[#6B7280]  mt-1 italic">
                 {weatherData?.marineDataFromNearby ? (
                   <span className="text-amber-600 dark:text-amber-400">
