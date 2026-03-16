@@ -44,6 +44,7 @@ const DiscoverSection = () => {
   const { data: freshwaterData } = useFreshwaterNearby(
     userLocation?.latitude,
     userLocation?.longitude,
+    userLocation?.countryCode,
   );
 
   // When we have a location, show images from the stream (region-specific, no duplicate fish).
