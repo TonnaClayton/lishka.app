@@ -115,7 +115,8 @@ export const useUserLocation = () => {
             q.queryKey[0] === "toxicFishData" ||
             q.queryKey[0] === "weather" ||
             q.queryKey[0] === "categoryRepresentativeImages" ||
-            q.queryKey[0] === "browseFish"),
+            q.queryKey[0] === "browseFish" ||
+            q.queryKey[0] === "fishingTips"),
       });
     },
   });
@@ -151,7 +152,8 @@ export const useUserLocation = () => {
             q.queryKey[0] === "toxicFishData" ||
             q.queryKey[0] === "weather" ||
             q.queryKey[0] === "categoryRepresentativeImages" ||
-            q.queryKey[0] === "browseFish"),
+            q.queryKey[0] === "browseFish" ||
+            q.queryKey[0] === "fishingTips"),
       });
     },
   });
