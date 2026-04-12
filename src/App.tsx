@@ -32,6 +32,7 @@ import AuthWrapper from "./pages/auth/auth-wrapper";
 import { PostHogProvider, PostHogErrorBoundary } from "posthog-js/react";
 import { initPosthog, posthog } from "./lib/posthog";
 import { Toaster } from "./components/ui/toaster";
+import { checkForLiveUpdate } from "./lib/live-update";
 // import AddToHomeScreenPrompt from "./components/add-to-homescreen";
 
 // Lazy load heavy components for better initial loading performance
@@ -576,6 +577,7 @@ const router = createBrowserRouter(
 
 function App() {
   initPosthog();
+  checkForLiveUpdate();
 
   const queryClient = new QueryClient({
     defaultOptions: {
