@@ -185,8 +185,8 @@ const PrivacyPolicyPage: React.FC = () => {
               </h3>
               <p className="text-white/70 leading-relaxed">
                 You can delete your Lishka account at any time. Deleting your
-                account permanently removes the personal data Lishka holds
-                about you from our active systems.
+                account permanently removes the personal data Lishka holds about
+                you from our active systems.
               </p>
 
               <h4 className="font-medium text-white">
@@ -208,9 +208,8 @@ const PrivacyPolicyPage: React.FC = () => {
                 >
                   tonnaclayton@gmail.com
                 </a>{" "}
-                from the address linked to your Lishka account, with the
-                subject &quot;Delete my account&quot;. We action requests
-                within 7 days.
+                from the address linked to your Lishka account, with the subject
+                &quot;Delete my account&quot;. We action requests within 7 days.
               </p>
 
               <h4 className="font-medium text-white">What gets deleted</h4>
@@ -219,9 +218,7 @@ const PrivacyPolicyPage: React.FC = () => {
                   Your profile (email, name, location, fishing experience,
                   preferences)
                 </li>
-                <li>
-                  Your photo gallery and uploaded catch photos
-                </li>
+                <li>Your photo gallery and uploaded catch photos</li>
                 <li>Logged catches and catch metadata</li>
                 <li>Saved fishing locations</li>
                 <li>Push notification token</li>
@@ -239,8 +236,8 @@ const PrivacyPolicyPage: React.FC = () => {
               </p>
               <p className="text-white/70 leading-relaxed">
                 Anonymised aggregate analytics (e.g. counts of how many users
-                opened a screen on a given day) are retained indefinitely.
-                After your account is deleted these events contain no personal
+                opened a screen on a given day) are retained indefinitely. After
+                your account is deleted these events contain no personal
                 identifiers and cannot be re-associated with you.
               </p>
 
@@ -248,8 +245,8 @@ const PrivacyPolicyPage: React.FC = () => {
                 Re-creating an account after deletion
               </h4>
               <p className="text-white/70 leading-relaxed">
-                If you sign up again with the same email after deletion, a
-                fresh account is created — none of your prior data is restored.
+                If you sign up again with the same email after deletion, a fresh
+                account is created — none of your prior data is restored.
               </p>
             </div>
 
@@ -302,8 +299,8 @@ const PrivacyPolicyPage: React.FC = () => {
                 11. Contact Us
               </h3>
               <p className="text-white/70 leading-relaxed">
-                If you have questions about this Privacy Policy or how we
-                handle your data, you can reach us by email at{" "}
+                If you have questions about this Privacy Policy or how we handle
+                your data, you can reach us by email at{" "}
                 <a
                   href="mailto:tonnaclayton@gmail.com"
                   className="underline hover:text-white"
