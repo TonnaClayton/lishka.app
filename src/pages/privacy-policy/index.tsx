@@ -163,20 +163,93 @@ const PrivacyPolicyPage: React.FC = () => {
               <ul className="list-disc list-inside text-white/70 space-y-2 ml-4">
                 <li>Access and review your personal information</li>
                 <li>Request correction of inaccurate data</li>
-                <li>Delete your account and associated data</li>
+                <li>
+                  <a
+                    href="#account-deletion"
+                    className="underline hover:text-white"
+                  >
+                    Delete your account and associated data
+                  </a>
+                </li>
                 <li>Opt-out of non-essential communications</li>
                 <li>Control location data sharing</li>
               </ul>
             </div>
 
             <div className="space-y-4">
-              <h3 className="text-md font-semibold text-white">
-                8. Data Retention
+              <h3
+                id="account-deletion"
+                className="text-md font-semibold text-white scroll-mt-24"
+              >
+                8. Account Deletion and Data Retention
               </h3>
               <p className="text-white/70 leading-relaxed">
-                We retain your information only as long as necessary to provide
-                our services and comply with legal obligations. You can request
-                data deletion at any time.
+                You can delete your Lishka account at any time. Deleting your
+                account permanently removes the personal data Lishka holds
+                about you from our active systems.
+              </p>
+
+              <h4 className="font-medium text-white">
+                How to delete your account
+              </h4>
+              <p className="text-white/70 leading-relaxed">
+                <strong>From the Lishka app:</strong> open the{" "}
+                <strong>Profile</strong> tab → tap the{" "}
+                <strong>menu icon</strong> (top right) → tap{" "}
+                <strong>&quot;Delete Account&quot;</strong> → confirm. Your
+                account is deleted immediately and you are signed out.
+              </p>
+              <p className="text-white/70 leading-relaxed">
+                <strong>By email:</strong> if you no longer have access to the
+                app, email{" "}
+                <a
+                  href="mailto:tonnaclayton@gmail.com"
+                  className="underline hover:text-white"
+                >
+                  tonnaclayton@gmail.com
+                </a>{" "}
+                from the address linked to your Lishka account, with the
+                subject &quot;Delete my account&quot;. We action requests
+                within 7 days.
+              </p>
+
+              <h4 className="font-medium text-white">What gets deleted</h4>
+              <ul className="list-disc list-inside text-white/70 space-y-2 ml-4">
+                <li>
+                  Your profile (email, name, location, fishing experience,
+                  preferences)
+                </li>
+                <li>
+                  Your photo gallery and uploaded catch photos
+                </li>
+                <li>Logged catches and catch metadata</li>
+                <li>Saved fishing locations</li>
+                <li>Push notification token</li>
+                <li>Your Ask Lishka chat history</li>
+              </ul>
+
+              <h4 className="font-medium text-white">
+                What is retained, and for how long
+              </h4>
+              <p className="text-white/70 leading-relaxed">
+                Encrypted backups maintained by our infrastructure providers
+                hold copies of database state for up to 30 days for disaster
+                recovery. Backups containing your data are purged on the
+                standard rotation within 30 days of your deletion request.
+              </p>
+              <p className="text-white/70 leading-relaxed">
+                Anonymised aggregate analytics (e.g. counts of how many users
+                opened a screen on a given day) are retained indefinitely.
+                After your account is deleted these events contain no personal
+                identifiers and cannot be re-associated with you.
+              </p>
+
+              <h4 className="font-medium text-white">
+                Re-creating an account after deletion
+              </h4>
+              <p className="text-white/70 leading-relaxed">
+                If you sign up again with the same email after deletion, a
+                fresh account is created — none of your prior data is restored.
               </p>
             </div>
 
@@ -229,9 +302,24 @@ const PrivacyPolicyPage: React.FC = () => {
                 11. Contact Us
               </h3>
               <p className="text-white/70 leading-relaxed">
-                If you have questions about this Privacy Policy or how we handle
-                your data, please contact us through our Instagram @lishka.app
-                or through the contact options in the App.
+                If you have questions about this Privacy Policy or how we
+                handle your data, you can reach us by email at{" "}
+                <a
+                  href="mailto:tonnaclayton@gmail.com"
+                  className="underline hover:text-white"
+                >
+                  tonnaclayton@gmail.com
+                </a>
+                , through our Instagram{" "}
+                <a
+                  href="https://instagram.com/lishka.app"
+                  className="underline hover:text-white"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  @lishka.app
+                </a>
+                , or through the contact options in the App.
               </p>
             </div>
 
