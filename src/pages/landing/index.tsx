@@ -16,6 +16,7 @@ import Autoplay from "embla-carousel-autoplay";
 import { cn } from "@/lib/utils";
 import { Link } from "react-router-dom";
 import { ROUTES } from "@/lib/routing";
+import { trackLead } from "@/lib/meta-pixel";
 import LandingPageLayout, {
   LandingPageHeader,
 } from "@/components/layout/landing-page-layout";
@@ -195,6 +196,7 @@ export default function LandingPage() {
             {/* CTA Button with glow effect */}
             <Link
               to={ROUTES.LOGIN}
+              onClick={() => trackLead("Get Started")}
               className="bg-[#0251FB] hover:bg-blue-600 text-white px-8 py-4 rounded-full font-medium shadow-lg mx-auto text-base transition-all duration-300 hover:shadow-[0_0_20px_rgba(2,81,251,0.6),0_0_40px_rgba(2,81,251,0.4),0_0_60px_rgba(2,81,251,0.2)] hover:scale-105 lg:text-lg"
             >
               <span>Get Started</span>
