@@ -7,6 +7,9 @@ import React, {
 } from "react";
 import { User, Session, OAuthResponse } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
+import { App as CapApp } from "@capacitor/app";
+import { Browser } from "@capacitor/browser";
 import { supabase, authService } from "@/lib/supabase";
 import {
   uploadAvatar as uploadAvatarToBlob,
@@ -306,6 +309,44 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       mounted = false;
       if (timeoutId) clearTimeout(timeoutId);
       subscription.unsubscribe();
+    };
+  }, []);
+
+  // Handle deep-link callback for OAuth on native platforms (Capacitor)
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform()) return;
+
+    const handleAppUrlOpen = async ({
+      url,
+    }: {
+      url: string;
+    }): Promise<void> => {
+      if (!url.includes("auth/callback")) return;
+
+      log("[AuthContext] Deep-link OAuth callback received:", url);
+
+      const urlObj = new URL(url);
+      const code = urlObj.searchParams.get("code");
+
+      if (code) {
+        try {
+          const { error: sessionError } =
+            await supabase.auth.exchangeCodeForSession(code);
+          if (sessionError) {
+            logError("[AuthContext] OAuth code exchange error:", sessionError);
+          }
+        } catch (err) {
+          logError("[AuthContext] OAuth deep-link handling error:", err);
+        }
+      }
+
+      await Browser.close();
+    };
+
+    const listener = CapApp.addListener("appUrlOpen", handleAppUrlOpen);
+
+    return () => {
+      listener.then((l) => l.remove());
     };
   }, []);
 

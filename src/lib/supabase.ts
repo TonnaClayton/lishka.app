@@ -1,4 +1,6 @@
 import { createClient } from "@supabase/supabase-js";
+import { Capacitor } from "@capacitor/core";
+import { Browser } from "@capacitor/browser";
 import { Database } from "@/types/supabase";
 import { config } from "@/lib/config";
 import { error, log, warn as warnLog } from "./logging";
@@ -111,10 +113,35 @@ export const authService = {
 
   // Sign in with Google OAuth
   async signInWithGoogle() {
+    const isNative = Capacitor.isNativePlatform();
+    const redirectTo = isNative
+      ? "app.lishka.app://auth/callback"
+      : `${window.location.origin}/auth/callback`;
+
+    if (isNative) {
+      const result = await supabase.auth.signInWithOAuth({
+        provider: "google",
+        options: {
+          redirectTo,
+          skipBrowserRedirect: true,
+          queryParams: {
+            access_type: "offline",
+            prompt: "consent",
+          },
+        },
+      });
+
+      if (result.data?.url) {
+        await Browser.open({ url: result.data.url });
+      }
+
+      return result;
+    }
+
     return supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
+        redirectTo,
         queryParams: {
           access_type: "offline",
           prompt: "consent",

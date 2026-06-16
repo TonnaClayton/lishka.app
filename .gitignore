@@ -38,3 +38,11 @@ coverage
 dev-dist
 
 /supabase/.temp
+
+# Capacitor native build artifacts (config files are committed)
+ios/App/Pods/
+ios/capacitor-cordova-ios-plugins/
+android/.gradle/
+android/app/build/
+android/build/
+android/capacitor-cordova-android-plugins/build/
