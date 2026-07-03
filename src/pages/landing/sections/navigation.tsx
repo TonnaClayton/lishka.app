@@ -121,9 +121,14 @@ const Navigation = () => {
                   }}
                   className="px-6 pb-4 pt-6 space-y-3"
                 >
-                  {["Features", "Testimonials", "FAQ"].map((item) => (
+                  {[
+                    { label: "Features", href: "#features" },
+                    { label: "How it works", href: "#how-it-works" },
+                    { label: "FAQ", href: "#faq" },
+                    { label: "Contact", href: "mailto:hello@lishka.app" },
+                  ].map((item) => (
                     <motion.div
-                      key={item}
+                      key={item.label}
                       variants={{
                         hidden: { opacity: 0, y: 20 },
                         visible: { opacity: 1, y: 0 },
@@ -131,11 +136,11 @@ const Navigation = () => {
                       transition={{ duration: 0.3, ease: "easeOut" }}
                     >
                       <Link
-                        href={`#${item.toLowerCase()}`}
+                        href={item.href}
                         className="block py-1 text-foreground/80 hover:text-foreground transition-colors duration-200"
                         onClick={() => setOpen(false)}
                       >
-                        {item}
+                        {item.label}
                       </Link>
                     </motion.div>
                   ))}
