@@ -17,13 +17,42 @@
     <meta name="apple-mobile-web-app-title" content="Lishka" />
     <meta
       name="description"
-      content="Your ultimate fishing companion app for tracking catches, gear, and locations"
+      content="Lishka scores every hour using wind, tide, weather, and moon conditions so good fishing windows are easy to spot. On iOS today, Android soon."
     />
     <!-- <meta
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://api.tempo.build https://storage.googleapis.com; connect-src 'self' https://api.openai.com https://customer-api.open-meteo.com https://marine-api.open-meteo.com https://www.gebco.net https://nominatim.openstreetmap.org https://tiles.openseamap.org https://unpkg.com https://storage.googleapis.com https://api.tempo.build https://*.supabase.co https://*.supabase.com https://blob.vercel-storage.com; img-src 'self' data: https: blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://unpkg.com; font-src 'self' https://fonts.gstatic.com https://unpkg.com; frame-src 'self';"
     /> -->
-    <title>Lishka App</title>
+    <title>Lishka | Never miss the day it&apos;s firing</title>
+
+    <!--
+      Open Graph + Twitter card meta tags — control how the link
+      preview looks when Lishka is shared in iMessage, Slack,
+      WhatsApp, Discord, Facebook, LinkedIn, X, etc.
+
+      This is a SPA so the same tags apply to every route. If a
+      per-route preview is needed later, wire react-helmet-async
+      into the app root. Until then, the landing preview is what
+      any /login /home /fish/* etc. link also renders.
+    -->
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Lishka" />
+    <meta property="og:url" content="https://www.lishka.app/" />
+    <meta property="og:title" content="Lishka | Never miss the day it&apos;s firing" />
+    <meta
+      property="og:description"
+      content="Hourly fishing scores tuned to your location, your method, and the live marine forecast."
+    />
+    <meta property="og:image" content="https://www.lishka.app/assets/v4-hero-bg.jpg" />
+    <meta property="og:image:alt" content="Lishka — hourly fishing scores tuned to your location and method." />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Lishka | Never miss the day it&apos;s firing" />
+    <meta
+      name="twitter:description"
+      content="Hourly fishing scores tuned to your location, your method, and the live marine forecast."
+    />
+    <meta name="twitter:image" content="https://www.lishka.app/assets/v4-hero-bg.jpg" />
     <link
       rel="preconnect"
       href="https://fonts.googleapis.com"
