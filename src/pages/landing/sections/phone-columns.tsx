@@ -1,4 +1,3 @@
-
 import { Marquee } from "../common/marquee";
 import {
   heroScreensColumn1,

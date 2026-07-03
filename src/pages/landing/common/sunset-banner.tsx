@@ -19,8 +19,8 @@ const SunsetBanner = () => {
     <div className="fixed top-0 inset-x-0 z-[110] bg-[#131415] text-white">
       <p className="m-0 mx-auto max-w-[1440px] px-4 md:px-6 py-2 text-center text-[12px] md:text-[13px] leading-[1.45] tracking-[0.1px] text-white/90">
         The web app will be{" "}
-        <span className="font-semibold text-white">retiring soon</span>. If
-        you still would like to access your web account,{" "}
+        <span className="font-semibold text-white">retiring soon</span>. If you
+        still would like to access your web account,{" "}
         <Link
           href="https://www.lishka.app/login"
           target="_blank"

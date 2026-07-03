@@ -1,4 +1,3 @@
-
 import React, { Dispatch, SetStateAction, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "./link";

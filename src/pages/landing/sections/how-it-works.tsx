@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import Image from "../common/img";
 
@@ -41,10 +40,7 @@ const steps = [
 
 const V4HowItWorks = () => {
   return (
-    <section
-      id="how-it-works"
-      className="w-full bg-[#f7f7f7]"
-    >
+    <section id="how-it-works" className="w-full bg-[#f7f7f7]">
       <div className="mx-auto max-w-[1440px] px-2 md:px-10 lg:px-24 py-8 md:py-16 lg:py-24">
         {/* Section heading */}
         <motion.h2

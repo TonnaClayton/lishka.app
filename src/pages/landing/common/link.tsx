@@ -25,9 +25,8 @@ const Link = ({ href, children, ...rest }: LinkProps) => {
       </a>
     );
   }
-  const { target, rel, ...routerRest } = rest;
   return (
-    <RouterLink to={href} {...routerRest}>
+    <RouterLink to={href} {...rest}>
       {children}
     </RouterLink>
   );

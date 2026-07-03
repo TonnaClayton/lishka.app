@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import Image from "../common/img";
 import { trackAppDownloadIntent } from "@/lib/meta-pixel";
@@ -117,7 +116,12 @@ const V4FinalCta = () => {
             aria-label="Download on the App Store"
             onClick={() => trackAppDownloadIntent("ios")}
             className="relative block hover:opacity-85 transition-opacity"
-            style={{ width: "152px", height: "44px", borderRadius: "8px", overflow: "hidden" }}
+            style={{
+              width: "152px",
+              height: "44px",
+              borderRadius: "8px",
+              overflow: "hidden",
+            }}
           >
             <Image
               fill

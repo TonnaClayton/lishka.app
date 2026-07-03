@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import Image from "../common/img";
 
@@ -95,7 +94,16 @@ const ForecastMoment = () => (
         </p>
         {/* Signal chips */}
         <div className="flex flex-wrap items-start gap-2 w-full">
-          {["WIND", "SWELL", "TIDE", "MOON", "PRESSURE", "TEMP", "SOLUNAR", "TIME"].map((s) => (
+          {[
+            "WIND",
+            "SWELL",
+            "TIDE",
+            "MOON",
+            "PRESSURE",
+            "TEMP",
+            "SOLUNAR",
+            "TIME",
+          ].map((s) => (
             <span
               key={s}
               style={{
@@ -221,8 +229,8 @@ const LocationMoment = () => (
             className="m-0 text-[14px] md:text-[15px] leading-[1.5]"
             style={{ color: "rgba(19, 20, 21, 0.65)" }}
           >
-            Score the exact spot you fish. Your harbour, your mark, your
-            stretch of beach.
+            Score the exact spot you fish. Your harbour, your mark, your stretch
+            of beach.
           </p>
         </div>
 
@@ -436,8 +444,8 @@ const SpeciesMoment = () => {
             className="m-0 text-[14px] md:text-[15px] lg:text-[16px] leading-[1.5]"
             style={{ color: "rgba(19, 20, 21, 0.65)" }}
           >
-            Every species near you, with seasons, bait, gear and method.
-            Toxic and risky catches flagged before you touch them.
+            Every species near you, with seasons, bait, gear and method. Toxic
+            and risky catches flagged before you touch them.
           </p>
         </div>
       </motion.div>
@@ -482,8 +490,8 @@ const AIMoment = () => (
           className="m-0 text-[14px] md:text-[15px] lg:text-[16px] leading-[1.5]"
           style={{ color: "rgba(255, 255, 255, 0.7)" }}
         >
-          AI that identifies a fish from a photo, reads a sonar screenshot,
-          and knows what bait works in today&apos;s swell.
+          AI that identifies a fish from a photo, reads a sonar screenshot, and
+          knows what bait works in today&apos;s swell.
         </p>
 
         {/* Chat bubbles */}
@@ -524,7 +532,8 @@ const AIMoment = () => (
                 maxWidth: "360px",
               }}
             >
-              Snapper and amberjack. Best window: Thursday 21:00–23:00 (78% score).
+              Snapper and amberjack. Best window: Thursday 21:00–23:00 (78%
+              score).
             </p>
           </div>
           <div

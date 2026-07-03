@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import Image from "../common/img";
 
@@ -31,12 +30,18 @@ const V4Socials = () => {
           viewport={{ once: true, amount: 0.5 }}
           variants={{
             hidden: { opacity: 0 },
-            visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.05 } },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.08, delayChildren: 0.05 },
+            },
           }}
           className="flex flex-col items-center text-center gap-3 px-2 md:px-10 lg:px-24"
         >
           <motion.p
-            variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}
+            variants={{
+              hidden: { opacity: 0, y: 10 },
+              visible: { opacity: 1, y: 0 },
+            }}
             transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
             className="hidden font-display font-bold uppercase m-0"
             style={{
@@ -48,7 +53,10 @@ const V4Socials = () => {
             UPLOAD. GET CATCH INFO. SHARE
           </motion.p>
           <motion.p
-            variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
+            variants={{
+              hidden: { opacity: 0, y: 16 },
+              visible: { opacity: 1, y: 0 },
+            }}
             transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
             className="
               font-display font-bold uppercase m-0 text-white
@@ -61,7 +69,10 @@ const V4Socials = () => {
             POST IT. PROVE IT.
           </motion.p>
           <motion.p
-            variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
+            variants={{
+              hidden: { opacity: 0, y: 16 },
+              visible: { opacity: 1, y: 0 },
+            }}
             transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
             className="m-0 text-[15px] md:text-[16px] lg:text-[18px] leading-[1.5] max-w-[600px]"
             style={{ color: "rgba(255, 255, 255, 0.7)" }}
@@ -77,7 +88,10 @@ const V4Socials = () => {
           viewport={{ once: true, amount: 0.2 }}
           variants={{
             hidden: { opacity: 0 },
-            visible: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
+            visible: {
+              opacity: 1,
+              transition: { staggerChildren: 0.06, delayChildren: 0.1 },
+            },
           }}
           className="
             flex lg:flex-wrap items-center lg:justify-center
@@ -92,7 +106,10 @@ const V4Socials = () => {
           {cards.map((src, i) => (
             <motion.div
               key={i}
-              variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+              variants={{
+                hidden: { opacity: 0, y: 20 },
+                visible: { opacity: 1, y: 0 },
+              }}
               transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
               className="
                 relative overflow-hidden shrink-0

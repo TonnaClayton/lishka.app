@@ -1,4 +1,3 @@
-
 import { SlideTabs } from "../common/nav-tabs";
 import { AnimatePresence, motion } from "framer-motion";
 import Image from "../common/img";

@@ -1,4 +1,3 @@
-
 import { AnimatePresence, motion } from "framer-motion";
 import { ReactNode, useState } from "react";
 
@@ -32,8 +31,8 @@ const faqs = [
     a: (
       <>
         <strong style={{ fontWeight: 600, color: "#131415" }}>Both.</strong>{" "}
-        Live on the App Store today. Google Play launches within the next
-        few weeks. Same app, same data, same scores.
+        Live on the App Store today. Google Play launches within the next few
+        weeks. Same app, same data, same scores.
       </>
     ),
   },
@@ -44,10 +43,10 @@ const faqs = [
         <strong style={{ fontWeight: 600, color: "#131415" }}>
           Eight signals
         </strong>
-        : wind, swell, tide, moon phase, barometric pressure, water
-        temperature, solunar cycle, and time. Weighted against your method
-        (shore, boat, kayak, freshwater) and your fishing location. The result
-        is one number from 0 to 100 per hour.
+        : wind, swell, tide, moon phase, barometric pressure, water temperature,
+        solunar cycle, and time. Weighted against your method (shore, boat,
+        kayak, freshwater) and your fishing location. The result is one number
+        from 0 to 100 per hour.
       </>
     ),
   },
@@ -68,12 +67,10 @@ const faqs = [
     q: "Shore, boat, kayak, freshwater?",
     a: (
       <>
-        <strong style={{ fontWeight: 600, color: "#131415" }}>
-          All four.
-        </strong>{" "}
+        <strong style={{ fontWeight: 600, color: "#131415" }}>All four.</strong>{" "}
         Pick your method and Lishka rebuilds the score around it. Tide weight
-        drops on the lake. Pressure and moon matter more on the boat. The
-        window for shore at dawn isn&apos;t the window for trolling at noon.
+        drops on the lake. Pressure and moon matter more on the boat. The window
+        for shore at dawn isn&apos;t the window for trolling at noon.
       </>
     ),
   },
@@ -94,8 +91,8 @@ const faqs = [
     a: (
       <>
         <strong style={{ fontWeight: 600, color: "#131415" }}>Yes.</strong>{" "}
-        Lishka uses your location to score your fishing spots in real time, so
-        a free account is required.
+        Lishka uses your location to score your fishing spots in real time, so a
+        free account is required.
       </>
     ),
   },
@@ -115,8 +112,8 @@ const faqs = [
     q: "Can other anglers see my spots?",
     a: (
       <>
-        <strong style={{ fontWeight: 600, color: "#131415" }}>No.</strong>{" "}
-        Your spots stay yours. Only you can see what you&apos;ve pinned.
+        <strong style={{ fontWeight: 600, color: "#131415" }}>No.</strong> Your
+        spots stay yours. Only you can see what you&apos;ve pinned.
       </>
     ),
   },
@@ -126,8 +123,8 @@ const faqs = [
       <>
         <strong style={{ fontWeight: 600, color: "#131415" }}>No.</strong>{" "}
         Lishka only reads your GPS once, while the app is open, to find your
-        fishing spot. We never track your location in the background. Your
-        daily fishing notifications use the spot you&apos;ve saved, so your
+        fishing spot. We never track your location in the background. Your daily
+        fishing notifications use the spot you&apos;ve saved, so your
         phone&apos;s GPS stays off when the app is closed.
       </>
     ),
@@ -216,11 +213,7 @@ const V4Faq = () => {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
 
   return (
-    <section
-      id="faq"
-      className="w-full"
-      style={{ backgroundColor: "#ffffff" }}
-    >
+    <section id="faq" className="w-full" style={{ backgroundColor: "#ffffff" }}>
       <div className="mx-auto max-w-[1440px] px-6 md:px-10 lg:px-24 py-16 md:py-20 lg:py-24">
         <div className="mx-auto w-full max-w-[1248px]">
           {/* Header */}
@@ -238,7 +231,10 @@ const V4Faq = () => {
             className="flex flex-col items-center text-center gap-3 mb-10 lg:mb-16"
           >
             <motion.p
-              variants={{ hidden: { opacity: 0, y: 10 }, visible: { opacity: 1, y: 0 } }}
+              variants={{
+                hidden: { opacity: 0, y: 10 },
+                visible: { opacity: 1, y: 0 },
+              }}
               transition={{ duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
               className="hidden font-display font-bold uppercase"
               style={{
@@ -251,7 +247,10 @@ const V4Faq = () => {
               QUESTIONS? GOOD.
             </motion.p>
             <motion.h2
-              variants={{ hidden: { opacity: 0, y: 16 }, visible: { opacity: 1, y: 0 } }}
+              variants={{
+                hidden: { opacity: 0, y: 16 },
+                visible: { opacity: 1, y: 0 },
+              }}
               transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
               className="
                 font-display font-bold uppercase m-0

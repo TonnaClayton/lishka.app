@@ -1,4 +1,3 @@
-
 import { motion } from "framer-motion";
 import Image from "../common/img";
 import Link from "../common/link";

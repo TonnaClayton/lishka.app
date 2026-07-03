@@ -1,4 +1,3 @@
-
 import { AnimatePresence, motion } from "framer-motion";
 
 import SmartQR from "./smart-qr";
