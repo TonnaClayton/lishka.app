@@ -1,0 +1,22 @@
+<svg preserveAspectRatio="none" width="100%" height="100%" overflow="visible" style="display: block;" viewBox="0 0 88 88" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g id="Vector">
+<path d="M11 11H22V22H11V11Z" fill="var(--fill-0, #131415)"/>
+<path d="M33 0V33H0V0H33ZM27.5 5.5H5.5V27.5H27.5V5.5Z" fill="var(--fill-0, #131415)"/>
+<path d="M22 66H11V77H22V66Z" fill="var(--fill-0, #131415)"/>
+<path d="M33 55V88H0V55H33ZM5.5 60.5V82.5H27.5V60.5H5.5Z" fill="var(--fill-0, #131415)"/>
+<path d="M66 11H77V22H66V11Z" fill="var(--fill-0, #131415)"/>
+<path d="M55 0V33H88V0H55ZM82.5 5.5V27.5H60.5V5.5H82.5Z" fill="var(--fill-0, #131415)"/>
+<path d="M44 5.5V0H49.5V11H44V22H38.5V5.5H44Z" fill="var(--fill-0, #131415)"/>
+<path d="M44 33V22H49.5V33H44Z" fill="var(--fill-0, #131415)"/>
+<path d="M33 44V38.5H38.5V33H44V44H49.5V38.5H77V44H55V49.5H38.5V44H33Z" fill="var(--fill-0, #131415)"/>
+<path d="M33 44V49.5H11V44H5.5V49.5H0V38.5H16.5V44H33Z" fill="var(--fill-0, #131415)"/>
+<path d="M88 49.5H82.5V38.5H88V49.5Z" fill="var(--fill-0, #131415)"/>
+<path d="M82.5 49.5H77V60.5H88V55H82.5V49.5Z" fill="var(--fill-0, #131415)"/>
+<path d="M60.5 49.5H71.5V55H66V60.5H60.5V49.5Z" fill="var(--fill-0, #131415)"/>
+<path d="M71.5 66V60.5H66V66H60.5V71.5H49.5V77H66V66H71.5Z" fill="var(--fill-0, #131415)"/>
+<path d="M71.5 66H88V71.5H77V77H71.5V66Z" fill="var(--fill-0, #131415)"/>
+<path d="M49.5 60.5V66H55V55H38.5V60.5H49.5Z" fill="var(--fill-0, #131415)"/>
+<path d="M38.5 66H44V82.5H66V88H38.5V66Z" fill="var(--fill-0, #131415)"/>
+<path d="M88 77V88H71.5V82.5H82.5V77H88Z" fill="var(--fill-0, #131415)"/>
+</g>
+</svg>

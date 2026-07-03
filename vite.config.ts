@@ -80,6 +80,9 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp}"],
+        // Landing hero + method backgrounds are 2-5 MB screenshots;
+        // lift the precache ceiling to 6 MiB so the SW build passes.
+        maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         // Clean up outdated caches
         cleanupOutdatedCaches: true,
         // Skip waiting and claim clients immediately on update
