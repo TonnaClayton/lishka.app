@@ -4,7 +4,6 @@ import react from "@vitejs/plugin-react-swc";
 import { tempo } from "tempo-devtools/dist/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { visualizer } from "rollup-plugin-visualizer";
-import prerender from "@prerenderer/rollup-plugin";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -145,47 +144,31 @@ export default defineConfig({
       },
     }),
     /*
-      Static prerendering — turns the built SPA into a hybrid where
-      the landing route ("/") ships fully-rendered HTML for
-      crawlers, social scrapers, and JS-disabled visitors, then
-      React hydrates on top for interactivity. Every other route
-      (login, home, fish/*, etc.) is auth-gated and stays
-      client-rendered.
+      TODO: Prerender — landing content is currently JS-rendered
+      only, so crawlers see an empty shell.
 
-      Only runs on build, never in dev. Adds ~20–30s to the build
-      as Puppeteer boots a headless Chrome to render the routes.
+      First attempt used @prerenderer/rollup-plugin +
+      renderer-puppeteer. Worked locally but Vercel's build
+      container is missing Chromium's shared libraries
+      (libnspr4.so etc.) so Puppeteer fails to launch during the
+      deploy build.
 
-      If AuthProvider crashes here on missing Supabase creds, look
-      at .env / Vercel env — the prerender uses whatever build-time
-      env is set.
+      JSDOM renderer builds but returns an empty snapshot — the
+      AuthProvider blocks the landing render behind an async
+      Supabase check, and JSDOM captures before the promise
+      resolves.
+
+      Follow-ups worth trying:
+        1. Prerender in a GitHub Actions workflow (which has a
+           real Chrome) that pushes dist/ to a deploy branch;
+           point Vercel at that branch
+        2. Add a build-time guard in AuthProvider that skips
+           Supabase when JSDOM detects `navigator.userAgent`
+           matches its default, then re-try the JSDOM renderer
+        3. Migrate the landing to a static export tool (e.g.
+           vite-react-ssg) that generates the HTML during build
+           without needing a browser
     */
-    prerender({
-      routes: ["/"],
-      renderer: "@prerenderer/renderer-puppeteer",
-      rendererOptions: {
-        renderAfterTime: 2000,
-        headless: true,
-      },
-      /*
-        Strip framer-motion's initial hidden state from the
-        snapshot. Below-the-fold sections use `whileInView` to
-        fade in on scroll — Puppeteer stays at scroll 0, so those
-        sections get captured with inline `style="opacity: 0"`,
-        which reads to crawlers as hidden content.
-
-        Removing the inline opacity leaves the DOM visible for
-        SEO. When React hydrates on the client, framer-motion
-        re-applies the initial state via component state, and the
-        scroll-triggered animations play normally.
-      */
-      postProcess(renderedRoute) {
-        renderedRoute.html = renderedRoute.html.replace(
-          /style="opacity:\s*0[^"]*"/g,
-          '',
-        );
-        return renderedRoute;
-      },
-    }),
   ],
   build: {
     rollupOptions: {
