@@ -73,20 +73,27 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Pull Vercel production env vars
-        # Puppeteer's rendered snapshot needs the app to fully
-        # mount inside headless Chrome, which means the Supabase
-        # client has to instantiate successfully. Pulling the
-        # Vercel project's production env (Supabase URL/keys,
-        # etc.) into .vercel/.env.production.local lets Vite
-        # inline them during the build.
+      - name: Pull Vercel project settings
+        # Needed for `vercel deploy --prebuilt` below to target
+        # the right project. `vercel pull` also creates
+        # .vercel/.env.production.local but that file has empty
+        # strings for any env var marked "Sensitive" in Vercel —
+        # which is why we can't use it to bootstrap the build.
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
 
-      - name: Copy pulled env into project root
-        # `vercel pull` writes to .vercel/.env.production.local
-        # but Vite reads .env.production.local from the project
-        # root. Copy it over so the build picks up the vars.
-        run: cp .vercel/.env.production.local .env.production.local
+      - name: Write env vars for build from GitHub secrets
+        # Vercel's "Sensitive" env vars come back as "" from
+        # `vercel pull`, so we can't rely on that file to have
+        # the Supabase URL/key. Copy the required secrets from
+        # GitHub Actions secrets into .env.production.local so
+        # Vite inlines the real values at build time — otherwise
+        # createClient() throws inside Puppeteer, React never
+        # mounts, and the snapshot captures the shell.
+        run: |
+          cat > .env.production.local <<EOF
+          VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+          VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }}
+          EOF
 
       - name: Build (prerender lands the landing HTML into dist/)
         # Run npm run build directly rather than `vercel build`.
