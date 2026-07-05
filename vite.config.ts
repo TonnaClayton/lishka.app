@@ -5,6 +5,7 @@ import { tempo } from "tempo-devtools/dist/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { visualizer } from "rollup-plugin-visualizer";
 import prerender from "@prerenderer/rollup-plugin";
+import PuppeteerRenderer from "@prerenderer/renderer-puppeteer";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -181,12 +182,15 @@ export default defineConfig({
       ? [
           prerender({
             routes: ["/"],
-            renderer: "@prerenderer/renderer-puppeteer",
-            rendererOptions: {
+            renderer: new PuppeteerRenderer({
               renderAfterTime: 2500,
               headless: true,
-            },
+            }),
             postProcess(renderedRoute) {
+              // eslint-disable-next-line no-console
+              console.log(
+                `[prerender.postProcess] route=${renderedRoute.route} html.length=${renderedRoute.html.length}`,
+              );
               renderedRoute.html = renderedRoute.html.replace(
                 /style="opacity:\s*0[^"]*"/g,
                 "",
