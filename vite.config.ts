@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react-swc";
 import { tempo } from "tempo-devtools/dist/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { visualizer } from "rollup-plugin-visualizer";
+import prerender from "@prerenderer/rollup-plugin";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -141,6 +142,48 @@ export default defineConfig({
       },
       devOptions: {
         enabled: true,
+      },
+    }),
+    /*
+      Static prerendering — turns the built SPA into a hybrid where
+      the landing route ("/") ships fully-rendered HTML for
+      crawlers, social scrapers, and JS-disabled visitors, then
+      React hydrates on top for interactivity. Every other route
+      (login, home, fish/*, etc.) is auth-gated and stays
+      client-rendered.
+
+      Only runs on build, never in dev. Adds ~20–30s to the build
+      as Puppeteer boots a headless Chrome to render the routes.
+
+      If AuthProvider crashes here on missing Supabase creds, look
+      at .env / Vercel env — the prerender uses whatever build-time
+      env is set.
+    */
+    prerender({
+      routes: ["/"],
+      renderer: "@prerenderer/renderer-puppeteer",
+      rendererOptions: {
+        renderAfterTime: 2000,
+        headless: true,
+      },
+      /*
+        Strip framer-motion's initial hidden state from the
+        snapshot. Below-the-fold sections use `whileInView` to
+        fade in on scroll — Puppeteer stays at scroll 0, so those
+        sections get captured with inline `style="opacity: 0"`,
+        which reads to crawlers as hidden content.
+
+        Removing the inline opacity leaves the DOM visible for
+        SEO. When React hydrates on the client, framer-motion
+        re-applies the initial state via component state, and the
+        scroll-triggered animations play normally.
+      */
+      postProcess(renderedRoute) {
+        renderedRoute.html = renderedRoute.html.replace(
+          /style="opacity:\s*0[^"]*"/g,
+          '',
+        );
+        return renderedRoute;
       },
     }),
   ],
