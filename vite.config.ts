@@ -4,8 +4,6 @@ import react from "@vitejs/plugin-react-swc";
 import { tempo } from "tempo-devtools/dist/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { visualizer } from "rollup-plugin-visualizer";
-import prerender from "@prerenderer/rollup-plugin";
-import PuppeteerRenderer from "@prerenderer/renderer-puppeteer";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -145,61 +143,6 @@ export default defineConfig({
         enabled: true,
       },
     }),
-    /*
-      Static prerendering — snapshot the landing route ("/") at
-      build time using Puppeteer + real headless Chrome, so
-      crawlers, link scrapers, and JS-disabled visitors see the
-      full landing content pre-hydration. Only "/" is
-      prerendered; every other route is auth-gated and stays
-      client-side SPA.
-
-      Chrome isn't present on Vercel's build container, so this
-      only runs when the ENABLE_PRERENDER env var is set —
-      normally by the GitHub Actions deploy workflow (see
-      .github/workflows/deploy.yml) which runs on ubuntu-latest
-      (has all the Chromium shared libs) and then pushes the
-      prebuilt output to Vercel via
-      `vercel deploy --prebuilt --prod`.
-
-      When ENABLE_PRERENDER is unset (Vercel-native build,
-      local dev preview, PR previews) the plugin is skipped so
-      the build succeeds without a browser — you'll get the
-      SPA shell instead of prerendered HTML. That's fine as a
-      fallback; the GH Action path is the SEO-optimised one.
-
-      JSDOM was attempted but couldn't render React at all —
-      too many of the app's dependencies rely on real browser
-      APIs (framer-motion, Radix, PostHog, Lenis, etc.).
-    */
-    ...((() => {
-      const enable = process.env.ENABLE_PRERENDER;
-      // eslint-disable-next-line no-console
-      console.log(
-        `[vite.config] ENABLE_PRERENDER=${JSON.stringify(enable)} — prerender ${enable === "true" ? "ON" : "OFF"}`,
-      );
-      return enable === "true";
-    })()
-      ? [
-          prerender({
-            routes: ["/"],
-            renderer: new PuppeteerRenderer({
-              renderAfterTime: 5000,
-              headless: true,
-            }),
-            postProcess(renderedRoute) {
-              // eslint-disable-next-line no-console
-              console.log(
-                `[prerender.postProcess] route=${renderedRoute.route} html.length=${renderedRoute.html.length}`,
-              );
-              renderedRoute.html = renderedRoute.html.replace(
-                /style="opacity:\s*0[^"]*"/g,
-                "",
-              );
-              return renderedRoute;
-            },
-          }),
-        ]
-      : []),
   ],
   build: {
     rollupOptions: {

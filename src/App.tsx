@@ -77,42 +77,11 @@ const GearDatabaseDebugger = lazy(
 const WhatsNewPage = lazy(() => import("./components/whats-new-page"));
 const GearUploadScreen = lazy(() => import("./components/gear-upload-screen"));
 
-/*
-  Detect the build-time prerender environment so we can bypass
-  the auth-loading gate below.
-
-  During `npm run build` the prerender plugin loads the built
-  bundle inside either JSDOM (Node-side headless DOM) or
-  Puppeteer (real headless Chrome) to capture the landing HTML
-  for SEO. Neither has a real Supabase session, so the
-  AuthProvider's loading state may not resolve within the
-  snapshot window and the capture would grab the loading spinner
-  instead of the actual landing.
-
-  Both renderers set `navigator.webdriver = true` (JSDOM
-  always, Puppeteer via its default launch options), and
-  Puppeteer's UA also includes "HeadlessChrome" in older
-  versions. Match either signal so we're not tied to Chrome's
-  moving UA strings.
-
-  When we detect the prerender environment we skip the loading
-  gate and render LandingPage immediately — which is exactly
-  what any crawler / social scraper / logged-out visitor sees
-  anyway.
-
-  This check is cheap at runtime for real users (a couple of
-  boolean checks, both false) and only kicks in at build time.
-*/
-const isPrerender =
-  typeof navigator !== "undefined" &&
-  (navigator.webdriver === true ||
-    /jsdom|HeadlessChrome/i.test(navigator.userAgent));
-
 // Index page component that conditionally renders based on auth state
 function IndexPage() {
   const { user, loading } = useAuth();
 
-  if (loading && !isPrerender) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">
