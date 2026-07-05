@@ -170,7 +170,14 @@ export default defineConfig({
       too many of the app's dependencies rely on real browser
       APIs (framer-motion, Radix, PostHog, Lenis, etc.).
     */
-    ...(process.env.ENABLE_PRERENDER === "true"
+    ...((() => {
+      const enable = process.env.ENABLE_PRERENDER;
+      // eslint-disable-next-line no-console
+      console.log(
+        `[vite.config] ENABLE_PRERENDER=${JSON.stringify(enable)} — prerender ${enable === "true" ? "ON" : "OFF"}`,
+      );
+      return enable === "true";
+    })()
       ? [
           prerender({
             routes: ["/"],

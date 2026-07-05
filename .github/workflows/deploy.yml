@@ -73,7 +73,14 @@ jobs:
         # ENABLE_PRERENDER we need to enable the prerender plugin.
         # Running `npm run build` directly here keeps that env var
         # visible to the Vite build.
-        run: npm run build
+        env:
+          ENABLE_PRERENDER: "true"
+        run: |
+          echo "== env probe before build =="
+          echo "ENABLE_PRERENDER=$ENABLE_PRERENDER"
+          npm run build
+          echo "== dist/index.html size after build =="
+          wc -c dist/index.html
 
       - name: Package dist/ into .vercel/output/ for prebuilt deploy
         # Vercel's `--prebuilt` deploy reads .vercel/output/ (the
