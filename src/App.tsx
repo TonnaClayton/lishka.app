@@ -77,11 +77,33 @@ const GearDatabaseDebugger = lazy(
 const WhatsNewPage = lazy(() => import("./components/whats-new-page"));
 const GearUploadScreen = lazy(() => import("./components/gear-upload-screen"));
 
+/*
+  Detect the build-time prerender environment so we can bypass
+  the auth-loading gate below.
+
+  During `npm run build`, the JSDOM prerenderer loads the built
+  bundle inside a Node-side headless DOM to capture the landing
+  HTML for SEO. That DOM has no real Supabase session and no way
+  to establish one, so the AuthProvider's loading state never
+  resolves and the snapshot captures the spinner instead of the
+  landing.
+
+  JSDOM identifies itself in `navigator.userAgent` (e.g. "jsdom/
+  26.1.0"). When we see that string we skip the loading gate and
+  render LandingPage immediately — which is exactly what any
+  crawler / social scraper / logged-out visitor sees anyway.
+
+  This check is cheap at runtime for real users (single string
+  comparison, false) and only kicks in at build time.
+*/
+const isPrerender =
+  typeof navigator !== "undefined" && /jsdom/i.test(navigator.userAgent);
+
 // Index page component that conditionally renders based on auth state
 function IndexPage() {
   const { user, loading } = useAuth();
 
-  if (loading) {
+  if (loading && !isPrerender) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="text-center">

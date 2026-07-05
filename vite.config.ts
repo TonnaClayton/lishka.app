@@ -4,6 +4,7 @@ import react from "@vitejs/plugin-react-swc";
 import { tempo } from "tempo-devtools/dist/vite";
 import { VitePWA } from "vite-plugin-pwa";
 import { visualizer } from "rollup-plugin-visualizer";
+import prerender from "@prerenderer/rollup-plugin";
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -144,31 +145,45 @@ export default defineConfig({
       },
     }),
     /*
-      TODO: Prerender — landing content is currently JS-rendered
-      only, so crawlers see an empty shell.
+      Static prerendering — snapshot the landing route ("/") at
+      build time using Puppeteer + real headless Chrome, so
+      crawlers, link scrapers, and JS-disabled visitors see the
+      full landing content pre-hydration. Only "/" is
+      prerendered; every other route is auth-gated and stays
+      client-side SPA.
 
-      First attempt used @prerenderer/rollup-plugin +
-      renderer-puppeteer. Worked locally but Vercel's build
-      container is missing Chromium's shared libraries
-      (libnspr4.so etc.) so Puppeteer fails to launch during the
-      deploy build.
+      Chrome is not present on Vercel's build container, so we
+      run this build in GitHub Actions instead (see
+      .github/workflows/deploy.yml) and push the prebuilt
+      output to Vercel via `vercel deploy --prebuilt --prod`.
+      The Vercel git integration is disabled to avoid the
+      Vercel-native (Chrome-less) build racing the GH Action.
 
-      JSDOM renderer builds but returns an empty snapshot — the
-      AuthProvider blocks the landing render behind an async
-      Supabase check, and JSDOM captures before the promise
-      resolves.
+      JSDOM was attempted but couldn't render React at all —
+      too many of the app's dependencies rely on real browser
+      APIs (framer-motion, Radix, PostHog, Lenis, etc.).
 
-      Follow-ups worth trying:
-        1. Prerender in a GitHub Actions workflow (which has a
-           real Chrome) that pushes dist/ to a deploy branch;
-           point Vercel at that branch
-        2. Add a build-time guard in AuthProvider that skips
-           Supabase when JSDOM detects `navigator.userAgent`
-           matches its default, then re-try the JSDOM renderer
-        3. Migrate the landing to a static export tool (e.g.
-           vite-react-ssg) that generates the HTML during build
-           without needing a browser
+      renderAfterTime waits 2.5s for framer-motion entry fades
+      to settle. postProcess strips any lingering opacity:0
+      styles from below-the-fold sections that Puppeteer never
+      scrolled into view — React re-applies them on client
+      hydration and the whileInView animations play normally.
     */
+    prerender({
+      routes: ["/"],
+      renderer: "@prerenderer/renderer-puppeteer",
+      rendererOptions: {
+        renderAfterTime: 2500,
+        headless: true,
+      },
+      postProcess(renderedRoute) {
+        renderedRoute.html = renderedRoute.html.replace(
+          /style="opacity:\s*0[^"]*"/g,
+          "",
+        );
+        return renderedRoute;
+      },
+    }),
   ],
   build: {
     rollupOptions: {

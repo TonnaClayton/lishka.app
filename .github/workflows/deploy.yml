@@ -1,0 +1,76 @@
+name: Deploy
+
+# Prerendered production deploy pipeline.
+#
+# Vercel's build container is missing the shared libraries
+# Puppeteer needs to run its bundled Chrome (libnspr4.so, etc.),
+# so the landing prerender can't run there. GitHub Actions'
+# ubuntu-latest runner does have those libs, so we build the
+# prerendered dist/ here and push it to Vercel as a prebuilt
+# deploy — no rebuild on Vercel's side.
+#
+# Setup required in the repo (one time):
+#   1. Secrets → Actions → add:
+#        VERCEL_TOKEN      - vercel.com/account/tokens
+#        VERCEL_ORG_ID     - team_QTjsGEeVco2DkokJbMSCgLk6
+#        VERCEL_PROJECT_ID - prj_JQhwM8sXYBattUhVAszW82fDZRGN
+#   2. Vercel dashboard → Project Settings → Git → disconnect
+#      the Git integration (or set "Ignored Build Step" to
+#      always skip) so Vercel's own build doesn't race this one.
+
+on:
+  push:
+    branches: [main]
+  # Manual trigger from the Actions tab for re-deploys without a
+  # code change (e.g. rotating env vars, forcing a rebuild).
+  workflow_dispatch:
+
+concurrency:
+  # Cancel any in-flight production deploy if a newer push lands
+  # before it finishes.
+  group: deploy-production
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    name: Prerender + deploy to Vercel
+    runs-on: ubuntu-latest
+    environment:
+      name: production
+      url: https://lishka.app/
+
+    env:
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        # Puppeteer's postinstall downloads its bundled Chrome
+        # into ~/.cache/puppeteer here. GH Actions ubuntu-latest
+        # has all the shared libs Chrome needs (unlike Vercel).
+        run: npm ci
+
+      - name: Install Vercel CLI
+        run: npm install --global vercel@latest
+
+      - name: Pull Vercel environment (production)
+        # Fetches env vars and project config for the prebuilt
+        # deploy step below. Uses the linked project by ID.
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Build (prerender lands the landing HTML into dist/)
+        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy prebuilt to Vercel production
+        # --prebuilt tells Vercel not to run its own build — just
+        # ship what's already in .vercel/output as production.
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
