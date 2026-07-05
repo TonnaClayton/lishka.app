@@ -81,15 +81,19 @@ const GearUploadScreen = lazy(() => import("./components/gear-upload-screen"));
   Detect the build-time prerender environment so we can bypass
   the auth-loading gate below.
 
-  During `npm run build`, the JSDOM prerenderer loads the built
-  bundle inside a Node-side headless DOM to capture the landing
-  HTML for SEO. That DOM has no real Supabase session and no way
-  to establish one, so the AuthProvider's loading state never
-  resolves and the snapshot captures the spinner instead of the
-  landing.
+  During `npm run build` the prerender plugin loads the built
+  bundle inside either JSDOM (Node-side headless DOM) or
+  Puppeteer (real headless Chrome) to capture the landing HTML
+  for SEO. Neither has a real Supabase session, so the
+  AuthProvider's loading state may not resolve within the
+  snapshot window and the capture would grab the loading spinner
+  instead of the actual landing.
 
-  JSDOM identifies itself in `navigator.userAgent` (e.g. "jsdom/
-  26.1.0"). When we see that string we skip the loading gate and
+  Both renderers identify themselves in `navigator.userAgent`:
+    - JSDOM       includes "jsdom/<version>"
+    - Puppeteer   includes "HeadlessChrome/<version>"
+
+  When either string is present we skip the loading gate and
   render LandingPage immediately — which is exactly what any
   crawler / social scraper / logged-out visitor sees anyway.
 
@@ -97,7 +101,8 @@ const GearUploadScreen = lazy(() => import("./components/gear-upload-screen"));
   comparison, false) and only kicks in at build time.
 */
 const isPrerender =
-  typeof navigator !== "undefined" && /jsdom/i.test(navigator.userAgent);
+  typeof navigator !== "undefined" &&
+  /jsdom|HeadlessChrome/i.test(navigator.userAgent);
 
 // Index page component that conditionally renders based on auth state
 function IndexPage() {
