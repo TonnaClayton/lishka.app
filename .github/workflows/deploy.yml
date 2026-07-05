@@ -66,13 +66,34 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
-      - name: Pull Vercel environment (production)
-        # Fetches env vars and project config for the prebuilt
-        # deploy step below. Uses the linked project by ID.
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-
       - name: Build (prerender lands the landing HTML into dist/)
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+        # Run npm run build directly rather than `vercel build`.
+        # `vercel build` uses only env vars pulled from the Vercel
+        # project (via `vercel pull`) and drops the workflow-level
+        # ENABLE_PRERENDER we need to enable the prerender plugin.
+        # Running `npm run build` directly here keeps that env var
+        # visible to the Vite build.
+        run: npm run build
+
+      - name: Package dist/ into .vercel/output/ for prebuilt deploy
+        # Vercel's `--prebuilt` deploy reads .vercel/output/ (the
+        # Build Output API v3 format). For a static site that's
+        # just static files under `static/` + a minimal config
+        # declaring version 3 and an SPA-fallback rewrite so any
+        # unmatched route falls back to /index.html (matching what
+        # vercel.json used to do).
+        run: |
+          mkdir -p .vercel/output/static
+          cp -r dist/. .vercel/output/static/
+          cat > .vercel/output/config.json <<'JSON'
+          {
+            "version": 3,
+            "routes": [
+              { "handle": "filesystem" },
+              { "src": "/(.*)", "dest": "/index.html" }
+            ]
+          }
+          JSON
 
       - name: Deploy prebuilt to Vercel production
         # --prebuilt tells Vercel not to run its own build — just
