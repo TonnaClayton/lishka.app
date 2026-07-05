@@ -3,4 +3,4 @@ User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://lishka.dev/sitemap.xml
+Sitemap: https://lishka.app/sitemap.xml

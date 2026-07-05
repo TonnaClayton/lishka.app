@@ -26,6 +26,20 @@
     <title>Lishka | Never miss the day it&apos;s firing</title>
 
     <!--
+      Canonical URL — apex lishka.app is our SEO-preferred host.
+      Vercel 308-redirects www.lishka.app → lishka.app (see
+      vercel.json).
+    -->
+    <link rel="canonical" href="https://lishka.app/" />
+
+    <!--
+      Apple smart banner — when the site is opened in Safari on
+      iOS and the app isn't installed, Safari shows a "View" chip
+      that deep-links to the App Store listing.
+    -->
+    <meta name="apple-itunes-app" content="app-id=6767207290" />
+
+    <!--
       Open Graph + Twitter card meta tags — control how the link
       preview looks when Lishka is shared in iMessage, Slack,
       WhatsApp, Discord, Facebook, LinkedIn, X, etc.
@@ -37,7 +51,7 @@
     -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Lishka" />
-    <meta property="og:url" content="https://www.lishka.app/" />
+    <meta property="og:url" content="https://lishka.app/" />
     <meta
       property="og:title"
       content="Lishka | Never miss the day it's firing"
@@ -48,7 +62,7 @@
     />
     <meta
       property="og:image"
-      content="https://www.lishka.app/assets/v4-hero-bg.jpg"
+      content="https://lishka.app/assets/v4-hero-bg.jpg"
     />
     <meta
       property="og:image:alt"
@@ -66,7 +80,48 @@
     />
     <meta
       name="twitter:image"
-      content="https://www.lishka.app/assets/v4-hero-bg.jpg"
+      content="https://lishka.app/assets/v4-hero-bg.jpg"
+    />
+
+    <!--
+      Structured data — JSON-LD SoftwareApplication schema. Tells
+      Google we're an app so it can render the rich "App" result
+      card when brand/product searches surface. aggregateRating
+      deliberately omitted — Google penalises unverified rating
+      claims, so until we can pull the App Store rating via API,
+      we don't declare it here.
+    -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "Lishka",
+        "operatingSystem": "iOS",
+        "applicationCategory": "LifestyleApplication",
+        "description": "Hourly fishing scores tuned to your location, your method, and the live marine forecast.",
+        "url": "https://lishka.app/",
+        "downloadUrl": "https://apps.apple.com/us/app/lishka/id6767207290",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "publisher": {
+          "@type": "Organization",
+          "name": "Lishka",
+          "url": "https://lishka.app/"
+        }
+      }
+    </script>
+
+    <!-- Preload the hero background photo for LCP — this is the
+         largest image above the fold, so painting it early is
+         the biggest single Lighthouse win. -->
+    <link
+      rel="preload"
+      as="image"
+      href="/assets/v4-hero-bg.jpg"
+      fetchpriority="high"
     />
     <link
       rel="preconnect"
