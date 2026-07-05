@@ -183,7 +183,7 @@ export default defineConfig({
           prerender({
             routes: ["/"],
             renderer: new PuppeteerRenderer({
-              renderAfterTime: 2500,
+              renderAfterTime: 5000,
               headless: true,
             }),
             postProcess(renderedRoute) {

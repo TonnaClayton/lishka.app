@@ -89,20 +89,24 @@ const GearUploadScreen = lazy(() => import("./components/gear-upload-screen"));
   snapshot window and the capture would grab the loading spinner
   instead of the actual landing.
 
-  Both renderers identify themselves in `navigator.userAgent`:
-    - JSDOM       includes "jsdom/<version>"
-    - Puppeteer   includes "HeadlessChrome/<version>"
+  Both renderers set `navigator.webdriver = true` (JSDOM
+  always, Puppeteer via its default launch options), and
+  Puppeteer's UA also includes "HeadlessChrome" in older
+  versions. Match either signal so we're not tied to Chrome's
+  moving UA strings.
 
-  When either string is present we skip the loading gate and
-  render LandingPage immediately — which is exactly what any
-  crawler / social scraper / logged-out visitor sees anyway.
+  When we detect the prerender environment we skip the loading
+  gate and render LandingPage immediately — which is exactly
+  what any crawler / social scraper / logged-out visitor sees
+  anyway.
 
-  This check is cheap at runtime for real users (single string
-  comparison, false) and only kicks in at build time.
+  This check is cheap at runtime for real users (a couple of
+  boolean checks, both false) and only kicks in at build time.
 */
 const isPrerender =
   typeof navigator !== "undefined" &&
-  /jsdom|HeadlessChrome/i.test(navigator.userAgent);
+  (navigator.webdriver === true ||
+    /jsdom|HeadlessChrome/i.test(navigator.userAgent));
 
 // Index page component that conditionally renders based on auth state
 function IndexPage() {
