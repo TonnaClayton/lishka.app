@@ -73,6 +73,21 @@ jobs:
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
 
+      - name: Pull Vercel production env vars
+        # Puppeteer's rendered snapshot needs the app to fully
+        # mount inside headless Chrome, which means the Supabase
+        # client has to instantiate successfully. Pulling the
+        # Vercel project's production env (Supabase URL/keys,
+        # etc.) into .vercel/.env.production.local lets Vite
+        # inline them during the build.
+        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Copy pulled env into project root
+        # `vercel pull` writes to .vercel/.env.production.local
+        # but Vite reads .env.production.local from the project
+        # root. Copy it over so the build picks up the vars.
+        run: cp .vercel/.env.production.local .env.production.local
+
       - name: Build (prerender lands the landing HTML into dist/)
         # Run npm run build directly rather than `vercel build`.
         # `vercel build` uses only env vars pulled from the Vercel
