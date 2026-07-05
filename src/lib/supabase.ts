@@ -3,9 +3,22 @@ import { Database } from "@/types/supabase";
 import { config } from "@/lib/config";
 import { error, log, warn as warnLog } from "./logging";
 
-// Initialize Supabase client with proper configuration
-const supabaseUrl = config.VITE_SUPABASE_URL;
-const supabaseKey = config.VITE_SUPABASE_ANON_KEY || config.VITE_SUPABASE_KEY;
+/*
+  Initialize Supabase client. Fall back to obviously-invalid
+  placeholders when the env vars are empty so createClient()
+  doesn't throw at module load — this matters for the
+  build-time prerender pipeline, which runs headless Chrome
+  against a bundle where Vercel's "Sensitive" env vars weren't
+  exported by `vercel pull`. Real production builds always have
+  the real values inlined by Vite, so this fallback never fires
+  for actual users.
+*/
+const supabaseUrl =
+  config.VITE_SUPABASE_URL || "https://placeholder.supabase.co";
+const supabaseKey =
+  config.VITE_SUPABASE_ANON_KEY ||
+  config.VITE_SUPABASE_KEY ||
+  "placeholder-key";
 
 if (!supabaseUrl) {
   error("Missing Supabase URL. Please check your environment variables.");
