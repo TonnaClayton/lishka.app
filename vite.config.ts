@@ -152,38 +152,43 @@ export default defineConfig({
       prerendered; every other route is auth-gated and stays
       client-side SPA.
 
-      Chrome is not present on Vercel's build container, so we
-      run this build in GitHub Actions instead (see
-      .github/workflows/deploy.yml) and push the prebuilt
-      output to Vercel via `vercel deploy --prebuilt --prod`.
-      The Vercel git integration is disabled to avoid the
-      Vercel-native (Chrome-less) build racing the GH Action.
+      Chrome isn't present on Vercel's build container, so this
+      only runs when the ENABLE_PRERENDER env var is set —
+      normally by the GitHub Actions deploy workflow (see
+      .github/workflows/deploy.yml) which runs on ubuntu-latest
+      (has all the Chromium shared libs) and then pushes the
+      prebuilt output to Vercel via
+      `vercel deploy --prebuilt --prod`.
+
+      When ENABLE_PRERENDER is unset (Vercel-native build,
+      local dev preview, PR previews) the plugin is skipped so
+      the build succeeds without a browser — you'll get the
+      SPA shell instead of prerendered HTML. That's fine as a
+      fallback; the GH Action path is the SEO-optimised one.
 
       JSDOM was attempted but couldn't render React at all —
       too many of the app's dependencies rely on real browser
       APIs (framer-motion, Radix, PostHog, Lenis, etc.).
-
-      renderAfterTime waits 2.5s for framer-motion entry fades
-      to settle. postProcess strips any lingering opacity:0
-      styles from below-the-fold sections that Puppeteer never
-      scrolled into view — React re-applies them on client
-      hydration and the whileInView animations play normally.
     */
-    prerender({
-      routes: ["/"],
-      renderer: "@prerenderer/renderer-puppeteer",
-      rendererOptions: {
-        renderAfterTime: 2500,
-        headless: true,
-      },
-      postProcess(renderedRoute) {
-        renderedRoute.html = renderedRoute.html.replace(
-          /style="opacity:\s*0[^"]*"/g,
-          "",
-        );
-        return renderedRoute;
-      },
-    }),
+    ...(process.env.ENABLE_PRERENDER === "true"
+      ? [
+          prerender({
+            routes: ["/"],
+            renderer: "@prerenderer/renderer-puppeteer",
+            rendererOptions: {
+              renderAfterTime: 2500,
+              headless: true,
+            },
+            postProcess(renderedRoute) {
+              renderedRoute.html = renderedRoute.html.replace(
+                /style="opacity:\s*0[^"]*"/g,
+                "",
+              );
+              return renderedRoute;
+            },
+          }),
+        ]
+      : []),
   ],
   build: {
     rollupOptions: {
