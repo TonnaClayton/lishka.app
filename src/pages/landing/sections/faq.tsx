@@ -31,8 +31,8 @@ const faqs = [
     a: (
       <>
         <strong style={{ fontWeight: 600, color: "#131415" }}>Both.</strong>{" "}
-        Live on the App Store today. Google Play launches within the next few
-        weeks. Same app, same data, same scores.
+        Lishka is live on the App Store and Google Play. Same app, same data,
+        same scores.
       </>
     ),
   },

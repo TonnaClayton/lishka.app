@@ -8,16 +8,13 @@
   When the iOS storefront ID or Play Store listing URL changes,
   update them here only.
 
-  ⚠️ PLAY_STORE_URL is currently an internal-test track. Replace
-  with the public listing URL before flipping PLAY_STORE_LIVE:
-    https://play.google.com/store/apps/details?id=<package>
 */
 
 export const APP_STORE_URL =
   "https://apps.apple.com/us/app/lishka/id6767207290";
 
 export const PLAY_STORE_URL =
-  "https://play.google.com/apps/internaltest/4698458480381463836";
+  "https://play.google.com/store/apps/details?id=app.lishka.mobile";
 
 /*
   Master switch for anything Android-facing on the landing page.
@@ -33,4 +30,4 @@ export const PLAY_STORE_URL =
   change activates the badge, the QR path, and the smart redirect
   simultaneously with no other edits.
 */
-export const PLAY_STORE_LIVE = false;
+export const PLAY_STORE_LIVE = true;

@@ -17,7 +17,7 @@
     <meta name="apple-mobile-web-app-title" content="Lishka" />
     <meta
       name="description"
-      content="Lishka scores every hour using wind, tide, weather, and moon conditions so good fishing windows are easy to spot. On iOS today, Android soon."
+      content="Lishka scores every hour using wind, tide, weather, and moon conditions so good fishing windows are easy to spot. On iOS and Android."
     />
     <!-- <meta
       http-equiv="Content-Security-Policy"
@@ -38,6 +38,13 @@
       that deep-links to the App Store listing.
     -->
     <meta name="apple-itunes-app" content="app-id=6767207290" />
+
+    <!--
+      Google Play smart banner — Chrome on Android reads this to
+      prompt "Open in Play Store" when the site loads and the
+      native app isn't installed.
+    -->
+    <meta name="google-play-app" content="app-id=app.lishka.mobile" />
 
     <!--
       Open Graph + Twitter card meta tags — control how the link
@@ -96,7 +103,7 @@
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "Lishka",
-        "operatingSystem": "iOS",
+        "operatingSystem": "iOS, Android",
         "applicationCategory": "LifestyleApplication",
         "description": "Hourly fishing scores tuned to your location, your method, and the live marine forecast.",
         "url": "https://lishka.app/",
