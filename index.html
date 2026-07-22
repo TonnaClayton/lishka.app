@@ -184,7 +184,12 @@
           "script",
           "https://connect.facebook.net/en_US/fbevents.js",
         );
+        // Multiple pixel init — Meta stacks these and dispatches
+        // subsequent fbq('track', ...) calls to every registered
+        // pixel. Running both while we compare data-flow between
+        // accounts; drop one once we've picked the primary.
         fbq("init", "1301918371549325");
+        fbq("init", "1369401328175009");
         fbq("track", "PageView");
       })();
     </script>
@@ -204,6 +209,13 @@
         width="1"
         style="display: none"
         src="https://www.facebook.com/tr?id=1301918371549325&ev=PageView&noscript=1"
+        alt=""
+      />
+      <img
+        height="1"
+        width="1"
+        style="display: none"
+        src="https://www.facebook.com/tr?id=1369401328175009&ev=PageView&noscript=1"
         alt=""
       />
     </noscript>
