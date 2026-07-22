@@ -7,7 +7,7 @@
       "permanent": true
     },
     {
-      "source": "/app",
+      "source": "/:route(app|download)",
       "has": [
         {
           "type": "header",
@@ -19,7 +19,7 @@
       "permanent": false
     },
     {
-      "source": "/app",
+      "source": "/:route(app|download)",
       "destination": "https://apps.apple.com/us/app/lishka/id6767207290",
       "permanent": false
     }
