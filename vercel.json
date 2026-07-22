@@ -5,6 +5,23 @@
       "has": [{ "type": "host", "value": "www.lishka.app" }],
       "destination": "https://lishka.app/:path*",
       "permanent": true
+    },
+    {
+      "source": "/app",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": "(?i).*android.*"
+        }
+      ],
+      "destination": "https://play.google.com/store/apps/details?id=app.lishka.mobile",
+      "permanent": false
+    },
+    {
+      "source": "/app",
+      "destination": "https://apps.apple.com/us/app/lishka/id6767207290",
+      "permanent": false
     }
   ],
   "headers": [
