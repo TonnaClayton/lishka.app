@@ -33,7 +33,9 @@ const SmartQR = ({ size, className }: Props) => {
   const [url, setUrl] = useState<string | null>(null);
 
   useEffect(() => {
-    setUrl(PLAY_STORE_LIVE ? `${window.location.origin}/app` : APP_STORE_URL);
+    setUrl(
+      PLAY_STORE_LIVE ? `${window.location.origin}/download` : APP_STORE_URL,
+    );
   }, []);
 
   if (!url) {
