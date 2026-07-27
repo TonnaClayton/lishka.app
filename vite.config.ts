@@ -79,19 +79,48 @@ export default defineConfig({
         screenshots: [],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,jpg,jpeg,webp}"],
+        // HTML is deliberately EXCLUDED from precache. If we precached
+        // index.html, workbox would serve the cached copy on every
+        // navigation, and returning visitors would see the version of
+        // the app from whenever they last loaded — old chunk hashes,
+        // old copy, old badges. We serve HTML via the NetworkFirst
+        // navigation rule below so every visit fetches the latest
+        // index.html from Vercel (which is cheap; ~5ms edge hit).
+        globPatterns: ["**/*.{js,css,ico,png,svg,jpg,jpeg,webp}"],
         // Landing hero + method backgrounds are 2-5 MB screenshots;
         // lift the precache ceiling to 6 MiB so the SW build passes.
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
         // Clean up outdated caches
         cleanupOutdatedCaches: true,
-        // Skip waiting and claim clients immediately on update
+        // Skip waiting and claim clients immediately on update. Paired
+        // with the controllerchange auto-reload in src/pwa.ts, this
+        // means a new deploy is picked up on the current visit, not
+        // the next one.
         skipWaiting: true,
         clientsClaim: true,
-        // Navigation fallback for SPA
-        navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/api/, /\.[^/]+$/],
+        // No SPA precache fallback — the NetworkFirst navigation
+        // handler below owns HTML delivery (with an offline fallback
+        // to the runtime HTML cache).
+        navigateFallback: null,
         runtimeCaching: [
+          {
+            // Fresh HTML on every navigation. Network first, fall back
+            // to the cached copy only if offline / timeout. This is
+            // what makes deploys visible without users needing to
+            // clear cache.
+            urlPattern: ({ request }) => request.mode === "navigate",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "html-cache",
+              networkTimeoutSeconds: 3,
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+              expiration: {
+                maxEntries: 20,
+              },
+            },
+          },
           {
             urlPattern: /^https:\/\/api\.openai\.com\/.*/i,
             handler: "NetworkFirst",
