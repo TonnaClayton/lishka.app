@@ -1,7 +1,6 @@
 {
   "redirects": [
     {
-      "//": "www→apex is now done client-side (see src/pwa.ts). The old server-side 308 blocked service-worker updates at www — /sw.js there returned a 3xx, which the SW update spec treats as a network error, so users stayed pinned to a stale precache. Serving the app at both hosts lets the SW at www update itself; the client-side redirect then bounces the fresh page to apex. Canonical tag in index.html preserves the SEO signal to apex in the meantime.",
       "source": "/:route(app|download)",
       "has": [
         {
