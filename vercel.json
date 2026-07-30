@@ -1,13 +1,7 @@
 {
   "redirects": [
     {
-      "//": "www→apex 308 for everything EXCEPT /sw.js. /sw.js on www must return a real 200 so the browser can install the kill-switch SW that unregisters the stale worker; a 3xx there fails the SW update per spec and leaves users stuck on old cached HTML.",
-      "source": "/((?!sw\\.js).*)",
-      "has": [{ "type": "host", "value": "www.lishka.app" }],
-      "destination": "https://lishka.app/$1",
-      "permanent": true
-    },
-    {
+      "//": "www→apex is now done client-side (see src/pwa.ts). The old server-side 308 blocked service-worker updates at www — /sw.js there returned a 3xx, which the SW update spec treats as a network error, so users stayed pinned to a stale precache. Serving the app at both hosts lets the SW at www update itself; the client-side redirect then bounces the fresh page to apex. Canonical tag in index.html preserves the SEO signal to apex in the meantime.",
       "source": "/:route(app|download)",
       "has": [
         {
@@ -100,12 +94,6 @@
     }
   ],
   "rewrites": [
-    {
-      "//": "On www only, /sw.js serves the self-destruct SW. Apex is untouched — its /sw.js remains the workbox-generated one.",
-      "source": "/sw.js",
-      "has": [{ "type": "host", "value": "www.lishka.app" }],
-      "destination": "/www-kill-sw.js"
-    },
     {
       "source": "/((?!sitemap\\.xml|robots\\.txt).*)",
       "destination": "/index.html"

@@ -1,6 +1,36 @@
 import { registerSW } from "virtual:pwa-register";
 
 /*
+  Host normalization — www → apex.
+
+  We previously did this at the edge with a Vercel 308 redirect,
+  but that broke service-worker updates on www.lishka.app: the
+  browser fetches /sw.js as part of its update check, saw a 3xx,
+  and per the SW spec treated it as a network error — so the old
+  SW at www stayed installed forever, kept intercepting
+  navigations, and kept serving stale precached HTML (including
+  the "Coming soon to Google Play" badge from before launch).
+
+  The fix runs here instead. Once fresh JS loads on www — which
+  can only happen after the SW at www has been unstuck and
+  updated — this line bounces the tab to apex. Every subsequent
+  visit lands on apex directly.
+
+  Kept before registerSW() so the redirect wins before we do any
+  more work. window.location.replace so it doesn't leave a
+  history entry the user has to press Back through.
+*/
+
+if (
+  typeof window !== "undefined" &&
+  window.location.hostname === "www.lishka.app"
+) {
+  window.location.replace(
+    "https://lishka.app" + window.location.pathname + window.location.search,
+  );
+}
+
+/*
   Service worker registration.
 
   Paired with the workbox config in vite.config.ts:
