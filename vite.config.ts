@@ -87,6 +87,12 @@ export default defineConfig({
         // navigation rule below so every visit fetches the latest
         // index.html from Vercel (which is cheap; ~5ms edge hit).
         globPatterns: ["**/*.{js,css,ico,png,svg,jpg,jpeg,webp}"],
+        // www-kill-sw.js is the self-destruct SW served exclusively
+        // at www.lishka.app/sw.js via a Vercel rewrite. Precaching it
+        // on the apex SW would be dead weight (nothing on apex fetches
+        // it) and a footgun (if it were ever registered, it would nuke
+        // the apex SW). Keep it out of the precache manifest.
+        globIgnores: ["www-kill-sw.js"],
         // Landing hero + method backgrounds are 2-5 MB screenshots;
         // lift the precache ceiling to 6 MiB so the SW build passes.
         maximumFileSizeToCacheInBytes: 6 * 1024 * 1024,
