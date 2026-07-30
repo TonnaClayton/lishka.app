@@ -2,7 +2,7 @@
   "redirects": [
     {
       "//": "www→apex 308 for everything EXCEPT /sw.js. /sw.js on www must return a real 200 so the browser can install the kill-switch SW that unregisters the stale worker; a 3xx there fails the SW update per spec and leaves users stuck on old cached HTML.",
-      "source": "/((?!sw\\.js$).*)",
+      "source": "/((?!sw\\.js).*)",
       "has": [{ "type": "host", "value": "www.lishka.app" }],
       "destination": "https://lishka.app/$1",
       "permanent": true
