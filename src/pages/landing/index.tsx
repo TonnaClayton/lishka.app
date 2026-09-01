@@ -9,7 +9,6 @@ import HowItWorks from "./sections/how-it-works";
 import Navigation from "./sections/navigation";
 import PhoneColumns from "./sections/phone-columns";
 import Socials from "./sections/socials";
-import SunsetBanner from "./common/sunset-banner";
 
 /*
   Lishka landing page — v4 layout.
@@ -78,7 +77,6 @@ const LandingPage = () => {
       style={{ backgroundColor: "#ffffff" }}
       className="font-inter text-foreground min-h-screen w-full select-none"
     >
-      <SunsetBanner />
       <Navigation />
       <main className="min-h-screen w-full">
         <Hero />

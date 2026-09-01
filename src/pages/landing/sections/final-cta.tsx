@@ -91,11 +91,10 @@ const V4FinalCta = () => {
             className="m-0 text-[15px] md:text-[16px] lg:text-[18px] leading-[1.5]"
             style={{ color: "rgba(255, 255, 255, 0.8)" }}
           >
-            Free for a limited time. Sign up now and{" "}
             <strong style={{ fontWeight: 600, color: "#ffffff" }}>
-              stay free forever
+              7 days free
             </strong>
-            . No ads, ever.
+            , then €5.99/month or €34.99/year. Cancel any time. No ads, ever.
           </p>
         </div>
 

@@ -17,12 +17,11 @@ const faqs = [
     q: "Is Lishka free?",
     a: (
       <>
-        Free for a limited time. Anyone who signs up during this time{" "}
         <strong style={{ fontWeight: 600, color: "#131415" }}>
-          stays free forever
-        </strong>
-        . No ads, ever. This one&apos;s on us. A thank you to the anglers who
-        supported the idea from day one.
+          7 days free
+        </strong>{" "}
+        to try everything. Then €5.99/month or €34.99/year. Cancel any time
+        during the trial and you won&apos;t be charged. No ads, ever.
       </>
     ),
   },
@@ -91,8 +90,8 @@ const faqs = [
     a: (
       <>
         <strong style={{ fontWeight: 600, color: "#131415" }}>Yes.</strong>{" "}
-        Lishka uses your location to score your fishing spots in real time, so a
-        free account is required.
+        Lishka uses your location to score your fishing spots in real time, so
+        an account is required.
       </>
     ),
   },
