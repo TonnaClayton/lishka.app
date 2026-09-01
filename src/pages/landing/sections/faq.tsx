@@ -20,8 +20,9 @@ const faqs = [
         <strong style={{ fontWeight: 600, color: "#131415" }}>
           7 days free
         </strong>{" "}
-        to try everything. Then €5.99/month or €34.99/year. Cancel any time
-        during the trial and you won&apos;t be charged. No ads, ever.
+        to try everything. Then a monthly or yearly subscription — your app
+        store shows the price in your currency. Cancel any time during the
+        trial and you won&apos;t be charged. No ads, ever.
       </>
     ),
   },

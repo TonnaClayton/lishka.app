@@ -94,7 +94,7 @@ const V4FinalCta = () => {
             <strong style={{ fontWeight: 600, color: "#ffffff" }}>
               7 days free
             </strong>
-            , then €5.99/month or €34.99/year. Cancel any time. No ads, ever.
+            , then monthly or yearly. Cancel any time. No ads, ever.
           </p>
         </div>
 
