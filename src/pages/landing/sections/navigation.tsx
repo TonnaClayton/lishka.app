@@ -20,7 +20,7 @@ const Navigation = () => {
       initial={{ y: -100, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.6, ease: "easeOut", delay: 0.2 }}
-      className="fixed top-[72px] md:top-[56px] z-[100] w-full px-4 md:px-6 lg:px-0"
+      className="fixed top-4 md:top-6 z-[100] w-full px-4 md:px-6 lg:px-0"
     >
       <nav className="w-full lg:w-fit mx-auto">
         <div
