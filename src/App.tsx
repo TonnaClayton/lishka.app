@@ -55,6 +55,7 @@ const SettingsPage = lazy(() => import("./components/settings-page"));
 const FaqPage = lazy(() => import("./components/faq-page"));
 const TermsPage = lazy(() => import("./pages/terms"));
 const PrivacyPolicyPage = lazy(() => import("./pages/privacy-policy"));
+const DataDeletionPage = lazy(() => import("./pages/data-deletion"));
 const SupportPage = lazy(() => import("./pages/support"));
 const BlobConnectionTest = lazy(
   () => import("./components/blob-connection-test"),
@@ -265,6 +266,14 @@ const router = createBrowserRouter(
       element: (
         <AppWrapper>
           <PrivacyPolicyPage />
+        </AppWrapper>
+      ),
+    },
+    {
+      path: ROUTES.DATA_DELETION,
+      element: (
+        <AppWrapper>
+          <DataDeletionPage />
         </AppWrapper>
       ),
     },

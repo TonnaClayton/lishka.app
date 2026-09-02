@@ -20,6 +20,7 @@ export const ROUTES = {
   TERMS: "/terms",
   PRIVACY_POLICY: "/privacy-policy",
   SUPPORT: "/support",
+  DATA_DELETION: "/data-deletion",
   MY_GEAR: "/my-gear",
   GEAR_DETAIL: "/gear-detail/:gearId",
   GEAR_CATEGORY: "/gear-category",
