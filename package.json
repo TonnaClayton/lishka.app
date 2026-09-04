@@ -139,5 +139,8 @@
     "*.{json,css,md}": [
       "prettier --write"
     ]
+  },
+  "engines": {
+    "node": "24.x"
   }
 }
