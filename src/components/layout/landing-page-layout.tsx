@@ -1,19 +1,17 @@
 import { ROUTES } from "@/lib/routing";
 import { Instagram } from "lucide-react";
-import React, { useMemo } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { X, Menu } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import { useAuth } from "@/contexts/auth-context";
 
 export default function LandingPageLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { user } = useAuth();
-  const homeLink = useMemo(() => (user ? "/home" : "/"), [user]);
+  const homeLink = "/";
   return (
     <div className="flex-1 flex-col h-full w-full relative overflow-y-auto bg-black">
       {children}
@@ -69,13 +67,6 @@ export default function LandingPageLayout({
               to={homeLink + "#faqs"}
             >
               FAQs
-            </Link>
-            <span className="text-white/60">•</span>
-            <Link
-              className="text-white/90 hover:text-white transition-colors cursor-pointer text-sm font-normal"
-              to={ROUTES.LOGIN_EMAIL}
-            >
-              Log In
             </Link>
           </div>
         </div>
@@ -321,9 +312,7 @@ export function LandingPageHeader({
   isMobileMenuOpen: boolean;
   setIsMobileMenuOpen: (isOpen: boolean) => void;
 }) {
-  const { user } = useAuth();
-
-  const homeLink = useMemo(() => (user ? "/home" : "/"), [user]);
+  const homeLink = "/";
   return (
     <>
       {/* Animated Particles */}
@@ -403,13 +392,6 @@ export function LandingPageHeader({
             >
               FAQs
             </Link>
-            <span className="text-white/60">•</span>
-            <Link
-              to={ROUTES.LOGIN}
-              className="text-white/90 hover:text-white transition-colors cursor-pointer text-[14px] font-normal w-[55px]"
-            >
-              Log In
-            </Link>
           </div>
 
           {/* Mobile Navigation */}
@@ -429,14 +411,6 @@ export function LandingPageHeader({
                   alt="Lishka Logo"
                   className="h-full object-contain w-[137px]"
                 />
-              </Link>
-            </div>
-            <div>
-              <Link
-                to={ROUTES.LOGIN_EMAIL}
-                className="text-white/90 hover:text-white transition-colors cursor-pointer text-sm font-normal"
-              >
-                Log In
               </Link>
             </div>
             <motion.button
