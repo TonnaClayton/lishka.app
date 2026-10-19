@@ -39,9 +39,9 @@ const DataDeletionPage: React.FC = () => {
 
             <div className="space-y-4">
               <p className="text-white/70 leading-relaxed">
-                You can delete your Lishka account and everything we hold
-                about you at any time. There are two ways to do it — from
-                inside the app, or by email if you can no longer sign in.
+                You can delete your Lishka account and everything we hold about
+                you at any time. There are two ways to do it — from inside the
+                app, or by email if you can no longer sign in.
               </p>
             </div>
 
@@ -59,7 +59,9 @@ const DataDeletionPage: React.FC = () => {
                   Scroll to the Account section and tap{" "}
                   <span className="text-white">Delete Account</span>.
                 </li>
-                <li>Confirm. Your account is removed and you are signed out.</li>
+                <li>
+                  Confirm. Your account is removed and you are signed out.
+                </li>
               </ol>
             </div>
 
@@ -128,9 +130,7 @@ const DataDeletionPage: React.FC = () => {
             </div>
 
             <div className="space-y-4">
-              <h2 className="text-lg font-semibold text-white">
-                Questions
-              </h2>
+              <h2 className="text-lg font-semibold text-white">Questions</h2>
               <p className="text-white/70 leading-relaxed">
                 Email{" "}
                 <a

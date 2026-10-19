@@ -122,32 +122,10 @@ export default defineConfig({
             },
           },
           {
-            urlPattern: /^https:\/\/api\.openai\.com\/.*/i,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "openai-cache",
-              networkTimeoutSeconds: 10,
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
             urlPattern: /^https:\/\/.*\.supabase\.(co|com)\/.*/i,
             handler: "NetworkFirst",
             options: {
               cacheName: "supabase-cache",
-              networkTimeoutSeconds: 10,
-              cacheableResponse: {
-                statuses: [0, 200],
-              },
-            },
-          },
-          {
-            urlPattern: /^https:\/\/.*\.open-meteo\.com\/.*/i,
-            handler: "NetworkFirst",
-            options: {
-              cacheName: "weather-cache",
               networkTimeoutSeconds: 10,
               cacheableResponse: {
                 statuses: [0, 200],
@@ -177,60 +155,13 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks: {
-          // React and core libraries
           "react-vendor": ["react", "react-dom", "react-router-dom"],
-
-          // UI libraries
-          "ui-vendor": [
-            "@radix-ui/react-dialog",
-            "@radix-ui/react-dropdown-menu",
-            "@radix-ui/react-tabs",
-            "@radix-ui/react-toast",
-            "@radix-ui/react-select",
-            "@radix-ui/react-accordion",
-            "@radix-ui/react-collapsible",
-            "@radix-ui/react-popover",
-            "@radix-ui/react-checkbox",
-            "@radix-ui/react-switch",
-            "@radix-ui/react-slider",
-            "@radix-ui/react-progress",
-            "@radix-ui/react-radio-group",
-            "@radix-ui/react-scroll-area",
-            "@radix-ui/react-separator",
-            "@radix-ui/react-tooltip",
-            "framer-motion",
-            "vaul",
-          ],
-
-          // Data/API libraries
-          "data-vendor": [
-            "@supabase/supabase-js",
-            "@tanstack/react-query",
-            "axios",
-          ],
-
-          // Map libraries
-          "map-vendor": ["leaflet", "react-leaflet"],
-
-          // Image/media libraries
-          "media-vendor": [
-            "html2canvas",
-            "html-to-image",
-            "react-image-crop",
-            "exif-js",
-          ],
-
-          // Form libraries
-          "form-vendor": ["react-hook-form", "@hookform/resolvers", "zod"],
-
-          // Utility libraries
+          "ui-vendor": ["framer-motion", "@radix-ui/react-separator"],
           "utils-vendor": [
-            "date-fns",
             "clsx",
             "class-variance-authority",
             "tailwind-merge",
             "lucide-react",
-            "@radix-ui/react-icons",
           ],
         },
       },
